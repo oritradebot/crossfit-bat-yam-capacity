@@ -70,7 +70,7 @@
     return (r.data && r.data.tracker) || null;
   }
   async function fetchBoard() {
-    var r = await sb.from("board").select("user_id,name,results").order("name");
+    var r = await sb.from("board").select("user_id,name,results,weeks").order("name");
     return r.data || [];
   }
   async function fetchProfile(uid) {
@@ -92,21 +92,30 @@
       }
     }, 800);
   }
-  function pushBoard(uid) {
+  // Per-week summary the leaderboard needs: completed days + shared result
+  function summarizeWeeks(tracker, myResults) {
+    var out = [], wk = (tracker && tracker.weeks) || [];
+    for (var i = 0; i < wk.length; i++) {
+      var days = (wk[i] && wk[i].days) || [], done = 0;
+      for (var j = 0; j < days.length; j++) { if (days[j] && days[j].done) done++; }
+      out.push({ completed: done, result: (myResults && myResults[i]) || 0 });
+    }
+    return out;
+  }
+  function pushBoard(uid, isAdmin) {
+    if (isAdmin) return;            // invisible admin: never appears on the shared board
     clearTimeout(t2);
     t2 = setTimeout(async function () {
       var b = lsGet(K.BOARD_KEY) || {};
+      var tracker = lsGet(K.TRACKER_KEY);
       await sb.from("board").upsert({
         user_id: uid,
         name: b.myName || "",
         results: b.myResults || {},
+        weeks: summarizeWeeks(tracker, b.myResults),
         updated_at: new Date().toISOString()
       });
     }, 800);
-  }
-
-  async function markWelcomeSeen(uid) {
-    try { await sb.from("profiles").update({ welcome_seen: true }).eq("id", uid); } catch (e) {}
   }
 
   // Intercept the app's own localStorage writes
@@ -115,8 +124,7 @@
     localStorage.setItem = function (key, val) {
       orig(key, val);
       if (key === K.TRACKER_KEY) pushState(uid, isAdmin);
-      else if (key === K.BOARD_KEY) pushBoard(uid);
-      else if (key === K.WELCOME_KEY) markWelcomeSeen(uid); // guide dismissed -> remember forever
+      else if (key === K.BOARD_KEY) pushBoard(uid, isAdmin);
     };
   }
 
@@ -125,12 +133,12 @@
     var DOMAIN = "@batyam.app";
     var css = document.createElement("style");
     css.textContent =
-      "#cfbyAdminOv{position:fixed;inset:0;z-index:99999;background:rgba(6,12,26,.72);display:none;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}" +
+      "#cfbyAdminOv{position:fixed;inset:0;z-index:99999;background:#0e1a33;display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto}" +
       "#cfbyAdminOv.open{display:flex}" +
-      ".cfa-box{background:#16233f;border:1px solid #243657;border-radius:16px;width:100%;max-width:760px;padding:22px;color:#eaf0ff;font-family:'Heebo',sans-serif;direction:rtl}" +
+      ".cfa-box{width:100%;max-width:1000px;min-height:calc(100vh - 48px);padding:8px 6px;color:#eaf0ff;font-family:'Heebo',sans-serif;direction:rtl}" +
       ".cfa-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}" +
       ".cfa-head h2{font-size:19px;font-weight:800}.cfa-head h2 span{color:#ef5b25}" +
-      ".cfa-x{background:none;border:none;color:#8ea3c9;font-size:24px;cursor:pointer}" +
+      ".cfa-x{background:#1b2b4d;border:1px solid #243657;border-radius:8px;color:#eaf0ff;font:700 13px 'Heebo',sans-serif;padding:8px 14px;cursor:pointer}" +
       ".cfa-add{background:#0f1830;border:1px solid #243657;border-radius:12px;padding:14px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end}" +
       ".cfa-add label{font-size:11px;color:#8ea3c9;display:block;margin-bottom:4px}" +
       ".cfa-add input{width:100%;background:#16233f;border:1px solid #243657;border-radius:8px;padding:9px 10px;color:#eaf0ff;font:14px 'Heebo',sans-serif}" +
@@ -150,7 +158,7 @@
     ov.id = "cfbyAdminOv";
     ov.innerHTML =
       '<div class="cfa-box">' +
-        '<div class="cfa-head"><h2><span>ADMIN</span> · ניהול משתמשים</h2><button class="cfa-x" id="cfaX">×</button></div>' +
+        '<div class="cfa-head"><h2><span>👥</span> ניהול משתתפים</h2><button class="cfa-x" id="cfaX">✕ סגור</button></div>' +
         '<div class="cfa-add">' +
           '<div><label>שם משתמש (אנגלית)</label><input id="cfaU" class="ltr" placeholder="username"></div>' +
           '<div><label>שם לתצוגה</label><input id="cfaN" placeholder="השם"></div>' +
@@ -260,6 +268,8 @@
     ensureTab();
     var mo = new MutationObserver(function () { ensureTab(); });
     mo.observe(document.body, { childList: true, subtree: true });
+    // safety net: keep trying for ~12s in case the header mounts late
+    var tries = 0, iv = setInterval(function () { ensureTab(); if (++tries > 48) clearInterval(iv); }, 250);
   }
 
   // ---- main ------------------------------------------------------------
@@ -272,10 +282,8 @@
     var prof = await fetchProfile(uid);
     var isAdmin = !!prof.is_admin;
 
-    // Guide screen: show only on the FIRST login ever (per account, any device).
-    // If already seen, pre-seed the flag so the app's welcome overlay stays closed.
-    if (prof.welcome_seen) { try { localStorage.setItem(K.WELCOME_KEY, "1"); } catch (e) {} }
-    else { try { localStorage.removeItem(K.WELCOME_KEY); } catch (e) {} }
+    // The guide never auto-pops now — it opens only via the "❓ מדריך" button.
+    try { localStorage.setItem(K.WELCOME_KEY, "1"); } catch (e) {}
 
     // 1) load + merge program/state
     var prog = await fetchSharedProgram();
@@ -287,9 +295,15 @@
       lsSetRaw(K.TRACKER_KEY, { v: 2, weeks: prog });
     } // else: leave empty -> app builds its default program
 
-    // 2) board (shared: everyone sees everyone)
+    // 2) board (shared leaderboard). Admin is invisible; each user appears once.
+    if (isAdmin) {
+      // wipe any leftover admin row so the admin never shows up to others
+      try { await sb.from("board").delete().eq("user_id", uid); } catch (e) {}
+    }
     var rows = await fetchBoard();
-    var board = rows.map(function (r) { return { id: r.user_id, name: r.name, results: r.results }; });
+    var board = rows
+      .filter(function (r) { return r.user_id !== uid; })  // the app renders "you" separately
+      .map(function (r) { return { id: r.user_id, name: r.name, weeks: r.weeks || [] }; });
     var myRow = rows.filter(function (r) { return r.user_id === uid; })[0];
     lsSetRaw(K.BOARD_KEY, {
       board: board,
