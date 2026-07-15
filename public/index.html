@@ -85,10 +85,12 @@
         var r = await sb.auth.signUp({ email:email, password:pass });
         if(r.error) throw r.error;
         var uid = r.data.user && r.data.user.id;
-        // create profile row (name shown on the board)
-        if(uid){ await sb.from("profiles").upsert({ id:uid, name:name||email.split("@")[0] }); }
-        if(!r.data.session){ msg("נשלח מייל אימות — אשר אותו ואז התחבר.","ok"); $("go").disabled=false; return; }
-        location.replace("app.html");
+        // create profile row (name shown on the board, email for admin monitoring)
+        if(uid){ await sb.from("profiles").upsert({ id:uid, name:name||email.split("@")[0], email:email }); }
+        // email confirmation ON (no session yet) -> the email link lands on confirmed.html
+        if(!r.data.session){ location.replace("confirmed.html?pending=1"); return; }
+        // email confirmation OFF (instant session) -> show the thank-you page
+        location.replace("confirmed.html");
       } else {
         var l = await sb.auth.signInWithPassword({ email:email, password:pass });
         if(l.error) throw l.error;

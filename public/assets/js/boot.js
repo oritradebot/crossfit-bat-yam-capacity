@@ -74,8 +74,8 @@
     return r.data || [];
   }
   async function fetchProfile(uid) {
-    var r = await sb.from("profiles").select("name,is_admin").eq("id", uid).maybeSingle();
-    return r.data || { name: "", is_admin: false };
+    var r = await sb.from("profiles").select("name,is_admin,welcome_seen").eq("id", uid).maybeSingle();
+    return r.data || { name: "", is_admin: false, welcome_seen: false };
   }
 
   // ---- Supabase writes (debounced) ------------------------------------
@@ -105,6 +105,10 @@
     }, 800);
   }
 
+  async function markWelcomeSeen(uid) {
+    try { await sb.from("profiles").update({ welcome_seen: true }).eq("id", uid); } catch (e) {}
+  }
+
   // Intercept the app's own localStorage writes
   function installInterceptor(uid, isAdmin) {
     var orig = localStorage.setItem.bind(localStorage);
@@ -112,6 +116,7 @@
       orig(key, val);
       if (key === K.TRACKER_KEY) pushState(uid, isAdmin);
       else if (key === K.BOARD_KEY) pushBoard(uid);
+      else if (key === K.WELCOME_KEY) markWelcomeSeen(uid); // guide dismissed -> remember forever
     };
   }
 
@@ -124,6 +129,11 @@
 
     var prof = await fetchProfile(uid);
     var isAdmin = !!prof.is_admin;
+
+    // Guide screen: show only on the FIRST login ever (per account, any device).
+    // If already seen, pre-seed the flag so the app's welcome overlay stays closed.
+    if (prof.welcome_seen) { try { localStorage.setItem(K.WELCOME_KEY, "1"); } catch (e) {} }
+    else { try { localStorage.removeItem(K.WELCOME_KEY); } catch (e) {} }
 
     // 1) load + merge program/state
     var prog = await fetchSharedProgram();

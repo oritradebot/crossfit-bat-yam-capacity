@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>נרשמת בהצלחה — BAT YAM Capacity</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supa-config.js"></script>
+<style>
+  :root{--card:#16233f;--line:#243657;--orange:#ef5b25;--txt:#eaf0ff;--mut:#8ea3c9;--green:#2ecc71;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:linear-gradient(160deg,#0f1830,#1a2848 60%,#23409a);min-height:100vh;
+    display:flex;align-items:center;justify-content:center;font-family:'Heebo',-apple-system,sans-serif;color:var(--txt);padding:20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:40px 30px;width:100%;max-width:420px;
+    text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.45)}
+  .check{width:84px;height:84px;border-radius:50%;margin:0 auto 22px;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 30% 30%,#2ecc71,#1a8f4c);box-shadow:0 8px 30px rgba(46,204,113,.35);animation:pop .5s ease}
+  .check svg{width:44px;height:44px;stroke:#fff;stroke-width:5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  @keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+  h1{font-size:23px;font-weight:800;letter-spacing:.5px;margin-bottom:10px}
+  p{color:var(--mut);font-size:15px;line-height:1.7;margin-bottom:6px}
+  .brand{color:var(--orange);font-weight:800}
+  .btn{display:inline-block;width:100%;margin-top:26px;background:var(--orange);color:#fff;border:none;border-radius:12px;
+    padding:15px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none;transition:transform .1s}
+  .btn:active{transform:scale(.98)}
+  .sub{margin-top:16px;font-size:13px;color:var(--mut)}
+  .sub a{color:var(--orange);cursor:pointer;font-weight:700}
+  .pending .check{background:radial-gradient(circle at 30% 30%,#f39c12,#b9770e);box-shadow:0 8px 30px rgba(243,156,18,.3)}
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="check"><svg viewBox="0 0 52 52"><polyline points="14,27 22,35 38,17"/></svg></div>
+    <h1 id="title">נרשמת בהצלחה! 💪</h1>
+    <p id="msg">ברוך הבא ל‑<span class="brand">BAT YAM CAPACITY</span>.<br>החשבון שלך מוכן — כל התוצאות שלך יישמרו וילוו אותך לאורך כל התוכנית.</p>
+    <a class="btn" id="cta" href="app.html">כניסה לתוכנית ←</a>
+    <div class="sub" id="sub"></div>
+  </div>
+
+<script>
+  var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
+  var params = new URLSearchParams(location.search);
+  var pending = params.get("pending") === "1";
+
+  // If we arrived from an email-confirmation link, Supabase puts the session in the URL.
+  // supabase-js auto-detects it; give it a moment, then check.
+  async function check(){
+    var s = await sb.auth.getSession();
+    var hasSession = s.data && s.data.session;
+
+    if (pending && !hasSession) {
+      // Email confirmation is ON and not yet clicked
+      document.getElementById("card").classList.add("pending");
+      document.getElementById("title").textContent = "כמעט שם! 📧";
+      document.getElementById("msg").innerHTML =
+        "שלחנו לך מייל אישור.<br>פתח אותו ולחץ על הקישור כדי להשלים את ההרשמה ל‑<span class='brand'>BAT YAM CAPACITY</span>.";
+      document.getElementById("cta").textContent = "כבר אישרתי — כניסה";
+      document.getElementById("cta").href = "index.html";
+      document.getElementById("sub").innerHTML = "לא קיבלת? בדוק בספאם, או <a href='index.html'>נסה שוב</a>.";
+      return;
+    }
+    // Normal success (confirmation off, or link already clicked -> session active)
+    document.getElementById("sub").innerHTML = hasSession
+      ? ""
+      : "אם הכפתור לא עובד, <a href='index.html'>התחבר כאן</a>.";
+  }
+  check();
+</script>
+</body>
+</html>
