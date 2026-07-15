@@ -20,7 +20,9 @@
   .sub{text-align:center;color:var(--mut);font-size:13px;margin:6px 0 22px}
   label{display:block;font-size:12px;color:var(--mut);margin:14px 0 6px}
   input{width:100%;background:#0f1830;border:1px solid var(--line);border-radius:10px;padding:12px 14px;
-    color:var(--txt);font-size:15px;font-family:inherit;direction:ltr;text-align:right}
+    color:var(--txt);font-size:15px;font-family:inherit}
+  input.ltr{direction:ltr;text-align:left}
+  input.rtl{direction:rtl;text-align:right}
   input:focus{outline:none;border-color:var(--orange)}
   button{width:100%;margin-top:20px;background:var(--orange);color:#fff;border:none;border-radius:10px;
     padding:13px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer}
@@ -29,6 +31,7 @@
   .toggle a{color:var(--orange);cursor:pointer;font-weight:700}
   .msg{margin-top:14px;font-size:13px;text-align:center;min-height:18px}
   .msg.err{color:#ff8a80}.msg.ok{color:#7ee2a8}
+  .hint{font-size:11px;color:var(--mut);margin-top:4px}
 </style>
 </head>
 <body>
@@ -41,12 +44,15 @@
     <h1>BAT YAM CAPACITY</h1>
     <p class="sub" id="sub">התחברות למעקב האישי שלך</p>
 
-    <label>אימייל</label>
-    <input id="email" type="email" placeholder="name@email.com" autocomplete="email">
+    <label>שם משתמש</label>
+    <input id="user" class="ltr" type="text" placeholder="username" autocomplete="username" autocapitalize="none" spellcheck="false">
+    <div class="hint" id="userHint" style="display:none">אותיות אנגלית ומספרים בלבד (בלי רווחים)</div>
+
+    <label id="nameLbl" style="display:none">שם לתצוגה בלוח (אפשר בעברית)</label>
+    <input id="name" class="rtl" type="text" placeholder="השם שלך" style="display:none">
+
     <label>סיסמה</label>
-    <input id="pass" type="password" placeholder="••••••••" autocomplete="current-password">
-    <label id="nameLbl" style="display:none">שם מלא (יוצג בלוח)</label>
-    <input id="name" type="text" placeholder="השם שלך" style="display:none;direction:rtl;text-align:right">
+    <input id="pass" class="ltr" type="password" placeholder="••••••••" autocomplete="current-password">
 
     <button id="go">התחבר</button>
     <div class="msg" id="msg"></div>
@@ -56,8 +62,11 @@
 <script>
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   var mode = "login";
+  var DOMAIN = "@batyam.app";                 // synthetic domain — no mail is ever sent here
   var $ = function(id){return document.getElementById(id);};
   function msg(t,cls){ var m=$("msg"); m.textContent=t; m.className="msg "+(cls||""); }
+  function toEmail(u){ return u.toLowerCase()+DOMAIN; }
+  var UNAME_RE = /^[a-z0-9._-]{3,30}$/;
 
   // already signed in? go straight to the app
   sb.auth.getSession().then(function(r){ if(r.data && r.data.session) location.replace("app.html"); });
@@ -69,34 +78,41 @@
     $("go").textContent  = s ? "הרשמה" : "התחבר";
     $("nameLbl").style.display = s?"block":"none";
     $("name").style.display    = s?"block":"none";
+    $("userHint").style.display= s?"block":"none";
     $("tg").innerHTML = s ? 'כבר יש לך חשבון? <a id="switch">התחברות</a>'
                           : 'אין לך חשבון? <a id="switch">הרשמה</a>';
-    $("switch").onclick = toggleMode;   // rebind on the freshly-written link
+    $("switch").onclick = toggleMode;
     msg("");
   }
   $("switch").onclick = toggleMode;
 
   $("go").onclick = async function(){
-    var email=$("email").value.trim(), pass=$("pass").value, name=$("name").value.trim();
-    if(!email||!pass){ msg("מלא אימייל וסיסמה","err"); return; }
+    var uname=$("user").value.trim().toLowerCase(), pass=$("pass").value, name=$("name").value.trim();
+    if(!uname||!pass){ msg("מלא שם משתמש וסיסמה","err"); return; }
+    if(mode==="signup" && !UNAME_RE.test(uname)){
+      msg("שם משתמש: 3-30 תווים, אותיות אנגלית/מספרים בלבד","err"); return;
+    }
+    var email = toEmail(uname);
     $("go").disabled=true; msg("רגע…");
     try{
       if(mode==="signup"){
         var r = await sb.auth.signUp({ email:email, password:pass });
         if(r.error) throw r.error;
         var uid = r.data.user && r.data.user.id;
-        // create profile row (name shown on the board, email for admin monitoring)
-        if(uid){ await sb.from("profiles").upsert({ id:uid, name:name||email.split("@")[0], email:email }); }
-        // email confirmation ON (no session yet) -> the email link lands on confirmed.html
+        // store display name + the plain username (shown in the admin panel)
+        if(uid){ await sb.from("profiles").upsert({ id:uid, name:(name||uname), email:uname }); }
         if(!r.data.session){ location.replace("confirmed.html?pending=1"); return; }
-        // email confirmation OFF (instant session) -> show the thank-you page
         location.replace("confirmed.html");
       } else {
         var l = await sb.auth.signInWithPassword({ email:email, password:pass });
-        if(l.error) throw l.error;
+        if(l.error){ msg("שם משתמש או סיסמה שגויים","err"); $("go").disabled=false; return; }
         location.replace("app.html");
       }
-    }catch(e){ msg(e.message||"שגיאה","err"); $("go").disabled=false; }
+    }catch(e){
+      var m=(e&&e.message)||"שגיאה";
+      if(/already registered|already exists/i.test(m)) m="שם המשתמש כבר תפוס";
+      msg(m,"err"); $("go").disabled=false;
+    }
   };
 </script>
 </body>
