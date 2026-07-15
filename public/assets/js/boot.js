@@ -125,8 +125,6 @@
     var DOMAIN = "@batyam.app";
     var css = document.createElement("style");
     css.textContent =
-      "#cfbyAdminBtn{position:fixed;bottom:18px;inset-inline-start:18px;z-index:99998;background:#ef5b25;color:#fff;" +
-      "border:none;border-radius:30px;padding:11px 16px;font:700 13px/1 'Heebo',sans-serif;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.4)}" +
       "#cfbyAdminOv{position:fixed;inset:0;z-index:99999;background:rgba(6,12,26,.72);display:none;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}" +
       "#cfbyAdminOv.open{display:flex}" +
       ".cfa-box{background:#16233f;border:1px solid #243657;border-radius:16px;width:100%;max-width:760px;padding:22px;color:#eaf0ff;font-family:'Heebo',sans-serif;direction:rtl}" +
@@ -147,10 +145,6 @@
       ".cfa-del:hover{background:#e74c3c;color:#fff}" +
       ".cfa-stat{color:#8ea3c9;font-size:12px;margin-bottom:10px}";
     document.head.appendChild(css);
-
-    var btn = document.createElement("button");
-    btn.id = "cfbyAdminBtn"; btn.textContent = "⚙ ניהול משתמשים";
-    document.body.appendChild(btn);
 
     var ov = document.createElement("div");
     ov.id = "cfbyAdminOv";
@@ -237,10 +231,35 @@
       }
     }
 
-    btn.onclick = function () { ov.classList.add("open"); refresh(); };
+    function openPanel() { ov.classList.add("open"); refresh(); }
     document.getElementById("cfaX").onclick = function () { ov.classList.remove("open"); amsg(""); };
     ov.onclick = function (e) { if (e.target === ov) { ov.classList.remove("open"); amsg(""); } };
     document.getElementById("cfaAdd").onclick = addUser;
+
+    // Inject a "משתתפים" tab into the top bar, right next to the "❓ מדריך" button.
+    // The app may re-render its header, so a MutationObserver re-inserts it if removed.
+    function findGuideBtn() {
+      var btns = document.querySelectorAll("button");
+      for (var i = 0; i < btns.length; i++) {
+        var t = (btns[i].textContent || "");
+        if (t.indexOf("מדריך") >= 0 && !btns[i].__cfbyTab) return btns[i];
+      }
+      return null;
+    }
+    function ensureTab() {
+      if (document.getElementById("cfbyAdminTab")) return;
+      var guide = findGuideBtn();
+      if (!guide) return;
+      var tab = document.createElement("button");
+      tab.id = "cfbyAdminTab"; tab.__cfbyTab = true;
+      tab.textContent = "👥 משתתפים";
+      tab.style.cssText = guide.style.cssText;           // match the guide button exactly
+      tab.onclick = openPanel;
+      guide.parentNode.insertBefore(tab, guide.nextSibling); // place it beside the guide
+    }
+    ensureTab();
+    var mo = new MutationObserver(function () { ensureTab(); });
+    mo.observe(document.body, { childList: true, subtree: true });
   }
 
   // ---- main ------------------------------------------------------------
