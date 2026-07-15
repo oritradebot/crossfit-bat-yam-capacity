@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BAT YAM — Capacity Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supa-config.js"></script>
+<style>
+  :root{--bg:#0f1830;--card:#16233f;--line:#243657;--orange:#ef5b25;--txt:#eaf0ff;--mut:#8ea3c9;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:linear-gradient(160deg,#0f1830,#1a2848 60%,#23409a);min-height:100vh;
+    display:flex;align-items:center;justify-content:center;font-family:'Heebo',-apple-system,sans-serif;color:var(--txt);padding:20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:32px 26px;width:100%;max-width:380px;
+    box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .logo{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#1a2848,#23409a);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .logo svg{width:34px;height:34px}
+  h1{font-size:20px;text-align:center;font-weight:800;letter-spacing:.5px}
+  .sub{text-align:center;color:var(--mut);font-size:13px;margin:6px 0 22px}
+  label{display:block;font-size:12px;color:var(--mut);margin:14px 0 6px}
+  input{width:100%;background:#0f1830;border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+    color:var(--txt);font-size:15px;font-family:inherit;direction:ltr;text-align:right}
+  input:focus{outline:none;border-color:var(--orange)}
+  button{width:100%;margin-top:20px;background:var(--orange);color:#fff;border:none;border-radius:10px;
+    padding:13px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer}
+  button:disabled{opacity:.6;cursor:default}
+  .toggle{text-align:center;margin-top:16px;font-size:13px;color:var(--mut)}
+  .toggle a{color:var(--orange);cursor:pointer;font-weight:700}
+  .msg{margin-top:14px;font-size:13px;text-align:center;min-height:18px}
+  .msg.err{color:#ff8a80}.msg.ok{color:#7ee2a8}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <svg viewBox="0 0 120 120"><g transform="translate(60 60)" fill="none" stroke="#ef5b25" stroke-width="6" stroke-linecap="round">
+        <line x1="-26" y1="0" x2="26" y2="0"/><line x1="-26" y1="-11" x2="-26" y2="11"/><line x1="26" y1="-11" x2="26" y2="11"/>
+        <line x1="-33" y1="-6" x2="-33" y2="6"/><line x1="33" y1="-6" x2="33" y2="6"/></g></svg>
+    </div>
+    <h1>BAT YAM CAPACITY</h1>
+    <p class="sub" id="sub">התחברות למעקב האישי שלך</p>
+
+    <label>אימייל</label>
+    <input id="email" type="email" placeholder="name@email.com" autocomplete="email">
+    <label>סיסמה</label>
+    <input id="pass" type="password" placeholder="••••••••" autocomplete="current-password">
+    <label id="nameLbl" style="display:none">שם מלא (יוצג בלוח)</label>
+    <input id="name" type="text" placeholder="השם שלך" style="display:none;direction:rtl;text-align:right">
+
+    <button id="go">התחבר</button>
+    <div class="msg" id="msg"></div>
+    <div class="toggle" id="tg">אין לך חשבון? <a id="switch">הרשמה</a></div>
+  </div>
+
+<script>
+  var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
+  var mode = "login";
+  var $ = function(id){return document.getElementById(id);};
+  function msg(t,cls){ var m=$("msg"); m.textContent=t; m.className="msg "+(cls||""); }
+
+  // already signed in? go straight to the app
+  sb.auth.getSession().then(function(r){ if(r.data && r.data.session) location.replace("app.html"); });
+
+  function toggleMode(){
+    mode = mode==="login" ? "signup" : "login";
+    var s = mode==="signup";
+    $("sub").textContent = s ? "יצירת חשבון חדש" : "התחברות למעקב האישי שלך";
+    $("go").textContent  = s ? "הרשמה" : "התחבר";
+    $("nameLbl").style.display = s?"block":"none";
+    $("name").style.display    = s?"block":"none";
+    $("tg").innerHTML = s ? 'כבר יש לך חשבון? <a id="switch">התחברות</a>'
+                          : 'אין לך חשבון? <a id="switch">הרשמה</a>';
+    $("switch").onclick = toggleMode;   // rebind on the freshly-written link
+    msg("");
+  }
+  $("switch").onclick = toggleMode;
+
+  $("go").onclick = async function(){
+    var email=$("email").value.trim(), pass=$("pass").value, name=$("name").value.trim();
+    if(!email||!pass){ msg("מלא אימייל וסיסמה","err"); return; }
+    $("go").disabled=true; msg("רגע…");
+    try{
+      if(mode==="signup"){
+        var r = await sb.auth.signUp({ email:email, password:pass });
+        if(r.error) throw r.error;
+        var uid = r.data.user && r.data.user.id;
+        // create profile row (name shown on the board)
+        if(uid){ await sb.from("profiles").upsert({ id:uid, name:name||email.split("@")[0] }); }
+        if(!r.data.session){ msg("נשלח מייל אימות — אשר אותו ואז התחבר.","ok"); $("go").disabled=false; return; }
+        location.replace("app.html");
+      } else {
+        var l = await sb.auth.signInWithPassword({ email:email, password:pass });
+        if(l.error) throw l.error;
+        location.replace("app.html");
+      }
+    }catch(e){ msg(e.message||"שגיאה","err"); $("go").disabled=false; }
+  };
+</script>
+</body>
+</html>

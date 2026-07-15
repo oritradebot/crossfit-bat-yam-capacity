@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Supabase client (runs in the user's browser) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supa-config.js"></script>
+<!-- React globals (harmless to preload) -->
+<script src="assets/js/react.js"></script>
+<script src="assets/js/react-dom.js"></script>
+<!-- boot.js gates auth, seeds localStorage from Supabase, THEN loads the app runtime -->
+<script src="assets/js/boot.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<style>/* hebrew */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/fc92f087.woff2") format('woff2');
+  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+/* math */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/845bf731.woff2") format('woff2');
+  unicode-range: U+0302-0303, U+0305, U+0307-0308, U+0310, U+0312, U+0315, U+031A, U+0326-0327, U+032C, U+032F-0330, U+0332-0333, U+0338, U+033A, U+0346, U+034D, U+0391-03A1, U+03A3-03A9, U+03B1-03C9, U+03D1, U+03D5-03D6, U+03F0-03F1, U+03F4-03F5, U+2016-2017, U+2034-2038, U+203C, U+2040, U+2043, U+2047, U+2050, U+2057, U+205F, U+2070-2071, U+2074-208E, U+2090-209C, U+20D0-20DC, U+20E1, U+20E5-20EF, U+2100-2112, U+2114-2115, U+2117-2121, U+2123-214F, U+2190, U+2192, U+2194-21AE, U+21B0-21E5, U+21F1-21F2, U+21F4-2211, U+2213-2214, U+2216-22FF, U+2308-230B, U+2310, U+2319, U+231C-2321, U+2336-237A, U+237C, U+2395, U+239B-23B7, U+23D0, U+23DC-23E1, U+2474-2475, U+25AF, U+25B3, U+25B7, U+25BD, U+25C1, U+25CA, U+25CC, U+25FB, U+266D-266F, U+27C0-27FF, U+2900-2AFF, U+2B0E-2B11, U+2B30-2B4C, U+2BFE, U+3030, U+FF5B, U+FF5D, U+1D400-1D7FF, U+1EE00-1EEFF;
+}
+/* symbols */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/8738c838.woff2") format('woff2');
+  unicode-range: U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AD, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F7FF, U+1F800-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FA89, U+1FA8F-1FAC6, U+1FACE-1FADC, U+1FADF-1FAE9, U+1FAF0-1FAF8, U+1FB00-1FBFF;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/2abd82ae.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/bfbe2959.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* hebrew */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/fc92f087.woff2") format('woff2');
+  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+/* math */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/845bf731.woff2") format('woff2');
+  unicode-range: U+0302-0303, U+0305, U+0307-0308, U+0310, U+0312, U+0315, U+031A, U+0326-0327, U+032C, U+032F-0330, U+0332-0333, U+0338, U+033A, U+0346, U+034D, U+0391-03A1, U+03A3-03A9, U+03B1-03C9, U+03D1, U+03D5-03D6, U+03F0-03F1, U+03F4-03F5, U+2016-2017, U+2034-2038, U+203C, U+2040, U+2043, U+2047, U+2050, U+2057, U+205F, U+2070-2071, U+2074-208E, U+2090-209C, U+20D0-20DC, U+20E1, U+20E5-20EF, U+2100-2112, U+2114-2115, U+2117-2121, U+2123-214F, U+2190, U+2192, U+2194-21AE, U+21B0-21E5, U+21F1-21F2, U+21F4-2211, U+2213-2214, U+2216-22FF, U+2308-230B, U+2310, U+2319, U+231C-2321, U+2336-237A, U+237C, U+2395, U+239B-23B7, U+23D0, U+23DC-23E1, U+2474-2475, U+25AF, U+25B3, U+25B7, U+25BD, U+25C1, U+25CA, U+25CC, U+25FB, U+266D-266F, U+27C0-27FF, U+2900-2AFF, U+2B0E-2B11, U+2B30-2B4C, U+2BFE, U+3030, U+FF5B, U+FF5D, U+1D400-1D7FF, U+1EE00-1EEFF;
+}
+/* symbols */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/8738c838.woff2") format('woff2');
+  unicode-range: U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AD, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F7FF, U+1F800-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FA89, U+1FA8F-1FAC6, U+1FACE-1FADC, U+1FADF-1FAE9, U+1FAF0-1FAF8, U+1FB00-1FBFF;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/2abd82ae.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/bfbe2959.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* hebrew */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/fc92f087.woff2") format('woff2');
+  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+/* math */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/845bf731.woff2") format('woff2');
+  unicode-range: U+0302-0303, U+0305, U+0307-0308, U+0310, U+0312, U+0315, U+031A, U+0326-0327, U+032C, U+032F-0330, U+0332-0333, U+0338, U+033A, U+0346, U+034D, U+0391-03A1, U+03A3-03A9, U+03B1-03C9, U+03D1, U+03D5-03D6, U+03F0-03F1, U+03F4-03F5, U+2016-2017, U+2034-2038, U+203C, U+2040, U+2043, U+2047, U+2050, U+2057, U+205F, U+2070-2071, U+2074-208E, U+2090-209C, U+20D0-20DC, U+20E1, U+20E5-20EF, U+2100-2112, U+2114-2115, U+2117-2121, U+2123-214F, U+2190, U+2192, U+2194-21AE, U+21B0-21E5, U+21F1-21F2, U+21F4-2211, U+2213-2214, U+2216-22FF, U+2308-230B, U+2310, U+2319, U+231C-2321, U+2336-237A, U+237C, U+2395, U+239B-23B7, U+23D0, U+23DC-23E1, U+2474-2475, U+25AF, U+25B3, U+25B7, U+25BD, U+25C1, U+25CA, U+25CC, U+25FB, U+266D-266F, U+27C0-27FF, U+2900-2AFF, U+2B0E-2B11, U+2B30-2B4C, U+2BFE, U+3030, U+FF5B, U+FF5D, U+1D400-1D7FF, U+1EE00-1EEFF;
+}
+/* symbols */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/8738c838.woff2") format('woff2');
+  unicode-range: U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AD, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F7FF, U+1F800-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FA89, U+1FA8F-1FAC6, U+1FACE-1FADC, U+1FADF-1FAE9, U+1FAF0-1FAF8, U+1FB00-1FBFF;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/2abd82ae.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/bfbe2959.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* hebrew */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("assets/fonts/fc92f087.woff2") format('woff2');
+  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+/* math */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("assets/fonts/845bf731.woff2") format('woff2');
+  unicode-range: U+0302-0303, U+0305, U+0307-0308, U+0310, U+0312, U+0315, U+031A, U+0326-0327, U+032C, U+032F-0330, U+0332-0333, U+0338, U+033A, U+0346, U+034D, U+0391-03A1, U+03A3-03A9, U+03B1-03C9, U+03D1, U+03D5-03D6, U+03F0-03F1, U+03F4-03F5, U+2016-2017, U+2034-2038, U+203C, U+2040, U+2043, U+2047, U+2050, U+2057, U+205F, U+2070-2071, U+2074-208E, U+2090-209C, U+20D0-20DC, U+20E1, U+20E5-20EF, U+2100-2112, U+2114-2115, U+2117-2121, U+2123-214F, U+2190, U+2192, U+2194-21AE, U+21B0-21E5, U+21F1-21F2, U+21F4-2211, U+2213-2214, U+2216-22FF, U+2308-230B, U+2310, U+2319, U+231C-2321, U+2336-237A, U+237C, U+2395, U+239B-23B7, U+23D0, U+23DC-23E1, U+2474-2475, U+25AF, U+25B3, U+25B7, U+25BD, U+25C1, U+25CA, U+25CC, U+25FB, U+266D-266F, U+27C0-27FF, U+2900-2AFF, U+2B0E-2B11, U+2B30-2B4C, U+2BFE, U+3030, U+FF5B, U+FF5D, U+1D400-1D7FF, U+1EE00-1EEFF;
+}
+/* symbols */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("assets/fonts/8738c838.woff2") format('woff2');
+  unicode-range: U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AD, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F7FF, U+1F800-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FA89, U+1FA8F-1FAC6, U+1FACE-1FADC, U+1FADF-1FAE9, U+1FAF0-1FAF8, U+1FB00-1FBFF;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("assets/fonts/2abd82ae.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("assets/fonts/bfbe2959.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/bad355cf.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/c8bc0479.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/93ac27ef.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/03f66d5f.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fonts/c302a2f6.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/fonts/bad355cf.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/fonts/c8bc0479.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/fonts/93ac27ef.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/fonts/03f66d5f.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/fonts/c302a2f6.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/bad355cf.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/c8bc0479.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/93ac27ef.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/03f66d5f.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/c302a2f6.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: 'Heebo', system-ui, sans-serif; background: #e6e5e0; color: #15171d; -webkit-font-smoothing: antialiased; }
+  a { color: #23409a; text-decoration: none; }
+  a:hover { color: #16255e; }
+  input, textarea, button { font-family: inherit; }
+  input::placeholder, textarea::placeholder { color: #a7a9b0; }
+  textarea { line-height: 1.5; }
+  ::-webkit-scrollbar { height: 8px; width: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(21,23,29,.2); border-radius: 8px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
+<!-- html2canvas loaded by boot.js -->
+</helmet>
+<div style="--blue:#23409a; --blue2:#2f52c4; --navy:#141f38; --ink:#15171d; --paper:#f4f3ef; --line:rgba(21,23,29,.12); --orange:#ef5b25; --muted:#6b6e78; --log:rgba(35,64,154,.06); min-height:100vh; display:flex; flex-direction:column; align-items:center;">
+
+  <header style="width:100%; background:linear-gradient(115deg,#0f1830,#1a2848 60%,#23409a); color:#fff; display:flex; justify-content:center; box-shadow:0 2px 20px rgba(15,24,48,.25); position:sticky; top:0; z-index:40;">
+    <div style="width:100%; max-width:1040px; padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <button sc-camel-on-click="{{ openAdmin }}" title="לחיצה על הלוגו — כניסת מנהל" style="background:none; border:none; padding:0; cursor:pointer; flex:none; position:relative;">
+        <img src="assets/img/5ec7dfdd.png" alt="CrossFit Bat Yam" style="width:46px; height:46px; border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.25); display:block;">
+        <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+          <span style="position:absolute; bottom:-4px; inset-inline-end:-6px; background:var(--orange); color:#fff; font:700 8px/1 'Oswald'; letter-spacing:.05em; padding:3px 5px; border-radius:6px; box-shadow:0 0 0 2px #16213c;">ADMIN</span>
+        </sc-if>
+      </button>
+      <div style="display:flex; flex-direction:column; gap:2px; min-width:0;">
+        <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:19px; letter-spacing:.06em; line-height:1;">CROSSFIT BAT YAM</div>
+        <div style="font-size:12px; color:#b9c4e6; font-weight:500;">CAPACITY PROGRAM · מעקב 8 שבועות</div>
+      </div>
+      <div style="margin-inline-start:auto; display:flex; align-items:center; gap:10px;">
+        <button sc-camel-on-click="{{ openWelcome }}" title="איך זה עובד?" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 13px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">❓ מדריך</button>
+        <div style="display:flex; background:rgba(255,255,255,.1); border-radius:999px; padding:4px; gap:2px; overflow-x:auto; max-width:100%;">
+          <button sc-camel-on-click="{{ setOverview }}" style="{{ tabOverviewStyle }}">סקירה</button>
+          <button sc-camel-on-click="{{ setLog }}" style="{{ tabLogStyle }}">יומן</button>
+          <button sc-camel-on-click="{{ setPRs }}" style="{{ tabPRStyle }}">🏆 שיאים אישיים</button>
+          <button sc-camel-on-click="{{ setBoard }}" style="{{ tabBoardStyle }}">🏅 דירוג</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main style="width:100%; max-width:1040px; padding:22px 20px 64px; flex:1;">
+
+    <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fadeUp .35s ease both;">
+        <sc-if value="{{ showReminder }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; align-items:center; gap:12px; background:#fff5ec; border:1px solid #f6c9ad; border-inline-start:4px solid var(--orange); border-radius:14px; padding:14px 16px; margin-bottom:18px;">
+            <span style="font-size:22px; flex:none;">🔔</span>
+            <div style="flex:1; min-width:0;">
+              <div style="font-weight:700; font-size:14px; color:var(--ink);">{{ reminderText }}</div>
+              <div style="font-size:12px; color:var(--muted); margin-top:2px;">אל תשכח לסמן ולתעד — כך הרצף והשיאים נשמרים.</div>
+            </div>
+            <button sc-camel-on-click="{{ openReminder }}" style="flex:none; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:9px 16px; font-weight:700; font-size:13px; cursor:pointer;">השלם עכשיו</button>
+            <button sc-camel-on-click="{{ dismissReminder }}" style="flex:none; background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; padding:2px 6px; line-height:1;">✕</button>
+          </div>
+        </sc-if>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:22px;">
+          <div style="background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--blue); line-height:1;">{{ statSessions }}<span style="font-size:16px; color:var(--muted);">/{{ statTarget }}</span></div>
+            <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">אימונים שהושלמו</div>
+          </div>
+          <div style="background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--ink); line-height:1;">{{ statPct }}<span style="font-size:18px; color:var(--muted);">%</span></div>
+            <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">מהיעד · 5 בשבוע</div>
+          </div>
+          <div style="background:var(--orange); color:#fff; border-radius:16px; padding:16px 18px;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; line-height:1;">{{ statWeekly }}</div>
+            <div style="font-size:12px; color:#ffe0d3; font-weight:600; letter-spacing:.04em; margin-top:6px;">יעד השבוע</div>
+          </div>
+          <div style="background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--orange); line-height:1;">{{ statStreak }}🔥</div>
+            <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">רצף שיא (ימים)</div>
+          </div>
+          <div style="background:var(--navy); color:#fff; border-radius:16px; padding:16px 18px;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; line-height:1;">{{ curWeekNum }}<span style="font-size:16px; color:#9fb0dd;">/8</span></div>
+            <div style="font-size:12px; color:#9fb0dd; font-weight:600; letter-spacing:.04em; margin-top:6px;">שבוע נוכחי</div>
+          </div>
+        </div>
+
+        <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; border-radius:18px; padding:20px 22px; margin-bottom:22px; box-shadow:0 8px 28px rgba(20,31,56,.22);">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <span style="font-family:'Oswald',sans-serif; font-weight:600; font-size:13px; letter-spacing:.14em; color:#8fa4d8;">THIS WEEK</span>
+            <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:20px;">WEEK {{ curWeekNum }}</span>
+            <span style="font-size:13px; color:#b9c4e6;">{{ curWeekRange }}</span>
+            <span style="margin-inline-start:auto; font-size:13px; color:#b9c4e6;">{{ curWeekDone }} / 5 אימונים</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-top:16px;">
+            <sc-for list="{{ thisWeekCells }}" as="c" hint-placeholder-count="7">
+              <button sc-camel-on-click="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" style="{{ c.miniStyle }}">
+                <span style="font-size:10px; font-weight:700; opacity:.85; letter-spacing:.03em;">{{ c.dow }}</span>
+                <span style="font-family:'Oswald',sans-serif; font-weight:600; font-size:15px;">{{ c.dnum }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <button sc-camel-on-click="{{ gotoToday }}" style="margin-top:16px; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:11px 20px; font-weight:700; font-size:14px; cursor:pointer; letter-spacing:.01em;">← פתח את האימון של היום</button>
+        </div>
+
+        <sc-if value="{{ showProgramMap }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#fff; border:1px solid var(--line); border-radius:18px; padding:20px 22px;">
+          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:6px;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; letter-spacing:.03em;">PROGRAM MAP</div>
+            <div style="font-size:12px; color:var(--muted);">8 שבועות · 12/07 → 05/09</div>
+          </div>
+          <div style="display:grid; grid-template-columns:34px repeat(7,1fr); gap:6px; align-items:center;">
+            <div></div>
+            <sc-for list="{{ dowHeaders }}" as="h" hint-placeholder-count="7">
+              <div style="text-align:center; font-size:10px; font-weight:700; color:var(--muted); letter-spacing:.03em;">{{ h }}</div>
+            </sc-for>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+            <sc-for list="{{ heatWeeks }}" as="wk" hint-placeholder-count="8">
+              <div style="display:grid; grid-template-columns:34px repeat(7,1fr); gap:6px; align-items:center;">
+                <div style="font-family:'Oswald',sans-serif; font-weight:600; font-size:12px; color:var(--muted); text-align:center;">W{{ wk.n }}</div>
+                <sc-for list="{{ wk.cells }}" as="c" hint-placeholder-count="7">
+                  <button sc-camel-on-click="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" style="{{ c.cellStyle }}">{{ c.dnum }}</button>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex; gap:16px; margin-top:16px; flex-wrap:wrap; font-size:11px; color:var(--muted);">
+            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:var(--blue); display:inline-block;"></span>הושלם</span>
+            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#fff; border:1.5px solid var(--blue); display:inline-block;"></span>מתוכנן</span>
+            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#fff; box-shadow:0 0 0 2px #d8342b; display:inline-block;"></span>לא סומן</span>
+            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#e7e6e1; display:inline-block;"></span>ריק / COMING SOON</span>
+            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#fff; box-shadow:0 0 0 2px var(--orange); display:inline-block;"></span>היום</span>
+          </div>
+        </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPRs }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .35s ease both;">
+        <div style="background:linear-gradient(120deg,#3a2a10,#5c4415); color:#fff; border-radius:18px; padding:24px 24px; margin-bottom:20px; box-shadow:0 8px 28px rgba(58,42,16,.22); display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+          <div style="font-size:40px; line-height:1;">🏆</div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:24px; letter-spacing:.05em;">PERSONAL RECORDS</div>
+            <div style="font-size:13px; color:#e8c98a; margin-top:2px;">לוח השיאים שלך — כל אימון שסימנת PR 🏆 נאסף לכאן אוטומטית</div>
+          </div>
+          <div style="text-align:center; background:rgba(255,255,255,.1); border:1px solid rgba(232,165,58,.4); border-radius:14px; padding:10px 18px;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:30px; line-height:1;">{{ prCount }}</div>
+            <div style="font-size:11px; color:#e8c98a; margin-top:3px;">שיאים</div>
+          </div>
+          <button sc-camel-on-click="{{ openSharePRs }}" style="flex:none; background:rgba(255,255,255,.12); border:1px solid rgba(232,165,58,.4); color:#fff; border-radius:12px; padding:11px 16px; font-weight:700; font-size:13px; cursor:pointer;">📤 שתף</button>
+        </div>
+
+        <sc-if value="{{ hasPRs }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px;">
+            <sc-for list="{{ prList }}" as="pr" hint-placeholder-count="4">
+              <button sc-camel-on-click="{{ onCell }}" data-wi="{{ pr.wi }}" data-di="{{ pr.di }}" style="display:flex; align-items:center; gap:14px; text-align:start; background:#fff; border:1px solid var(--line); border-inline-start:4px solid var(--orange); border-radius:14px; padding:16px 18px; cursor:pointer; color:var(--ink); box-shadow:0 4px 16px rgba(20,31,56,.06);">
+                <span style="font-size:22px; flex:none;">🏆</span>
+                <div style="flex:1; min-width:0;">
+                  <div dir="auto" style="font-weight:700; font-size:16px; margin-bottom:3px;">{{ pr.move }}</div>
+                  <div dir="auto" style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; color:var(--blue);">{{ pr.res }}</div>
+                </div>
+                <div style="text-align:end; flex:none;">
+                  <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:14px; color:var(--navy);">{{ pr.week }}</div>
+                  <div style="font-size:11px; color:var(--muted); margin-top:2px;">{{ pr.date }}</div>
+                </div>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noPRs }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center; padding:56px 20px; background:#fff; border:1px solid var(--line); border-radius:18px; color:var(--muted);">
+            <div style="font-size:40px; margin-bottom:10px;">🏆</div>
+            <div style="font-size:15px; font-weight:600; color:var(--ink); margin-bottom:4px;">עדיין אין שיאים</div>
+            <div style="font-size:13px;">כשתסמן אימון כ-PR בסרגל המאמץ, הוא יופיע כאן.</div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isBoard }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeUp .35s ease both;">
+        <div style="background:linear-gradient(120deg,#123a24,#1d6a3f); color:#fff; border-radius:18px; padding:22px 24px; margin-bottom:16px; box-shadow:0 8px 28px rgba(18,58,36,.22);">
+          <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+            <div style="font-size:38px; line-height:1;">🏅</div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:24px; letter-spacing:.05em;">דירוג הבוקס</div>
+              <div style="font-size:13px; color:#a9e0c0; margin-top:2px;">טבלת תחרות · פחות נקודות = מקום גבוה יותר · מצטבר לכל העונה</div>
+            </div>
+            <div style="text-align:center; background:rgba(255,255,255,.1); border:1px solid rgba(169,224,192,.4); border-radius:14px; padding:10px 18px;">
+              <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:30px; line-height:1;">{{ boardCount }}</div>
+              <div style="font-size:11px; color:#a9e0c0; margin-top:3px;">מתחרים</div>
+            </div>
+          </div>
+          <div dir="rtl" style="font-size:11.5px; color:#c7ecd6; margin-top:14px; line-height:1.6; background:rgba(0,0,0,.15); border-radius:10px; padding:9px 12px;">איך מחשבים? בסגנון קרוספיט — <b>פחות נקודות = טוב יותר</b>. <b>70% תוצאה</b>: מקום 1 בתוצאות = 0 נק', וכל מקום מתחת מוסיף נקודות. <b>30% נוכחות</b>: הגעת לכל 5 = 0, כל אימון שהוחמץ = +1. הסכום הנמוך ביותר בעונה = מקום ראשון.</div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:14px;">
+          <button sc-camel-on-click="{{ setWeekMode }}" style="{{ modeWeekStyle }}">שבועי</button>
+          <button sc-camel-on-click="{{ setTotalMode }}" style="{{ modeTotalStyle }}">סה"כ עונה</button>
+        </div>
+
+        <sc-if value="{{ showWeekPills }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px;">
+            <sc-for list="{{ boardWeekPills }}" as="p" hint-placeholder-count="8">
+              <button sc-camel-on-click="{{ onBoardWeek }}" data-wi="{{ p.wi }}" style="{{ p.style }}">
+                <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:14px;">W{{ p.n }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-bottom:16px;">
+          <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; border-radius:16px; padding:20px 22px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+              <div style="font-size:12px; color:#9fb0dd; font-weight:600; letter-spacing:.04em;">הניקוד שלך · שבוע {{ selBoardWeekNum }}</div>
+              <div style="background:rgba(239,91,37,.2); border:1px solid rgba(239,91,37,.5); border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700;">סה"כ עונה: {{ myTotal }}</div>
+            </div>
+            <div style="display:flex; align-items:baseline; gap:8px; margin-top:6px;">
+              <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:46px; line-height:1;">{{ myPoints }}</span>
+              <span style="font-size:12px; color:#9fb0dd;">נק' · פחות = טוב יותר</span>
+            </div>
+            <div style="display:flex; gap:18px; margin-top:14px;">
+              <div><div style="font-size:11px; color:#9fb0dd;">תוצאה (70%)</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px;">{{ myResultPts }}</div><div style="font-size:10.5px; color:#9fb0dd; margin-top:1px;">{{ myPlaceText }}</div></div>
+              <div><div style="font-size:11px; color:#9fb0dd;">החמצות (30%)</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px;">+{{ myMissed }}</div><div style="font-size:10.5px; color:#9fb0dd; margin-top:1px;">נק' לכל אימון שהוחמץ</div></div>
+            </div>
+            <label style="display:flex; flex-direction:column; gap:5px; margin-top:16px;">
+              <span style="font-size:11px; color:#9fb0dd;">התוצאה שלך השבוע (לפי המדד שהמאמן קובע)</span>
+              <input sc-camel-input-mode="numeric" value="{{ myResultVal }}" sc-camel-on-change="{{ onMyResult }}" placeholder="0" style="border:1px solid rgba(255,255,255,.25); border-radius:9px; padding:9px 12px; font-size:15px; background:rgba(255,255,255,.1); color:#fff; outline:none; max-width:160px; font-weight:600;">
+            </label>
+          </div>
+          <div style="background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px 20px;">
+            <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">הניקוד שלך לאורך 8 השבועות</div>
+            <div style="display:flex; align-items:flex-end; gap:6px; height:92px;">
+              <sc-for list="{{ trend }}" as="t" hint-placeholder-count="8">
+                <button sc-camel-on-click="{{ onBoardWeek }}" data-wi="{{ t.wi }}" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:4px; height:100%; background:none; border:none; cursor:pointer; padding:0;">
+                  <span style="{{ t.numStyle }}">{{ t.score }}</span>
+                  <div style="{{ t.barStyle }}"></div>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#fff; border:1px solid var(--line); border-radius:18px; padding:18px 20px; box-shadow:0 6px 24px rgba(20,31,56,.06);">
+          <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">
+            <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">השם שלך בטבלה</span>
+            <sc-if value="{{ nameEditing }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; gap:8px; max-width:380px;">
+                <input dir="auto" value="{{ nameDraft }}" sc-camel-on-change="{{ onNameDraft }}" placeholder="איך יקראו לך בדירוג?" style="flex:1; min-width:0; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:15px; background:#fafaf8; color:var(--ink); outline:none;">
+                <button sc-camel-on-click="{{ confirmName }}" style="flex:none; background:var(--blue); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-weight:700; font-size:14px; cursor:pointer;">אשר</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ notNameEditing }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span dir="auto" style="font-weight:700; font-size:16px; color:var(--ink);">{{ myNameDisplay }}</span>
+                <button sc-camel-on-click="{{ editName }}" style="background:#f4f3ef; color:var(--muted); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">✎ ערוך</button>
+              </div>
+            </sc-if>
+          </div>
+          <div style="display:grid; grid-template-columns:44px 1fr 74px 74px; gap:8px; padding:0 14px 8px; font:600 10px/1 'Oswald'; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);">
+            <span style="text-align:center;">#</span><span>שם</span><span style="text-align:center;">ניקוד</span><span style="text-align:center;">{{ boardSubLabel }}</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:7px;">
+            <sc-for list="{{ boardRows }}" as="r" hint-placeholder-count="3">
+              <div style="{{ r.rowStyle }}">
+                <span style="{{ r.rankStyle }}">{{ r.medal }}</span>
+                <span dir="auto" style="font-weight:700; font-size:14px;">{{ r.name }}</span>
+                <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:19px; color:var(--blue); text-align:center;">{{ r.score }}</span>
+                <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; color:var(--muted); text-align:center;">{{ r.cons }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+          {{ boardEditor }}
+        </sc-if>
+
+        <div dir="rtl" style="text-align:center; margin-top:16px; font-size:11.5px; color:var(--muted); line-height:1.6;">הנקודות שלך מחושבות אוטומטית מהנתונים שלך. מספרי המתחרים מוזנים ידנית על ידי המנהל — לסנכרון חי בין כל המכשירים צריך שרת נתונים משותף.</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isLog }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fadeUp .35s ease both;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+          <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.04em; color:var(--navy);">יומן אימונים</div>
+          <div style="margin-inline-start:auto; display:flex; gap:8px;">
+            <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+              <button sc-camel-on-click="{{ openBuilder }}" style="background:var(--navy); color:#fff; border:none; border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">🛠️ בנה שבוע</button>
+            </sc-if>
+            <button sc-camel-on-click="{{ openShareWeek }}" style="background:#fff; color:var(--blue); border:1px solid var(--blue); border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">📤 שתף שבוע</button>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px;">
+          <sc-for list="{{ weekPills }}" as="p" hint-placeholder-count="8">
+            <button sc-camel-on-click="{{ onWeekPill }}" data-wi="{{ p.wi }}" style="{{ p.style }}">
+              <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:14px;">W{{ p.n }}</span>
+              <span style="font-size:10px; opacity:.8;">{{ p.doneLabel }}</span>
+            </button>
+          </sc-for>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:7px; margin-bottom:18px;">
+          <sc-for list="{{ dayChips }}" as="c" hint-placeholder-count="7">
+            <button sc-camel-on-click="{{ onDayChip }}" data-di="{{ c.di }}" style="{{ c.style }}">
+              <span style="font-size:10px; font-weight:700; letter-spacing:.03em; opacity:.9;">{{ c.dow }}</span>
+              <span style="font-family:'Oswald',sans-serif; font-weight:600; font-size:14px; margin-top:2px;">{{ c.dnum }}</span>
+              <span style="font-size:9px; margin-top:3px;">{{ c.mark }}</span>
+            </button>
+          </sc-for>
+        </div>
+
+        <div style="background:#fff; border:1px solid var(--line); border-radius:18px; overflow:hidden; box-shadow:0 6px 24px rgba(20,31,56,.06);">
+          <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; padding:15px 20px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <button sc-camel-on-click="{{ prevDay }}" style="background:rgba(255,255,255,.12); border:none; color:#fff; width:34px; height:34px; border-radius:10px; cursor:pointer; font-size:18px; flex:none;">‹</button>
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:20px; letter-spacing:.03em;">{{ dayWeekday }}</span>
+                <sc-if value="{{ hasRating }}" hint-placeholder-val="{{ false }}">
+                  <span style="{{ ratingBadgeStyle }}">{{ ratingLabel }}</span>
+                </sc-if>
+              </div>
+              <div style="font-size:13px; color:#b9c4e6;">{{ dayDate }} · WEEK {{ selWeekNum }}</div>
+            </div>
+            <button sc-camel-on-click="{{ nextDay }}" style="background:rgba(255,255,255,.12); border:none; color:#fff; width:34px; height:34px; border-radius:10px; cursor:pointer; font-size:18px; flex:none;">›</button>
+            <div style="margin-inline-start:auto; display:flex; align-items:center; gap:8px;">
+              <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex; background:rgba(255,255,255,.1); border-radius:999px; padding:3px; gap:2px;">
+                  <button sc-camel-on-click="{{ setViewMode }}" style="{{ viewTabStyle }}">צפייה</button>
+                  <button sc-camel-on-click="{{ setEditMode }}" style="{{ editTabStyle }}">עריכה</button>
+                </div>
+              </sc-if>
+              <button sc-camel-on-click="{{ toggleDone }}" style="{{ doneBtnStyle }}">{{ doneBtnLabel }}</button>
+            </div>
+          </div>
+
+          <sc-if value="{{ viewMode }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:16px 18px;">
+              <sc-if value="{{ dayIsEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="text-align:center; padding:44px 16px 40px;">
+                  <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:30px; letter-spacing:.14em; color:var(--blue); opacity:.9;">COMING SOON</div>
+                  <div style="font-size:13px; color:var(--muted); margin-top:8px;">האימון של היום עוד לא פורסם — נמלא אותו יחד כשהוא יעלה.</div>
+                  <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+                    <button sc-camel-on-click="{{ setEditMode }}" style="margin-top:18px; background:var(--blue); color:#fff; border:none; border-radius:999px; padding:10px 22px; font-weight:700; font-size:13px; cursor:pointer;">+ הזן אימון</button>
+                  </sc-if>
+                </div>
+              </sc-if>
+
+              <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; align-items:start;">
+                <sc-if value="{{ vShowLift }}" hint-placeholder-val="{{ true }}">
+                  <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:#fff;">
+                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:#f4f3ef; border-bottom:1px solid var(--line);">
+                      <span style="font-size:15px;">🏋️</span>
+                      <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">LIFT</span>
+                    </div>
+                    <div style="padding:14px 16px; display:flex; flex-direction:column; gap:8px;">
+                      <div dir="auto" style="font-weight:700; font-size:15px;">{{ day.lift.movement }}</div>
+                      <div dir="auto" style="white-space:pre-line; font-size:13px; color:var(--muted); line-height:1.6;">{{ day.lift.planned }}</div>
+                      <div style="display:flex; flex-direction:column; gap:5px; margin-top:4px;">
+                        <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--blue);">✎ התוצאה שלי</span>
+                        {{ liftBar }}
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ vShowMetcon }}" hint-placeholder-val="{{ true }}">
+                  <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:#fff;">
+                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:#f4f3ef; border-bottom:1px solid var(--line);">
+                      <span style="font-size:15px;">⏱️</span>
+                      <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">METCON</span>
+                    </div>
+                    <div style="padding:14px 16px; display:flex; flex-direction:column; gap:8px;">
+                      <div dir="auto" style="font-weight:700; font-size:15px;">{{ day.metcon.name }}</div>
+                      <sc-if value="{{ day.metcon.hasScheme }}" hint-placeholder-val="{{ true }}">
+                        <div dir="auto" style="font-size:13px; color:var(--orange); font-weight:600;">{{ day.metcon.scheme }}</div>
+                      </sc-if>
+                      <div style="display:flex; flex-direction:column; gap:5px; margin-top:2px;">
+                        <sc-for list="{{ day.metcon.viewMovements }}" as="mv" hint-placeholder-count="4">
+                          <div dir="auto" style="display:flex; gap:8px; font-size:13px; align-items:baseline;">
+                            <span style="color:var(--orange); font-weight:700; font-family:'Oswald',sans-serif; flex:none;">{{ mv.num }}</span>
+                            <span style="font-weight:600;">{{ mv.name }}</span>
+                            <span style="color:var(--muted);">{{ mv.detail }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <sc-if value="{{ day.metcon.hasScore }}" hint-placeholder-val="{{ false }}">
+                        <div style="font-size:12px; font-weight:700; color:var(--navy); letter-spacing:.03em; text-transform:uppercase; font-family:'Oswald',sans-serif;">Score — {{ day.metcon.score }}</div>
+                      </sc-if>
+                      <sc-if value="{{ day.metcon.hasNote }}" hint-placeholder-val="{{ false }}">
+                        <div dir="auto" style="white-space:pre-line; font-size:12.5px; color:var(--muted); line-height:1.6; border-top:1px solid var(--line); padding-top:8px; margin-top:2px;">{{ day.metcon.note }}</div>
+                      </sc-if>
+                      <div style="display:flex; flex-direction:column; gap:5px; margin-top:4px;">
+                        <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--blue);">✎ התוצאה שלי</span>
+                        {{ metconBar }}
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ vShowExtra }}" hint-placeholder-val="{{ false }}">
+                  <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:#fff;">
+                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:#f4f3ef; border-bottom:1px solid var(--line);">
+                      <span style="font-size:15px;">➕</span>
+                      <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">EXTRA</span>
+                    </div>
+                    <div style="padding:14px 16px; display:flex; flex-direction:column; gap:14px;">
+                      <sc-for list="{{ day.viewExtras }}" as="ex" hint-placeholder-count="2">
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                          <div dir="auto" style="font-weight:700; font-size:13.5px;">Extra #{{ ex.num }} — {{ ex.name }}</div>
+                          <div dir="auto" style="white-space:pre-line; font-size:12.5px; color:var(--muted); line-height:1.6;">{{ ex.detail }}</div>
+                          {{ ex.resultBar }}
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <div style="border:1px solid rgba(35,64,154,.3); border-radius:16px; overflow:hidden; background:var(--log); grid-column:1 / -1;">
+                  <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:rgba(35,64,154,.1); border-bottom:1px solid rgba(35,64,154,.2);">
+                    <span style="font-size:15px;">📝</span>
+                    <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">SESSION SUMMARY</span>
+                  </div>
+                  <div style="padding:14px 16px; display:flex; flex-direction:column; gap:12px;">
+                    <div>
+                      <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">סרגל מאמץ · איך הרגיש האימון</div>
+                      {{ effortBar }}
+                    </div>
+                    {{ summaryField }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ editMode }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:8px 20px 24px;">
+              <div style="margin-top:18px;">
+                <div style="display:flex; align-items:center; gap:9px; margin-bottom:12px;">
+                  <span style="width:4px; height:20px; background:var(--blue); border-radius:3px;"></span>
+                  <span style="font-size:17px;">🏋️</span>
+                  <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.06em;">LIFT</span>
+                </div>
+                <div style="display:grid; gap:12px;">
+                  <label style="display:flex; flex-direction:column; gap:6px;">
+                    <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">Movement / תרגיל</span>
+                    <input dir="auto" data-path="lift.movement" value="{{ day.lift.movement }}" sc-camel-on-change="{{ onEdit }}" placeholder="למשל: Squat Clean + Jerk" style="{{ inputStyle }}">
+                  </label>
+                  <label style="display:flex; flex-direction:column; gap:6px;">
+                    <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">Planned / תכנית ודגשים</span>
+                    {{ plannedField }}
+                  </label>
+                  <label style="display:flex; flex-direction:column; gap:6px;">
+                    <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--blue);">✎ Your Result / התוצאה שלי</span>
+                    {{ liftBar }}
+                  </label>
+                </div>
+              </div>
+
+              <div style="margin-top:26px;">
+                <div style="display:flex; align-items:center; gap:9px; margin-bottom:12px;">
+                  <span style="width:4px; height:20px; background:var(--orange); border-radius:3px;"></span>
+                  <span style="font-size:17px;">⏱️</span>
+                  <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.06em;">METCON</span>
+                </div>
+                <div style="display:grid; gap:12px;">
+                  <div style="display:grid; grid-template-columns:1.6fr 1fr; gap:12px;">
+                    <label style="display:flex; flex-direction:column; gap:6px;">
+                      <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">WOD Name</span>
+                      <input dir="auto" data-path="metcon.name" value="{{ day.metcon.name }}" sc-camel-on-change="{{ onEdit }}" placeholder="שם / כותרת המטקון" style="{{ inputStyle }}">
+                    </label>
+                    <label style="display:flex; flex-direction:column; gap:6px;">
+                      <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">Scheme</span>
+                      <input dir="auto" data-path="metcon.scheme" value="{{ day.metcon.scheme }}" sc-camel-on-change="{{ onEdit }}" placeholder="AMRAP / For Time / Rounds" style="{{ inputStyle }}">
+                    </label>
+                  </div>
+                  <div style="display:flex; flex-direction:column; gap:7px; background:#faf9f6; border:1px solid var(--line); border-radius:12px; padding:12px;">
+                    <sc-for list="{{ day.metcon.movements }}" as="mv" hint-placeholder-count="4">
+                      <div style="display:grid; grid-template-columns:26px 1fr 1.1fr; gap:8px; align-items:center;">
+                        <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:12px; color:var(--orange); text-align:center;">{{ mv.num }}</span>
+                        <input dir="auto" data-path="metcon.movements.{{ mv.i }}.name" value="{{ mv.name }}" sc-camel-on-change="{{ onEdit }}" placeholder="תנועה" style="{{ inputSm }}">
+                        <input dir="auto" data-path="metcon.movements.{{ mv.i }}.detail" value="{{ mv.detail }}" sc-camel-on-change="{{ onEdit }}" placeholder="חזרות / מרחק / משקל" style="{{ inputSm }}">
+                      </div>
+                    </sc-for>
+                  </div>
+                  <div style="display:flex; flex-direction:column; gap:6px;">
+                    <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--blue);">✎ Your Result / התוצאה שלי</span>
+                    {{ metconBar }}
+                  </div>
+                  <label style="display:flex; flex-direction:column; gap:6px;">
+                    <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">📌 Notes / הערות המטקון</span>
+                    {{ noteField }}
+                  </label>
+                </div>
+              </div>
+
+              <div style="margin-top:26px;">
+                <div style="display:flex; align-items:center; gap:9px; margin-bottom:12px;">
+                  <span style="width:4px; height:20px; background:#7a8194; border-radius:3px;"></span>
+                  <span style="font-size:17px;">➕</span>
+                  <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.06em;">EXTRA / ACCESSORY</span>
+                </div>
+                <div style="display:grid; gap:14px;">
+                  <sc-for list="{{ day.extras }}" as="ex" hint-placeholder-count="2">
+                    <div style="border:1px solid var(--line); border-radius:12px; padding:12px; display:grid; gap:10px;">
+                      <input dir="auto" data-path="extras.{{ ex.i }}.name" value="{{ ex.name }}" sc-camel-on-change="{{ onEdit }}" placeholder="Extra #{{ ex.num }} — שם התרגיל" style="{{ inputStyle }}">
+                      {{ ex.detailField }}
+                      {{ ex.resultBar }}
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="margin-top:26px;">
+                <label style="display:flex; flex-direction:column; gap:6px;">
+                  <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">🏋️ סרגל מאמץ / Effort</span>
+                  {{ effortBar }}
+                </label>
+              </div>
+
+              <div style="margin-top:26px;">
+                <label style="display:flex; flex-direction:column; gap:6px;">
+                  <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">📝 Session Summary / סיכום האימון</span>
+                  {{ summaryField }}
+                </label>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <div style="text-align:center; margin-top:30px; font-size:11px; color:var(--muted);">הנתונים נשמרים אוטומטית במכשיר הזה · CrossFit Bat Yam</div>
+  </main>
+
+  <sc-if value="{{ welcomeOpen }}" hint-placeholder-val="{{ false }}">
+    <div sc-camel-on-click="{{ closeWelcome }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .25s ease both;">
+      <div sc-camel-on-click="{{ stop }}" style="background:#fff; border-radius:24px; width:100%; max-width:440px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto;">
+        <div style="background:linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a); color:#fff; padding:26px 24px 22px; text-align:center;">
+          <img src="assets/img/5ec7dfdd.png" alt="" style="width:56px; height:56px; border-radius:50%; box-shadow:0 0 0 3px rgba(255,255,255,.25); margin-bottom:12px;">
+          <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; letter-spacing:.05em;">ברוכים הבאים 👋</div>
+          <div dir="rtl" style="font-size:13px; color:#b9c4e6; margin-top:6px; line-height:1.6;">לוח המעקב של תוכנית <bdi>Capacity</bdi> — 8 שבועות.<br>ככה מתמצאים בכמה שניות:</div>
+        </div>
+        <div dir="rtl" style="padding:20px 22px; display:flex; flex-direction:column; gap:16px;">
+          <div style="display:flex; gap:12px; align-items:flex-start;">
+            <span style="font-size:20px; flex:none;">📊</span>
+            <div><div style="font-weight:700; font-size:14px;">סקירה</div><div style="font-size:12.5px; color:var(--muted); line-height:1.5;">התקדמות כללית, יעד שבועי, רצף שיא ומפת התוכנית. לחיצה על יום קופצת אליו.</div></div>
+          </div>
+          <div style="display:flex; gap:12px; align-items:flex-start;">
+            <span style="font-size:20px; flex:none;">📅</span>
+            <div><div style="font-weight:700; font-size:14px;">יומן</div><div style="font-size:12.5px; color:var(--muted); line-height:1.5;">האימון היומי — Lift, Metcon ו-Extra. תעד תוצאות, דרג את המאמץ וסמן "הושלם".</div></div>
+          </div>
+          <div style="display:flex; gap:12px; align-items:flex-start;">
+            <span style="font-size:20px; flex:none;">🏆</span>
+            <div><div style="font-weight:700; font-size:14px;">שיאים</div><div style="font-size:12.5px; color:var(--muted); line-height:1.5;">כל אימון שתדרג כ-PR נאסף לכאן אוטומטית.</div></div>
+          </div>
+          <div style="display:flex; gap:12px; align-items:flex-start;">
+            <span style="font-size:20px; flex:none;">📤</span>
+            <div><div style="font-weight:700; font-size:14px;">שיתוף</div><div style="font-size:12.5px; color:var(--muted); line-height:1.5;">ייצא כרטיס של שבוע או של השיאים כתמונה או טקסט — לוואטסאפ או למאמן.</div></div>
+          </div>
+          <div style="display:flex; gap:12px; align-items:flex-start; background:#f4f3ef; border-radius:12px; padding:12px 14px;">
+            <span style="font-size:20px; flex:none;">💬</span>
+            <div><div style="font-weight:700; font-size:14px;">לא ברור משהו? נתקעת?</div><div style="font-size:12.5px; color:var(--muted); line-height:1.6;">שלחו לי הודעה ואשמח לעזור — <a href="https://wa.me/972523330954" target="_blank" style="font-weight:700; white-space:nowrap;">אורי עוזיאל · 052-333-0954</a></div></div>
+          </div>
+          <div style="font-size:11.5px; color:var(--muted); text-align:center;">הנתונים נשמרים אוטומטית במכשיר הזה.</div>
+          <button sc-camel-on-click="{{ closeWelcome }}" style="background:var(--blue); color:#fff; border:none; border-radius:12px; padding:13px; font-weight:700; font-size:15px; cursor:pointer;">יאללה, בואו נתחיל 💪</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ shareOpen }}" hint-placeholder-val="{{ false }}">
+    <div sc-camel-on-click="{{ closeShare }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:95; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .2s ease both;">
+      <div sc-camel-on-click="{{ stop }}" style="background:#fff; border-radius:22px; padding:20px; width:100%; max-width:424px; box-shadow:0 24px 70px rgba(12,18,34,.45); margin:auto;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+          <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.04em; color:var(--navy);">{{ shareTitle }}</div>
+          <button sc-camel-on-click="{{ closeShare }}" style="background:#f4f3ef; border:none; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; color:var(--muted);">✕</button>
+        </div>
+        <div style="display:flex; justify-content:center; margin-bottom:16px;">{{ shareCard }}</div>
+        <div style="display:flex; gap:10px;">
+          <button sc-camel-on-click="{{ shareDownload }}" style="flex:1; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📸 הורד תמונה</button>
+          <button sc-camel-on-click="{{ shareCopy }}" style="flex:1; background:#f4f3ef; color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📋 העתק טקסט</button>
+        </div>
+        <div style="text-align:center; font-size:11px; color:var(--muted); margin-top:12px;">שתף בוואטסאפ, שמור למכשיר או שלח למאמן</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ builderOpen }}" hint-placeholder-val="{{ false }}">
+    <div sc-camel-on-click="{{ closeBuilder }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:95; display:flex; align-items:flex-start; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .2s ease both;">
+      <div sc-camel-on-click="{{ stop }}" style="background:#f4f3ef; border-radius:22px; width:100%; max-width:680px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto;">
+        {{ builderBody }}
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--navy); color:#fff; padding:12px 22px; border-radius:999px; font-weight:600; font-size:14px; z-index:120; box-shadow:0 10px 30px rgba(0,0,0,.3); animation:fadeUp .2s ease both;">{{ toast }}</div>
+  </sc-if>
+
+  <sc-if value="{{ adminOpen }}" hint-placeholder-val="{{ false }}">
+    <div sc-camel-on-click="{{ closeAdmin }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:90; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
+      <div sc-camel-on-click="{{ stop }}" style="background:#fff; border-radius:20px; padding:26px 26px 24px; width:100%; max-width:340px; box-shadow:0 20px 60px rgba(12,18,34,.4);">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+          <img src="assets/img/5ec7dfdd.png" alt="" style="width:34px; height:34px; border-radius:50%;">
+          <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; letter-spacing:.05em; color:var(--navy);">ADMIN ACCESS</div>
+        </div>
+        <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:13px; color:var(--muted); margin:10px 0 18px;">אתה מחובר כמנהל — יש לך הרשאות עריכה מלאות.</div>
+          <button sc-camel-on-click="{{ adminLogout }}" style="width:100%; background:#f4f3ef; color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">התנתק ממצב מנהל</button>
+        </sc-if>
+        <sc-if value="{{ notAdmin }}" hint-placeholder-val="{{ true }}">
+          <div style="font-size:13px; color:var(--muted); margin:10px 0 14px;">הזן קוד מנהל כדי לפתוח עריכת אימונים. שאר המשתמשים יכולים לצפות ולסמן אימון כהושלם.</div>
+          {{ adminInputField }}
+          <sc-if value="{{ adminError }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:12px; color:#d8342b; font-weight:600; margin-top:8px;">קוד שגוי, נסה שוב.</div>
+          </sc-if>
+          <button sc-camel-on-click="{{ adminSubmit }}" style="width:100%; margin-top:14px; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">כניסה</button>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900},&quot;startView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;overview&quot;,&quot;log&quot;],&quot;default&quot;:&quot;overview&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;includeExample&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;showProgramMap&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;adminCode&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;batyam&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Admin&quot;}}">
+class Component extends DCLogic {
+  weekdays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  dowShort = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  startDate = new Date(2026, 6, 12);
+  KEY = 'cfby_tracker_v1';
+  WEEKLY_TARGET = 5;
+
+  emptyDay() {
+    return { done:false, rating:'',
+      lift:{ movement:'', planned:'', result:'', log:{ weight:'', reps:'', note:'' } },
+      metcon:{ name:'', scheme:'', score:'', note:'', result:'', log:{ mode:'time', time:'', rounds:'', reps:'', note:'' }, movements:[{name:'',detail:''},{name:'',detail:''},{name:'',detail:''},{name:'',detail:''}] },
+      extras:[{name:'',detail:'',result:'',log:{text:''}},{name:'',detail:'',result:'',log:{text:''}}],
+      summary:'' };
+  }
+
+  buildProgram(includeExample) {
+    const weeks = [];
+    for (let w=0; w<8; w++) {
+      const days = [];
+      for (let d=0; d<7; d++) days.push(this.emptyDay());
+      weeks.push({ days });
+    }
+    if (includeExample) {
+      const m = weeks[0].days[1];
+      m.rating = 'pr';
+      m.lift = { movement:'Squat Clean + Pause Jerk', planned:'Every 1:30 x 8 sets\n*Pause 2s at receiving position\n\nמוסיפים משקל כל 2 סטים.\nעצירה במנח הקבלה של הג’רק — פוש ג’רק או ספליט, בחירה חופשית.', result:'', log:{ weight:'92.5', reps:'1', note:'שיא אישי חדש! 🎉' } };
+      m.metcon = { name:'CapaciTest #2 — Monostructural', scheme:'3 Rounds For Time', score:'Time', result:'',
+        note:'זה הטסט האירובי שלנו לבלוק הקרוב — נשתדל לשפר אותו בעוד 8 שבועות.\nאפשר להגיע מהריצה ישירות לחתירה אם חסרות מכונות.\nמתאמנים חדשים — חותכים את הריצה ל-400–600m, ואת החזרות ל-15 בכל תנועה.',
+        movements:[{name:'800m Run',detail:'each round'},{name:'Box Jump',detail:'20 reps @ 24/20" — step down'},{name:'Burpees to Plate',detail:'20 reps'},{name:'Cal Row',detail:'20/15 cals'}] };
+      m.extras = [
+        { name:'Pull Up — CapaciTest #3', detail:'Every 30s x 10 sets (5:00) · Strict\nבחר מספר חזרות והישאר עקבי · רצועה 1–6 במידת הצורך\nתלייה מלאה, סנטר מעל המוט · תעד סה"כ חזרות ל-5:00', result:'' },
+        { name:'Alternating EMOM 9:00', detail:'Min 1: 8+8 DB Hammer Curl\nMin 2: 10 Banded Face Pulls\nMin 3: 20s Copenhagen Plank / side', result:'' }
+      ];
+    }
+    return weeks;
+  }
+
+  normalizeDay(o) {
+    const nd = this.emptyDay();
+    if (!o) return nd;
+    nd.done = !!o.done;
+    nd.rating = o.rating || '';
+    if (o.lift) {
+      nd.lift.movement = o.lift.movement || '';
+      nd.lift.planned = o.lift.planned || '';
+      const oldRes = o.lift.result || [o.lift.actual, o.lift.progress].filter(Boolean).join(' · ') || '';
+      const L = o.lift.log || {};
+      nd.lift.log = { weight: L.weight||'', reps: L.reps||'', note: L.note!==undefined ? L.note : oldRes };
+    }
+    const src = o.metcon || o.wod;
+    if (src) {
+      nd.metcon.name = src.name || '';
+      nd.metcon.scheme = src.scheme || '';
+      nd.metcon.score = src.score || '';
+      nd.metcon.note = (o.metcon ? (o.metcon.note || '') : (o.notes || ''));
+      const M = src.log || {};
+      nd.metcon.log = { mode: M.mode||'time', time: M.time||'', rounds: M.rounds||'', reps: M.reps||'', note: M.note!==undefined ? M.note : (src.result||'') };
+      if (Array.isArray(src.movements)) src.movements.forEach((m,i)=>{ if(i<4){ nd.metcon.movements[i].name=m.name||''; nd.metcon.movements[i].detail=m.detail||''; }});
+    }
+    if (Array.isArray(o.extras)) o.extras.forEach((e,i)=>{ if(i<2){ const EL=e.log||{}; nd.extras[i]={name:e.name||'',detail:e.detail||'',result:e.result||'',log:{text: EL.text!==undefined ? EL.text : (e.result||'')}}; }});
+    nd.summary = o.summary || '';
+    return nd;
+  }
+  normalizeWeeks(weeks) {
+    const norm = this.buildProgram(false);
+    if (Array.isArray(weeks)) weeks.forEach((wk,wi)=>{ if(wi<8 && wk && Array.isArray(wk.days)) wk.days.forEach((d,di)=>{ if(di<7) norm[wi].days[di]=this.normalizeDay(d); }); });
+    return norm;
+  }
+
+  cwi() {
+    const t = new Date(); t.setHours(0,0,0,0);
+    const idx = Math.floor((t - this.startDate) / 86400000);
+    return Math.max(0, Math.min(7, Math.floor(idx / 7)));
+  }
+  todayIdx() {
+    const t = new Date(); t.setHours(0,0,0,0);
+    const idx = Math.floor((t - this.startDate) / 86400000);
+    return (idx >= 0 && idx < 56) ? idx : -1;
+  }
+
+  state = {
+    view: (this.props && this.props.startView) || 'overview',
+    editMode: false,
+    selWeek: this.cwi(),
+    selDay: 1,
+    data: this.buildProgram(true),
+    isAdmin: false,
+    adminOpen: false,
+    adminInput: '',
+    adminError: false,
+    shareOpen: false,
+    shareType: 'week',
+    shareWi: 0,
+    builderOpen: false,
+    builderWi: 0,
+    builderDay: -1,
+    reminderDismissed: false,
+    toast: '',
+    welcomeOpen: false,
+    board: [],
+    myName: '',
+    editingName: false,
+    nameDraft: '',
+    selBoardWeek: 0,
+    boardMode: 'week',
+    myResults: {}
+  };
+  WELCOME_KEY = 'cfby_welcome_v1';
+  BOARD_KEY = 'cfby_board_v1';
+
+  adminCode() { return (this.props && this.props.adminCode) || 'batyam'; }
+
+  componentDidMount() {
+    let saved = null;
+    try { const raw = localStorage.getItem(this.KEY); if (raw) saved = JSON.parse(raw); } catch (e) {}
+    if (saved && Array.isArray(saved.weeks)) {
+      if (saved.v >= 2) this.setState({ data: this.normalizeWeeks(saved.weeks) });
+      else { const fresh = this.buildProgram(this.props && this.props.includeExample === false ? false : true); this.save(fresh); this.setState({ data: fresh }); }
+    } else if (this.props && this.props.includeExample === false) {
+      this.setState({ data: this.buildProgram(false) });
+    }
+    const ti = this.todayIdx();
+    if (ti >= 0) this.setState({ selWeek: Math.floor(ti/7), selDay: ti%7 });
+    this.setState({ selBoardWeek: this.cwi() });
+    try { if (localStorage.getItem('cfby_admin') === '1') this.setState({ isAdmin: true }); } catch (e) {}
+    try { if (!localStorage.getItem(this.WELCOME_KEY)) this.setState({ welcomeOpen: true }); } catch (e) {}
+    try { const raw = localStorage.getItem(this.BOARD_KEY); if (raw) { const b = JSON.parse(raw); this.setState({ board: (Array.isArray(b.board)?b.board:[]).map(a=>({ id:a.id||(Date.now()+Math.random()), name:a.name||'', weeks:a.weeks||{} })), myName: b.myName||'', nameDraft: b.myName||'', myResults: b.myResults||{} }); } } catch (e) {}
+  }
+  EFFORT_PTS = { pr:100, good:80, average:55, missed:0 };
+  weekStats(wi) {
+    const completed = Math.min(this.WEEKLY_TARGET, this.state.data[wi].days.filter(d=>d.done).length);
+    return { completed };
+  }
+  computeWeek(wi) {
+    const AV = this.WEEKLY_TARGET;
+    const RMAX = AV * (70/30);
+    const mr = this.state.myResults || {};
+    const entrants = [];
+    entrants.push({ id:'me', you:true, name:(this.state.myName||'אני')+' (אתה)', completed:this.weekStats(wi).completed, result:+mr[wi]||0 });
+    this.state.board.forEach(a=>{ const wk=(a.weeks&&a.weeks[wi])||{}; entrants.push({ id:a.id, you:false, name:a.name||'ללא שם', completed:Math.min(AV,+wk.completed||0), result:+wk.result||0 }); });
+    const posted = entrants.map(e=>e.result).filter(x=>x>0);
+    const M = posted.length;
+    entrants.forEach(e=>{
+      e.missed = Math.max(0, AV - Math.min(AV, e.completed));
+      let rp, placement = null;
+      if (e.result > 0) {
+        const greater = posted.filter(x=>x>e.result).length;
+        const eq = posted.filter(x=>x===e.result).length;
+        placement = 1 + greater + (eq-1)/2;
+        rp = M > 1 ? (placement-1)/(M-1) * RMAX : 0;
+      } else {
+        rp = M > 0 ? RMAX : 0;
+      }
+      e.placement = placement;
+      e.resultPts = Math.round(rp*10)/10;
+      e.points = Math.round((rp + e.missed)*10)/10;
+    });
+    return entrants;
+  }
+  myTotalScore() { let s=0; for (let w=0; w<8; w++) { const me=this.computeWeek(w).find(e=>e.you); s += me?me.points:0; } return Math.round(s*10)/10; }
+  segLight(active) { return 'border:none; cursor:pointer; padding:8px 18px; border-radius:999px; font-weight:700; font-size:13px; transition:all .15s; ' + (active ? 'background:var(--navy); color:#fff;' : 'background:#eeede8; color:var(--muted);'); }
+  saveBoard() { try { localStorage.setItem(this.BOARD_KEY, JSON.stringify({ board:this.state.board, myName:this.state.myName, myResults:this.state.myResults })); } catch (e) {} }
+  editAthleteName(id, val) { const board = this.state.board.map(a=> a.id===id ? { ...a, name:val } : a); this.setState({ board }, ()=>this.saveBoard()); }
+  editAthleteWeek(id, wi, field, val) {
+    const board = this.state.board.map(a=>{ if (a.id!==id) return a; const weeks={ ...(a.weeks||{}) }; const cur={ ...(weeks[wi]||{}) }; cur[field] = parseInt(val,10)||0; weeks[wi]=cur; return { ...a, weeks }; });
+    this.setState({ board }, ()=>this.saveBoard());
+  }
+  addAthlete() { const board = [...this.state.board, { id:Date.now(), name:'', weeks:{} }]; this.setState({ board }, ()=>this.saveBoard()); }
+  removeAthlete(id) { const board = this.state.board.filter(a=>a.id!==id); this.setState({ board }, ()=>this.saveBoard()); }
+  boardEditorEl() {
+    const bw = this.state.selBoardWeek;
+    const numStyle = { border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 4px', fontSize:'14px', background:'#fff', color:'var(--ink)', outline:'none', textAlign:'center', fontWeight:600, boxSizing:'border-box', width:'100%' };
+    const selStyle = { border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 6px', fontSize:'12.5px', background:'#fff', color:'var(--ink)', outline:'none', boxSizing:'border-box', width:'100%', fontFamily:'inherit', cursor:'pointer' };
+    const rows = this.state.board.map((a)=>{
+      const wk = (a.weeks && a.weeks[bw]) || {};
+      return React.createElement('div', { key:a.id, style:{ display:'grid', gridTemplateColumns:'1fr 58px 72px 36px', gap:'8px', alignItems:'center' } },
+        React.createElement('input', { dir:'auto', value:a.name||'', placeholder:'שם המתחרה', onChange:(e)=>this.editAthleteName(a.id,e.target.value), style:{ border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 10px', fontSize:'14px', background:'#fff', color:'var(--ink)', outline:'none', boxSizing:'border-box', width:'100%' } }),
+        React.createElement('input', { inputMode:'numeric', value:wk.completed||0, onChange:(e)=>this.editAthleteWeek(a.id,bw,'completed',e.target.value), style:numStyle }),
+        React.createElement('input', { inputMode:'numeric', value:wk.result||0, onChange:(e)=>this.editAthleteWeek(a.id,bw,'result',e.target.value), style:numStyle }),
+        React.createElement('button', { onClick:()=>this.removeAthlete(a.id), title:'הסר', style:{ background:'#fdecea', color:'#d8342b', border:'none', borderRadius:'9px', padding:'8px 0', fontWeight:700, fontSize:'14px', cursor:'pointer' } }, '✕')
+      );
+    });
+    return React.createElement('div', { style:{ background:'#fff', border:'1px solid var(--line)', borderRadius:'16px', padding:'18px 20px', marginTop:'14px' } },
+      React.createElement('div', { style:{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'4px', flexWrap:'wrap', gap:'8px' } },
+        React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'15px', letterSpacing:'.04em', color:'var(--navy)' } }, '🔧 ניהול מתחרים · שבוע '+(bw+1)),
+        React.createElement('div', { style:{ fontSize:'11px', color:'var(--muted)' } }, 'שם · הושלמו · תוצאה')
+      ),
+      React.createElement('div', { style:{ fontSize:'11.5px', color:'var(--muted)', marginBottom:'12px', lineHeight:1.5 } }, 'לכל מתחרה: כמה אימונים השלים (מתוך 5) ומספר "תוצאה" משותף לפי מדד שאתה קובע — הניקוד היחסי מחושב מול החציון של כל המתחרים.'),
+      React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } }, rows.length ? rows : React.createElement('div', { style:{ fontSize:'13px', color:'var(--muted)' } }, 'אין מתחרים עדיין — הוסף למטה.')),
+      React.createElement('button', { onClick:()=>this.addAthlete(), style:{ marginTop:'12px', background:'var(--blue)', color:'#fff', border:'none', borderRadius:'10px', padding:'10px 18px', fontWeight:700, fontSize:'13px', cursor:'pointer' } }, '+ הוסף מתחרה')
+    );
+  }
+
+  gIndex() { const t = new Date(); t.setHours(0,0,0,0); return Math.floor((t - this.startDate) / 86400000); }
+  isMissed(gi, day) { return gi < this.gIndex() && !day.done && this.dayHasPlan(day); }
+
+  save(weeks) { try { localStorage.setItem(this.KEY, JSON.stringify({ v:2, weeks })); } catch (e) {} }
+
+  setDeep(root, path, val) {
+    const parts = path.split('.');
+    let o = root;
+    for (let i=0; i<parts.length-1; i++) { const k = /^\d+$/.test(parts[i]) ? +parts[i] : parts[i]; o = o[k]; }
+    const last = parts[parts.length-1];
+    o[/^\d+$/.test(last) ? +last : last] = val;
+  }
+
+  areaEl(path, val, ph, min) {
+    return React.createElement('textarea', {
+      dir: 'auto', value: val || '', placeholder: ph,
+      onChange: (e) => this.onEditPath(path, e.target.value),
+      style: { border:'1px solid var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'14px', background:'#fafaf8', color:'var(--ink)', outline:'none', width:'100%', minHeight:(min||64)+'px', resize:'vertical', whiteSpace:'pre-wrap', fontFamily:'inherit', lineHeight:1.5 }
+    });
+  }
+  onEditPath(path, val) {
+    const d = structuredClone(this.state.data);
+    this.setDeep(d[this.state.selWeek].days[this.state.selDay], path, val);
+    this.save(d); this.setState({ data: d });
+  }
+
+  RATINGS = [
+    { k:'pr',      label:'PR',      emoji:'🏆', color:'#e8a53a' },
+    { k:'good',    label:'Good',    emoji:'💪', color:'#3fbf6a' },
+    { k:'average', label:'Average', emoji:'😐', color:'#7a8194' },
+    { k:'missed',  label:'Missed',  emoji:'❌', color:'#d8342b' }
+  ];
+  ratingMeta(k) { return this.RATINGS.find(r=>r.k===k) || null; }
+
+  effortBar(current, editable) {
+    return React.createElement('div', { style:{ display:'flex', gap:'8px', flexWrap:'wrap' } },
+      this.RATINGS.map(r => {
+        const on = current === r.k;
+        return React.createElement('button', {
+          key: r.k,
+          onClick: editable ? (()=>this.onEditPath('rating', on ? '' : r.k)) : undefined,
+          disabled: !editable && !on,
+          style: {
+            flex:'1 1 0', minWidth:'70px', display:'flex', alignItems:'center', justifyContent:'center', gap:'6px',
+            padding:'10px 8px', borderRadius:'12px', fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'13px',
+            letterSpacing:'.04em', cursor: editable ? 'pointer' : 'default', transition:'all .15s',
+            border: on ? ('1.5px solid '+r.color) : '1.5px solid var(--line)',
+            background: on ? r.color : '#fff',
+            color: on ? '#fff' : (editable ? 'var(--ink)' : '#c9cace'),
+            opacity: (!editable && !on) ? .45 : 1
+          }
+        }, React.createElement('span', { style:{ fontSize:'15px' } }, r.emoji), r.label);
+      })
+    );
+  }
+
+  numEl(path, val, ph, w) {
+    return React.createElement('input', {
+      dir:'auto', inputMode:'decimal', value: val || '', placeholder: ph,
+      onChange:(e)=>this.onEditPath(path, e.target.value),
+      style:{ width: w||'100%', border:'1px solid rgba(35,64,154,.35)', borderRadius:'10px', padding:'10px 12px', fontSize:'15px', background:'var(--log)', color:'var(--ink)', outline:'none', fontWeight:600, textAlign:'center' }
+    });
+  }
+  txtEl(path, val, ph) {
+    return React.createElement('input', {
+      dir:'auto', value: val || '', placeholder: ph,
+      onChange:(e)=>this.onEditPath(path, e.target.value),
+      style:{ flex:1, minWidth:'120px', border:'1px solid rgba(35,64,154,.35)', borderRadius:'10px', padding:'10px 12px', fontSize:'14px', background:'var(--log)', color:'var(--ink)', outline:'none' }
+    });
+  }
+  unit(el, label) {
+    return React.createElement('div', { style:{ flex:1, display:'flex', flexDirection:'column', gap:'4px', alignItems:'stretch' } },
+      React.createElement('span', { style:{ font:"600 9px/1 'Oswald'", letterSpacing:'.08em', textTransform:'uppercase', color:'var(--muted)', textAlign:'center' } }, label),
+      el
+    );
+  }
+
+  liftBar(lift) {
+    const L = lift.log || {};
+    return React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
+      this.unit(this.numEl('lift.log.weight', L.weight, '0'), 'kg / משקל'),
+      React.createElement('span', { style:{ fontWeight:700, color:'var(--muted)', paddingBottom:'10px' } }, '×'),
+      this.unit(this.numEl('lift.log.reps', L.reps, '0'), 'reps / חזרות'),
+      this.unit(this.txtEl('lift.log.note', L.note, 'הערה'), 'note')
+    );
+  }
+  metconBar(metcon) {
+    const M = metcon.log || {};
+    const mode = M.mode || 'time';
+    const seg = (k, lbl) => React.createElement('button', {
+      key:k, onClick:()=>this.onEditPath('metcon.log.mode', k),
+      style:{ flex:1, border:'none', cursor:'pointer', padding:'6px 10px', borderRadius:'8px', fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'12px', transition:'all .15s',
+        background: mode===k ? 'var(--blue)' : 'transparent', color: mode===k ? '#fff' : 'var(--muted)' }
+    }, lbl);
+    const inputs = mode==='time'
+      ? this.unit(this.txtEl('metcon.log.time', M.time, 'mm:ss'), 'time / זמן')
+      : React.createElement(React.Fragment, null,
+          this.unit(this.numEl('metcon.log.rounds', M.rounds, '0'), 'rounds / סבבים'),
+          React.createElement('span', { style:{ fontWeight:700, color:'var(--muted)', paddingBottom:'10px' } }, '+'),
+          this.unit(this.numEl('metcon.log.reps', M.reps, '0'), 'reps / חזרות')
+        );
+    return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } },
+      React.createElement('div', { style:{ display:'flex', gap:'2px', background:'#eeede8', borderRadius:'10px', padding:'3px', width:'fit-content' } }, seg('time','Time'), seg('rounds','Rounds + Reps')),
+      React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } }, inputs, this.unit(this.txtEl('metcon.log.note', M.note, 'הערה'), 'note'))
+    );
+  }
+  extraBar(i, ex) {
+    const E = ex.log || {};
+    return this.txtEl('extras.'+i+'.log.text', E.text, '✎ זמן / משקל / חזרות / תוצאה');
+  }
+  logSummaryText(day) {
+    const parts = [];
+    const L = day.lift.log||{}; if (L.weight||L.reps) parts.push([L.weight&&(L.weight+'kg'), L.reps&&(L.reps+' reps')].filter(Boolean).join(' × '));
+    const M = day.metcon.log||{};
+    if (M.mode==='time' && M.time) parts.push(M.time);
+    else if ((M.rounds||M.reps)) parts.push([M.rounds&&(M.rounds+' rds'), M.reps&&(M.reps+' reps')].filter(Boolean).join(' + '));
+    return parts.join(' · ');
+  }
+
+  dateAt(i) { const d = new Date(this.startDate); d.setDate(d.getDate()+i); return d; }
+  pad(n) { return String(n).padStart(2,'0'); }
+  dateStr(d) { return this.pad(d.getDate())+'/'+this.pad(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(2); }
+  rangeStr(wi) { const a=this.dateAt(wi*7), b=this.dateAt(wi*7+6); return this.pad(a.getDate())+'/'+this.pad(a.getMonth()+1)+' — '+this.pad(b.getDate())+'/'+this.pad(b.getMonth()+1); }
+
+  dayHasPlan(day) {
+    return !!(day.lift.movement || day.lift.planned || day.metcon.name || day.metcon.note ||
+      day.metcon.movements.some(m=>m.name||m.detail) || day.extras.some(e=>e.name||e.detail));
+  }
+  dayState(day) { if (day.done) return 'done'; return this.dayHasPlan(day) ? 'planned' : 'empty'; }
+
+  renderVals() {
+    const { view, editMode, selWeek, selDay, data } = this.state;
+    const props = this.props || {};
+    const cwi = this.cwi(), ti = this.todayIdx();
+
+    let done=0, best=0, run=0;
+    const flat = [];
+    for (let w=0; w<8; w++) for (let d=0; d<7; d++) flat.push(data[w].days[d]);
+    flat.forEach(day=>{ if (day.done) { done++; run++; best=Math.max(best,run); } else run=0; });
+    const target = this.WEEKLY_TARGET * 8;
+    const pct = Math.round(done/target*100);
+
+    const gnow = this.gIndex();
+    const unlogged = [];
+    for (let g=0; g<56 && g<=gnow; g++) { const dd=data[Math.floor(g/7)].days[g%7]; if (this.dayHasPlan(dd) && !dd.done) unlogged.push(g); }
+
+    const heatWeeks = data.map((wk, wi) => ({
+      n: wi+1,
+      cells: wk.days.map((day, di) => {
+        const gi = wi*7+di; const st = this.dayState(day);
+        return { wi, di, dnum: this.dateAt(gi).getDate(), title: this.dowShort[di]+' '+this.dateStr(this.dateAt(gi)), cellStyle: this.cellStyle(st, gi===ti, this.isMissed(gi,day)) };
+      })
+    }));
+
+    const thisWeekCells = data[cwi].days.map((day, di) => {
+      const gi = cwi*7+di; const st = this.dayState(day);
+      return { wi: cwi, di, dow: this.dowShort[di], dnum: this.dateAt(gi).getDate(), title: this.dowShort[di]+' '+this.dateStr(this.dateAt(gi)), miniStyle: this.miniStyle(st, gi===ti, this.isMissed(gi,day)) };
+    });
+    const curWeekDone = data[cwi].days.filter(x=>x.done).length;
+
+    const weekPills = data.map((wk, wi) => {
+      const dn = wk.days.filter(x=>x.done).length;
+      return { wi, n: wi+1, doneLabel: dn?(dn+'/5'):'·', style: this.pillStyle(wi===selWeek) };
+    });
+
+    const dayChips = data[selWeek].days.map((day, di) => {
+      const gi = selWeek*7+di; const st = this.dayState(day);
+      return { di, dow: this.dowShort[di], dnum: this.dateAt(gi).getDate(), mark: day.done ? '✓' : (this.dayHasPlan(day) ? '•' : ''), style: this.chipStyle(st, di===selDay, gi===ti, this.isMissed(gi,day)) };
+    });
+
+    const day = data[selWeek].days[selDay];
+    const gi = selWeek*7+selDay;
+    const met = day.metcon;
+    const viewMovements = met.movements.map((m,i)=>({ num:i+1, name:m.name, detail:m.detail })).filter(m=>m.name||m.detail);
+    const viewExtras = day.extras.map((e,i)=>({ i, num:i+1, name:e.name, detail:e.detail, result:e.result, resultBar:this.extraBar(i,e) })).filter(e=>e.name||e.detail);
+
+    const vShowLift = !!(day.lift.movement || day.lift.planned);
+    const vShowMetcon = !!(met.name || met.scheme || met.note || viewMovements.length);
+    const vShowExtra = viewExtras.length > 0;
+
+    const dayObj = {
+      done: day.done,
+      lift: { movement: day.lift.movement, planned: day.lift.planned, result: day.lift.result },
+      metcon: {
+        name: met.name, scheme: met.scheme, score: met.score, note: met.note, result: met.result,
+        hasScheme: !!met.scheme, hasScore: !!met.score, hasNote: !!met.note,
+        movements: met.movements.map((m,i)=>({ i, num:i+1, name:m.name, detail:m.detail })),
+        viewMovements
+      },
+      extras: day.extras.map((e,i)=>({ i, num:i+1, name:e.name, detail:e.detail, result:e.result,
+        detailField: this.areaEl('extras.'+i+'.detail', e.detail, 'פירוט / סכימה', 56),
+        resultBar: this.extraBar(i, e) })),
+      viewExtras
+    };
+    const rMeta = this.ratingMeta(day.rating);
+
+    const prList = [];
+    for (let w=0; w<8; w++) for (let d=0; d<7; d++) {
+      const dd = data[w].days[d];
+      if (dd.rating !== 'pr') continue;
+      const gi = w*7+d;
+      const move = dd.lift.movement || dd.metcon.name || (dd.extras.find(e=>e.name)||{}).name || 'Workout';
+      const res = this.logSummaryText(dd) || (dd.lift.log&&dd.lift.log.note) || (dd.metcon.log&&dd.metcon.log.note) || '';
+      prList.push({ wi:w, di:d, move, res, date:this.dateStr(this.dateAt(gi)), week:'W'+(w+1) });
+    }
+    prList.reverse();
+
+    const bw = this.state.selBoardWeek;
+    const mode = this.state.boardMode;
+    const AV = this.WEEKLY_TARGET;
+    const wkEntrants = this.computeWeek(bw);
+    const postedCount = wkEntrants.filter(e=>e.result>0).length;
+    const myE = wkEntrants.find(e=>e.you) || { points:0, resultPts:0, missed:0, placement:null, completed:0 };
+    const myTotal = this.myTotalScore();
+    let ranked;
+    if (mode==='total') {
+      const tot = {};
+      for (let w=0; w<8; w++) this.computeWeek(w).forEach(e=>{ const t = tot[e.id] || (tot[e.id] = { name:e.name, you:e.you, sum:0 }); t.sum += e.points; });
+      ranked = Object.keys(tot).map(k=>({ name:tot[k].name, you:tot[k].you, score:Math.round(tot[k].sum*10)/10, sub:'ממוצע '+(Math.round(tot[k].sum/8*10)/10) })).sort((a,b)=>a.score-b.score);
+    } else {
+      ranked = wkEntrants.map(e=>({ name:e.name, you:e.you, score:e.points, sub:e.placement?('#'+Math.round(e.placement)):'—' })).sort((a,b)=>a.score-b.score);
+    }
+    const boardRows = ranked.map((a,i)=>({
+      name:a.name, score:a.score, cons:a.sub,
+      medal: i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1),
+      rowStyle: (a.you ? 'background:rgba(239,91,37,.1); border:1px solid rgba(239,91,37,.45);' : 'background:#fff; border:1px solid var(--line);') + ' display:grid; grid-template-columns:44px 1fr 74px 74px; align-items:center; gap:8px; padding:12px 14px; border-radius:12px;',
+      rankStyle: "font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; text-align:center;" + (i<3 ? '' : ' color:var(--muted);')
+    }));
+    const boardWeekPills = data.map((wk,wi)=>({ wi, n:wi+1, style:this.pillStyle(wi===bw) }));
+    const MAXW = AV*(70/30)+AV;
+    const trend = data.map((wk,wi)=>{ const me=this.computeWeek(wi).find(e=>e.you); const s=me?me.points:0; return { wi, score:s, barStyle:'width:100%; border-radius:5px 5px 0 0; min-height:3px; height:'+Math.max(3,Math.min(100,s/MAXW*100))+'%; background:'+(wi===bw?'var(--orange)':'rgba(35,64,154,.45)')+'; transition:height .2s;', numStyle:'font-family:\'Oswald\',sans-serif; font-weight:700; font-size:11px; color:'+(wi===bw?'var(--orange)':'var(--muted)')+';' }; });
+
+    return {
+      logo: 'assets/logo.png',
+      isOverview: view==='overview', isLog: view==='log', isPRs: view==='prs', isBoard: view==='board',
+      setBoard: ()=>this.setState({view:'board'}),
+      tabBoardStyle: this.tabStyle(view==='board'),
+      boardRows, boardCount: ranked.length,
+      selBoardWeekNum: bw+1,
+      boardWeekPills, trend,
+      onBoardWeek: (e)=>this.setState({ selBoardWeek:+e.currentTarget.dataset.wi }),
+      isTotalMode: mode==='total', showWeekPills: mode!=='total',
+      setWeekMode: ()=>this.setState({ boardMode:'week' }),
+      setTotalMode: ()=>this.setState({ boardMode:'total' }),
+      modeWeekStyle: this.segLight(mode!=='total'), modeTotalStyle: this.segLight(mode==='total'),
+      boardSubLabel: mode==='total' ? 'ממוצע' : 'מקום',
+      myPoints: myE.points, myResultPts: myE.resultPts, myMissed: myE.missed, myTotal,
+      myPlaceText: (myE.placement ? ('מקום '+Math.round(myE.placement)+' מתוך '+postedCount) : 'לא הוזנה תוצאה'),
+      myResultVal: (this.state.myResults||{})[bw]||'',
+      onMyResult: (e)=>{ const v=parseInt(e.target.value,10)||0; const mr={ ...(this.state.myResults||{}) }; mr[bw]=v; this.setState({ myResults:mr }, ()=>this.saveBoard()); },
+      myNameDisplay: this.state.myName,
+      nameEditing: this.state.editingName || !this.state.myName,
+      notNameEditing: !(this.state.editingName || !this.state.myName),
+      nameDraft: this.state.nameDraft,
+      onNameDraft: (e)=>this.setState({ nameDraft:e.target.value }),
+      confirmName: ()=>{ const v=(this.state.nameDraft||'').trim(); if(!v) return; this.setState({ myName:v, editingName:false }, ()=>this.saveBoard()); },
+      editName: ()=>this.setState({ editingName:true, nameDraft:this.state.myName }),
+      boardEditor: this.boardEditorEl(),
+      showProgramMap: props.showProgramMap !== false,
+      setOverview: ()=>this.setState({view:'overview'}),
+      setLog: ()=>this.setState({view:'log'}),
+      setPRs: ()=>this.setState({view:'prs'}),
+      tabOverviewStyle: this.tabStyle(view==='overview'),
+      tabLogStyle: this.tabStyle(view==='log'),
+      tabPRStyle: this.tabStyle(view==='prs'),
+
+      viewMode: !(editMode && this.state.isAdmin), editMode: editMode && this.state.isAdmin,
+      setViewMode: ()=>this.setState({editMode:false}),
+      setEditMode: ()=>this.setState({editMode:true}),
+      isAdmin: this.state.isAdmin, notAdmin: !this.state.isAdmin,
+      adminOpen: this.state.adminOpen, adminError: this.state.adminError,
+      openAdmin: ()=>this.setState({adminOpen:true, adminError:false, adminInput:''}),
+      closeAdmin: ()=>this.setState({adminOpen:false}),
+      stop: (e)=>e.stopPropagation(),
+      adminInputField: this.adminInputEl(),
+      adminSubmit: ()=>this.submitAdmin(),
+      adminLogout: ()=>{ try{localStorage.removeItem('cfby_admin');}catch(e){} this.setState({isAdmin:false, adminOpen:false, editMode:false}); },
+      viewTabStyle: this.segStyle(!editMode),
+      editTabStyle: this.segStyle(editMode),
+
+      statSessions: done, statTarget: target, statPct: pct, statStreak: best,
+      statWeekly: curWeekDone + '/' + this.WEEKLY_TARGET,
+      curWeekNum: cwi+1, curWeekRange: this.rangeStr(cwi), curWeekDone,
+      dowHeaders: this.dowShort,
+      heatWeeks, thisWeekCells, weekPills, dayChips,
+      prList, hasPRs: prList.length>0, noPRs: prList.length===0, prCount: prList.length,
+
+      selWeekNum: selWeek+1,
+      day: dayObj,
+      effortBar: this.effortBar(day.rating, true),
+      effortBarView: this.effortBar(day.rating, false),
+      liftBar: this.liftBar(day.lift),
+      metconBar: this.metconBar(day.metcon),
+      hasRating: !!rMeta,
+      ratingLabel: rMeta ? (rMeta.emoji + ' ' + rMeta.label) : '',
+      ratingBadgeStyle: rMeta ? ('display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; font-family:\'Oswald\',sans-serif; font-weight:700; font-size:12px; letter-spacing:.04em; color:#fff; background:'+rMeta.color+';') : 'display:none;',
+      dayWeekday: this.weekdays[selDay],
+      dayDate: this.dateStr(this.dateAt(gi)),
+      dayIsEmpty: !vShowLift && !vShowMetcon && !vShowExtra,
+      vShowLift, vShowMetcon, vShowExtra,
+      plannedField: this.areaEl('lift.planned', day.lift.planned, 'סטים, חזרות, אחוזים, דגשים…', 80),
+      noteField: this.areaEl('metcon.note', met.note, 'הערות / הסבר על המטקון…', 64),
+      summaryField: this.areaEl('summary', day.summary, 'איך היה האימון? תחושה, שיאים, מה לשפר בפעם הבאה…', 130),
+      doneBtnStyle: this.doneBtnStyle(day.done),
+      doneBtnLabel: day.done ? '✓ הושלם' : 'סמן כהושלם',
+
+      inputStyle: 'border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:15px; background:#fafaf8; color:var(--ink); outline:none; width:100%;',
+      inputSm: 'border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:14px; background:#fff; color:var(--ink); outline:none; width:100%;',
+      logStyle: 'border:1px solid rgba(35,64,154,.35); border-radius:10px; padding:10px 12px; font-size:15px; background:var(--log); color:var(--ink); outline:none; width:100%; font-weight:500;',
+
+      onCell: (e)=>{ const wi=+e.currentTarget.dataset.wi, di=+e.currentTarget.dataset.di; this.setState({view:'log', selWeek:wi, selDay:di}); },
+      onWeekPill: (e)=>this.setState({selWeek:+e.currentTarget.dataset.wi}),
+      onDayChip: (e)=>this.setState({selDay:+e.currentTarget.dataset.di}),
+      gotoToday: ()=>{ const t=this.todayIdx(); if(t>=0) this.setState({view:'log', selWeek:Math.floor(t/7), selDay:t%7}); else this.setState({view:'log'}); },
+      prevDay: ()=>this.step(-1),
+      nextDay: ()=>this.step(1),
+      toggleDone: ()=>{ const d=structuredClone(this.state.data); d[selWeek].days[selDay].done=!d[selWeek].days[selDay].done; this.save(d); this.setState({data:d}); },
+      onEdit: (e)=>{ const d=structuredClone(this.state.data); this.setDeep(d[selWeek].days[selDay], e.target.dataset.path, e.target.value); this.save(d); this.setState({data:d}); },
+
+      showReminder: unlogged.length>0 && !this.state.reminderDismissed,
+      reminderText: 'יש לך ' + unlogged.length + ' ' + (unlogged.length===1 ? 'אימון שעדיין לא סומן' : 'אימונים שעדיין לא סומנו') + ' כהושלמו',
+      openReminder: ()=>{ const g=unlogged[0]; this.setState({view:'log', selWeek:Math.floor(g/7), selDay:g%7}); },
+      dismissReminder: ()=>this.setState({reminderDismissed:true}),
+
+      openBuilder: ()=>this.setState({builderOpen:true, builderWi:selWeek, builderDay:-1}),
+      openShareWeek: ()=>this.setState({shareOpen:true, shareType:'week', shareWi:selWeek}),
+      openSharePRs: ()=>this.setState({shareOpen:true, shareType:'prboard'}),
+      closeShare: ()=>this.setState({shareOpen:false}),
+      closeBuilder: ()=>this.setState({builderOpen:false}),
+      shareOpen: this.state.shareOpen,
+      builderOpen: this.state.builderOpen,
+      shareTitle: this.state.shareType==='week' ? ('שיתוף · שבוע '+(this.state.shareWi+1)) : 'שיתוף · לוח שיאים',
+      shareCard: this.shareCardEl(),
+      shareDownload: ()=>this.shareImage(),
+      shareCopy: ()=>this.shareCopyText(),
+      builderBody: this.builderBodyEl(),
+      hasToast: !!this.state.toast, toast: this.state.toast,
+      welcomeOpen: this.state.welcomeOpen,
+      openWelcome: ()=>this.setState({ welcomeOpen:true }),
+      closeWelcome: ()=>{ try { localStorage.setItem(this.WELCOME_KEY, '1'); } catch (e) {} this.setState({ welcomeOpen:false }); }
+    };
+  }
+
+  step(dir) {
+    let gi = this.state.selWeek*7 + this.state.selDay + dir;
+    gi = Math.max(0, Math.min(55, gi));
+    this.setState({ selWeek: Math.floor(gi/7), selDay: gi%7 });
+  }
+
+  tabStyle(active) {
+    return 'border:none; cursor:pointer; padding:8px 16px; border-radius:999px; font-weight:700; font-size:13px; transition:all .15s; ' +
+      (active ? 'background:#fff; color:var(--navy);' : 'background:transparent; color:#c3cdea;');
+  }
+  segStyle(active) {
+    return 'border:none; cursor:pointer; padding:6px 14px; border-radius:999px; font-weight:700; font-size:12px; transition:all .15s; ' +
+      (active ? 'background:#fff; color:var(--navy);' : 'background:transparent; color:#c3cdea;');
+  }
+  cellStyle(st, today, missed) {
+    const base = 'aspect-ratio:1/1; border-radius:8px; cursor:pointer; font-family:\'Oswald\',sans-serif; font-weight:600; font-size:12px; display:flex; align-items:center; justify-content:center; transition:transform .1s; ';
+    let s;
+    if (st==='done') s = 'background:var(--blue); color:#fff; border:none;';
+    else if (missed) s = 'background:#fdecea; color:#d8342b; border:1.5px solid #d8342b;';
+    else if (st==='planned') s = 'background:#fff; color:var(--blue); border:1.5px solid var(--blue);';
+    else s = 'background:#e7e6e1; color:#a7a9b0; border:none;';
+    if (today) s += ' box-shadow:0 0 0 2px var(--orange);';
+    return base + s;
+  }
+  miniStyle(st, today, missed) {
+    const base = 'display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 0; border-radius:10px; cursor:pointer; transition:transform .1s; ';
+    let s;
+    if (st==='done') s = 'background:var(--blue2); color:#fff; border:none;';
+    else if (missed) s = 'background:rgba(216,52,43,.18); color:#ffb3ab; border:1px solid #e5564c;';
+    else if (st==='planned') s = 'background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.35);';
+    else s = 'background:rgba(255,255,255,.06); color:#8fa4d8; border:none;';
+    if (today) s += ' box-shadow:0 0 0 2px var(--orange);';
+    return base + s;
+  }
+  pillStyle(active) {
+    return 'flex:none; display:flex; flex-direction:column; align-items:center; gap:1px; min-width:52px; padding:8px 12px; border-radius:12px; cursor:pointer; transition:all .15s; ' +
+      (active ? 'background:var(--navy); color:#fff; border:1px solid var(--navy);' : 'background:#fff; color:var(--muted); border:1px solid var(--line);');
+  }
+  chipStyle(st, active, today, missed) {
+    const base = 'display:flex; flex-direction:column; align-items:center; padding:9px 0 8px; border-radius:12px; cursor:pointer; transition:all .12s; ';
+    let s;
+    if (active) s = 'background:var(--blue); color:#fff; border:1px solid var(--blue);';
+    else if (st==='done') s = 'background:rgba(35,64,154,.12); color:var(--blue); border:1px solid rgba(35,64,154,.3);';
+    else if (missed) s = 'background:#fdecea; color:#d8342b; border:1.5px solid #d8342b;';
+    else if (st==='planned') s = 'background:#fff; color:var(--ink); border:1px solid var(--line);';
+    else s = 'background:#eeede8; color:#9a9ca4; border:1px solid transparent;';
+    if (today && !active) s += ' box-shadow:0 0 0 2px var(--orange);';
+    return base + s;
+  }
+  adminInputEl() {
+    return React.createElement('input', {
+      type: 'password', value: this.state.adminInput, placeholder: 'קוד מנהל',
+      autoFocus: true,
+      onChange: (e) => this.setState({ adminInput: e.target.value, adminError: false }),
+      onKeyDown: (e) => { if (e.key === 'Enter') this.submitAdmin(); },
+      style: { width:'100%', border:'1px solid var(--line)', borderRadius:'12px', padding:'12px 14px', fontSize:'15px', background:'#fafaf8', color:'var(--ink)', outline:'none', letterSpacing:'.1em' }
+    });
+  }
+  submitAdmin() {
+    if ((this.state.adminInput || '').trim().toLowerCase() === this.adminCode().toLowerCase()) {
+      try { localStorage.setItem('cfby_admin', '1'); } catch (e) {}
+      this.setState({ isAdmin: true, adminOpen: false, adminError: false, adminInput: '' });
+    } else {
+      this.setState({ adminError: true });
+    }
+  }
+  doneBtnStyle(done) {
+    return 'border:none; cursor:pointer; padding:8px 16px; border-radius:999px; font-weight:700; font-size:12px; transition:all .15s; white-space:nowrap; ' +
+      (done ? 'background:#3fbf6a; color:#fff;' : 'background:rgba(255,255,255,.14); color:#fff; border:1px solid rgba(255,255,255,.4);');
+  }
+
+  toast(msg) { if (this._tt) clearTimeout(this._tt); this.setState({ toast: msg }); this._tt = setTimeout(()=>this.setState({ toast:'' }), 2200); }
+
+  getAt(wi, di, path) { let o = this.state.data[wi].days[di]; for (const p of path.split('.')) { if (o==null) return undefined; o = o[/^\d+$/.test(p)?+p:p]; } return o; }
+  editAt(wi, di, path, val) { const d = structuredClone(this.state.data); this.setDeep(d[wi].days[di], path, val); this.save(d); this.setState({ data:d }); }
+  clearDay(di) { const wi=this.state.builderWi; const d=structuredClone(this.state.data); d[wi].days[di]=this.emptyDay(); this.save(d); this.setState({ data:d }); this.toast('היום נוקה'); }
+  planOnly(src) {
+    const nd = this.emptyDay();
+    nd.lift.movement = src.lift.movement; nd.lift.planned = src.lift.planned;
+    nd.metcon.name = src.metcon.name; nd.metcon.scheme = src.metcon.scheme; nd.metcon.score = src.metcon.score; nd.metcon.note = src.metcon.note;
+    src.metcon.movements.forEach((m,i)=>{ nd.metcon.movements[i] = { name:m.name, detail:m.detail }; });
+    src.extras.forEach((e,i)=>{ nd.extras[i] = { name:e.name, detail:e.detail, result:'', log:{ text:'' } }; });
+    return nd;
+  }
+  planCopy(srcWi) { const wi=this.state.builderWi; if (srcWi===wi) return; const d=structuredClone(this.state.data); d[wi].days = this.state.data[srcWi].days.map(x=>this.planOnly(x)); this.save(d); this.setState({ data:d }); this.toast('התוכנית הועתקה משבוע '+(srcWi+1)); }
+
+  shareText() {
+    const t = this.state.shareType, data = this.state.data;
+    if (t==='prboard') {
+      const lines = ['🏆 שיאים אישיים · CrossFit Bat Yam', ''];
+      const items = [];
+      for (let w=0; w<8; w++) for (let d=0; d<7; d++) { const dd=data[w].days[d]; if (dd.rating!=='pr') continue; const move=dd.lift.movement||dd.metcon.name||'Workout'; const res=this.logSummaryText(dd)||(dd.lift.log&&dd.lift.log.note)||''; items.push('• '+move+(res?(' — '+res):'')+' (W'+(w+1)+')'); }
+      lines.push(items.length ? items.join('\n') : 'עדיין אין שיאים');
+      return lines.join('\n');
+    }
+    const wi = this.state.shareWi;
+    const lines = ['🔥 CrossFit Bat Yam — שבוע '+(wi+1), this.rangeStr(wi), ''];
+    data[wi].days.forEach((day,di)=>{ if (!this.dayHasPlan(day) && !day.done) return; const title=day.lift.movement||day.metcon.name||'אימון'; const res=this.logSummaryText(day); const rm=this.ratingMeta(day.rating); lines.push((day.done?'✅':'⬜')+' '+this.dowShort[di]+' — '+title+(res?(' · '+res):'')+(rm?(' '+rm.emoji):'')); });
+    const dn = data[wi].days.filter(x=>x.done).length;
+    lines.push('', 'סה"כ ' + dn + '/5 אימונים הושלמו');
+    return lines.join('\n');
+  }
+  legacyCopy(txt, cb) { try { const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); cb&&cb(); } catch(e) { this.toast('לא ניתן להעתיק אוטומטית'); } }
+  shareCopyText() { const txt=this.shareText(); const done=()=>this.toast('הטקסט הועתק ✓'); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(()=>this.legacyCopy(txt,done)); else this.legacyCopy(txt,done); }
+  shareImage() {
+    const el = document.getElementById('share-card');
+    if (!el || !window.html2canvas) { this.toast('מכין תמונה…'); this.shareCopyText(); return; }
+    window.html2canvas(el, { backgroundColor:null, scale:2, useCORS:true }).then(canvas=>{
+      canvas.toBlob(async (blob)=>{
+        try {
+          const file = new File([blob], 'capacity.png', { type:'image/png' });
+          if (navigator.canShare && navigator.canShare({ files:[file] })) { await navigator.share({ files:[file], title:'CrossFit Bat Yam' }); return; }
+        } catch(e) {}
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download='capacity-'+Date.now()+'.png'; a.click();
+        setTimeout(()=>URL.revokeObjectURL(url), 3000);
+        this.toast('התמונה הורדה 📸');
+      }, 'image/png');
+    }).catch(()=>this.toast('שגיאה ביצירת התמונה'));
+  }
+
+  shareCardEl() {
+    const t = this.state.shareType, data = this.state.data;
+    const head = React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'14px' } },
+      React.createElement('img', { src:'assets/logo.png', style:{ width:'38px', height:'38px', borderRadius:'50%', boxShadow:'0 0 0 2px rgba(255,255,255,.25)' } }),
+      React.createElement('div', null,
+        React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'15px', letterSpacing:'.06em' } }, 'CROSSFIT BAT YAM'),
+        React.createElement('div', { style:{ fontSize:'10px', color:'#b9c4e6' } }, 'CAPACITY PROGRAM · 8 WEEKS')
+      )
+    );
+    let body;
+    if (t==='prboard') {
+      const items = [];
+      for (let w=0; w<8; w++) for (let d=0; d<7; d++) { const dd=data[w].days[d]; if (dd.rating!=='pr') continue; const move=dd.lift.movement||dd.metcon.name||'Workout'; const res=this.logSummaryText(dd)||(dd.lift.log&&dd.lift.log.note)||''; items.push({ move, res, w }); }
+      items.reverse();
+      body = React.createElement('div', null,
+        React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'22px', letterSpacing:'.04em', margin:'2px 0 14px' } }, '🏆 PERSONAL RECORDS'),
+        React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } },
+          items.length ? items.map((it,i)=>React.createElement('div', { key:i, style:{ display:'flex', alignItems:'center', gap:'10px', background:'rgba(255,255,255,.08)', borderRadius:'10px', padding:'10px 12px' } },
+            React.createElement('span', { style:{ fontSize:'16px' } }, '🏆'),
+            React.createElement('div', { style:{ flex:1, minWidth:0 } },
+              React.createElement('div', { style:{ fontWeight:700, fontSize:'13px' } }, it.move),
+              it.res ? React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'13px', color:'#f0c064' } }, it.res) : null
+            ),
+            React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontSize:'11px', color:'#b9c4e6' } }, 'W'+(it.w+1))
+          )) : React.createElement('div', { style:{ fontSize:'13px', color:'#b9c4e6' } }, 'עדיין אין שיאים')
+        )
+      );
+    } else {
+      const wi = this.state.shareWi;
+      const rows = [];
+      data[wi].days.forEach((day,di)=>{ if (!this.dayHasPlan(day) && !day.done) return; const title=day.lift.movement||day.metcon.name||'אימון'; const res=this.logSummaryText(day); const rm=this.ratingMeta(day.rating); rows.push({ di, title, res, done:day.done, emoji:rm?rm.emoji:'' }); });
+      const dn = data[wi].days.filter(x=>x.done).length;
+      body = React.createElement('div', null,
+        React.createElement('div', { style:{ display:'flex', alignItems:'baseline', gap:'8px', margin:'2px 0 12px' } },
+          React.createElement('span', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'22px', letterSpacing:'.04em' } }, 'WEEK '+(wi+1)),
+          React.createElement('span', { style:{ fontSize:'12px', color:'#b9c4e6' } }, this.rangeStr(wi))
+        ),
+        React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'7px' } },
+          rows.length ? rows.map((r,i)=>React.createElement('div', { key:i, style:{ display:'flex', alignItems:'center', gap:'9px', background:'rgba(255,255,255,.08)', borderRadius:'10px', padding:'9px 11px' } },
+            React.createElement('span', { style:{ fontSize:'13px' } }, r.done?'✅':'⬜'),
+            React.createElement('span', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:600, fontSize:'11px', color:'#8fa4d8', width:'32px', flex:'none' } }, this.dowShort[r.di]),
+            React.createElement('div', { style:{ flex:1, minWidth:0 } },
+              React.createElement('div', { style:{ fontWeight:700, fontSize:'13px' } }, r.title),
+              r.res ? React.createElement('div', { style:{ fontSize:'11px', color:'#b9c4e6' } }, r.res) : null
+            ),
+            r.emoji ? React.createElement('span', { style:{ fontSize:'14px' } }, r.emoji) : null
+          )) : React.createElement('div', { style:{ fontSize:'13px', color:'#b9c4e6' } }, 'אין אימונים מתוכננים לשבוע זה עדיין')
+        ),
+        React.createElement('div', { style:{ marginTop:'14px', paddingTop:'12px', borderTop:'1px solid rgba(255,255,255,.15)', display:'flex', justifyContent:'space-between', alignItems:'center' } },
+          React.createElement('span', { style:{ fontSize:'12px', color:'#b9c4e6' } }, 'הושלמו השבוע'),
+          React.createElement('span', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'18px', color:'#ef5b25' } }, dn+' / 5')
+        )
+      );
+    }
+    return React.createElement('div', { id:'share-card', style:{ width:'380px', background:'linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a)', color:'#fff', borderRadius:'20px', padding:'22px', fontFamily:"'Heebo',sans-serif", boxSizing:'border-box' } }, head, body);
+  }
+
+  builderBodyEl() {
+    const wi = this.state.builderWi;
+    const data = this.state.data;
+    const get = (di,p)=>this.getAt(wi,di,p);
+    const inp = (di,p,ph)=>React.createElement('input', { dir:'auto', value:get(di,p)||'', placeholder:ph, onChange:(e)=>this.editAt(wi,di,p,e.target.value), style:{ width:'100%', border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 10px', fontSize:'13.5px', background:'#fff', color:'var(--ink)', outline:'none', boxSizing:'border-box' } });
+    const area = (di,p,ph,min)=>React.createElement('textarea', { dir:'auto', value:get(di,p)||'', placeholder:ph, onChange:(e)=>this.editAt(wi,di,p,e.target.value), style:{ width:'100%', border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 10px', fontSize:'13px', background:'#fff', color:'var(--ink)', outline:'none', minHeight:(min||50)+'px', resize:'vertical', fontFamily:'inherit', lineHeight:1.5, boxSizing:'border-box' } });
+    const lab = (txt)=>React.createElement('div', { style:{ font:"600 10px/1 'Oswald'", letterSpacing:'.08em', textTransform:'uppercase', color:'var(--muted)', margin:'2px 0 6px' } }, txt);
+
+    const weekBtns = React.createElement('div', { style:{ display:'flex', gap:'4px', flexWrap:'wrap', marginTop:'12px' } },
+      data.map((_,i)=>React.createElement('button', { key:i, onClick:()=>this.setState({ builderWi:i, builderDay:-1 }), style:{ border:'none', cursor:'pointer', padding:'6px 11px', borderRadius:'8px', fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'12px', background:i===wi?'#ef5b25':'rgba(255,255,255,.12)', color:'#fff' } }, 'W'+(i+1)))
+    );
+    const copySel = React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'8px', marginTop:'12px', flexWrap:'wrap' } },
+      React.createElement('span', { style:{ fontSize:'12px', color:'#b9c4e6' } }, 'שכפל תוכנית משבוע:'),
+      React.createElement('select', { value:'', onChange:(e)=>{ if (e.target.value!=='') this.planCopy(+e.target.value); }, style:{ border:'none', borderRadius:'8px', padding:'6px 10px', fontSize:'13px', background:'rgba(255,255,255,.14)', color:'#fff', cursor:'pointer', fontFamily:'inherit' } },
+        React.createElement('option', { value:'' }, 'בחר שבוע…'),
+        data.map((_,i)=>i===wi?null:React.createElement('option', { key:i, value:i, style:{ color:'#15171d' } }, 'שבוע '+(i+1)))
+      )
+    );
+    const header = React.createElement('div', { style:{ background:'linear-gradient(120deg,#141f38,#22336a)', color:'#fff', padding:'18px 20px', position:'sticky', top:0, zIndex:2 } },
+      React.createElement('div', { style:{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'10px' } },
+        React.createElement('div', null,
+          React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'18px', letterSpacing:'.05em' } }, '🛠️ בניית תוכנית שבועית'),
+          React.createElement('div', { style:{ fontSize:'12px', color:'#b9c4e6', marginTop:'2px' } }, 'הזן את כל אימוני שבוע '+(wi+1)+' במקום אחד · '+this.rangeStr(wi))
+        ),
+        React.createElement('button', { onClick:()=>this.setState({ builderOpen:false }), style:{ background:'rgba(255,255,255,.14)', border:'none', color:'#fff', width:'32px', height:'32px', borderRadius:'9px', cursor:'pointer', fontSize:'16px', flex:'none' } }, '✕')
+      ),
+      weekBtns, copySel
+    );
+
+    const days = data[wi].days.map((day,di)=>{
+      const open = this.state.builderDay===di;
+      const filled = this.dayHasPlan(day);
+      const hdr = React.createElement('button', { onClick:()=>this.setState({ builderDay:open?-1:di }), style:{ width:'100%', display:'flex', alignItems:'center', gap:'10px', padding:'12px 14px', background:open?'#eef1fb':'#fff', border:'none', borderBottom:open?'1px solid var(--line)':'none', cursor:'pointer', textAlign:'start' } },
+        React.createElement('span', { style:{ width:'9px', height:'9px', borderRadius:'50%', flex:'none', background:filled?'#3fbf6a':'#d3d3cd' } }),
+        React.createElement('span', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'14px', color:'var(--navy)' } }, this.weekdays[di]),
+        React.createElement('span', { style:{ fontSize:'12px', color:'var(--muted)' } }, this.dateStr(this.dateAt(wi*7+di))),
+        React.createElement('span', { style:{ marginInlineStart:'auto', fontSize:'12px', color:'var(--muted)' } }, filled?'✎ ערוך':'הזן'),
+        React.createElement('span', { style:{ fontSize:'12px', color:'var(--muted)', transform:open?'rotate(180deg)':'none', transition:'transform .15s' } }, '▾')
+      );
+      if (!open) return React.createElement('div', { key:di, style:{ background:'#fff', border:'1px solid var(--line)', borderRadius:'12px', overflow:'hidden' } }, hdr);
+      const body = React.createElement('div', { style:{ padding:'14px', display:'flex', flexDirection:'column', gap:'16px' } },
+        React.createElement('div', null, lab('🏋️ Lift — תרגיל'), inp(di,'lift.movement','שם התרגיל'), React.createElement('div',{style:{height:'8px'}}), area(di,'lift.planned','סטים · חזרות · אחוזים · דגשים',60)),
+        React.createElement('div', null, lab('⏱️ Metcon'),
+          React.createElement('div', { style:{ display:'grid', gridTemplateColumns:'1.5fr 1fr', gap:'8px' } }, inp(di,'metcon.name','שם המטקון'), inp(di,'metcon.scheme','AMRAP / For Time')),
+          React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'6px', marginTop:'8px', background:'#faf9f6', border:'1px solid var(--line)', borderRadius:'10px', padding:'10px' } },
+            [0,1,2,3].map(mi=>React.createElement('div', { key:mi, style:{ display:'grid', gridTemplateColumns:'20px 1fr 1.1fr', gap:'7px', alignItems:'center' } },
+              React.createElement('span', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'11px', color:'var(--orange)', textAlign:'center' } }, mi+1),
+              inp(di,'metcon.movements.'+mi+'.name','תנועה'),
+              inp(di,'metcon.movements.'+mi+'.detail','חזרות / מרחק')
+            ))
+          ),
+          React.createElement('div',{style:{height:'8px'}}), area(di,'metcon.note','הערות המטקון',44)
+        ),
+        React.createElement('div', null, lab('➕ Extra / Accessory'),
+          React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'10px' } },
+            [0,1].map(ei=>React.createElement('div', { key:ei, style:{ display:'flex', flexDirection:'column', gap:'6px' } },
+              inp(di,'extras.'+ei+'.name','Extra #'+(ei+1)+' — שם'),
+              area(di,'extras.'+ei+'.detail','פירוט',40)
+            ))
+          )
+        ),
+        React.createElement('div', { style:{ display:'flex', justifyContent:'flex-end' } },
+          React.createElement('button', { onClick:()=>this.clearDay(di), style:{ background:'#fdecea', color:'#d8342b', border:'none', borderRadius:'9px', padding:'8px 14px', fontWeight:700, fontSize:'12px', cursor:'pointer' } }, 'נקה יום')
+        )
+      );
+      return React.createElement('div', { key:di, style:{ background:'#fff', border:'1px solid var(--line)', borderRadius:'12px', overflow:'hidden' } }, hdr, body);
+    });
+
+    const bodyWrap = React.createElement('div', { style:{ padding:'16px', display:'flex', flexDirection:'column', gap:'8px' } }, days);
+    const footer = React.createElement('div', { style:{ padding:'14px 16px', background:'#fff', borderTop:'1px solid var(--line)', display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', bottom:0 } },
+      React.createElement('span', { style:{ fontSize:'12px', color:'var(--muted)' } }, 'נשמר אוטומטית'),
+      React.createElement('button', { onClick:()=>this.setState({ builderOpen:false }), style:{ background:'var(--blue)', color:'#fff', border:'none', borderRadius:'10px', padding:'10px 22px', fontWeight:700, fontSize:'14px', cursor:'pointer' } }, 'סיום')
+    );
+    return React.createElement('div', null, header, bodyWrap, footer);
+  }
+}
+</script>
+
+
+
+</body></html>
