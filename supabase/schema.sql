@@ -64,6 +64,15 @@ as $$
   select exists (select 1 from public.profiles where id = auth.uid() and is_admin);
 $$;
 
+-- Drop any legacy admin policies that used an INLINE "select ... from profiles"
+-- subquery. Such a policy on `profiles` causes RLS infinite-recursion the moment
+-- the table is read. The is_admin() helper above replaces all of them.
+drop policy if exists profile_admin_del    on public.profiles;
+drop policy if exists profiles_admin_write on public.profiles;
+drop policy if exists states_admin_del     on public.states;
+drop policy if exists states_admin_read    on public.states;
+drop policy if exists board_admin_del      on public.board;
+
 -- PROFILES: a user reads/writes only their own row; everyone may read names.
 -- Admins may create/edit/delete any profile (needed by the admin panel).
 drop policy if exists profiles_read  on public.profiles;
