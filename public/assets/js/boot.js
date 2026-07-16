@@ -259,8 +259,17 @@
       }
       return null;
     }
+    // The app's own "admin mode" (logo -> code "batyam") lives in this key.
+    function appAdminMode() { try { return localStorage.getItem("cfby_admin") === "1"; } catch (e) { return false; } }
     function ensureTab() {
-      if (document.getElementById("cfbyAdminTab")) return;
+      var existing = document.getElementById("cfbyAdminTab");
+      // User management is only relevant inside the app's admin mode.
+      if (!appAdminMode()) {
+        if (existing) existing.remove();
+        ov.classList.remove("open");        // close the panel if admin mode was just exited
+        return;
+      }
+      if (existing) return;
       var guide = findGuideBtn();
       if (!guide) return;
       var tab = document.createElement("button");
