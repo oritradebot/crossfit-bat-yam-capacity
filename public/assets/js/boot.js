@@ -284,6 +284,14 @@
     mo.observe(document.body, { childList: true, subtree: true });
     // safety net: keep trying for ~12s in case the header mounts late
     var tries = 0, iv = setInterval(function () { ensureTab(); if (++tries > 48) clearInterval(iv); }, 250);
+
+    // Deterministic reaction to admin-mode enter/exit, with NO refresh needed:
+    // the app writes cfby_admin='1' on entry and removes it on exit. Hook both
+    // so the tab appears/disappears the instant admin mode toggles.
+    var _lsSet = localStorage.setItem.bind(localStorage);
+    var _lsRem = localStorage.removeItem.bind(localStorage);
+    localStorage.setItem = function (k, v) { _lsSet(k, v); if (k === "cfby_admin") ensureTab(); };
+    localStorage.removeItem = function (k) { _lsRem(k); if (k === "cfby_admin") ensureTab(); };
   }
 
   // ---- main ------------------------------------------------------------
