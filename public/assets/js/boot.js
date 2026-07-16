@@ -207,9 +207,11 @@
     async function del(uid, name) {
       if (!confirm('למחוק את "' + (name || "המשתמש") + '"?\nכל הנתונים שלו יימחקו והוא יוסר מהלוח.')) return;
       try {
-        await sb.from("board").delete().eq("user_id", uid);
-        await sb.from("states").delete().eq("user_id", uid);
-        await sb.from("profiles").delete().eq("id", uid);
+        // supabase-js does NOT throw on an RLS block — it returns { error }. Check each.
+        var err = (await sb.from("board").delete().eq("user_id", uid)).error
+               || (await sb.from("states").delete().eq("user_id", uid)).error
+               || (await sb.from("profiles").delete().eq("id", uid)).error;
+        if (err) throw err;
         amsg("נמחק.", "ok"); refresh();
       } catch (e) { amsg("מחיקה נכשלה: " + (e.message || e), "err"); }
     }
@@ -228,7 +230,10 @@
         var r = await tmp.auth.signUp({ email: u + DOMAIN, password: p });
         if (r.error) throw r.error;
         var newId = r.data.user && r.data.user.id;
-        if (newId) { await sb.from("profiles").upsert({ id: newId, name: (n || u), email: u }); }
+        if (newId) {
+          var up = await sb.from("profiles").upsert({ id: newId, name: (n || u), email: u });
+          if (up.error) throw up.error;   // surface RLS/other failures instead of a false "created"
+        }
         document.getElementById("cfaU").value = ""; document.getElementById("cfaN").value = ""; document.getElementById("cfaP").value = "";
         amsg('נוצר "' + (n || u) + '". מסור לו שם משתמש: ' + u, "ok");
         refresh();
