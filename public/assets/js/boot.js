@@ -28,37 +28,11 @@
   function lsGet(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
   function lsSetRaw(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
 
-  // Split a day into PROGRAM scaffold (shared, admin) vs PERSONAL (per user)
-  var PROGRAM_FIELDS = ["lift.movement","lift.planned",
-    "metcon.name","metcon.scheme","metcon.score","metcon.note","metcon.movements",
-    "extras.name","extras.detail"];
-  // Overlay the shared program's scaffold onto a user's weeks, keeping results.
-  function mergeProgramIntoUser(userWeeks, progWeeks) {
-    if (!progWeeks) return userWeeks;
-    if (!userWeeks) userWeeks = JSON.parse(JSON.stringify(progWeeks)); // fresh user -> empty results already
-    for (var w = 0; w < progWeeks.length; w++) {
-      if (!userWeeks[w]) { userWeeks[w] = JSON.parse(JSON.stringify(progWeeks[w])); continue; }
-      for (var d = 0; d < progWeeks[w].days.length; d++) {
-        var pd = progWeeks[w].days[d], ud = userWeeks[w].days[d];
-        if (!ud) { userWeeks[w].days[d] = JSON.parse(JSON.stringify(pd)); continue; }
-        // program scaffold -> copy from shared
-        ud.lift = ud.lift || {}; pd.lift = pd.lift || {};
-        ud.lift.movement = pd.lift.movement; ud.lift.planned = pd.lift.planned;
-        ud.metcon = ud.metcon || {}; pd.metcon = pd.metcon || {};
-        ud.metcon.name = pd.metcon.name; ud.metcon.scheme = pd.metcon.scheme;
-        ud.metcon.score = pd.metcon.score; ud.metcon.note = pd.metcon.note;
-        ud.metcon.movements = pd.metcon.movements;
-        // extras: keep count from program, preserve user results by index
-        pd.extras = pd.extras || []; ud.extras = ud.extras || [];
-        for (var i = 0; i < pd.extras.length; i++) {
-          ud.extras[i] = ud.extras[i] || {};
-          ud.extras[i].name = pd.extras[i].name;
-          ud.extras[i].detail = pd.extras[i].detail;
-        }
-      }
-    }
-    return userWeeks;
-  }
+  // NOTE: program/results merging is NOT done here any more. The app owns it:
+  // normalizeWeeks() coerces any saved blob into its canonical shape, and
+  // applyProgram() overlays the built-in program when the saved program version
+  // is older than the app's. boot.js just seeds the raw blob and lets the app
+  // reconcile it.
 
   // ---- Supabase reads --------------------------------------------------
   async function fetchSharedProgram() {
@@ -92,12 +66,18 @@
       }
     }, 800);
   }
-  // Per-week summary the leaderboard needs: completed days + shared result
+  // Per-week summary the leaderboard needs: completed days + shared result.
+  // A day counts twice when its alternate session is also done — this must match
+  // the app's own weekStats(), or a user's rank would disagree with their screen.
   function summarizeWeeks(tracker, myResults) {
     var out = [], wk = (tracker && tracker.weeks) || [];
     for (var i = 0; i < wk.length; i++) {
       var days = (wk[i] && wk[i].days) || [], done = 0;
-      for (var j = 0; j < days.length; j++) { if (days[j] && days[j].done) done++; }
+      for (var j = 0; j < days.length; j++) {
+        if (!days[j]) continue;
+        if (days[j].done) done++;
+        if (days[j].alt && days[j].alt.done) done++;
+      }
       out.push({ completed: done, result: (myResults && myResults[i]) || 0 });
     }
     return out;
@@ -304,18 +284,26 @@
     var prof = await fetchProfile(uid);
     var isAdmin = !!prof.is_admin;
 
-    // The guide never auto-pops now — it opens only via the "❓ מדריך" button.
+    // Nothing may pop up on its own. These flags are set BEFORE the app boots:
+    //  - WELCOME_KEY : the guide opens only via the "❓ מדריך" button.
+    //  - cfby_onb_v1 : the first-run onboarding is disabled outright (the display
+    //                  name comes from the account/profile, so it has nothing to ask).
+    //  - cfby_reset_v1: the app wipes all logs on its first run unless this is set.
+    //                  Our logs come from Supabase, so that would destroy synced
+    //                  progress. Never let it run.
     try { localStorage.setItem(K.WELCOME_KEY, "1"); } catch (e) {}
+    try { localStorage.setItem("cfby_onb_v1", "1"); } catch (e) {}
+    try { localStorage.setItem("cfby_reset_v1", "1"); } catch (e) {}
 
-    // 1) load + merge program/state
-    var prog = await fetchSharedProgram();
+    // 1) seed the tracker. The app reconciles shape + program version itself.
     var mine = await fetchMyState(uid);
     if (mine && mine.weeks) {
-      mine.weeks = mergeProgramIntoUser(mine.weeks, prog);
-      lsSetRaw(K.TRACKER_KEY, mine);
-    } else if (prog) {
-      lsSetRaw(K.TRACKER_KEY, { v: 2, weeks: prog });
-    } // else: leave empty -> app builds its default program
+      lsSetRaw(K.TRACKER_KEY, mine);            // this user's own saved blob
+    } else {
+      var prog = await fetchSharedProgram();    // fresh user -> admin's published program
+      if (prog) lsSetRaw(K.TRACKER_KEY, { v: 2, weeks: prog });
+      // else: leave empty -> the app builds its built-in program
+    }
 
     // 2) board (shared leaderboard). Admin is invisible; each user appears once.
     if (isAdmin) {

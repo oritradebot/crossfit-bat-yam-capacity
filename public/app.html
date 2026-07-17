@@ -15,323 +15,8 @@
 <x-dc>
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<style>/* hebrew */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/fonts/fc92f087.woff2") format('woff2');
-  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
-}
-/* math */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/fonts/845bf731.woff2") format('woff2');
-  unicode-range: U+0302-0303, U+0305, U+0307-0308, U+0310, U+0312, U+0315, U+031A, U+0326-0327, U+032C, U+032F-0330, U+0332-0333, U+0338, U+033A, U+0346, U+034D, U+0391-03A1, U+03A3-03A9, U+03B1-03C9, U+03D1, U+03D5-03D6, U+03F0-03F1, U+03F4-03F5, U+2016-2017, U+2034-2038, U+203C, U+2040, U+2043, U+2047, U+2050, U+2057, U+205F, U+2070-2071, U+2074-208E, U+2090-209C, U+20D0-20DC, U+20E1, U+20E5-20EF, U+2100-2112, U+2114-2115, U+2117-2121, U+2123-214F, U+2190, U+2192, U+2194-21AE, U+21B0-21E5, U+21F1-21F2, U+21F4-2211, U+2213-2214, U+2216-22FF, U+2308-230B, U+2310, U+2319, U+231C-2321, U+2336-237A, U+237C, U+2395, U+239B-23B7, U+23D0, U+23DC-23E1, U+2474-2475, U+25AF, U+25B3, U+25B7, U+25BD, U+25C1, U+25CA, U+25CC, U+25FB, U+266D-266F, U+27C0-27FF, U+2900-2AFF, U+2B0E-2B11, U+2B30-2B4C, U+2BFE, U+3030, U+FF5B, U+FF5D, U+1D400-1D7FF, U+1EE00-1EEFF;
-}
-/* symbols */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/fonts/8738c838.woff2") format('woff2');
-  unicode-range: U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AD, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F7FF, U+1F800-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FA89, U+1FA8F-1FAC6, U+1FACE-1FADC, U+1FADF-1FAE9, U+1FAF0-1FAF8, U+1FB00-1FBFF;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/fonts/2abd82ae.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/fonts/bfbe2959.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* hebrew */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/fonts/fc92f087.woff2") format('woff2');
-  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
-}
-/* math */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/fonts/845bf731.woff2") format('woff2');
-  unicode-range: U+0302-0303, U+0305, U+0307-0308, U+0310, U+0312, U+0315, U+031A, U+0326-0327, U+032C, U+032F-0330, U+0332-0333, U+0338, U+033A, U+0346, U+034D, U+0391-03A1, U+03A3-03A9, U+03B1-03C9, U+03D1, U+03D5-03D6, U+03F0-03F1, U+03F4-03F5, U+2016-2017, U+2034-2038, U+203C, U+2040, U+2043, U+2047, U+2050, U+2057, U+205F, U+2070-2071, U+2074-208E, U+2090-209C, U+20D0-20DC, U+20E1, U+20E5-20EF, U+2100-2112, U+2114-2115, U+2117-2121, U+2123-214F, U+2190, U+2192, U+2194-21AE, U+21B0-21E5, U+21F1-21F2, U+21F4-2211, U+2213-2214, U+2216-22FF, U+2308-230B, U+2310, U+2319, U+231C-2321, U+2336-237A, U+237C, U+2395, U+239B-23B7, U+23D0, U+23DC-23E1, U+2474-2475, U+25AF, U+25B3, U+25B7, U+25BD, U+25C1, U+25CA, U+25CC, U+25FB, U+266D-266F, U+27C0-27FF, U+2900-2AFF, U+2B0E-2B11, U+2B30-2B4C, U+2BFE, U+3030, U+FF5B, U+FF5D, U+1D400-1D7FF, U+1EE00-1EEFF;
-}
-/* symbols */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/fonts/8738c838.woff2") format('woff2');
-  unicode-range: U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AD, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F7FF, U+1F800-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FA89, U+1FA8F-1FAC6, U+1FACE-1FADC, U+1FADF-1FAE9, U+1FAF0-1FAF8, U+1FB00-1FBFF;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/fonts/2abd82ae.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/fonts/bfbe2959.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* hebrew */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/fonts/fc92f087.woff2") format('woff2');
-  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
-}
-/* math */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/fonts/845bf731.woff2") format('woff2');
-  unicode-range: U+0302-0303, U+0305, U+0307-0308, U+0310, U+0312, U+0315, U+031A, U+0326-0327, U+032C, U+032F-0330, U+0332-0333, U+0338, U+033A, U+0346, U+034D, U+0391-03A1, U+03A3-03A9, U+03B1-03C9, U+03D1, U+03D5-03D6, U+03F0-03F1, U+03F4-03F5, U+2016-2017, U+2034-2038, U+203C, U+2040, U+2043, U+2047, U+2050, U+2057, U+205F, U+2070-2071, U+2074-208E, U+2090-209C, U+20D0-20DC, U+20E1, U+20E5-20EF, U+2100-2112, U+2114-2115, U+2117-2121, U+2123-214F, U+2190, U+2192, U+2194-21AE, U+21B0-21E5, U+21F1-21F2, U+21F4-2211, U+2213-2214, U+2216-22FF, U+2308-230B, U+2310, U+2319, U+231C-2321, U+2336-237A, U+237C, U+2395, U+239B-23B7, U+23D0, U+23DC-23E1, U+2474-2475, U+25AF, U+25B3, U+25B7, U+25BD, U+25C1, U+25CA, U+25CC, U+25FB, U+266D-266F, U+27C0-27FF, U+2900-2AFF, U+2B0E-2B11, U+2B30-2B4C, U+2BFE, U+3030, U+FF5B, U+FF5D, U+1D400-1D7FF, U+1EE00-1EEFF;
-}
-/* symbols */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/fonts/8738c838.woff2") format('woff2');
-  unicode-range: U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AD, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F7FF, U+1F800-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FA89, U+1FA8F-1FAC6, U+1FACE-1FADC, U+1FADF-1FAE9, U+1FAF0-1FAF8, U+1FB00-1FBFF;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/fonts/2abd82ae.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/fonts/bfbe2959.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* hebrew */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url("assets/fonts/fc92f087.woff2") format('woff2');
-  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
-}
-/* math */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url("assets/fonts/845bf731.woff2") format('woff2');
-  unicode-range: U+0302-0303, U+0305, U+0307-0308, U+0310, U+0312, U+0315, U+031A, U+0326-0327, U+032C, U+032F-0330, U+0332-0333, U+0338, U+033A, U+0346, U+034D, U+0391-03A1, U+03A3-03A9, U+03B1-03C9, U+03D1, U+03D5-03D6, U+03F0-03F1, U+03F4-03F5, U+2016-2017, U+2034-2038, U+203C, U+2040, U+2043, U+2047, U+2050, U+2057, U+205F, U+2070-2071, U+2074-208E, U+2090-209C, U+20D0-20DC, U+20E1, U+20E5-20EF, U+2100-2112, U+2114-2115, U+2117-2121, U+2123-214F, U+2190, U+2192, U+2194-21AE, U+21B0-21E5, U+21F1-21F2, U+21F4-2211, U+2213-2214, U+2216-22FF, U+2308-230B, U+2310, U+2319, U+231C-2321, U+2336-237A, U+237C, U+2395, U+239B-23B7, U+23D0, U+23DC-23E1, U+2474-2475, U+25AF, U+25B3, U+25B7, U+25BD, U+25C1, U+25CA, U+25CC, U+25FB, U+266D-266F, U+27C0-27FF, U+2900-2AFF, U+2B0E-2B11, U+2B30-2B4C, U+2BFE, U+3030, U+FF5B, U+FF5D, U+1D400-1D7FF, U+1EE00-1EEFF;
-}
-/* symbols */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url("assets/fonts/8738c838.woff2") format('woff2');
-  unicode-range: U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AD, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F7FF, U+1F800-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FA89, U+1FA8F-1FAC6, U+1FACE-1FADC, U+1FADF-1FAE9, U+1FAF0-1FAF8, U+1FB00-1FBFF;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url("assets/fonts/2abd82ae.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Heebo';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url("assets/fonts/bfbe2959.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* cyrillic-ext */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/fonts/bad355cf.woff2") format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-/* cyrillic */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/fonts/c8bc0479.woff2") format('woff2');
-  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
-}
-/* vietnamese */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/fonts/93ac27ef.woff2") format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/fonts/03f66d5f.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/fonts/c302a2f6.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* cyrillic-ext */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/fonts/bad355cf.woff2") format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-/* cyrillic */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/fonts/c8bc0479.woff2") format('woff2');
-  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
-}
-/* vietnamese */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/fonts/93ac27ef.woff2") format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/fonts/03f66d5f.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/fonts/c302a2f6.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* cyrillic-ext */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/fonts/bad355cf.woff2") format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-/* cyrillic */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/fonts/c8bc0479.woff2") format('woff2');
-  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
-}
-/* vietnamese */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/fonts/93ac27ef.woff2") format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/fonts/03f66d5f.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Oswald';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/fonts/c302a2f6.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-</style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -344,15 +29,15 @@
   ::-webkit-scrollbar { height: 8px; width: 8px; }
   ::-webkit-scrollbar-thumb { background: rgba(21,23,29,.2); border-radius: 8px; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
 </style>
-<!-- html2canvas loaded by boot.js -->
 </helmet>
 <div style="--blue:#23409a; --blue2:#2f52c4; --navy:#141f38; --ink:#15171d; --paper:#f4f3ef; --line:rgba(21,23,29,.12); --orange:#ef5b25; --muted:#6b6e78; --log:rgba(35,64,154,.06); min-height:100vh; display:flex; flex-direction:column; align-items:center;">
 
   <header style="width:100%; background:linear-gradient(115deg,#0f1830,#1a2848 60%,#23409a); color:#fff; display:flex; justify-content:center; box-shadow:0 2px 20px rgba(15,24,48,.25); position:sticky; top:0; z-index:40;">
     <div style="width:100%; max-width:1040px; padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-      <button sc-camel-on-click="{{ openAdmin }}" title="לחיצה על הלוגו — כניסת מנהל" style="background:none; border:none; padding:0; cursor:pointer; flex:none; position:relative;">
-        <img src="assets/img/5ec7dfdd.png" alt="CrossFit Bat Yam" style="width:46px; height:46px; border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.25); display:block;">
+      <button onClick="{{ openAdmin }}" title="לחיצה על הלוגו — כניסת מנהל" style="background:none; border:none; padding:0; cursor:pointer; flex:none; position:relative;">
+        <img src="assets/logo.png" alt="CrossFit Bat Yam" style="width:46px; height:46px; border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.25); display:block;">
         <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
           <span style="position:absolute; bottom:-4px; inset-inline-end:-6px; background:var(--orange); color:#fff; font:700 8px/1 'Oswald'; letter-spacing:.05em; padding:3px 5px; border-radius:6px; box-shadow:0 0 0 2px #16213c;">ADMIN</span>
         </sc-if>
@@ -362,32 +47,26 @@
         <div style="font-size:12px; color:#b9c4e6; font-weight:500;">CAPACITY PROGRAM · מעקב 8 שבועות</div>
       </div>
       <div style="margin-inline-start:auto; display:flex; align-items:center; gap:10px;">
-        <button sc-camel-on-click="{{ openWelcome }}" title="איך זה עובד?" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 13px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">❓ מדריך</button>
+        <button onClick="{{ openWelcome }}" title="איך זה עובד?" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 13px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">❓ מדריך</button>
         <div style="display:flex; background:rgba(255,255,255,.1); border-radius:999px; padding:4px; gap:2px; overflow-x:auto; max-width:100%;">
-          <button sc-camel-on-click="{{ setOverview }}" style="{{ tabOverviewStyle }}">סקירה</button>
-          <button sc-camel-on-click="{{ setLog }}" style="{{ tabLogStyle }}">יומן</button>
-          <button sc-camel-on-click="{{ setPRs }}" style="{{ tabPRStyle }}">🏆 שיאים אישיים</button>
-          <button sc-camel-on-click="{{ setBoard }}" style="{{ tabBoardStyle }}">🏅 דירוג</button>
+          <button onClick="{{ setOverview }}" style="{{ tabOverviewStyle }}">סקירה</button>
+          <button onClick="{{ setLog }}" style="{{ tabLogStyle }}">יומן</button>
+          <button onClick="{{ setPRs }}" style="{{ tabPRStyle }}">🏆 שיאים אישיים</button>
+          <button onClick="{{ setBoard }}" style="{{ tabBoardStyle }}">🏅 דירוג</button>
         </div>
       </div>
     </div>
   </header>
 
   <main style="width:100%; max-width:1040px; padding:22px 20px 64px; flex:1;">
+    <datalist id="movelib">
+      <sc-for list="{{ moveLib }}" as="m" hint-placeholder-count="0">
+        <option value="{{ m }}"></option>
+      </sc-for>
+    </datalist>
 
     <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
       <div style="animation:fadeUp .35s ease both;">
-        <sc-if value="{{ showReminder }}" hint-placeholder-val="{{ false }}">
-          <div style="display:flex; align-items:center; gap:12px; background:#fff5ec; border:1px solid #f6c9ad; border-inline-start:4px solid var(--orange); border-radius:14px; padding:14px 16px; margin-bottom:18px;">
-            <span style="font-size:22px; flex:none;">🔔</span>
-            <div style="flex:1; min-width:0;">
-              <div style="font-weight:700; font-size:14px; color:var(--ink);">{{ reminderText }}</div>
-              <div style="font-size:12px; color:var(--muted); margin-top:2px;">אל תשכח לסמן ולתעד — כך הרצף והשיאים נשמרים.</div>
-            </div>
-            <button sc-camel-on-click="{{ openReminder }}" style="flex:none; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:9px 16px; font-weight:700; font-size:13px; cursor:pointer;">השלם עכשיו</button>
-            <button sc-camel-on-click="{{ dismissReminder }}" style="flex:none; background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; padding:2px 6px; line-height:1;">✕</button>
-          </div>
-        </sc-if>
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:22px;">
           <div style="background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--blue); line-height:1;">{{ statSessions }}<span style="font-size:16px; color:var(--muted);">/{{ statTarget }}</span></div>
@@ -420,13 +99,13 @@
           </div>
           <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-top:16px;">
             <sc-for list="{{ thisWeekCells }}" as="c" hint-placeholder-count="7">
-              <button sc-camel-on-click="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" style="{{ c.miniStyle }}">
+              <button onClick="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" style="{{ c.miniStyle }}">
                 <span style="font-size:10px; font-weight:700; opacity:.85; letter-spacing:.03em;">{{ c.dow }}</span>
                 <span style="font-family:'Oswald',sans-serif; font-weight:600; font-size:15px;">{{ c.dnum }}</span>
               </button>
             </sc-for>
           </div>
-          <button sc-camel-on-click="{{ gotoToday }}" style="margin-top:16px; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:11px 20px; font-weight:700; font-size:14px; cursor:pointer; letter-spacing:.01em;">← פתח את האימון של היום</button>
+          <button onClick="{{ gotoToday }}" style="margin-top:16px; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:11px 20px; font-weight:700; font-size:14px; cursor:pointer; letter-spacing:.01em;">← פתח את האימון של היום</button>
         </div>
 
         <sc-if value="{{ showProgramMap }}" hint-placeholder-val="{{ true }}">
@@ -446,7 +125,7 @@
               <div style="display:grid; grid-template-columns:34px repeat(7,1fr); gap:6px; align-items:center;">
                 <div style="font-family:'Oswald',sans-serif; font-weight:600; font-size:12px; color:var(--muted); text-align:center;">W{{ wk.n }}</div>
                 <sc-for list="{{ wk.cells }}" as="c" hint-placeholder-count="7">
-                  <button sc-camel-on-click="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" style="{{ c.cellStyle }}">{{ c.dnum }}</button>
+                  <button onClick="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" style="{{ c.cellStyle }}">{{ c.dnum }}</button>
                 </sc-for>
               </div>
             </sc-for>
@@ -455,6 +134,7 @@
             <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:var(--blue); display:inline-block;"></span>הושלם</span>
             <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#fff; border:1.5px solid var(--blue); display:inline-block;"></span>מתוכנן</span>
             <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#fff; box-shadow:0 0 0 2px #d8342b; display:inline-block;"></span>לא סומן</span>
+            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#eef1f6; border:1.5px dashed #b9c2d0; display:inline-block;"></span>מנוחה 🛌</span>
             <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#e7e6e1; display:inline-block;"></span>ריק / COMING SOON</span>
             <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#fff; box-shadow:0 0 0 2px var(--orange); display:inline-block;"></span>היום</span>
           </div>
@@ -475,13 +155,13 @@
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:30px; line-height:1;">{{ prCount }}</div>
             <div style="font-size:11px; color:#e8c98a; margin-top:3px;">שיאים</div>
           </div>
-          <button sc-camel-on-click="{{ openSharePRs }}" style="flex:none; background:rgba(255,255,255,.12); border:1px solid rgba(232,165,58,.4); color:#fff; border-radius:12px; padding:11px 16px; font-weight:700; font-size:13px; cursor:pointer;">📤 שתף</button>
+          <button onClick="{{ openSharePRs }}" style="flex:none; background:rgba(255,255,255,.12); border:1px solid rgba(232,165,58,.4); color:#fff; border-radius:12px; padding:11px 16px; font-weight:700; font-size:13px; cursor:pointer;">📤 שתף</button>
         </div>
 
         <sc-if value="{{ hasPRs }}" hint-placeholder-val="{{ true }}">
           <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px;">
             <sc-for list="{{ prList }}" as="pr" hint-placeholder-count="4">
-              <button sc-camel-on-click="{{ onCell }}" data-wi="{{ pr.wi }}" data-di="{{ pr.di }}" style="display:flex; align-items:center; gap:14px; text-align:start; background:#fff; border:1px solid var(--line); border-inline-start:4px solid var(--orange); border-radius:14px; padding:16px 18px; cursor:pointer; color:var(--ink); box-shadow:0 4px 16px rgba(20,31,56,.06);">
+              <button onClick="{{ onCell }}" data-wi="{{ pr.wi }}" data-di="{{ pr.di }}" style="display:flex; align-items:center; gap:14px; text-align:start; background:#fff; border:1px solid var(--line); border-inline-start:4px solid var(--orange); border-radius:14px; padding:16px 18px; cursor:pointer; color:var(--ink); box-shadow:0 4px 16px rgba(20,31,56,.06);">
                 <span style="font-size:22px; flex:none;">🏆</span>
                 <div style="flex:1; min-width:0;">
                   <div dir="auto" style="font-weight:700; font-size:16px; margin-bottom:3px;">{{ pr.move }}</div>
@@ -496,10 +176,11 @@
           </div>
         </sc-if>
         <sc-if value="{{ noPRs }}" hint-placeholder-val="{{ false }}">
-          <div style="text-align:center; padding:56px 20px; background:#fff; border:1px solid var(--line); border-radius:18px; color:var(--muted);">
-            <div style="font-size:40px; margin-bottom:10px;">🏆</div>
-            <div style="font-size:15px; font-weight:600; color:var(--ink); margin-bottom:4px;">עדיין אין שיאים</div>
-            <div style="font-size:13px;">כשתסמן אימון כ-PR בסרגל המאמץ, הוא יופיע כאן.</div>
+          <div style="text-align:center; padding:56px 24px; background:#fff; border:1px solid var(--line); border-radius:18px;">
+            <div style="width:96px; height:96px; margin:0 auto 18px; border-radius:50%; background:radial-gradient(circle at 50% 35%, rgba(232,165,58,.22), rgba(232,165,58,.05)); display:flex; align-items:center; justify-content:center; font-size:46px; animation:floaty 2.8s ease-in-out infinite;">🏆</div>
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; letter-spacing:.04em; color:var(--ink); margin-bottom:6px;">השיא הראשון שלך מחכה</div>
+            <div style="font-size:13.5px; color:var(--muted); line-height:1.6; max-width:320px; margin-inline:auto;">כל אימון שתדרג כ-<b style="color:var(--orange);">🏆 PR</b> בסרגל המאמץ ייאסף לכאן אוטומטית — עם התוצאה, התנועה והשבוע.</div>
+            <button onClick="{{ gotoToday }}" style="margin-top:22px; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:12px 26px; font-weight:700; font-size:14px; cursor:pointer;">← לך לאימון ותדרג PR</button>
           </div>
         </sc-if>
       </div>
@@ -522,22 +203,19 @@
           <div dir="rtl" style="font-size:11.5px; color:#c7ecd6; margin-top:14px; line-height:1.6; background:rgba(0,0,0,.15); border-radius:10px; padding:9px 12px;">איך מחשבים? בסגנון קרוספיט — <b>פחות נקודות = טוב יותר</b>. <b>70% תוצאה</b>: מקום 1 בתוצאות = 0 נק', וכל מקום מתחת מוסיף נקודות. <b>30% נוכחות</b>: הגעת לכל 5 = 0, כל אימון שהוחמץ = +1. הסכום הנמוך ביותר בעונה = מקום ראשון.</div>
         </div>
 
-        <div style="display:flex; align-items:center; gap:6px; margin-bottom:14px;">
-          <button sc-camel-on-click="{{ setWeekMode }}" style="{{ modeWeekStyle }}">שבועי</button>
-          <button sc-camel-on-click="{{ setTotalMode }}" style="{{ modeTotalStyle }}">סה"כ עונה</button>
+        <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+          <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; letter-spacing:.04em; color:var(--navy);">📅 הניקוד השבועי שלך</span>
+          <span style="font-size:11.5px; color:var(--muted);">בחר שבוע לצפייה ולהזנת התוצאה שלך</span>
+        </div>
+        <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px;">
+          <sc-for list="{{ boardWeekPills }}" as="p" hint-placeholder-count="8">
+            <button onClick="{{ onBoardWeek }}" data-wi="{{ p.wi }}" style="{{ p.style }}">
+              <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:14px;">W{{ p.n }}</span>
+            </button>
+          </sc-for>
         </div>
 
-        <sc-if value="{{ showWeekPills }}" hint-placeholder-val="{{ true }}">
-          <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px;">
-            <sc-for list="{{ boardWeekPills }}" as="p" hint-placeholder-count="8">
-              <button sc-camel-on-click="{{ onBoardWeek }}" data-wi="{{ p.wi }}" style="{{ p.style }}">
-                <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:14px;">W{{ p.n }}</span>
-              </button>
-            </sc-for>
-          </div>
-        </sc-if>
-
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-bottom:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-bottom:24px;">
           <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; border-radius:16px; padding:20px 22px;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
               <div style="font-size:12px; color:#9fb0dd; font-weight:600; letter-spacing:.04em;">הניקוד שלך · שבוע {{ selBoardWeekNum }}</div>
@@ -553,14 +231,14 @@
             </div>
             <label style="display:flex; flex-direction:column; gap:5px; margin-top:16px;">
               <span style="font-size:11px; color:#9fb0dd;">התוצאה שלך השבוע (לפי המדד שהמאמן קובע)</span>
-              <input sc-camel-input-mode="numeric" value="{{ myResultVal }}" sc-camel-on-change="{{ onMyResult }}" placeholder="0" style="border:1px solid rgba(255,255,255,.25); border-radius:9px; padding:9px 12px; font-size:15px; background:rgba(255,255,255,.1); color:#fff; outline:none; max-width:160px; font-weight:600;">
+              <input inputMode="numeric" value="{{ myResultVal }}" onChange="{{ onMyResult }}" placeholder="0" style="border:1px solid rgba(255,255,255,.25); border-radius:9px; padding:9px 12px; font-size:15px; background:rgba(255,255,255,.1); color:#fff; outline:none; max-width:160px; font-weight:600;">
             </label>
           </div>
           <div style="background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px 20px;">
             <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">הניקוד שלך לאורך 8 השבועות</div>
             <div style="display:flex; align-items:flex-end; gap:6px; height:92px;">
               <sc-for list="{{ trend }}" as="t" hint-placeholder-count="8">
-                <button sc-camel-on-click="{{ onBoardWeek }}" data-wi="{{ t.wi }}" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:4px; height:100%; background:none; border:none; cursor:pointer; padding:0;">
+                <button onClick="{{ onBoardWeek }}" data-wi="{{ t.wi }}" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:4px; height:100%; background:none; border:none; cursor:pointer; padding:0;">
                   <span style="{{ t.numStyle }}">{{ t.score }}</span>
                   <div style="{{ t.barStyle }}"></div>
                 </button>
@@ -569,19 +247,23 @@
           </div>
         </div>
 
+        <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+          <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; letter-spacing:.04em; color:var(--navy);">🏆 דירוג העונה</span>
+          <span style="font-size:11.5px; color:var(--muted);">הניקוד המצטבר של כל המתחרים · פחות = מקום גבוה יותר</span>
+        </div>
         <div style="background:#fff; border:1px solid var(--line); border-radius:18px; padding:18px 20px; box-shadow:0 6px 24px rgba(20,31,56,.06);">
           <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">
             <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">השם שלך בטבלה</span>
             <sc-if value="{{ nameEditing }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex; gap:8px; max-width:380px;">
-                <input dir="auto" value="{{ nameDraft }}" sc-camel-on-change="{{ onNameDraft }}" placeholder="איך יקראו לך בדירוג?" style="flex:1; min-width:0; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:15px; background:#fafaf8; color:var(--ink); outline:none;">
-                <button sc-camel-on-click="{{ confirmName }}" style="flex:none; background:var(--blue); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-weight:700; font-size:14px; cursor:pointer;">אשר</button>
+                <input dir="auto" value="{{ nameDraft }}" onChange="{{ onNameDraft }}" placeholder="איך יקראו לך בדירוג?" style="flex:1; min-width:0; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:15px; background:#fafaf8; color:var(--ink); outline:none;">
+                <button onClick="{{ confirmName }}" style="flex:none; background:var(--blue); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-weight:700; font-size:14px; cursor:pointer;">אשר</button>
               </div>
             </sc-if>
             <sc-if value="{{ notNameEditing }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex; align-items:center; gap:10px;">
                 <span dir="auto" style="font-weight:700; font-size:16px; color:var(--ink);">{{ myNameDisplay }}</span>
-                <button sc-camel-on-click="{{ editName }}" style="background:#f4f3ef; color:var(--muted); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">✎ ערוך</button>
+                <button onClick="{{ editName }}" style="background:#f4f3ef; color:var(--muted); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">✎ ערוך</button>
               </div>
             </sc-if>
           </div>
@@ -592,7 +274,12 @@
             <sc-for list="{{ boardRows }}" as="r" hint-placeholder-count="3">
               <div style="{{ r.rowStyle }}">
                 <span style="{{ r.rankStyle }}">{{ r.medal }}</span>
-                <span dir="auto" style="font-weight:700; font-size:14px;">{{ r.name }}</span>
+                <div style="display:flex; align-items:center; gap:7px; min-width:0;">
+                  <span dir="auto" style="font-weight:700; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ r.name }}</span>
+                  <sc-if value="{{ r.you }}" hint-placeholder-val="{{ false }}">
+                    <span style="flex:none; background:var(--orange); color:#fff; font-family:'Oswald',sans-serif; font-weight:700; font-size:10px; letter-spacing:.05em; padding:2px 7px; border-radius:999px;">אתה</span>
+                  </sc-if>
+                </div>
                 <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:19px; color:var(--blue); text-align:center;">{{ r.score }}</span>
                 <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; color:var(--muted); text-align:center;">{{ r.cons }}</span>
               </div>
@@ -614,14 +301,15 @@
           <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.04em; color:var(--navy);">יומן אימונים</div>
           <div style="margin-inline-start:auto; display:flex; gap:8px;">
             <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
-              <button sc-camel-on-click="{{ openBuilder }}" style="background:var(--navy); color:#fff; border:none; border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">🛠️ בנה שבוע</button>
+              <button onClick="{{ openMoves }}" style="background:#fff; color:var(--navy); border:1px solid var(--line); border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">🏃 תנועות</button>
+              <button onClick="{{ openBuilder }}" style="background:var(--navy); color:#fff; border:none; border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">🛠️ בנה שבוע</button>
             </sc-if>
-            <button sc-camel-on-click="{{ openShareWeek }}" style="background:#fff; color:var(--blue); border:1px solid var(--blue); border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">📤 שתף שבוע</button>
+            <button onClick="{{ openShareWeek }}" style="background:#fff; color:var(--blue); border:1px solid var(--blue); border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">📤 שתף שבוע</button>
           </div>
         </div>
         <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px;">
           <sc-for list="{{ weekPills }}" as="p" hint-placeholder-count="8">
-            <button sc-camel-on-click="{{ onWeekPill }}" data-wi="{{ p.wi }}" style="{{ p.style }}">
+            <button onClick="{{ onWeekPill }}" data-wi="{{ p.wi }}" style="{{ p.style }}">
               <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:14px;">W{{ p.n }}</span>
               <span style="font-size:10px; opacity:.8;">{{ p.doneLabel }}</span>
             </button>
@@ -630,7 +318,7 @@
 
         <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:7px; margin-bottom:18px;">
           <sc-for list="{{ dayChips }}" as="c" hint-placeholder-count="7">
-            <button sc-camel-on-click="{{ onDayChip }}" data-di="{{ c.di }}" style="{{ c.style }}">
+            <button onClick="{{ onDayChip }}" data-di="{{ c.di }}" style="{{ c.style }}">
               <span style="font-size:10px; font-weight:700; letter-spacing:.03em; opacity:.9;">{{ c.dow }}</span>
               <span style="font-family:'Oswald',sans-serif; font-weight:600; font-size:14px; margin-top:2px;">{{ c.dnum }}</span>
               <span style="font-size:9px; margin-top:3px;">{{ c.mark }}</span>
@@ -640,7 +328,7 @@
 
         <div style="background:#fff; border:1px solid var(--line); border-radius:18px; overflow:hidden; box-shadow:0 6px 24px rgba(20,31,56,.06);">
           <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; padding:15px 20px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <button sc-camel-on-click="{{ prevDay }}" style="background:rgba(255,255,255,.12); border:none; color:#fff; width:34px; height:34px; border-radius:10px; cursor:pointer; font-size:18px; flex:none;">‹</button>
+            <button onClick="{{ prevDay }}" style="background:rgba(255,255,255,.12); border:none; color:#fff; width:34px; height:34px; border-radius:10px; cursor:pointer; font-size:18px; flex:none;">‹</button>
             <div style="display:flex; flex-direction:column; gap:2px;">
               <div style="display:flex; align-items:center; gap:8px;">
                 <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:20px; letter-spacing:.03em;">{{ dayWeekday }}</span>
@@ -650,26 +338,37 @@
               </div>
               <div style="font-size:13px; color:#b9c4e6;">{{ dayDate }} · WEEK {{ selWeekNum }}</div>
             </div>
-            <button sc-camel-on-click="{{ nextDay }}" style="background:rgba(255,255,255,.12); border:none; color:#fff; width:34px; height:34px; border-radius:10px; cursor:pointer; font-size:18px; flex:none;">›</button>
+            <button onClick="{{ nextDay }}" style="background:rgba(255,255,255,.12); border:none; color:#fff; width:34px; height:34px; border-radius:10px; cursor:pointer; font-size:18px; flex:none;">›</button>
             <div style="margin-inline-start:auto; display:flex; align-items:center; gap:8px;">
               <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
                 <div style="display:flex; background:rgba(255,255,255,.1); border-radius:999px; padding:3px; gap:2px;">
-                  <button sc-camel-on-click="{{ setViewMode }}" style="{{ viewTabStyle }}">צפייה</button>
-                  <button sc-camel-on-click="{{ setEditMode }}" style="{{ editTabStyle }}">עריכה</button>
+                  <button onClick="{{ setViewMode }}" style="{{ viewTabStyle }}">צפייה</button>
+                  <button onClick="{{ setEditMode }}" style="{{ editTabStyle }}">עריכה</button>
                 </div>
               </sc-if>
-              <button sc-camel-on-click="{{ toggleDone }}" style="{{ doneBtnStyle }}">{{ doneBtnLabel }}</button>
+              <button onClick="{{ toggleRest }}" style="{{ restBtnStyle }}">{{ restBtnLabel }}</button>
             </div>
           </div>
+
+          <sc-if value="{{ hasAlt }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; gap:6px; padding:10px 18px; background:#eef1fb; border-bottom:1px solid var(--line);">
+              <button onClick="{{ setSessMain }}" style="{{ sessMainTabStyle }}">💪 {{ sessMainLabel }}</button>
+              <button onClick="{{ setSessAlt }}" style="{{ sessAltTabStyle }}">🚴 {{ sessAltLabel }}</button>
+            </div>
+          </sc-if>
 
           <sc-if value="{{ viewMode }}" hint-placeholder-val="{{ true }}">
             <div style="padding:16px 18px;">
               <sc-if value="{{ dayIsEmpty }}" hint-placeholder-val="{{ false }}">
-                <div style="text-align:center; padding:44px 16px 40px;">
-                  <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:30px; letter-spacing:.14em; color:var(--blue); opacity:.9;">COMING SOON</div>
-                  <div style="font-size:13px; color:var(--muted); margin-top:8px;">האימון של היום עוד לא פורסם — נמלא אותו יחד כשהוא יעלה.</div>
+                <div style="text-align:center; padding:48px 20px 44px;">
+                  <div style="width:88px; height:88px; margin:0 auto 18px; border-radius:50%; background:radial-gradient(circle at 50% 35%, rgba(35,64,154,.14), rgba(35,64,154,.04)); display:flex; align-items:center; justify-content:center; font-size:42px; animation:floaty 2.8s ease-in-out infinite;">🗓️</div>
+                  <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:30px; letter-spacing:.14em; color:var(--blue);">COMING SOON</div>
+                  <div style="font-size:13.5px; color:var(--muted); margin-top:8px; line-height:1.6; max-width:300px; margin-inline:auto;">האימון של היום עוד לא פורסם. הוא יופיע כאן ברגע שהמאמן יעלה אותו — בינתיים אפשר לתעד ימים אחרים או לסמן מנוחה.</div>
                   <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
-                    <button sc-camel-on-click="{{ setEditMode }}" style="margin-top:18px; background:var(--blue); color:#fff; border:none; border-radius:999px; padding:10px 22px; font-weight:700; font-size:13px; cursor:pointer;">+ הזן אימון</button>
+                    <button onClick="{{ setEditMode }}" style="margin-top:20px; background:var(--blue); color:#fff; border:none; border-radius:999px; padding:11px 24px; font-weight:700; font-size:14px; cursor:pointer;">+ הזן אימון עכשיו</button>
+                  </sc-if>
+                  <sc-if value="{{ notAdmin }}" hint-placeholder-val="{{ true }}">
+                    <button onClick="{{ gotoToday }}" style="margin-top:20px; background:#f4f3ef; color:var(--navy); border:1px solid var(--line); border-radius:999px; padding:11px 24px; font-weight:700; font-size:14px; cursor:pointer;">← חזרה לאימון של היום</button>
                   </sc-if>
                 </div>
               </sc-if>
@@ -726,6 +425,37 @@
                   </div>
                 </sc-if>
 
+                <sc-if value="{{ vShowMetcon2 }}" hint-placeholder-val="{{ false }}">
+                  <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:#fff;">
+                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:#f4f3ef; border-bottom:1px solid var(--line);">
+                      <span style="font-size:15px;">⏱️</span>
+                      <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">METCON B</span>
+                    </div>
+                    <div style="padding:14px 16px; display:flex; flex-direction:column; gap:8px;">
+                      <div dir="auto" style="font-weight:700; font-size:15px;">{{ day.metcon2.name }}</div>
+                      <sc-if value="{{ day.metcon2.hasScheme }}" hint-placeholder-val="{{ true }}">
+                        <div dir="auto" style="font-size:13px; color:var(--orange); font-weight:600;">{{ day.metcon2.scheme }}</div>
+                      </sc-if>
+                      <div style="display:flex; flex-direction:column; gap:5px; margin-top:2px;">
+                        <sc-for list="{{ day.metcon2.viewMovements }}" as="mv" hint-placeholder-count="4">
+                          <div dir="auto" style="display:flex; gap:8px; font-size:13px; align-items:baseline;">
+                            <span style="color:var(--orange); font-weight:700; font-family:'Oswald',sans-serif; flex:none;">{{ mv.num }}</span>
+                            <span style="font-weight:600;">{{ mv.name }}</span>
+                            <span style="color:var(--muted);">{{ mv.detail }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <sc-if value="{{ day.metcon2.hasNote }}" hint-placeholder-val="{{ false }}">
+                        <div dir="auto" style="white-space:pre-line; font-size:12.5px; color:var(--muted); line-height:1.6; border-top:1px solid var(--line); padding-top:8px; margin-top:2px;">{{ day.metcon2.note }}</div>
+                      </sc-if>
+                      <div style="display:flex; flex-direction:column; gap:5px; margin-top:4px;">
+                        <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--blue);">✎ התוצאה שלי</span>
+                        {{ metcon2Bar }}
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+
                 <sc-if value="{{ vShowExtra }}" hint-placeholder-val="{{ false }}">
                   <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:#fff;">
                     <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:#f4f3ef; border-bottom:1px solid var(--line);">
@@ -757,6 +487,8 @@
                     {{ summaryField }}
                   </div>
                 </div>
+
+                <div style="grid-column:1 / -1;">{{ saveBar }}</div>
               </div>
             </div>
           </sc-if>
@@ -772,7 +504,7 @@
                 <div style="display:grid; gap:12px;">
                   <label style="display:flex; flex-direction:column; gap:6px;">
                     <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">Movement / תרגיל</span>
-                    <input dir="auto" data-path="lift.movement" value="{{ day.lift.movement }}" sc-camel-on-change="{{ onEdit }}" placeholder="למשל: Squat Clean + Jerk" style="{{ inputStyle }}">
+                    <input dir="auto" list="movelib" data-path="lift.movement" value="{{ day.lift.movement }}" onChange="{{ onEdit }}" placeholder="למשל: Squat Clean + Jerk" style="{{ inputStyle }}">
                   </label>
                   <label style="display:flex; flex-direction:column; gap:6px;">
                     <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">Planned / תכנית ודגשים</span>
@@ -795,19 +527,19 @@
                   <div style="display:grid; grid-template-columns:1.6fr 1fr; gap:12px;">
                     <label style="display:flex; flex-direction:column; gap:6px;">
                       <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">WOD Name</span>
-                      <input dir="auto" data-path="metcon.name" value="{{ day.metcon.name }}" sc-camel-on-change="{{ onEdit }}" placeholder="שם / כותרת המטקון" style="{{ inputStyle }}">
+                      <input dir="auto" data-path="metcon.name" value="{{ day.metcon.name }}" onChange="{{ onEdit }}" placeholder="שם / כותרת המטקון" style="{{ inputStyle }}">
                     </label>
                     <label style="display:flex; flex-direction:column; gap:6px;">
                       <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">Scheme</span>
-                      <input dir="auto" data-path="metcon.scheme" value="{{ day.metcon.scheme }}" sc-camel-on-change="{{ onEdit }}" placeholder="AMRAP / For Time / Rounds" style="{{ inputStyle }}">
+                      <input dir="auto" data-path="metcon.scheme" value="{{ day.metcon.scheme }}" onChange="{{ onEdit }}" placeholder="AMRAP / For Time / Rounds" style="{{ inputStyle }}">
                     </label>
                   </div>
                   <div style="display:flex; flex-direction:column; gap:7px; background:#faf9f6; border:1px solid var(--line); border-radius:12px; padding:12px;">
                     <sc-for list="{{ day.metcon.movements }}" as="mv" hint-placeholder-count="4">
                       <div style="display:grid; grid-template-columns:26px 1fr 1.1fr; gap:8px; align-items:center;">
                         <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:12px; color:var(--orange); text-align:center;">{{ mv.num }}</span>
-                        <input dir="auto" data-path="metcon.movements.{{ mv.i }}.name" value="{{ mv.name }}" sc-camel-on-change="{{ onEdit }}" placeholder="תנועה" style="{{ inputSm }}">
-                        <input dir="auto" data-path="metcon.movements.{{ mv.i }}.detail" value="{{ mv.detail }}" sc-camel-on-change="{{ onEdit }}" placeholder="חזרות / מרחק / משקל" style="{{ inputSm }}">
+                        <input dir="auto" list="movelib" data-path="metcon.movements.{{ mv.i }}.name" value="{{ mv.name }}" onChange="{{ onEdit }}" placeholder="תנועה" style="{{ inputSm }}">
+                        <input dir="auto" data-path="metcon.movements.{{ mv.i }}.detail" value="{{ mv.detail }}" onChange="{{ onEdit }}" placeholder="חזרות / מרחק / משקל" style="{{ inputSm }}">
                       </div>
                     </sc-for>
                   </div>
@@ -831,7 +563,7 @@
                 <div style="display:grid; gap:14px;">
                   <sc-for list="{{ day.extras }}" as="ex" hint-placeholder-count="2">
                     <div style="border:1px solid var(--line); border-radius:12px; padding:12px; display:grid; gap:10px;">
-                      <input dir="auto" data-path="extras.{{ ex.i }}.name" value="{{ ex.name }}" sc-camel-on-change="{{ onEdit }}" placeholder="Extra #{{ ex.num }} — שם התרגיל" style="{{ inputStyle }}">
+                      <input dir="auto" list="movelib" data-path="extras.{{ ex.i }}.name" value="{{ ex.name }}" onChange="{{ onEdit }}" placeholder="Extra #{{ ex.num }} — שם התרגיל" style="{{ inputStyle }}">
                       {{ ex.detailField }}
                       {{ ex.resultBar }}
                     </div>
@@ -862,10 +594,10 @@
   </main>
 
   <sc-if value="{{ welcomeOpen }}" hint-placeholder-val="{{ false }}">
-    <div sc-camel-on-click="{{ closeWelcome }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .25s ease both;">
-      <div sc-camel-on-click="{{ stop }}" style="background:#fff; border-radius:24px; width:100%; max-width:440px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto;">
+    <div onClick="{{ closeWelcome }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .25s ease both;">
+      <div onClick="{{ stop }}" style="background:#fff; border-radius:24px; width:100%; max-width:440px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto;">
         <div style="background:linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a); color:#fff; padding:26px 24px 22px; text-align:center;">
-          <img src="assets/img/5ec7dfdd.png" alt="" style="width:56px; height:56px; border-radius:50%; box-shadow:0 0 0 3px rgba(255,255,255,.25); margin-bottom:12px;">
+          <img src="assets/logo.png" alt="" style="width:56px; height:56px; border-radius:50%; box-shadow:0 0 0 3px rgba(255,255,255,.25); margin-bottom:12px;">
           <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; letter-spacing:.05em;">ברוכים הבאים 👋</div>
           <div dir="rtl" style="font-size:13px; color:#b9c4e6; margin-top:6px; line-height:1.6;">לוח המעקב של תוכנית <bdi>Capacity</bdi> — 8 שבועות.<br>ככה מתמצאים בכמה שניות:</div>
         </div>
@@ -891,23 +623,88 @@
             <div><div style="font-weight:700; font-size:14px;">לא ברור משהו? נתקעת?</div><div style="font-size:12.5px; color:var(--muted); line-height:1.6;">שלחו לי הודעה ואשמח לעזור — <a href="https://wa.me/972523330954" target="_blank" style="font-weight:700; white-space:nowrap;">אורי עוזיאל · 052-333-0954</a></div></div>
           </div>
           <div style="font-size:11.5px; color:var(--muted); text-align:center;">הנתונים נשמרים אוטומטית במכשיר הזה.</div>
-          <button sc-camel-on-click="{{ closeWelcome }}" style="background:var(--blue); color:#fff; border:none; border-radius:12px; padding:13px; font-weight:700; font-size:15px; cursor:pointer;">יאללה, בואו נתחיל 💪</button>
+          <button onClick="{{ closeWelcome }}" style="background:var(--blue); color:#fff; border:none; border-radius:12px; padding:13px; font-weight:700; font-size:15px; cursor:pointer;">יאללה, בואו נתחיל 💪</button>
         </div>
       </div>
     </div>
   </sc-if>
 
+  <sc-if value="{{ onbOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; inset:0; background:rgba(12,18,34,.72); backdrop-filter:blur(4px); z-index:110; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .25s ease both;">
+      <div style="background:#fff; border-radius:24px; width:100%; max-width:430px; box-shadow:0 24px 70px rgba(12,18,34,.5); overflow:hidden; margin:auto;">
+        <div style="background:linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a); color:#fff; padding:26px 24px 22px; text-align:center;">
+          <img src="assets/logo.png" alt="" style="width:56px; height:56px; border-radius:50%; box-shadow:0 0 0 3px rgba(255,255,255,.25); margin-bottom:12px;">
+          <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:23px; letter-spacing:.04em;">בוא נכיר 💪</div>
+          <div dir="rtl" style="font-size:13px; color:#b9c4e6; margin-top:6px; line-height:1.6;">שתי דקות של הגדרה ואתה בפנים — הכול נשמר במכשיר שלך.</div>
+        </div>
+        <div dir="rtl" style="padding:22px; display:flex; flex-direction:column; gap:20px;">
+          <label style="display:flex; flex-direction:column; gap:7px;">
+            <span style="font-weight:700; font-size:14px; color:var(--ink);">איך קוראים לך?</span>
+            <span style="font-size:12px; color:var(--muted); margin-top:-4px;">השם שיופיע בטבלת הדירוג של הבוקס.</span>
+            <input dir="auto" value="{{ onbName }}" onChange="{{ onOnbName }}" placeholder="השם שלך" style="border:1px solid var(--line); border-radius:11px; padding:12px 14px; font-size:16px; background:#fafaf8; color:var(--ink); outline:none;">
+          </label>
+          <div style="display:flex; flex-direction:column; gap:7px;">
+            <span style="font-weight:700; font-size:14px; color:var(--ink);">כמה אימונים בשבוע? 🎯</span>
+            <span style="font-size:12px; color:var(--muted); margin-top:-4px;">היעד האישי שלך — לפיו נחשב את ההתקדמות והנקודות.</span>
+            <div style="display:flex; gap:8px;">
+              <sc-for list="{{ onbTargetOpts }}" as="o" hint-placeholder-count="4">
+                <button onClick="{{ onOnbTarget }}" data-t="{{ o.v }}" style="{{ o.style }}">{{ o.v }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <label style="display:flex; flex-direction:column; gap:7px;">
+            <span style="font-weight:700; font-size:14px; color:var(--ink);">מה המטרה שלך בבלוק הזה?</span>
+            <span style="font-size:12px; color:var(--muted); margin-top:-4px;">אופציונלי — נזכיר לך אותה כשתצטרך מוטיבציה.</span>
+            <input dir="auto" value="{{ onbGoal }}" onChange="{{ onOnbGoal }}" placeholder="למשל: להוציא Muscle-up ראשון" style="border:1px solid var(--line); border-radius:11px; padding:12px 14px; font-size:16px; background:#fafaf8; color:var(--ink); outline:none;">
+          </label>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <button onClick="{{ finishOnb }}" style="{{ finishOnbStyle }}">בוא נתחיל 🚀</button>
+            <button onClick="{{ skipOnb }}" style="background:none; border:none; color:var(--muted); font-size:13px; cursor:pointer; padding:6px;">דלג לעכשיו</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ movesOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeMoves }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .25s ease both;">
+      <div onClick="{{ stop }}" dir="rtl" style="background:#fff; border-radius:22px; width:100%; max-width:460px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto; display:flex; flex-direction:column; max-height:calc(100vh - 40px);">
+        <div style="background:linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a); color:#fff; padding:20px 22px; display:flex; align-items:center; gap:12px;">
+          <span style="font-size:26px;">🏃</span>
+          <div style="flex:1; min-width:0;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; letter-spacing:.04em;">ספריית תנועות</div>
+            <div style="font-size:12px; color:#b9c4e6; margin-top:2px;">{{ moveCount }} תנועות · מופיעות כהשלמה אוטומטית בהזנת אימון</div>
+          </div>
+          <button onClick="{{ closeMoves }}" style="background:rgba(255,255,255,.14); border:none; color:#fff; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; flex:none;">✕</button>
+        </div>
+        <div style="padding:16px 20px; border-bottom:1px solid var(--line); display:flex; gap:8px;">
+          <input dir="auto" value="{{ moveDraft }}" onChange="{{ onMoveDraft }}" placeholder="הוסף תנועה חדשה — למשל: Sandbag Clean" style="flex:1; min-width:0; border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:15px; background:#fafaf8; color:var(--ink); outline:none;">
+          <button onClick="{{ addMove }}" style="flex:none; background:var(--orange); color:#fff; border:none; border-radius:10px; padding:11px 20px; font-weight:700; font-size:14px; cursor:pointer;">הוסף</button>
+        </div>
+        <div style="padding:12px 16px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
+          <sc-for list="{{ moveList }}" as="m" hint-placeholder-count="8">
+            <div style="display:flex; align-items:center; gap:10px; background:#faf9f6; border:1px solid var(--line); border-radius:10px; padding:10px 14px;">
+              <span dir="auto" style="flex:1; min-width:0; font-weight:600; font-size:14px; color:var(--ink);">{{ m.name }}</span>
+              <button onClick="{{ removeMove }}" data-m="{{ m.name }}" title="הסר" style="flex:none; background:#fdecea; color:#d8342b; border:none; border-radius:8px; padding:6px 10px; font-weight:700; font-size:13px; cursor:pointer;">✕</button>
+            </div>
+          </sc-for>
+        </div>
+        <div style="padding:12px 20px; border-top:1px solid var(--line); font-size:11.5px; color:var(--muted); line-height:1.6;">שמות אחידים = השוואת שיאים מדויקת. השינויים נשמרים במכשיר זה. ההשלמה מציעה שמות אך עדיין מאפשרת להקליד שם חופשי.</div>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ shareOpen }}" hint-placeholder-val="{{ false }}">
-    <div sc-camel-on-click="{{ closeShare }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:95; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .2s ease both;">
-      <div sc-camel-on-click="{{ stop }}" style="background:#fff; border-radius:22px; padding:20px; width:100%; max-width:424px; box-shadow:0 24px 70px rgba(12,18,34,.45); margin:auto;">
+    <div onClick="{{ closeShare }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:95; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .2s ease both;">
+      <div onClick="{{ stop }}" style="background:#fff; border-radius:22px; padding:20px; width:100%; max-width:424px; box-shadow:0 24px 70px rgba(12,18,34,.45); margin:auto;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
           <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.04em; color:var(--navy);">{{ shareTitle }}</div>
-          <button sc-camel-on-click="{{ closeShare }}" style="background:#f4f3ef; border:none; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; color:var(--muted);">✕</button>
+          <button onClick="{{ closeShare }}" style="background:#f4f3ef; border:none; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; color:var(--muted);">✕</button>
         </div>
         <div style="display:flex; justify-content:center; margin-bottom:16px;">{{ shareCard }}</div>
         <div style="display:flex; gap:10px;">
-          <button sc-camel-on-click="{{ shareDownload }}" style="flex:1; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📸 הורד תמונה</button>
-          <button sc-camel-on-click="{{ shareCopy }}" style="flex:1; background:#f4f3ef; color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📋 העתק טקסט</button>
+          <button onClick="{{ shareDownload }}" style="flex:1; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📸 הורד תמונה</button>
+          <button onClick="{{ shareCopy }}" style="flex:1; background:#f4f3ef; color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📋 העתק טקסט</button>
         </div>
         <div style="text-align:center; font-size:11px; color:var(--muted); margin-top:12px;">שתף בוואטסאפ, שמור למכשיר או שלח למאמן</div>
       </div>
@@ -915,8 +712,8 @@
   </sc-if>
 
   <sc-if value="{{ builderOpen }}" hint-placeholder-val="{{ false }}">
-    <div sc-camel-on-click="{{ closeBuilder }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:95; display:flex; align-items:flex-start; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .2s ease both;">
-      <div sc-camel-on-click="{{ stop }}" style="background:#f4f3ef; border-radius:22px; width:100%; max-width:680px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto;">
+    <div onClick="{{ closeBuilder }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:95; display:flex; align-items:flex-start; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .2s ease both;">
+      <div onClick="{{ stop }}" style="background:#f4f3ef; border-radius:22px; width:100%; max-width:680px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto;">
         {{ builderBody }}
       </div>
     </div>
@@ -927,15 +724,15 @@
   </sc-if>
 
   <sc-if value="{{ adminOpen }}" hint-placeholder-val="{{ false }}">
-    <div sc-camel-on-click="{{ closeAdmin }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:90; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
-      <div sc-camel-on-click="{{ stop }}" style="background:#fff; border-radius:20px; padding:26px 26px 24px; width:100%; max-width:340px; box-shadow:0 20px 60px rgba(12,18,34,.4);">
+    <div onClick="{{ closeAdmin }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:90; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
+      <div onClick="{{ stop }}" style="background:#fff; border-radius:20px; padding:26px 26px 24px; width:100%; max-width:340px; box-shadow:0 20px 60px rgba(12,18,34,.4);">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
-          <img src="assets/img/5ec7dfdd.png" alt="" style="width:34px; height:34px; border-radius:50%;">
+          <img src="assets/logo.png" alt="" style="width:34px; height:34px; border-radius:50%;">
           <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; letter-spacing:.05em; color:var(--navy);">ADMIN ACCESS</div>
         </div>
         <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
           <div style="font-size:13px; color:var(--muted); margin:10px 0 18px;">אתה מחובר כמנהל — יש לך הרשאות עריכה מלאות.</div>
-          <button sc-camel-on-click="{{ adminLogout }}" style="width:100%; background:#f4f3ef; color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">התנתק ממצב מנהל</button>
+          <button onClick="{{ adminLogout }}" style="width:100%; background:#f4f3ef; color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">התנתק ממצב מנהל</button>
         </sc-if>
         <sc-if value="{{ notAdmin }}" hint-placeholder-val="{{ true }}">
           <div style="font-size:13px; color:var(--muted); margin:10px 0 14px;">הזן קוד מנהל כדי לפתוח עריכת אימונים. שאר המשתמשים יכולים לצפות ולסמן אימון כהושלם.</div>
@@ -943,25 +740,39 @@
           <sc-if value="{{ adminError }}" hint-placeholder-val="{{ false }}">
             <div style="font-size:12px; color:#d8342b; font-weight:600; margin-top:8px;">קוד שגוי, נסה שוב.</div>
           </sc-if>
-          <button sc-camel-on-click="{{ adminSubmit }}" style="width:100%; margin-top:14px; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">כניסה</button>
+          <button onClick="{{ adminSubmit }}" style="width:100%; margin-top:14px; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">כניסה</button>
         </sc-if>
       </div>
     </div>
   </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900},&quot;startView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;overview&quot;,&quot;log&quot;],&quot;default&quot;:&quot;overview&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;includeExample&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;showProgramMap&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;adminCode&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;batyam&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Admin&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900},&quot;startView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;overview&quot;,&quot;log&quot;],&quot;default&quot;:&quot;overview&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;includeExample&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;showProgramMap&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;adminCode&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;batyam&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Admin&quot;}}">
 class Component extends DCLogic {
   weekdays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   dowShort = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
   startDate = new Date(2026, 6, 12);
   KEY = 'cfby_tracker_v1';
   WEEKLY_TARGET = 5;
+  MOVEMENTS = [
+    'Back Squat','Front Squat','Overhead Squat','Box Squat','Pause Back Squat','Squat Clean','Power Clean','Clean & Jerk','Squat Clean + Jerk','Hang Power Clean','Hang Squat Clean',
+    'Snatch','Power Snatch','Hang Power Snatch','Hang Squat Snatch','Overhead Snatch','Muscle Snatch','Snatch Balance',
+    'Deadlift','Sumo Deadlift','Romanian Deadlift','Deadlift High Pull','Clean Pull','Snatch Pull',
+    'Strict Press','Push Press','Push Jerk','Split Jerk','Bench Press','Close-Grip Bench Press','Incline Bench Press','DB Bench Press','DB Shoulder Press','DB Push Press',
+    'Pull Up','Strict Pull Up','Chest to Bar','Bar Muscle Up','Ring Muscle Up','Toes to Bar','Knees to Elbow','Chin Up','Ring Row',
+    'Handstand Push Up','Strict HSPU','Wall Walk','Handstand Walk','Pike Push Up','Push Up','Ring Dip','Dip',
+    'Thruster','Wall Ball','Wallball','Wallwalks','Burpee','Burpee Box Jump Over','Burpee Get Over','Burpee to Plate','Box Jump','Box Jump Over','Step Up','Pistol','Air Squat',
+    'Kettlebell Swing','KB Swing','Goblet Squat','KB Snatch','KB Clean & Jerk','DB Snatch','DB Clean','DB Thruster','DB Hammer Curl',
+    'Rope Climb','Legless Rope Climb','GHD Sit Up','Sit Up','Hollow Hold','Plank','Copenhagen Plank','Banded Face Pull',
+    'Run','Row','Cal Row','Bike','Cal Bike','Echo Bike','Ski Erg','Cal Ski','Double Under','Single Under','Jump Rope',
+    'Lunge','Walking Lunge','Overhead Lunge','Front Rack Lunge','Good Morning','Barbell Row','Bent Over Row','Farmers Carry','Sled Push','Sled Pull','Turkish Get Up'
+  ];
 
   emptyDay() {
-    return { done:false, rating:'',
+    const mc = () => ({ name:'', scheme:'', score:'', note:'', result:'', resultMode:'', log:{ mode:'time', time:'', rounds:'', reps:'', amount:'', note:'' }, movements:[{name:'',detail:''},{name:'',detail:''},{name:'',detail:''},{name:'',detail:''}] });
+    return { done:false, rest:false, rating:'',
       lift:{ movement:'', planned:'', result:'', log:{ weight:'', reps:'', note:'' } },
-      metcon:{ name:'', scheme:'', score:'', note:'', result:'', log:{ mode:'time', time:'', rounds:'', reps:'', note:'' }, movements:[{name:'',detail:''},{name:'',detail:''},{name:'',detail:''},{name:'',detail:''}] },
+      metcon: mc(), metcon2: mc(),
       extras:[{name:'',detail:'',result:'',log:{text:''}},{name:'',detail:'',result:'',log:{text:''}}],
       summary:'' };
   }
@@ -973,6 +784,10 @@ class Component extends DCLogic {
       for (let d=0; d<7; d++) days.push(this.emptyDay());
       weeks.push({ days });
     }
+    this.applyProgram(weeks);
+    return weeks;
+  }
+  _seedExampleDISABLED(weeks, includeExample) {
     if (includeExample) {
       const m = weeks[0].days[1];
       m.rating = 'pr';
@@ -986,6 +801,69 @@ class Component extends DCLogic {
       ];
     }
     return weeks;
+  }
+
+  PROGRAM_VERSION = 6;
+  programWeek1() {
+    return {
+      0: {
+        lift: { movement:'Back Squat — CapaciTest #1 (Baseline)', planned:'Build to a heavy set of 3, by feel.\nEvery 2:30 — add weight each set.\nSuggested jumps: 60-70-80-85-90% of your estimated 3RM, then smaller jumps.\n\nהמטרה: שלשה כבדה, גריינד טוב — אבל להשתדל להימנע מכשל.' },
+        metcon: { name:'AMRAP 12:00', scheme:'AMRAP 12:00', score:'Total reps', note:'Score — total reps.\nהציבו ארגז גבוה או שורה ארוכה של ארגזים; כל מעבר מעל הארגז מתבצע בעזרת ידיים.', movements:[['Wallballs','12'],['Burpee get overs','6 @30/24"'],['Wallwalks','3']] },
+        extras: [['Snatch Practice','Every 1:30 for 6 sets:\nPower snatch + Squat snatch\n\nStay up to ±70% — this is just a practice session. Drop & reset.']],
+        alt: {
+          metcon: { name:'Row 3000 + E3MOM (Endurance)', scheme:'For time', score:'Rowing amount', resultMode:'amount', note:'Row 3000m. Every 3 minutes (E3MOM) — Run 200 meters.\nהזינו כמה חתירה בוצעה בסך הכל.', movements:[['Row','3000m'],['E3MOM','Run 200m']] },
+          metcon2: { name:'METCON-B — AMRAP 16:00', scheme:'AMRAP 16:00', score:'Rounds', resultMode:'rounds', note:'הזינו כמה סיבובים הושלמו.', movements:[['Run','400m'],['Wallballs','12'],['Burpee get overs','6 @30/24"'],['Wallwalks','3']] },
+          extras: [['',''],['','']]
+        }
+      },
+      1: {
+        lift: { movement:'Squat Clean + Pause Jerk', planned:'Every 1:30 x 8 sets\n*Pause at the receiving position for 2s.\n\nמוסיפים משקל כל 2 סטים.\nמוסיפים עצירה במנח הקבלה של הג׳רק, זה יכול להיות פוש ג׳רק או ספליט - בחירה חופשית.' },
+        metcon: { name:'CapaciTest #2 — Monostructural', scheme:'3 Rounds For Time', score:'Time', note:'Score — time.\nזה יהיה הטסט האירובי שלנו לבלוק הקרוב - ואנחנו הולכים לנסות לשפר אותו בעוד 8 שבועות.\nאפשר להגיע מהריצה ישירות לחתירה אם חסרות מכונות.\nמתאמנים חדשים - חותכים את הריצה ל-400-600m, ואת החזרות ל-15 בכל תנועה.', movements:[['800m Run',''],['Box jump','20 @24/20" step down'],['Burpees to plate','20'],['Cal row','20/15']] },
+        extras: [['CapaciTest #3 — Pull Up','Every 30s for 10 sets (5:00) · Strict pull-up set\nreps per set. Pick a number, stick to it. Band 1-6 if needed.\nStrict. Full hang. Chin over bar.\nRecord your total reps over the 5:00.'],['Alternating EMOM 9:00','Min 1 - 8+8 DB Hammer curls\nMin 2 - 10 Banded face pulls\nMin 3 - 20s Copenhagen plank each side']]
+      },
+      2: {
+        lift: { movement:'Different Strength', planned:'Till the end of the class, perform ±3 sets of:\n6 Heavy DB Snatches\n10+10 Banded Pallof presses\n\nGo as heavy as you can on the DB. Play time.\nPrefer resetting the DB, and not T&G.' },
+        metcon: { name:'Big Tuesday', scheme:'One running clock · 2 scores', score:'Avg reps/cal per min', note:'0:00–10:00 — Every 2:00 for 5 sets:\n• 10-15 T2B\n• 5 Power snatches\n\n15:00–30:00 — EMOMania (Alternating EMOM 15:00):\n• Min 1 — Double unders\n• Min 2 — Max Devil presses (2×DB)\n• Min 3 — 30s Max V-Ups\n\nScore — average reps/cal per minute (pick a number and stick to it).\nLevel 1 = 20 DU / 40-60 SU · Level 2 = 40 DU · Level 3 = 60 DU\n\nהחלק הראשון סביב תנועה נקייה ויעילה; השני סביב נפח. בחלק הראשון בחרו מספר שתוכלו להחזיק רצוף. הדוויל פרס יכול להיות קלין וג׳רק.', movements:[] },
+        extras: [['BY Extra','3 sets for quality:\n10-15 GHD sit-ups (or weighted sit-ups)\n10 Hip extensions (GHD or banded)\nStatic Handstand hold practice set.']]
+      },
+      3: {
+        lift: { movement:'Front Squat — Volume', planned:'Every 2:30 for 4 sets:\n4 reps @65-70% of Sunday Back Squat 3RM\n\nFirst rep paused 1s at the bottom. Quality over load.\n\nאם לא הרמתם את השלשה הכבדה ביום ראשון — לכו על סטים של 4 חזרות עם עוד הרבה בטנק. זה אמור להיות סקוואטים איכותיים ונפחיים — לא כבד במיוחד.' },
+        metcon: { name:'Paincave', scheme:'4 Rounds For Time', score:'Time · cap 12:00', note:'Time cap 12:00.\nLevel 1 = 20/15kg, 50 DU / 100 SU\nLevel 2 = 30/20kg, 80 DU\nLevel 3 = 35/25kg, 100 DU\n\nהמטרה כאן פשוטה וישירה: ארבעה סבבים מאוד לא נעימים, עם הרבה עבודה בכל תנועה. הסט של הת׳ראסטרים אמור להיות ארוך ולקחת כדקה וחצי. משקל בין מוט ריק (למתחילים) ועד 35 ק״ג לגברים ו-25 לנשים.', movements:[['Double unders',''],['Thrusters','']] },
+        extras: [['BY Extra — Strict Press','Every 2:00 for 4-5 sets:\n6 reps @65-70%\n1s hold overhead for each rep.\n\nPerform bodyweight Bulgarian Split Squats — slight tempo, 5-8 quality reps after each press set.']]
+      },
+      4: {
+        lift: { movement:'Gymnastics CapaciTest #4 — C2B / Pull-ups EMOM (Baseline)', planned:'EMOM 10:00 — pick a rep count you can hold every single minute unbroken.\nC2B or pull-ups — your call based on your level.\nPick a number. Stick to it. Log the number.\n\nזו הפעם הראשונה שעושים טסט כזה. בחרו מספר שתוכלו לבצע בכל דקה ושמרו עליו לאורך 10 הדקות. בשבוע הבא נוסיף חזרה אחת לדקה, לפחות.' },
+        metcon: { name:'Every 3:00 x 5 sets', scheme:'Every 3:00 for 5 sets', score:'Slowest round', note:'Level 1 = 10/7 cals, 2 Jumping/Banded MU\nLevel 2 = 12/8 cals, 2 MU\nLevel 3 = 14/10 cals, 4 MU\nLevel 4 = 16/12 cals, 6-8 MU\n\nScore — slowest round.\nבחרו כמות קלוריות שתיקח פחות מדקה לסיים, יחד עם סט מאסל אפים שתוכלו לבצע ברצף.', movements:[['Cal row',''],['Bar muscle-ups',''],['Power cleans','4']] },
+        extras: [['Strength — Deadlift','Build a heavy triple for the day. Reset each rep.\nשלושה כבדה, כשכל הורדה של המוט תדרוש גם שליטה. לא לזרוק — ללוות את המוט אל הרצפה.']]
+      },
+      5: {
+        lift: { movement:'Power Snatch — EMOM 10:00', planned:'EMOM 10:00 — 2 Touch & Go Power Snatches.\nPractice moving ±70% well.' },
+        metcon: { name:'AMRAP 20:00 (ascending)', scheme:'AMRAP 20:00', score:'Total reps', note:'Add 2 burpees & snatches each round.\nScore — total reps.\nזה אירובי וארוך. תדאגו לקחת דאמבל שתוכלו להחזיק איתו סטים רצופים ל-3-4 הסבבים הראשונים.', movements:[['Run','200m'],['Burpees over the DB','10'],['DB snatches','10']] },
+        extras: [['Strength Successory','Every 1:30 for 4 sets:\n3-4 Floating snatch pulls\n\nTry using ±90% of your snatch and maintain speed.']]
+      },
+      6: {
+        lift: { movement:'Team Strength — AMRAP 10:00 (teams of 3)', planned:'I-go-you-go-you-go style:\n5 Single arm push presses (each hand)\nWhen all 3 teammates complete their 10 reps, the entire team goes for a max L-Hang set on the bar.\n\nפוש פרס ביד אחת בלבד; כל מתאמן עם הדאמבל הכבד ביותר שעדיין מאפשר תנועה טובה. מתאמן א׳ מבצע, אחריו ב׳, אחריו ג׳, ואז מחזיקים L כולם יחד.' },
+        metcon: { name:'In pairs — Every 4:00 x 20:00', scheme:'Every 4:00 for 20:00 (pairs)', score:'Total burpees', note:'Score — total burpees.\nקפיצות הארגז אחד מול השני: פרטנר 1 קופץ ויורד, ואז פרטנר 2. 10 קפיצות כל אחד.', movements:[['Suitcase carry','100m (each DB/KB)'],['Hand release push-ups','10-15 synced'],['Box jumps','10 @30/24"'],['Max synced burpees','remaining time']] },
+        extras: [['BY Extra','Every 90s for 8 sets, alternate:\n• 5 Dips — full range of motion, add weight if you can\n• 10 Single-leg DB RDL']]
+      }
+    };
+  }
+  applyProgram(weeks) {
+    const p = this.programWeek1();
+    const fillMetcon = (dst, m) => { if (!m) return; dst.name=m.name||''; dst.scheme=m.scheme||''; dst.score=m.score||''; dst.note=m.note||''; dst.resultMode=m.resultMode||''; for (let i=0;i<4;i++){ const mv=(m.movements||[])[i]; dst.movements[i]={ name:mv?mv[0]:'', detail:mv?mv[1]:'' }; } };
+    const fill = (day, src) => {
+      if (!day || !src) return;
+      if (src.lift) { day.lift.movement = src.lift.movement||''; day.lift.planned = src.lift.planned||''; }
+      if (src.metcon) fillMetcon(day.metcon, src.metcon);
+      if (src.metcon2) fillMetcon(day.metcon2, src.metcon2);
+      if (src.extras) src.extras.forEach((e,i)=>{ if(i<2){ day.extras[i].name=e[0]||''; day.extras[i].detail=e[1]||''; } });
+    };
+    Object.keys(p).forEach(di=>{
+      const src = p[di]; const day = weeks[0] && weeks[0].days[+di];
+      if (!day) return;
+      fill(day, src);
+      if (src.alt) { if (!day.alt) day.alt = this.emptyDay(); fill(day.alt, src.alt); }
+    });
   }
 
   normalizeDay(o) {
@@ -1006,12 +884,21 @@ class Component extends DCLogic {
       nd.metcon.scheme = src.scheme || '';
       nd.metcon.score = src.score || '';
       nd.metcon.note = (o.metcon ? (o.metcon.note || '') : (o.notes || ''));
+      nd.metcon.resultMode = src.resultMode||'';
       const M = src.log || {};
-      nd.metcon.log = { mode: M.mode||'time', time: M.time||'', rounds: M.rounds||'', reps: M.reps||'', note: M.note!==undefined ? M.note : (src.result||'') };
+      nd.metcon.log = { mode: M.mode||'time', time: M.time||'', rounds: M.rounds||'', reps: M.reps||'', amount: M.amount||'', note: M.note!==undefined ? M.note : (src.result||'') };
       if (Array.isArray(src.movements)) src.movements.forEach((m,i)=>{ if(i<4){ nd.metcon.movements[i].name=m.name||''; nd.metcon.movements[i].detail=m.detail||''; }});
+    }
+    const src2 = o.metcon2;
+    if (src2) {
+      nd.metcon2.name = src2.name||''; nd.metcon2.scheme = src2.scheme||''; nd.metcon2.score = src2.score||''; nd.metcon2.note = src2.note||''; nd.metcon2.resultMode = src2.resultMode||'';
+      const M2 = src2.log || {};
+      nd.metcon2.log = { mode: M2.mode||'time', time: M2.time||'', rounds: M2.rounds||'', reps: M2.reps||'', amount: M2.amount||'', note: M2.note||'' };
+      if (Array.isArray(src2.movements)) src2.movements.forEach((m,i)=>{ if(i<4){ nd.metcon2.movements[i].name=m.name||''; nd.metcon2.movements[i].detail=m.detail||''; }});
     }
     if (Array.isArray(o.extras)) o.extras.forEach((e,i)=>{ if(i<2){ const EL=e.log||{}; nd.extras[i]={name:e.name||'',detail:e.detail||'',result:e.result||'',log:{text: EL.text!==undefined ? EL.text : (e.result||'')}}; }});
     nd.summary = o.summary || '';
+    if (o.alt) nd.alt = this.normalizeDay(o.alt);
     return nd;
   }
   normalizeWeeks(weeks) {
@@ -1050,15 +937,28 @@ class Component extends DCLogic {
     reminderDismissed: false,
     toast: '',
     welcomeOpen: false,
+    onbOpen: false,
+    onbName: '',
+    onbTarget: 5,
+    onbGoal: '',
+    myTarget: 5,
+    myGoal: '',
+    movesOpen: false,
+    moves: this.MOVEMENTS.slice(),
+    moveDraft: '',
     board: [],
     myName: '',
     editingName: false,
     nameDraft: '',
     selBoardWeek: 0,
     boardMode: 'week',
-    myResults: {}
+    myResults: {},
+    activeSession: 'main'
   };
   WELCOME_KEY = 'cfby_welcome_v1';
+  ONB_KEY = 'cfby_onb_v1';
+  RESET_KEY = 'cfby_reset_v1';
+  MOVES_KEY = 'cfby_moves_v1';
   BOARD_KEY = 'cfby_board_v1';
 
   adminCode() { return (this.props && this.props.adminCode) || 'batyam'; }
@@ -1067,34 +967,47 @@ class Component extends DCLogic {
     let saved = null;
     try { const raw = localStorage.getItem(this.KEY); if (raw) saved = JSON.parse(raw); } catch (e) {}
     if (saved && Array.isArray(saved.weeks)) {
-      if (saved.v >= 2) this.setState({ data: this.normalizeWeeks(saved.weeks) });
-      else { const fresh = this.buildProgram(this.props && this.props.includeExample === false ? false : true); this.save(fresh); this.setState({ data: fresh }); }
-    } else if (this.props && this.props.includeExample === false) {
-      this.setState({ data: this.buildProgram(false) });
+      if (saved.v >= 2) { let weeks = this.cleanDone(this.normalizeWeeks(saved.weeks)); if ((saved.pv||0) < this.PROGRAM_VERSION) { this.applyProgram(weeks); } let doReset=false; try { doReset = !localStorage.getItem(this.RESET_KEY); } catch(e){} if (doReset) { weeks = this.resetLogs(weeks); try { localStorage.setItem(this.RESET_KEY,'1'); } catch(e){} } this.save(weeks); this.setState({ data: weeks }); }
+      else { const fresh = this.buildProgram(); this.save(fresh); this.setState({ data: fresh }); try { localStorage.setItem(this.RESET_KEY,'1'); } catch(e){} }
+    } else {
+      const fresh = this.buildProgram(); this.save(fresh); this.setState({ data: fresh }); try { localStorage.setItem(this.RESET_KEY,'1'); } catch(e){}
     }
     const ti = this.todayIdx();
     if (ti >= 0) this.setState({ selWeek: Math.floor(ti/7), selDay: ti%7 });
     this.setState({ selBoardWeek: this.cwi() });
     try { if (localStorage.getItem('cfby_admin') === '1') this.setState({ isAdmin: true }); } catch (e) {}
-    try { if (!localStorage.getItem(this.WELCOME_KEY)) this.setState({ welcomeOpen: true }); } catch (e) {}
-    try { const raw = localStorage.getItem(this.BOARD_KEY); if (raw) { const b = JSON.parse(raw); this.setState({ board: (Array.isArray(b.board)?b.board:[]).map(a=>({ id:a.id||(Date.now()+Math.random()), name:a.name||'', weeks:a.weeks||{} })), myName: b.myName||'', nameDraft: b.myName||'', myResults: b.myResults||{} }); } } catch (e) {}
+    try { if (!localStorage.getItem(this.ONB_KEY)) this.setState({ onbOpen: true }); } catch (e) {}
+    try { const raw = localStorage.getItem(this.MOVES_KEY); if (raw) { const m = JSON.parse(raw); if (Array.isArray(m) && m.length) this.setState({ moves: m }); } } catch (e) {}
+    // Load the leaderboard that boot.js seeded from Supabase (other athletes,
+    // my display name, my results). saveBoard() writes this key; without a read
+    // the board would be dropped on every load.
+    try { const raw = localStorage.getItem(this.BOARD_KEY); if (raw) { const b = JSON.parse(raw); this.setState({
+      board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {} })),
+      myName: b.myName || '', nameDraft: b.myName || '', myResults: b.myResults || {},
+      myTarget: b.myTarget || this.WEEKLY_TARGET, myGoal: b.myGoal || ''
+    }); } } catch (e) {}
   }
   EFFORT_PTS = { pr:100, good:80, average:55, missed:0 };
   weekStats(wi) {
-    const completed = Math.min(this.WEEKLY_TARGET, this.state.data[wi].days.filter(d=>d.done).length);
-    return { completed };
+    const AV = this.myTargetVal();
+    let c = 0, rest = 0;
+    this.state.data[wi].days.forEach(d=>{ if (d.done) c++; if (d.alt && d.alt.done) c++; if (d.rest && !d.done) rest++; });
+    return { completed: Math.min(AV, c), rest };
   }
   computeWeek(wi) {
     const AV = this.WEEKLY_TARGET;
     const RMAX = AV * (70/30);
     const mr = this.state.myResults || {};
     const entrants = [];
-    entrants.push({ id:'me', you:true, name:(this.state.myName||'אני')+' (אתה)', completed:this.weekStats(wi).completed, result:+mr[wi]||0 });
-    this.state.board.forEach(a=>{ const wk=(a.weeks&&a.weeks[wi])||{}; entrants.push({ id:a.id, you:false, name:a.name||'ללא שם', completed:Math.min(AV,+wk.completed||0), result:+wk.result||0 }); });
+    const myWk = this.weekStats(wi);
+    entrants.push({ id:'me', you:true, name:(this.state.myName||'אני')+' (אתה)', completed:myWk.completed, rest:myWk.rest, result:+mr[wi]||0 });
+    this.state.board.forEach(a=>{ const wk=(a.weeks&&a.weeks[wi])||{}; entrants.push({ id:a.id, you:false, name:a.name||'ללא שם', completed:Math.min(AV,+wk.completed||0), rest:0, result:+wk.result||0 }); });
     const posted = entrants.map(e=>e.result).filter(x=>x>0);
     const M = posted.length;
     entrants.forEach(e=>{
-      e.missed = Math.max(0, AV - Math.min(AV, e.completed));
+      const base = e.you ? this.myTargetVal() : AV;
+      const target = Math.max(0, base - (e.rest||0));
+      e.missed = Math.max(0, target - Math.min(target, e.completed));
       let rp, placement = null;
       if (e.result > 0) {
         const greater = posted.filter(x=>x>e.result).length;
@@ -1112,7 +1025,9 @@ class Component extends DCLogic {
   }
   myTotalScore() { let s=0; for (let w=0; w<8; w++) { const me=this.computeWeek(w).find(e=>e.you); s += me?me.points:0; } return Math.round(s*10)/10; }
   segLight(active) { return 'border:none; cursor:pointer; padding:8px 18px; border-radius:999px; font-weight:700; font-size:13px; transition:all .15s; ' + (active ? 'background:var(--navy); color:#fff;' : 'background:#eeede8; color:var(--muted);'); }
-  saveBoard() { try { localStorage.setItem(this.BOARD_KEY, JSON.stringify({ board:this.state.board, myName:this.state.myName, myResults:this.state.myResults })); } catch (e) {} }
+  saveBoard() { try { localStorage.setItem(this.BOARD_KEY, JSON.stringify({ board:this.state.board, myName:this.state.myName, myResults:this.state.myResults, myTarget:this.state.myTarget, myGoal:this.state.myGoal })); } catch (e) {} }
+  myTargetVal() { return this.state.myTarget || this.WEEKLY_TARGET; }
+  saveMoves() { try { localStorage.setItem(this.MOVES_KEY, JSON.stringify(this.state.moves)); } catch (e) {} }
   editAthleteName(id, val) { const board = this.state.board.map(a=> a.id===id ? { ...a, name:val } : a); this.setState({ board }, ()=>this.saveBoard()); }
   editAthleteWeek(id, wi, field, val) {
     const board = this.state.board.map(a=>{ if (a.id!==id) return a; const weeks={ ...(a.weeks||{}) }; const cur={ ...(weeks[wi]||{}) }; cur[field] = parseInt(val,10)||0; weeks[wi]=cur; return { ...a, weeks }; });
@@ -1145,9 +1060,9 @@ class Component extends DCLogic {
   }
 
   gIndex() { const t = new Date(); t.setHours(0,0,0,0); return Math.floor((t - this.startDate) / 86400000); }
-  isMissed(gi, day) { return gi < this.gIndex() && !day.done && this.dayHasPlan(day); }
+  isMissed(gi, day) { return gi < this.gIndex() && !day.done && !day.rest && this.dayHasPlan(day); }
 
-  save(weeks) { try { localStorage.setItem(this.KEY, JSON.stringify({ v:2, weeks })); } catch (e) {} }
+  save(weeks) { try { localStorage.setItem(this.KEY, JSON.stringify({ v:2, pv:this.PROGRAM_VERSION, weeks })); } catch (e) {} }
 
   setDeep(root, path, val) {
     const parts = path.split('.');
@@ -1166,7 +1081,9 @@ class Component extends DCLogic {
   }
   onEditPath(path, val) {
     const d = structuredClone(this.state.data);
-    this.setDeep(d[this.state.selWeek].days[this.state.selDay], path, val);
+    const dc = d[this.state.selWeek].days[this.state.selDay];
+    const target = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
+    this.setDeep(target, path, val);
     this.save(d); this.setState({ data: d });
   }
 
@@ -1230,24 +1147,27 @@ class Component extends DCLogic {
       this.unit(this.txtEl('lift.log.note', L.note, 'הערה'), 'note')
     );
   }
-  metconBar(metcon) {
+  metconBar(metcon, base) {
+    base = base || 'metcon';
     const M = metcon.log || {};
-    const mode = M.mode || 'time';
+    const fixed = metcon.resultMode || '';
+    const mode = fixed || M.mode || 'time';
     const seg = (k, lbl) => React.createElement('button', {
-      key:k, onClick:()=>this.onEditPath('metcon.log.mode', k),
+      key:k, onClick:()=>this.onEditPath(base+'.log.mode', k),
       style:{ flex:1, border:'none', cursor:'pointer', padding:'6px 10px', borderRadius:'8px', fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'12px', transition:'all .15s',
         background: mode===k ? 'var(--blue)' : 'transparent', color: mode===k ? '#fff' : 'var(--muted)' }
     }, lbl);
-    const inputs = mode==='time'
-      ? this.unit(this.txtEl('metcon.log.time', M.time, 'mm:ss'), 'time / זמן')
-      : React.createElement(React.Fragment, null,
-          this.unit(this.numEl('metcon.log.rounds', M.rounds, '0'), 'rounds / סבבים'),
+    let inputs;
+    if (mode==='amount') inputs = this.unit(this.numEl(base+'.log.amount', M.amount, '0'), 'כמות (מ׳ / קל׳)');
+    else if (mode==='time') inputs = this.unit(this.txtEl(base+'.log.time', M.time, 'mm:ss'), 'time / זמן');
+    else inputs = React.createElement(React.Fragment, null,
+          this.unit(this.numEl(base+'.log.rounds', M.rounds, '0'), 'rounds / סבבים'),
           React.createElement('span', { style:{ fontWeight:700, color:'var(--muted)', paddingBottom:'10px' } }, '+'),
-          this.unit(this.numEl('metcon.log.reps', M.reps, '0'), 'reps / חזרות')
+          this.unit(this.numEl(base+'.log.reps', M.reps, '0'), 'reps / חזרות')
         );
     return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } },
-      React.createElement('div', { style:{ display:'flex', gap:'2px', background:'#eeede8', borderRadius:'10px', padding:'3px', width:'fit-content' } }, seg('time','Time'), seg('rounds','Rounds + Reps')),
-      React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } }, inputs, this.unit(this.txtEl('metcon.log.note', M.note, 'הערה'), 'note'))
+      fixed ? null : React.createElement('div', { style:{ display:'flex', gap:'2px', background:'#eeede8', borderRadius:'10px', padding:'3px', width:'fit-content' } }, seg('time','Time'), seg('rounds','Rounds + Reps')),
+      React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } }, inputs, this.unit(this.txtEl(base+'.log.note', M.note, 'הערה'), 'note'))
     );
   }
   extraBar(i, ex) {
@@ -1263,6 +1183,80 @@ class Component extends DCLogic {
     return parts.join(' · ');
   }
 
+  liftPresent(day) { return !!(day.lift && (day.lift.movement || day.lift.planned)); }
+  liftLogged(day) { const L = (day.lift && day.lift.log) || {}; return !!(L.weight); }
+  metconPresent(m) { return !!(m && (m.name || m.scheme || m.note || (m.movements||[]).some(x=>x.name||x.detail))); }
+  metconLogged(m) { const M = (m && m.log) || {}; const mode = (m && m.resultMode) || M.mode || 'time'; if (mode==='amount') return !!M.amount; if (mode==='time') return !!M.time; return !!(M.rounds || M.reps); }
+  canComplete(day) {
+    const missing = [];
+    if (this.liftPresent(day) && !this.liftLogged(day)) missing.push('משקל ל-LIFT');
+    if (this.metconPresent(day.metcon) && !this.metconLogged(day.metcon)) missing.push('תוצאה למטקון');
+    if (this.metconPresent(day.metcon2) && !this.metconLogged(day.metcon2)) missing.push('תוצאה למטקון B');
+    const anyPresent = this.liftPresent(day) || this.metconPresent(day.metcon) || this.metconPresent(day.metcon2);
+    return { ok: anyPresent && missing.length===0, missing, anyPresent };
+  }
+  cleanDone(weeks) {
+    weeks.forEach(wk => wk.days.forEach(day => {
+      if (day.done && !this.canComplete(day).ok) day.done = false;
+      if (day.alt && day.alt.done && !this.canComplete(day.alt).ok) day.alt.done = false;
+    }));
+    return weeks;
+  }
+  clearDayLog(d) {
+    d.done = false; d.rest = false; d.rating = ''; d.summary = '';
+    if (d.lift) d.lift.log = { weight:'', reps:'', note:'' };
+    if (d.metcon) d.metcon.log = { mode:(d.metcon.log&&d.metcon.log.mode)||'time', time:'', rounds:'', reps:'', amount:'', note:'' };
+    if (d.metcon2) d.metcon2.log = { mode:(d.metcon2.log&&d.metcon2.log.mode)||'time', time:'', rounds:'', reps:'', amount:'', note:'' };
+    if (Array.isArray(d.extras)) d.extras.forEach(e=>{ e.result=''; e.log = { text:'' }; });
+  }
+  resetLogs(weeks) {
+    weeks.forEach(wk => wk.days.forEach(day => { this.clearDayLog(day); if (day.alt) this.clearDayLog(day.alt); }));
+    return weeks;
+  }
+  saveBarEl(day) {
+    if (day.done) {
+      return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'12px', flexWrap:'wrap', background:'rgba(63,191,106,.1)', border:'1px solid rgba(63,191,106,.4)', borderRadius:'14px', padding:'14px 16px' } },
+        React.createElement('span', { style:{ fontSize:'22px', flex:'none' } }, '✅'),
+        React.createElement('div', { style:{ flex:1, minWidth:0 } },
+          React.createElement('div', { style:{ fontWeight:700, fontSize:'14px', color:'var(--ink)' } }, 'האימון נשמר ונספר כהושלם'),
+          React.createElement('div', { style:{ fontSize:'12px', color:'var(--muted)', marginTop:'2px' } }, 'אפשר לעדכן תוצאות ולשמור שוב, או לבטל את השמירה.')
+        ),
+        React.createElement('button', { onClick:()=>this.unsaveDay(), style:{ flex:'none', background:'#fff', color:'var(--muted)', border:'1px solid var(--line)', borderRadius:'999px', padding:'10px 18px', fontWeight:700, fontSize:'13px', cursor:'pointer' } }, 'בטל שמירה')
+      );
+    }
+    const c = this.canComplete(day);
+    return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'10px', background:'#fff', border:'1px solid var(--line)', borderRadius:'14px', padding:'16px' } },
+      React.createElement('div', { style:{ fontSize:'13px', color:'var(--muted)', lineHeight:1.6 } },
+        c.ok ? 'הכול מוכן — לחיצה על שמור תזין את האימון כהושלם ותשמור את התוצאות שלך.'
+             : (c.anyPresent ? ('כדי לשמור את האימון יש למלא: ' ) : 'אין עדיין אימון להשלים ליום הזה.'),
+        c.ok || !c.anyPresent ? null : React.createElement('b', { style:{ color:'var(--orange)' } }, c.missing.join(' · '))
+      ),
+      React.createElement('button', {
+        onClick:()=>this.saveDay(),
+        disabled: !c.anyPresent,
+        style:{ background: c.ok ? 'var(--orange)' : '#e7e6e1', color: c.ok ? '#fff' : '#9a9ca4', border:'none', borderRadius:'12px', padding:'14px', fontWeight:700, fontSize:'15px', cursor: c.anyPresent ? 'pointer' : 'not-allowed' }
+      }, '💾 שמור אימון והשלם')
+    );
+  }
+  saveDay() {
+    const d = structuredClone(this.state.data);
+    const dc = d[this.state.selWeek].days[this.state.selDay];
+    const t = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
+    const c = this.canComplete(t);
+    if (!c.ok) { this.toast(c.anyPresent ? ('חסר: ' + c.missing.join(' · ')) : 'אין אימון להשלים'); return; }
+    t.done = true; t.rest = false;
+    this.save(d); this.setState({ data:d });
+    this.toast('🎉 האימון נשמר והושלם!');
+  }
+  unsaveDay() {
+    const d = structuredClone(this.state.data);
+    const dc = d[this.state.selWeek].days[this.state.selDay];
+    const t = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
+    t.done = false;
+    this.save(d); this.setState({ data:d });
+    this.toast('השמירה בוטלה');
+  }
+
   dateAt(i) { const d = new Date(this.startDate); d.setDate(d.getDate()+i); return d; }
   pad(n) { return String(n).padStart(2,'0'); }
   dateStr(d) { return this.pad(d.getDate())+'/'+this.pad(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(2); }
@@ -1272,7 +1266,7 @@ class Component extends DCLogic {
     return !!(day.lift.movement || day.lift.planned || day.metcon.name || day.metcon.note ||
       day.metcon.movements.some(m=>m.name||m.detail) || day.extras.some(e=>e.name||e.detail));
   }
-  dayState(day) { if (day.done) return 'done'; return this.dayHasPlan(day) ? 'planned' : 'empty'; }
+  dayState(day) { if (day.done) return 'done'; if (day.rest) return 'rest'; return this.dayHasPlan(day) ? 'planned' : 'empty'; }
 
   renderVals() {
     const { view, editMode, selWeek, selDay, data } = this.state;
@@ -1280,15 +1274,18 @@ class Component extends DCLogic {
     const cwi = this.cwi(), ti = this.todayIdx();
 
     let done=0, best=0, run=0;
-    const flat = [];
-    for (let w=0; w<8; w++) for (let d=0; d<7; d++) flat.push(data[w].days[d]);
-    flat.forEach(day=>{ if (day.done) { done++; run++; best=Math.max(best,run); } else run=0; });
-    const target = this.WEEKLY_TARGET * 8;
+    for (let w=0; w<8; w++) for (let d=0; d<7; d++) {
+      const dd = data[w].days[d];
+      if (dd.done) done++;
+      if (dd.alt && dd.alt.done) done++;
+      if (dd.done) { run++; best=Math.max(best,run); } else run=0;
+    }
+    const target = this.myTargetVal() * 8;
     const pct = Math.round(done/target*100);
 
     const gnow = this.gIndex();
     const unlogged = [];
-    for (let g=0; g<56 && g<=gnow; g++) { const dd=data[Math.floor(g/7)].days[g%7]; if (this.dayHasPlan(dd) && !dd.done) unlogged.push(g); }
+    for (let g=0; g<56 && g<=gnow; g++) { const dd=data[Math.floor(g/7)].days[g%7]; if ((this.dayHasPlan(dd) && !dd.done) || (dd.alt && this.dayHasPlan(dd.alt) && !dd.alt.done)) unlogged.push(g); }
 
     const heatWeeks = data.map((wk, wi) => ({
       n: wi+1,
@@ -1302,26 +1299,32 @@ class Component extends DCLogic {
       const gi = cwi*7+di; const st = this.dayState(day);
       return { wi: cwi, di, dow: this.dowShort[di], dnum: this.dateAt(gi).getDate(), title: this.dowShort[di]+' '+this.dateStr(this.dateAt(gi)), miniStyle: this.miniStyle(st, gi===ti, this.isMissed(gi,day)) };
     });
-    const curWeekDone = data[cwi].days.filter(x=>x.done).length;
+    const curWeekDone = data[cwi].days.reduce((s,x)=>s+(x.done?1:0)+(x.alt&&x.alt.done?1:0),0);
 
     const weekPills = data.map((wk, wi) => {
-      const dn = wk.days.filter(x=>x.done).length;
+      const dn = wk.days.reduce((s,x)=>s+(x.done?1:0)+(x.alt&&x.alt.done?1:0),0);
       return { wi, n: wi+1, doneLabel: dn?(dn+'/5'):'·', style: this.pillStyle(wi===selWeek) };
     });
 
     const dayChips = data[selWeek].days.map((day, di) => {
       const gi = selWeek*7+di; const st = this.dayState(day);
-      return { di, dow: this.dowShort[di], dnum: this.dateAt(gi).getDate(), mark: day.done ? '✓' : (this.dayHasPlan(day) ? '•' : ''), style: this.chipStyle(st, di===selDay, gi===ti, this.isMissed(gi,day)) };
+      return { di, dow: this.dowShort[di], dnum: this.dateAt(gi).getDate(), mark: day.done ? '✓' : (day.rest ? '🛌' : (this.dayHasPlan(day) ? '•' : '')), style: this.chipStyle(st, di===selDay, gi===ti, this.isMissed(gi,day)) };
     });
 
-    const day = data[selWeek].days[selDay];
+    const dayC = data[selWeek].days[selDay];
+    const asAlt = this.state.activeSession==='alt' && !!dayC.alt;
+    const hasAlt = !!(dayC.alt && this.dayHasPlan(dayC.alt));
+    const day = asAlt ? dayC.alt : dayC;
     const gi = selWeek*7+selDay;
     const met = day.metcon;
+    const met2 = day.metcon2;
     const viewMovements = met.movements.map((m,i)=>({ num:i+1, name:m.name, detail:m.detail })).filter(m=>m.name||m.detail);
+    const view2Movements = met2.movements.map((m,i)=>({ num:i+1, name:m.name, detail:m.detail })).filter(m=>m.name||m.detail);
     const viewExtras = day.extras.map((e,i)=>({ i, num:i+1, name:e.name, detail:e.detail, result:e.result, resultBar:this.extraBar(i,e) })).filter(e=>e.name||e.detail);
 
     const vShowLift = !!(day.lift.movement || day.lift.planned);
     const vShowMetcon = !!(met.name || met.scheme || met.note || viewMovements.length);
+    const vShowMetcon2 = !!(met2.name || met2.scheme || met2.note || view2Movements.length);
     const vShowExtra = viewExtras.length > 0;
 
     const dayObj = {
@@ -1333,6 +1336,11 @@ class Component extends DCLogic {
         movements: met.movements.map((m,i)=>({ i, num:i+1, name:m.name, detail:m.detail })),
         viewMovements
       },
+      metcon2: {
+        name: met2.name, scheme: met2.scheme, score: met2.score, note: met2.note,
+        hasScheme: !!met2.scheme, hasNote: !!met2.note,
+        viewMovements: view2Movements
+      },
       extras: day.extras.map((e,i)=>({ i, num:i+1, name:e.name, detail:e.detail, result:e.result,
         detailField: this.areaEl('extras.'+i+'.detail', e.detail, 'פירוט / סכימה', 56),
         resultBar: this.extraBar(i, e) })),
@@ -1342,17 +1350,19 @@ class Component extends DCLogic {
 
     const prList = [];
     for (let w=0; w<8; w++) for (let d=0; d<7; d++) {
-      const dd = data[w].days[d];
-      if (dd.rating !== 'pr') continue;
+      const base = data[w].days[d];
       const gi = w*7+d;
-      const move = dd.lift.movement || dd.metcon.name || (dd.extras.find(e=>e.name)||{}).name || 'Workout';
-      const res = this.logSummaryText(dd) || (dd.lift.log&&dd.lift.log.note) || (dd.metcon.log&&dd.metcon.log.note) || '';
-      prList.push({ wi:w, di:d, move, res, date:this.dateStr(this.dateAt(gi)), week:'W'+(w+1) });
+      [base, base.alt].forEach(dd=>{
+        if (!dd || dd.rating !== 'pr') return;
+        const move = dd.lift.movement || dd.metcon.name || (dd.extras.find(e=>e.name)||{}).name || 'Workout';
+        const res = this.logSummaryText(dd) || (dd.lift.log&&dd.lift.log.note) || (dd.metcon.log&&dd.metcon.log.note) || '';
+        prList.push({ wi:w, di:d, move, res, date:this.dateStr(this.dateAt(gi)), week:'W'+(w+1) });
+      });
     }
     prList.reverse();
 
     const bw = this.state.selBoardWeek;
-    const mode = this.state.boardMode;
+    const mode = 'total';
     const AV = this.WEEKLY_TARGET;
     const wkEntrants = this.computeWeek(bw);
     const postedCount = wkEntrants.filter(e=>e.result>0).length;
@@ -1367,7 +1377,7 @@ class Component extends DCLogic {
       ranked = wkEntrants.map(e=>({ name:e.name, you:e.you, score:e.points, sub:e.placement?('#'+Math.round(e.placement)):'—' })).sort((a,b)=>a.score-b.score);
     }
     const boardRows = ranked.map((a,i)=>({
-      name:a.name, score:a.score, cons:a.sub,
+      name:a.name, score:a.score, cons:a.sub, you:a.you,
       medal: i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1),
       rowStyle: (a.you ? 'background:rgba(239,91,37,.1); border:1px solid rgba(239,91,37,.45);' : 'background:#fff; border:1px solid var(--line);') + ' display:grid; grid-template-columns:44px 1fr 74px 74px; align-items:center; gap:8px; padding:12px 14px; border-radius:12px;',
       rankStyle: "font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; text-align:center;" + (i<3 ? '' : ' color:var(--muted);')
@@ -1425,7 +1435,7 @@ class Component extends DCLogic {
       editTabStyle: this.segStyle(editMode),
 
       statSessions: done, statTarget: target, statPct: pct, statStreak: best,
-      statWeekly: curWeekDone + '/' + this.WEEKLY_TARGET,
+      statWeekly: curWeekDone + '/' + this.myTargetVal(),
       curWeekNum: cwi+1, curWeekRange: this.rangeStr(cwi), curWeekDone,
       dowHeaders: this.dowShort,
       heatWeeks, thisWeekCells, weekPills, dayChips,
@@ -1436,32 +1446,45 @@ class Component extends DCLogic {
       effortBar: this.effortBar(day.rating, true),
       effortBarView: this.effortBar(day.rating, false),
       liftBar: this.liftBar(day.lift),
-      metconBar: this.metconBar(day.metcon),
+      saveBar: this.saveBarEl(day),
+      metconBar: this.metconBar(day.metcon, 'metcon'),
+      metcon2Bar: this.metconBar(day.metcon2, 'metcon2'),
       hasRating: !!rMeta,
       ratingLabel: rMeta ? (rMeta.emoji + ' ' + rMeta.label) : '',
       ratingBadgeStyle: rMeta ? ('display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; font-family:\'Oswald\',sans-serif; font-weight:700; font-size:12px; letter-spacing:.04em; color:#fff; background:'+rMeta.color+';') : 'display:none;',
       dayWeekday: this.weekdays[selDay],
       dayDate: this.dateStr(this.dateAt(gi)),
-      dayIsEmpty: !vShowLift && !vShowMetcon && !vShowExtra,
-      vShowLift, vShowMetcon, vShowExtra,
+      dayIsEmpty: !vShowLift && !vShowMetcon && !vShowMetcon2 && !vShowExtra,
+      vShowLift, vShowMetcon, vShowMetcon2, vShowExtra,
       plannedField: this.areaEl('lift.planned', day.lift.planned, 'סטים, חזרות, אחוזים, דגשים…', 80),
       noteField: this.areaEl('metcon.note', met.note, 'הערות / הסבר על המטקון…', 64),
       summaryField: this.areaEl('summary', day.summary, 'איך היה האימון? תחושה, שיאים, מה לשפר בפעם הבאה…', 130),
       doneBtnStyle: this.doneBtnStyle(day.done),
       doneBtnLabel: day.done ? '✓ הושלם' : 'סמן כהושלם',
+      restBtnStyle: this.restBtnStyle(day.rest),
+      restBtnLabel: day.rest ? '🛌 מנוחה' : '🛌 סמן מנוחה',
 
       inputStyle: 'border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:15px; background:#fafaf8; color:var(--ink); outline:none; width:100%;',
       inputSm: 'border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:14px; background:#fff; color:var(--ink); outline:none; width:100%;',
       logStyle: 'border:1px solid rgba(35,64,154,.35); border-radius:10px; padding:10px 12px; font-size:15px; background:var(--log); color:var(--ink); outline:none; width:100%; font-weight:500;',
 
-      onCell: (e)=>{ const wi=+e.currentTarget.dataset.wi, di=+e.currentTarget.dataset.di; this.setState({view:'log', selWeek:wi, selDay:di}); },
-      onWeekPill: (e)=>this.setState({selWeek:+e.currentTarget.dataset.wi}),
-      onDayChip: (e)=>this.setState({selDay:+e.currentTarget.dataset.di}),
-      gotoToday: ()=>{ const t=this.todayIdx(); if(t>=0) this.setState({view:'log', selWeek:Math.floor(t/7), selDay:t%7}); else this.setState({view:'log'}); },
+      onCell: (e)=>{ const wi=+e.currentTarget.dataset.wi, di=+e.currentTarget.dataset.di; this.setState({view:'log', selWeek:wi, selDay:di, activeSession:'main'}); },
+      onWeekPill: (e)=>this.setState({selWeek:+e.currentTarget.dataset.wi, activeSession:'main'}),
+      onDayChip: (e)=>this.setState({selDay:+e.currentTarget.dataset.di, activeSession:'main'}),
+      gotoToday: ()=>{ const t=this.todayIdx(); if(t>=0) this.setState({view:'log', selWeek:Math.floor(t/7), selDay:t%7, activeSession:'main'}); else this.setState({view:'log'}); },
       prevDay: ()=>this.step(-1),
       nextDay: ()=>this.step(1),
-      toggleDone: ()=>{ const d=structuredClone(this.state.data); d[selWeek].days[selDay].done=!d[selWeek].days[selDay].done; this.save(d); this.setState({data:d}); },
-      onEdit: (e)=>{ const d=structuredClone(this.state.data); this.setDeep(d[selWeek].days[selDay], e.target.dataset.path, e.target.value); this.save(d); this.setState({data:d}); },
+      toggleDone: ()=>{ const d=structuredClone(this.state.data); const dc=d[selWeek].days[selDay]; const t=(this.state.activeSession==='alt'&&dc.alt)?dc.alt:dc; t.done=!t.done; if(t.done) t.rest=false; this.save(d); this.setState({data:d}); },
+      toggleRest: ()=>{ const d=structuredClone(this.state.data); const dc=d[selWeek].days[selDay]; const t=(this.state.activeSession==='alt'&&dc.alt)?dc.alt:dc; t.rest=!t.rest; if(t.rest) t.done=false; this.save(d); this.setState({data:d}); this.toast(t.rest?'סומן כיום מנוחה — לא ייחשב כהוחמצה':'מנוחה בוטלה'); },
+      onEdit: (e)=>{ const d=structuredClone(this.state.data); const dc=d[selWeek].days[selDay]; const t=(this.state.activeSession==='alt'&&dc.alt)?dc.alt:dc; this.setDeep(t, e.target.dataset.path, e.target.value); this.save(d); this.setState({data:d}); },
+
+      hasAlt,
+      sessMainLabel: 'WOD',
+      sessAltLabel: 'ENDURANCE',
+      sessMainTabStyle: this.segLight(!asAlt),
+      sessAltTabStyle: this.segLight(asAlt),
+      setSessMain: ()=>this.setState({activeSession:'main'}),
+      setSessAlt: ()=>this.setState({activeSession:'alt'}),
 
       showReminder: unlogged.length>0 && !this.state.reminderDismissed,
       reminderText: 'יש לך ' + unlogged.length + ' ' + (unlogged.length===1 ? 'אימון שעדיין לא סומן' : 'אימונים שעדיין לא סומנו') + ' כהושלמו',
@@ -1483,14 +1506,35 @@ class Component extends DCLogic {
       hasToast: !!this.state.toast, toast: this.state.toast,
       welcomeOpen: this.state.welcomeOpen,
       openWelcome: ()=>this.setState({ welcomeOpen:true }),
-      closeWelcome: ()=>{ try { localStorage.setItem(this.WELCOME_KEY, '1'); } catch (e) {} this.setState({ welcomeOpen:false }); }
+      closeWelcome: ()=>{ try { localStorage.setItem(this.WELCOME_KEY, '1'); } catch (e) {} this.setState({ welcomeOpen:false }); },
+
+      onbOpen: this.state.onbOpen,
+      moveLib: this.state.moves,
+      movesOpen: this.state.movesOpen,
+      moveDraft: this.state.moveDraft,
+      moveCount: this.state.moves.length,
+      moveList: this.state.moves.slice().sort((a,b)=>a.localeCompare(b)).map(m=>({ name:m })),
+      openMoves: ()=>this.setState({ movesOpen:true, moveDraft:'' }),
+      closeMoves: ()=>this.setState({ movesOpen:false }),
+      onMoveDraft: (e)=>this.setState({ moveDraft:e.target.value }),
+      addMove: ()=>{ const v=(this.state.moveDraft||'').trim(); if(!v) return; if(this.state.moves.some(m=>m.toLowerCase()===v.toLowerCase())){ this.toast('התנועה כבר קיימת ברשימה'); return; } const moves=[...this.state.moves, v]; this.setState({ moves, moveDraft:'' }, ()=>this.saveMoves()); this.toast('נוספה: '+v); },
+      removeMove: (e)=>{ const nm=e.currentTarget.dataset.m; const moves=this.state.moves.filter(m=>m!==nm); this.setState({ moves }, ()=>this.saveMoves()); },
+      onbName: this.state.onbName,
+      onbGoal: this.state.onbGoal,
+      onbTargetOpts: [3,4,5,6].map(v=>({ v, style: 'flex:1; padding:12px 0; border-radius:11px; cursor:pointer; font-family:\'Oswald\',sans-serif; font-weight:700; font-size:18px; transition:all .12s; ' + (this.state.onbTarget===v ? 'background:var(--blue); color:#fff; border:1.5px solid var(--blue);' : 'background:#fafaf8; color:var(--muted); border:1.5px solid var(--line);') })),
+      onOnbName: (e)=>this.setState({ onbName:e.target.value }),
+      onOnbGoal: (e)=>this.setState({ onbGoal:e.target.value }),
+      onOnbTarget: (e)=>this.setState({ onbTarget:+e.currentTarget.dataset.t }),
+      finishOnbStyle: 'background:var(--orange); color:#fff; border:none; border-radius:12px; padding:14px; font-weight:700; font-size:16px; cursor:pointer;',
+      finishOnb: ()=>{ const nm=(this.state.onbName||'').trim(); try { localStorage.setItem(this.ONB_KEY,'1'); } catch(e){} this.setState({ myName:nm, nameDraft:nm, myTarget:this.state.onbTarget||5, myGoal:(this.state.onbGoal||'').trim(), onbOpen:false }, ()=>{ this.saveBoard(); this.toast('הכול מוכן — קדימה לאימון! 🚀'); }); },
+      skipOnb: ()=>{ try { localStorage.setItem(this.ONB_KEY,'1'); } catch(e){} this.setState({ onbOpen:false }); },
     };
   }
 
   step(dir) {
     let gi = this.state.selWeek*7 + this.state.selDay + dir;
     gi = Math.max(0, Math.min(55, gi));
-    this.setState({ selWeek: Math.floor(gi/7), selDay: gi%7 });
+    this.setState({ selWeek: Math.floor(gi/7), selDay: gi%7, activeSession:'main' });
   }
 
   tabStyle(active) {
@@ -1506,6 +1550,7 @@ class Component extends DCLogic {
     let s;
     if (st==='done') s = 'background:var(--blue); color:#fff; border:none;';
     else if (missed) s = 'background:#fdecea; color:#d8342b; border:1.5px solid #d8342b;';
+    else if (st==='rest') s = 'background:#eef1f6; color:#8a94a6; border:1.5px dashed #b9c2d0;';
     else if (st==='planned') s = 'background:#fff; color:var(--blue); border:1.5px solid var(--blue);';
     else s = 'background:#e7e6e1; color:#a7a9b0; border:none;';
     if (today) s += ' box-shadow:0 0 0 2px var(--orange);';
@@ -1516,6 +1561,7 @@ class Component extends DCLogic {
     let s;
     if (st==='done') s = 'background:var(--blue2); color:#fff; border:none;';
     else if (missed) s = 'background:rgba(216,52,43,.18); color:#ffb3ab; border:1px solid #e5564c;';
+    else if (st==='rest') s = 'background:rgba(255,255,255,.05); color:#8fa4d8; border:1px dashed rgba(255,255,255,.35);';
     else if (st==='planned') s = 'background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.35);';
     else s = 'background:rgba(255,255,255,.06); color:#8fa4d8; border:none;';
     if (today) s += ' box-shadow:0 0 0 2px var(--orange);';
@@ -1531,6 +1577,7 @@ class Component extends DCLogic {
     if (active) s = 'background:var(--blue); color:#fff; border:1px solid var(--blue);';
     else if (st==='done') s = 'background:rgba(35,64,154,.12); color:var(--blue); border:1px solid rgba(35,64,154,.3);';
     else if (missed) s = 'background:#fdecea; color:#d8342b; border:1.5px solid #d8342b;';
+    else if (st==='rest') s = 'background:#eef1f6; color:#8a94a6; border:1px dashed #b9c2d0;';
     else if (st==='planned') s = 'background:#fff; color:var(--ink); border:1px solid var(--line);';
     else s = 'background:#eeede8; color:#9a9ca4; border:1px solid transparent;';
     if (today && !active) s += ' box-shadow:0 0 0 2px var(--orange);';
@@ -1556,6 +1603,10 @@ class Component extends DCLogic {
   doneBtnStyle(done) {
     return 'border:none; cursor:pointer; padding:8px 16px; border-radius:999px; font-weight:700; font-size:12px; transition:all .15s; white-space:nowrap; ' +
       (done ? 'background:#3fbf6a; color:#fff;' : 'background:rgba(255,255,255,.14); color:#fff; border:1px solid rgba(255,255,255,.4);');
+  }
+  restBtnStyle(rest) {
+    return 'border:none; cursor:pointer; padding:8px 14px; border-radius:999px; font-weight:700; font-size:12px; transition:all .15s; white-space:nowrap; ' +
+      (rest ? 'background:#dbe3f0; color:#3a4762;' : 'background:rgba(255,255,255,.08); color:#c3cdea; border:1px solid rgba(255,255,255,.25);');
   }
 
   toast(msg) { if (this._tt) clearTimeout(this._tt); this.setState({ toast: msg }); this._tt = setTimeout(()=>this.setState({ toast:'' }), 2200); }
@@ -1610,12 +1661,21 @@ class Component extends DCLogic {
 
   shareCardEl() {
     const t = this.state.shareType, data = this.state.data;
-    const head = React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'14px' } },
-      React.createElement('img', { src:'assets/logo.png', style:{ width:'38px', height:'38px', borderRadius:'50%', boxShadow:'0 0 0 2px rgba(255,255,255,.25)' } }),
-      React.createElement('div', null,
+    const nm = (this.state.myName||'').trim();
+    const head = React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'16px' } },
+      React.createElement('img', { src:'assets/logo.png', style:{ width:'42px', height:'42px', borderRadius:'50%', boxShadow:'0 0 0 2px rgba(255,255,255,.25)' } }),
+      React.createElement('div', { style:{ flex:1, minWidth:0 } },
         React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'15px', letterSpacing:'.06em' } }, 'CROSSFIT BAT YAM'),
         React.createElement('div', { style:{ fontSize:'10px', color:'#b9c4e6' } }, 'CAPACITY PROGRAM · 8 WEEKS')
-      )
+      ),
+      nm ? React.createElement('div', { style:{ textAlign:'end', flex:'none' } },
+        React.createElement('div', { style:{ fontSize:'9px', color:'#8fa4d8', letterSpacing:'.08em' } }, 'ATHLETE'),
+        React.createElement('div', { dir:'auto', style:{ fontWeight:700, fontSize:'13px' } }, nm)
+      ) : null
+    );
+    const foot = React.createElement('div', { style:{ marginTop:'16px', paddingTop:'12px', borderTop:'1px solid rgba(255,255,255,.15)', display:'flex', alignItems:'center', justifyContent:'space-between' } },
+      React.createElement('span', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:600, fontSize:'11px', letterSpacing:'.1em', color:'#ef5b25' } }, 'STRONGER EVERY WEEK'),
+      React.createElement('span', { style:{ fontSize:'10px', color:'#8fa4d8' } }, this.dateStr(new Date()))
     );
     let body;
     if (t==='prboard') {
@@ -1662,14 +1722,14 @@ class Component extends DCLogic {
         )
       );
     }
-    return React.createElement('div', { id:'share-card', style:{ width:'380px', background:'linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a)', color:'#fff', borderRadius:'20px', padding:'22px', fontFamily:"'Heebo',sans-serif", boxSizing:'border-box' } }, head, body);
+    return React.createElement('div', { id:'share-card', style:{ width:'400px', background:'linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a)', color:'#fff', borderRadius:'20px', padding:'24px', fontFamily:"'Heebo',sans-serif", boxSizing:'border-box' } }, head, body, foot);
   }
 
   builderBodyEl() {
     const wi = this.state.builderWi;
     const data = this.state.data;
     const get = (di,p)=>this.getAt(wi,di,p);
-    const inp = (di,p,ph)=>React.createElement('input', { dir:'auto', value:get(di,p)||'', placeholder:ph, onChange:(e)=>this.editAt(wi,di,p,e.target.value), style:{ width:'100%', border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 10px', fontSize:'13.5px', background:'#fff', color:'var(--ink)', outline:'none', boxSizing:'border-box' } });
+    const inp = (di,p,ph,useList)=>React.createElement('input', { dir:'auto', list:useList?'movelib':undefined, value:get(di,p)||'', placeholder:ph, onChange:(e)=>this.editAt(wi,di,p,e.target.value), style:{ width:'100%', border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 10px', fontSize:'13.5px', background:'#fff', color:'var(--ink)', outline:'none', boxSizing:'border-box' } });
     const area = (di,p,ph,min)=>React.createElement('textarea', { dir:'auto', value:get(di,p)||'', placeholder:ph, onChange:(e)=>this.editAt(wi,di,p,e.target.value), style:{ width:'100%', border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 10px', fontSize:'13px', background:'#fff', color:'var(--ink)', outline:'none', minHeight:(min||50)+'px', resize:'vertical', fontFamily:'inherit', lineHeight:1.5, boxSizing:'border-box' } });
     const lab = (txt)=>React.createElement('div', { style:{ font:"600 10px/1 'Oswald'", letterSpacing:'.08em', textTransform:'uppercase', color:'var(--muted)', margin:'2px 0 6px' } }, txt);
 
@@ -1706,13 +1766,13 @@ class Component extends DCLogic {
       );
       if (!open) return React.createElement('div', { key:di, style:{ background:'#fff', border:'1px solid var(--line)', borderRadius:'12px', overflow:'hidden' } }, hdr);
       const body = React.createElement('div', { style:{ padding:'14px', display:'flex', flexDirection:'column', gap:'16px' } },
-        React.createElement('div', null, lab('🏋️ Lift — תרגיל'), inp(di,'lift.movement','שם התרגיל'), React.createElement('div',{style:{height:'8px'}}), area(di,'lift.planned','סטים · חזרות · אחוזים · דגשים',60)),
+        React.createElement('div', null, lab('🏋️ Lift — תרגיל'), inp(di,'lift.movement','שם התרגיל',true), React.createElement('div',{style:{height:'8px'}}), area(di,'lift.planned','סטים · חזרות · אחוזים · דגשים',60)),
         React.createElement('div', null, lab('⏱️ Metcon'),
           React.createElement('div', { style:{ display:'grid', gridTemplateColumns:'1.5fr 1fr', gap:'8px' } }, inp(di,'metcon.name','שם המטקון'), inp(di,'metcon.scheme','AMRAP / For Time')),
           React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'6px', marginTop:'8px', background:'#faf9f6', border:'1px solid var(--line)', borderRadius:'10px', padding:'10px' } },
             [0,1,2,3].map(mi=>React.createElement('div', { key:mi, style:{ display:'grid', gridTemplateColumns:'20px 1fr 1.1fr', gap:'7px', alignItems:'center' } },
               React.createElement('span', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'11px', color:'var(--orange)', textAlign:'center' } }, mi+1),
-              inp(di,'metcon.movements.'+mi+'.name','תנועה'),
+              inp(di,'metcon.movements.'+mi+'.name','תנועה',true),
               inp(di,'metcon.movements.'+mi+'.detail','חזרות / מרחק')
             ))
           ),
@@ -1742,7 +1802,19 @@ class Component extends DCLogic {
   }
 }
 </script>
-
-
-
-</body></html>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f1830"/><stop offset="0.6" stop-color="#1a2848"/><stop offset="1" stop-color="#23409a"/></linearGradient></defs>
+  <rect width="120" height="120" rx="24" fill="url(#g)"/>
+  <g transform="translate(60 54)" fill="none" stroke="#ef5b25" stroke-width="6" stroke-linecap="round">
+    <line x1="-26" y1="0" x2="26" y2="0"/>
+    <line x1="-26" y1="-11" x2="-26" y2="11"/>
+    <line x1="26" y1="-11" x2="26" y2="11"/>
+    <line x1="-33" y1="-6" x2="-33" y2="6"/>
+    <line x1="33" y1="-6" x2="33" y2="6"/>
+  </g>
+  <text x="60" y="98" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="15" letter-spacing="1" fill="#ffffff">BAT YAM</text>
+</svg>
+</template>
+</body>
+</html>
