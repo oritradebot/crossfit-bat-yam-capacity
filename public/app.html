@@ -1040,9 +1040,9 @@ class Component extends DCLogic {
         const greater = posted.filter(x=>x>e.result).length;
         const eq = posted.filter(x=>x===e.result).length;
         placement = 1 + greater + (eq-1)/2;
-        rp = M > 1 ? (placement-1)/(M-1) * RMAX : 0;
+        rp = placement;              // place in the table IS the score: 1st = 1, 2nd = 2, ...
       } else {
-        rp = M > 0 ? RMAX : 0;
+        rp = M > 0 ? M + 1 : 0;      // no result posted -> ranked after everyone who did
       }
       e.placement = placement;
       e.resultPts = Math.round(rp*10)/10;
