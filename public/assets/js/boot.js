@@ -331,9 +331,38 @@
     // 4) NOW boot the app (data is already in localStorage)
     await loadScript("assets/js/html2canvas.js");
     await loadScript("assets/js/dc-runtime.js");
+    await revealApp();
 
     // 5) admins get the in-app user-management panel (floating button)
     if (isAdmin) { try { injectAdminPanel(uid); } catch (e) { console.error("[admin panel]", e); } }
+  }
+
+  // app.html hides <x-dc> because the browser paints that raw markup — modals and
+  // all — before the runtime replaces it. Unrendered "{{ binding }}" text is the
+  // tell that it has not rendered yet; once it is gone, mark the page ready.
+  //
+  // Only flip a class on <html> — never touch the nodes. The runtime rebuilds
+  // <body> into its own #dc-root, which reverts inline styles and re-creates
+  // removed nodes; a class on <html> survives that, and app.html's CSS does the
+  // rest. Re-query every tick for the same reason. Marks ready regardless after
+  // ~3s so a runtime change can never strand the user on a blank page.
+  function revealApp() {
+    return new Promise(function (res) {
+      var tries = 0;
+      (function poll() {
+        // The runtime renders into a fresh #dc-root and removes <x-dc>. Treat
+        // #dc-root appearing as "rendered"; also accept an <x-dc> whose bindings
+        // are gone, in case the runtime's root id ever changes. ~3s hard cap.
+        var x = document.querySelector("x-dc");
+        var rendered = !!document.getElementById("dc-root") ||
+                       (x && x.innerHTML.length > 0 && x.innerHTML.indexOf("{{") === -1);
+        if (rendered || ++tries > 100) {
+          document.documentElement.classList.add("cfby-ready");
+          return res();
+        }
+        setTimeout(poll, 30);
+      })();
+    });
   }
 
   main().catch(function (e) {

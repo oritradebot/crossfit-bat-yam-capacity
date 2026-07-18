@@ -10,8 +10,20 @@
 <script src="assets/js/react-dom.js"></script>
 <!-- boot.js gates auth, seeds localStorage from Supabase, THEN loads the app runtime -->
 <script src="assets/js/boot.js"></script>
+<style>
+  /* Hide the raw app template until boot.js adds .cfby-ready to <html>, so the
+     browser never flashes the unrendered markup before dc-runtime paints it.
+     State lives on <html> (not the nodes) because the runtime rebuilds <body>.
+     NOTE: keep this comment free of runtime binding tokens. */
+  html:not(.cfby-ready) x-dc { visibility: hidden; }
+  html.cfby-ready #cfbyBoot { display: none; }
+  #cfbyBoot { position:fixed; inset:0; z-index:9999; display:flex; align-items:center;
+    justify-content:center; background:linear-gradient(160deg,#0f1830,#1a2848 60%,#23409a);
+    color:#8ea3c9; font:600 14px/1 'Heebo',system-ui,sans-serif; letter-spacing:.04em; }
+</style>
 </head>
 <body>
+<div id="cfbyBoot">טוען…</div>
 <x-dc>
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
