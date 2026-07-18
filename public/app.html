@@ -1085,6 +1085,14 @@ class Component extends DCLogic {
       myTarget: b.myTarget || this.WEEKLY_TARGET, myGoal: b.myGoal || '', myCategory: b.myCategory || null,
       myGender: b.myGender || null, myAge: (b.myAge != null ? b.myAge : null)
     }); } } catch (e) {}
+    // boot.js calls this when the board changes on the server (realtime) — refresh
+    // only the OTHER athletes, never my own fields, to avoid clobbering local edits.
+    try { window.cfbyReloadBoard = ()=>this.reloadOthers(); } catch (e) {}
+  }
+  reloadOthers() {
+    try { const raw = localStorage.getItem(this.BOARD_KEY); if (raw) { const b = JSON.parse(raw);
+      this.setState({ board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {}, category: a.category || null })) });
+    } } catch (e) {}
   }
   EFFORT_PTS = { pr:100, good:80, average:55, missed:0 };
   weekStats(wi) {

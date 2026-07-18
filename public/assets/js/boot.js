@@ -124,11 +124,17 @@
     }, 800);
   }
 
+  // When boot.js itself rewrites the board (e.g. a realtime refresh of other
+  // athletes), suppress the interceptor so it does not push our own row back
+  // and cause an echo loop.
+  var suppressPush = false;
+
   // Intercept the app's own localStorage writes
   function installInterceptor(uid, isAdmin) {
     var orig = localStorage.setItem.bind(localStorage);
     localStorage.setItem = function (key, val) {
       orig(key, val);
+      if (suppressPush) return;
       if (key === K.TRACKER_KEY) {
         pushState(uid, isAdmin);
         // A completed workout only writes the tracker, but the leaderboard's
@@ -139,6 +145,34 @@
         pushBoard(uid, isAdmin);
       }
     };
+  }
+
+  // ---- realtime leaderboard -------------------------------------------
+  // Refresh ONLY the other athletes' rows (never our own fields) so anyone
+  // else's change appears live, without a page refresh.
+  var rtTimer = null;
+  async function refreshOthers(uid) {
+    var rows = await fetchBoard();
+    var byId = {}; rows.forEach(function (r) { byId[r.user_id] = r; });
+    var profs = await fetchAllProfiles();
+    var board = profs
+      .filter(function (p) { return p.id !== uid; })
+      .map(function (p) { var r = byId[p.id]; return { id: p.id, name: (r && r.name) || p.name || "", weeks: (r && r.weeks) || [], category: categoryOf(p.gender, p.birth_date) }; });
+    var cur = lsGet(K.BOARD_KEY) || {};
+    cur.board = board;
+    suppressPush = true;
+    try { lsSetRaw(K.BOARD_KEY, cur); } finally { suppressPush = false; }
+    if (window.cfbyReloadBoard) { try { window.cfbyReloadBoard(); } catch (e) {} }
+  }
+  function subscribeBoard(uid) {
+    try {
+      sb.channel("cfby-board")
+        .on("postgres_changes", { event: "*", schema: "public", table: "board" }, function () {
+          clearTimeout(rtTimer);
+          rtTimer = setTimeout(function () { refreshOthers(uid).catch(function () {}); }, 500);
+        })
+        .subscribe();
+    } catch (e) { console.error("[realtime]", e); }
   }
 
   // ---- in-app ADMIN panel (only injected for admins) ------------------
@@ -445,6 +479,9 @@
 
     // 5) admins get the in-app user-management panel (floating button)
     if (isAdmin) { try { injectAdminPanel(uid); } catch (e) { console.error("[admin panel]", e); } }
+
+    // 6) live leaderboard: refresh others' rows whenever the board changes
+    subscribeBoard(uid);
   }
 
   // app.html hides <x-dc> because the browser paints that raw markup — modals and
