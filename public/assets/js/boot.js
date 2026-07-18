@@ -89,7 +89,8 @@
     return out;
   }
   function pushBoard(uid, isAdmin) {
-    if (isAdmin) return;            // invisible admin: never appears on the shared board
+    // Admins compete on the leaderboard like everyone else (their extra powers
+    // are the panel + program editing, not board visibility).
     clearTimeout(t2);
     t2 = setTimeout(async function () {
       var b = lsGet(K.BOARD_KEY) || {};
@@ -321,18 +322,14 @@
     // 2) board (shared leaderboard). Built from the full roster of registered
     //    athletes (profiles), so a new user shows up immediately — not only once
     //    they log a workout. Their board row (completed counts + result) is
-    //    merged in when it exists. Admins are invisible; "you" is rendered by
-    //    the app separately, so exclude self here.
-    if (isAdmin) {
-      // wipe any leftover admin row so the admin never shows up to others
-      try { await sb.from("board").delete().eq("user_id", uid); } catch (e) {}
-    }
+    //    merged in when it exists. Everyone competes, admins included; "you" is
+    //    rendered by the app separately, so exclude only self here.
     var rows = await fetchBoard();
     var byId = {};
     rows.forEach(function (r) { byId[r.user_id] = r; });
     var profiles = await fetchAllProfiles();
     var board = profiles
-      .filter(function (p) { return !p.is_admin && p.id !== uid; })
+      .filter(function (p) { return p.id !== uid; })
       .map(function (p) {
         var r = byId[p.id];
         return { id: p.id, name: (r && r.name) || p.name || "", weeks: (r && r.weeks) || [] };
@@ -350,7 +347,7 @@
     // One-time board sync on load: seeding above happens BEFORE the interceptor,
     // so a user who already completed workouts (in their state) wouldn't be on
     // the board until their next change. Push now so they appear immediately.
-    if (!isAdmin) pushBoard(uid, isAdmin);
+    pushBoard(uid, isAdmin);
 
     // expose a manual sign-out for the app if needed
     window.cfbySignOut = async function () { await sb.auth.signOut(); location.replace("index.html"); };
