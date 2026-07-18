@@ -194,7 +194,6 @@
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:30px; line-height:1;">{{ prCount }}</div>
             <div style="font-size:11px; color:#e8c98a; margin-top:3px;">שיאים</div>
           </div>
-          <button onClick="{{ openSharePRs }}" style="flex:none; background:rgba(255,255,255,.12); border:1px solid rgba(232,165,58,.4); color:#fff; border-radius:12px; padding:11px 16px; font-weight:700; font-size:13px; cursor:pointer;">📤 שתף</button>
         </div>
 
         <sc-if value="{{ hasPRs }}" hint-placeholder-val="{{ true }}">
@@ -529,6 +528,7 @@
                 </div>
 
                 <div style="grid-column:1 / -1;">{{ saveBar }}</div>
+                <div style="grid-column:1 / -1;"><button onClick="{{ openShareDay }}" style="width:100%; background:#fff; color:var(--blue); border:1px solid var(--blue); border-radius:12px; padding:11px; font-weight:700; font-size:14px; cursor:pointer;">📤 שתף את האימון כתמונה</button></div>
               </div>
             </div>
           </sc-if>
@@ -636,49 +636,26 @@
   <sc-if value="{{ welcomeOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeWelcome }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .25s ease both;">
       <div onClick="{{ stop }}" style="background:#fff; border-radius:24px; width:100%; max-width:440px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto;">
-        <div style="background:linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a); color:#fff; padding:26px 24px 22px; text-align:center;">
-          <img src="assets/logo.png" alt="" style="width:56px; height:56px; border-radius:50%; box-shadow:0 0 0 3px rgba(255,255,255,.25); margin-bottom:12px;">
-          <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; letter-spacing:.05em;">ברוכים הבאים 👋</div>
-          <div dir="rtl" style="font-size:13px; color:#b9c4e6; margin-top:6px; line-height:1.6;">לוח המעקב של תוכנית <bdi>Capacity</bdi> — 8 שבועות.<br>ככה מתמצאים בכמה שניות:</div>
+        <div style="background:linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a); color:#fff; padding:15px 22px 13px; text-align:center;">
+          <img src="assets/logo.png" alt="" style="width:38px; height:38px; border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.25); margin-bottom:5px;">
+          <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; letter-spacing:.05em;">ברוכים הבאים 👋</div>
+          <div dir="rtl" style="font-size:12px; color:#b9c4e6; margin-top:2px; line-height:1.4;">לוח המעקב של <bdi>Capacity</bdi> — 8 שבועות</div>
         </div>
-        <div dir="rtl" style="padding:20px 22px; display:flex; flex-direction:column; gap:16px;">
-          <div style="display:flex; gap:12px; align-items:flex-start;">
-            <span style="font-size:20px; flex:none;">📊</span>
-            <div><div style="font-weight:700; font-size:14px;">סקירה</div><div style="font-size:12.5px; color:var(--muted); line-height:1.5;">התקדמות כללית, יעד שבועי, רצף שיא ומפת התוכנית. לחיצה על יום קופצת אליו.</div></div>
+        <div dir="rtl" style="padding:13px 18px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📊</span><div style="line-height:1.45;"><b style="font-size:13px;">סקירה</b> <span style="font-size:12px; color:var(--muted);">— התקדמות, יעד שבועי, רצף ומפת התוכנית.</span></div></div>
+          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📅</span><div style="line-height:1.45;"><b style="font-size:13px;">יומן</b> <span style="font-size:12px; color:var(--muted);">— האימון היומי. תעד תוצאות, דרג מאמץ וסמן "הושלם".</span></div></div>
+          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏅</span><div style="line-height:1.45;"><b style="font-size:13px;">דירוג</b> <span style="font-size:12px; color:var(--muted);">— מתחרים בקטגוריה שלך על סמך תוצאות המטקון.</span></div></div>
+          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏆</span><div style="line-height:1.45;"><b style="font-size:13px;">שיאים</b> <span style="font-size:12px; color:var(--muted);">— כל אימון שתדרג כ-PR נאסף לכאן אוטומטית.</span></div></div>
+          <div style="display:flex; flex-direction:column; gap:4px; background:rgba(239,91,37,.08); border:1px solid rgba(239,91,37,.3); border-radius:11px; padding:9px 12px;">
+            <div style="display:flex; gap:7px; align-items:center;"><span style="font-size:16px;">📲</span><b style="font-size:13px;">התקינו כאפליקציה על הטלפון</b></div>
+            <div style="font-size:11.5px; color:var(--ink); line-height:1.5;"><b>🍏 אייפון</b> (Safari): שיתוף ⬆️ ← «הוסף למסך הבית».</div>
+            <div style="font-size:11.5px; color:var(--ink); line-height:1.5;"><b>🤖 אנדרואיד</b> (Chrome): תפריט ⋮ ← «הוספה למסך הבית».</div>
           </div>
-          <div style="display:flex; gap:12px; align-items:flex-start;">
-            <span style="font-size:20px; flex:none;">📅</span>
-            <div><div style="font-weight:700; font-size:14px;">יומן</div><div style="font-size:12.5px; color:var(--muted); line-height:1.5;">האימון היומי — Lift, Metcon ו-Extra. תעד תוצאות, דרג את המאמץ וסמן "הושלם".</div></div>
+          <div style="display:flex; gap:8px; align-items:center; background:#f4f3ef; border-radius:11px; padding:9px 12px;">
+            <span style="font-size:16px; flex:none;">💬</span>
+            <div style="font-size:12px; color:var(--muted); line-height:1.4;">נתקעת? <a href="https://wa.me/972523330954" target="_blank" style="font-weight:700; white-space:nowrap;">אורי · 052-333-0954</a></div>
           </div>
-          <div style="display:flex; gap:12px; align-items:flex-start;">
-            <span style="font-size:20px; flex:none;">🏆</span>
-            <div><div style="font-weight:700; font-size:14px;">שיאים</div><div style="font-size:12.5px; color:var(--muted); line-height:1.5;">כל אימון שתדרג כ-PR נאסף לכאן אוטומטית.</div></div>
-          </div>
-          <div style="display:flex; gap:12px; align-items:flex-start;">
-            <span style="font-size:20px; flex:none;">📤</span>
-            <div><div style="font-weight:700; font-size:14px;">שיתוף</div><div style="font-size:12.5px; color:var(--muted); line-height:1.5;">ייצא כרטיס של שבוע או של השיאים כתמונה או טקסט — לוואטסאפ או למאמן.</div></div>
-          </div>
-          <div style="display:flex; flex-direction:column; gap:9px; background:rgba(239,91,37,.08); border:1px solid rgba(239,91,37,.3); border-radius:12px; padding:13px 15px;">
-            <div style="display:flex; gap:10px; align-items:center;">
-              <span style="font-size:20px; flex:none;">📲</span>
-              <div style="font-weight:700; font-size:14px;">התקינו כאפליקציה על הטלפון</div>
-            </div>
-            <div style="font-size:12.5px; color:var(--muted); line-height:1.6;">כדי שייפתח כמו אפליקציה אמיתית — מסך מלא, אייקון על המסך וכניסה בנגיעה אחת:</div>
-            <div style="display:flex; gap:8px; align-items:flex-start;">
-              <span style="font-size:15px; flex:none;">🍏</span>
-              <div style="font-size:12.5px; color:var(--ink); line-height:1.6;"><b>אייפון</b> (Safari): כפתור השיתוף <b>⬆️</b> ← «הוסף למסך הבית».</div>
-            </div>
-            <div style="display:flex; gap:8px; align-items:flex-start;">
-              <span style="font-size:15px; flex:none;">🤖</span>
-              <div style="font-size:12.5px; color:var(--ink); line-height:1.6;"><b>אנדרואיד</b> (Chrome): תפריט <b>⋮</b> ← «הוספה למסך הבית».</div>
-            </div>
-          </div>
-          <div style="display:flex; gap:12px; align-items:flex-start; background:#f4f3ef; border-radius:12px; padding:12px 14px;">
-            <span style="font-size:20px; flex:none;">💬</span>
-            <div><div style="font-weight:700; font-size:14px;">לא ברור משהו? נתקעת?</div><div style="font-size:12.5px; color:var(--muted); line-height:1.6;">שלחו לי הודעה ואשמח לעזור — <a href="https://wa.me/972523330954" target="_blank" style="font-weight:700; white-space:nowrap;">אורי עוזיאל · 052-333-0954</a></div></div>
-          </div>
-          <div style="font-size:11.5px; color:var(--muted); text-align:center;">הנתונים נשמרים אוטומטית במכשיר הזה.</div>
-          <button onClick="{{ closeWelcome }}" style="background:var(--blue); color:#fff; border:none; border-radius:12px; padding:13px; font-weight:700; font-size:15px; cursor:pointer;">יאללה, בואו נתחיל 💪</button>
+          <button onClick="{{ closeWelcome }}" style="background:var(--blue); color:#fff; border:none; border-radius:11px; padding:11px; font-weight:700; font-size:14px; cursor:pointer; margin-top:2px;">יאללה, בואו נתחיל 💪</button>
         </div>
       </div>
     </div>
@@ -1039,6 +1016,7 @@ class Component extends DCLogic {
     shareOpen: false,
     shareType: 'week',
     shareWi: 0,
+    shareDi: 0,
     builderOpen: false,
     builderWi: 0,
     builderDay: -1,
@@ -1151,7 +1129,7 @@ class Component extends DCLogic {
     return entrants;
   }
   myTotalScore(catFilter) { let s=0; for (let w=0; w<8; w++) { const me=this.computeWeek(w, catFilter).find(e=>e.you); s += me?me.points:0; } return Math.round(s*10)/10; }
-  CAT_LABELS = { 'teen men':'נוער · גברים', 'teen women':'נוער · נשים', 'elite men':'עלית · גברים', 'elite women':'עלית · נשים', 'masters men':'מאסטרס · גברים', 'masters women':'מאסטרס · נשים' };
+  CAT_LABELS = { 'teen men':'TEEN · גברים', 'teen women':'TEEN · נשים', 'elite men':'ELITE · גברים', 'elite women':'ELITE · נשים', 'masters men':'MASTERS · גברים', 'masters women':'MASTERS · נשים' };
   catLabel(c) { return this.CAT_LABELS[c] || c || '—'; }
   catPillStyle(active) { return 'border:none; cursor:pointer; padding:7px 14px; border-radius:999px; font-weight:700; font-size:12.5px; white-space:nowrap; transition:all .15s; ' + (active ? 'background:var(--orange); color:#fff;' : 'background:#eeede8; color:var(--muted);'); }
   segLight(active) { return 'border:none; cursor:pointer; padding:8px 18px; border-radius:999px; font-weight:700; font-size:13px; transition:all .15s; ' + (active ? 'background:var(--navy); color:#fff;' : 'background:#eeede8; color:var(--muted);'); }
@@ -1669,12 +1647,12 @@ class Component extends DCLogic {
 
       openBuilder: ()=>this.setState({builderOpen:true, builderWi:selWeek, builderDay:-1}),
       openShareWeek: ()=>this.setState({shareOpen:true, shareType:'week', shareWi:selWeek}),
-      openSharePRs: ()=>this.setState({shareOpen:true, shareType:'prboard'}),
+      openShareDay: ()=>this.setState({shareOpen:true, shareType:'day', shareWi:selWeek, shareDi:selDay}),
       closeShare: ()=>this.setState({shareOpen:false}),
       closeBuilder: ()=>this.setState({builderOpen:false}),
       shareOpen: this.state.shareOpen,
       builderOpen: this.state.builderOpen,
-      shareTitle: this.state.shareType==='week' ? ('שיתוף · שבוע '+(this.state.shareWi+1)) : 'שיתוף · לוח שיאים',
+      shareTitle: this.state.shareType==='week' ? ('שיתוף · שבוע '+(this.state.shareWi+1)) : (this.state.shareType==='day' ? 'שיתוף אימון' : 'שיתוף'),
       shareCard: this.shareCardEl(),
       shareDownload: ()=>this.shareImage(),
       shareCopy: ()=>this.shareCopyText(),
@@ -1870,6 +1848,34 @@ class Component extends DCLogic {
             React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontSize:'11px', color:'#b9c4e6' } }, 'W'+(it.w+1))
           )) : React.createElement('div', { style:{ fontSize:'13px', color:'#b9c4e6' } }, 'עדיין אין שיאים')
         )
+      );
+    } else if (t==='day') {
+      const wi=this.state.shareWi, di=this.state.shareDi;
+      const day=(data[wi]&&data[wi].days[di])||null;
+      const gi=wi*7+di;
+      const rows=[];
+      if (day) {
+        if (day.lift&&day.lift.movement){ const L=day.lift.log||{}; rows.push({tag:'LIFT', name:day.lift.movement, res:[L.weight&&(L.weight+'kg'),L.reps&&('× '+L.reps)].filter(Boolean).join(' ')}); }
+        if (day.metcon&&day.metcon.name){ const M=day.metcon.log||{}; let r=''; if(M.mode==='time'&&M.time)r=M.time; else if(M.rounds||M.reps)r=[M.rounds&&(M.rounds+' rds'),M.reps&&(M.reps+' reps')].filter(Boolean).join(' + '); else if(M.amount)r=M.amount; rows.push({tag:'METCON', name:day.metcon.name, res:r}); }
+        (day.extras||[]).forEach(e=>{ if(e&&e.name) rows.push({tag:'EXTRA', name:e.name, res:''}); });
+      }
+      const rm=day?this.ratingMeta(day.rating):null;
+      body=React.createElement('div', null,
+        React.createElement('div', { style:{ margin:'2px 0 12px' } },
+          React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'20px', letterSpacing:'.03em' } }, this.dateStr(this.dateAt(gi))),
+          React.createElement('div', { style:{ fontSize:'12px', color:'#b9c4e6' } }, 'WEEK '+(wi+1))
+        ),
+        React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } },
+          rows.length ? rows.map((r,i)=>React.createElement('div', { key:i, style:{ background:'rgba(255,255,255,.08)', borderRadius:'10px', padding:'10px 12px' } },
+            React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:600, fontSize:'10px', color:'#8fa4d8', letterSpacing:'.08em', marginBottom:'2px' } }, r.tag),
+            React.createElement('div', { style:{ fontWeight:700, fontSize:'14px' } }, r.name),
+            r.res ? React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'14px', color:'#f0c064', marginTop:'2px' } }, r.res) : null
+          )) : React.createElement('div', { style:{ fontSize:'13px', color:'#b9c4e6' } }, 'אין נתונים לאימון זה')
+        ),
+        rm ? React.createElement('div', { style:{ marginTop:'12px', display:'inline-flex', alignItems:'center', gap:'6px', background:'rgba(239,91,37,.2)', border:'1px solid rgba(239,91,37,.5)', borderRadius:'999px', padding:'5px 14px' } },
+          React.createElement('span', { style:{ fontSize:'14px' } }, rm.emoji),
+          React.createElement('span', { style:{ fontWeight:700, fontSize:'12px' } }, rm.label)
+        ) : null
       );
     } else {
       const wi = this.state.shareWi;
