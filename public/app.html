@@ -175,7 +175,7 @@
     </sc-if>
 
     <sc-if value="{{ isPRs }}" hint-placeholder-val="{{ false }}">
-      <div style="animation:fadeUp .35s ease both;">
+      <div style="animation:fadeUp .35s ease both; direction:rtl;">
         <div style="background:linear-gradient(120deg,#3a2a10,#5c4415); color:#fff; border-radius:18px; padding:24px 24px; margin-bottom:20px; box-shadow:0 8px 28px rgba(58,42,16,.22); display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
           <div style="font-size:40px; line-height:1;">🏆</div>
           <div style="flex:1; min-width:0;">
@@ -257,11 +257,11 @@
               <span style="font-size:12px; color:#9fb0dd;">נק' · פחות = טוב יותר</span>
             </div>
             <div style="display:flex; gap:18px; margin-top:14px;">
-              <div><div style="font-size:11px; color:#9fb0dd;">תוצאה (70%)</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px;">{{ myResultPts }}</div><div style="font-size:10.5px; color:#9fb0dd; margin-top:1px;">{{ myPlaceText }}</div></div>
-              <div><div style="font-size:11px; color:#9fb0dd;">החמצות (30%)</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px;">+{{ myMissed }}</div><div style="font-size:10.5px; color:#9fb0dd; margin-top:1px;">נק' לכל אימון שהוחמץ</div></div>
+              <div><div style="font-size:11px; color:#9fb0dd;">תוצאה</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px;">{{ myResultPts }}</div><div style="font-size:10.5px; color:#9fb0dd; margin-top:1px;">{{ myPlaceText }}</div></div>
+              <div><div style="font-size:11px; color:#9fb0dd;">החמצות</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px;">+{{ myMissed }}</div><div style="font-size:10.5px; color:#9fb0dd; margin-top:1px;">נק' לכל אימון שהוחמץ</div></div>
             </div>
             <label style="display:flex; flex-direction:column; gap:5px; margin-top:16px;">
-              <span style="font-size:11px; color:#9fb0dd;">התוצאה שלך השבוע (לפי המדד שהמאמן קובע)</span>
+              <span style="font-size:11px; color:#9fb0dd;">התוצאה שלך בבלוק השבועי</span>
               <input inputMode="numeric" value="{{ myResultVal }}" onChange="{{ onMyResult }}" placeholder="0" style="border:1px solid rgba(255,255,255,.25); border-radius:9px; padding:9px 12px; font-size:15px; background:rgba(255,255,255,.1); color:#fff; outline:none; max-width:160px; font-weight:600;">
             </label>
           </div>
