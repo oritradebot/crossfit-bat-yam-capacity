@@ -10,11 +10,15 @@ create table if not exists public.profiles (
   email        text,                          -- the plain username (shown in the admin panel)
   is_admin     boolean not null default false,
   welcome_seen boolean not null default false,
+  gender       text,                          -- 'male' | 'female' (competition category)
+  birth_date   date,                          -- category is derived from age
   created_at   timestamptz not null default now()
 );
 -- keep existing installs in sync (columns added after the first launch)
 alter table public.profiles add column if not exists email        text;
 alter table public.profiles add column if not exists welcome_seen boolean not null default false;
+alter table public.profiles add column if not exists gender       text;
+alter table public.profiles add column if not exists birth_date   date;
 
 -- 2) STATES : each user's full tracker blob (program + their own results)
 create table if not exists public.states (

@@ -48,15 +48,34 @@
     return r.data || [];
   }
   async function fetchProfile(uid) {
-    var r = await sb.from("profiles").select("name,is_admin,welcome_seen").eq("id", uid).maybeSingle();
-    return r.data || { name: "", is_admin: false, welcome_seen: false };
+    var r = await sb.from("profiles").select("name,is_admin,welcome_seen,gender,birth_date").eq("id", uid).maybeSingle();
+    return r.data || { name: "", is_admin: false, welcome_seen: false, gender: null, birth_date: null };
   }
   // Every registered athlete — the leaderboard is built from this so a user
   // appears the moment their account exists, before they log any workout.
   async function fetchAllProfiles() {
-    var r = await sb.from("profiles").select("id,name,is_admin");
+    var r = await sb.from("profiles").select("id,name,is_admin,gender,birth_date");
     return r.data || [];
   }
+
+  // ---- competition categories (gender x age bracket) -------------------
+  function ageFrom(birthDate) {
+    if (!birthDate) return null;
+    var b = new Date(birthDate), n = new Date();
+    var a = n.getFullYear() - b.getFullYear();
+    var m = n.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && n.getDate() < b.getDate())) a--;
+    return a;
+  }
+  // -> "teen men" | "teen women" | "elite men" | "elite women" | "masters men" | "masters women"
+  function categoryOf(gender, birthDate) {
+    if (!gender || !birthDate) return null;
+    var a = ageFrom(birthDate);
+    if (a == null) return null;
+    var bracket = a < 18 ? "teen" : (a < 35 ? "elite" : "masters");
+    return bracket + " " + (gender === "female" ? "women" : "men");
+  }
+  window.cfbyCategoryOf = categoryOf;   // the app uses this for filtering/rankings
 
   // ---- Supabase writes (debounced) ------------------------------------
   var t1 = null, t2 = null;
@@ -288,6 +307,58 @@
     localStorage.removeItem = function (k) { _lsRem(k); if (k === "cfby_admin") ensureTab(); };
   }
 
+  // ---- first-login mini-onboarding: gender + birth date ----------------
+  function askProfileDetails() {
+    return new Promise(function (resolve) {
+      var css = document.createElement("style");
+      css.textContent =
+        "#cfbyOnb{position:fixed;inset:0;z-index:100000;background:linear-gradient(160deg,#0f1830,#1a2848 60%,#23409a);display:flex;align-items:center;justify-content:center;padding:20px;font-family:'Heebo',system-ui,sans-serif;direction:rtl}" +
+        "#cfbyOnb .box{background:#16233f;border:1px solid #243657;border-radius:20px;padding:28px 26px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.5)}" +
+        "#cfbyOnb h2{color:#eaf0ff;font-size:20px;font-weight:800;margin:0 0 4px;text-align:center}" +
+        "#cfbyOnb .sub{color:#8ea3c9;font-size:13px;text-align:center;margin:0 0 18px}" +
+        "#cfbyOnb label{display:block;color:#8ea3c9;font-size:12px;margin:14px 0 7px}" +
+        "#cfbyOnb .gwrap{display:flex;gap:10px}" +
+        "#cfbyOnb .g{flex:1;background:#0f1830;border:1px solid #243657;border-radius:12px;padding:12px;color:#eaf0ff;font:700 14px 'Heebo',sans-serif;cursor:pointer;transition:all .15s}" +
+        "#cfbyOnb .g.sel{background:#ef5b25;border-color:#ef5b25;color:#fff}" +
+        "#cfbyOnb input{width:100%;background:#0f1830;border:1px solid #243657;border-radius:12px;padding:12px 14px;color:#eaf0ff;font:15px 'Heebo',sans-serif;outline:none;color-scheme:dark}" +
+        "#cfbyOnb .go{width:100%;margin-top:22px;background:#ef5b25;color:#fff;border:none;border-radius:12px;padding:13px;font:800 15px 'Heebo',sans-serif;cursor:pointer}" +
+        "#cfbyOnb .go:disabled{opacity:.5;cursor:default}";
+      document.head.appendChild(css);
+      var ov = document.createElement("div");
+      ov.id = "cfbyOnb";
+      ov.innerHTML =
+        '<div class="box">' +
+          '<h2>👋 בוא נכיר</h2>' +
+          '<p class="sub">פרטים לקטגוריית התחרות שלך</p>' +
+          '<label>מין</label>' +
+          '<div class="gwrap"><button class="g" data-g="male">זכר</button><button class="g" data-g="female">נקבה</button></div>' +
+          '<label>תאריך לידה</label>' +
+          '<input id="cfbyDob" type="date">' +
+          '<button class="go" id="cfbyGo" disabled>המשך</button>' +
+        '</div>';
+      document.body.appendChild(ov);
+      var gender = null;
+      var gbtns = ov.querySelectorAll(".g");
+      var dob = ov.querySelector("#cfbyDob");
+      var go = ov.querySelector("#cfbyGo");
+      function refresh() { go.disabled = !(gender && dob.value); }
+      Array.prototype.forEach.call(gbtns, function (b) {
+        b.onclick = function () {
+          gender = b.getAttribute("data-g");
+          Array.prototype.forEach.call(gbtns, function (x) { x.classList.remove("sel"); });
+          b.classList.add("sel"); refresh();
+        };
+      });
+      dob.oninput = refresh;
+      go.onclick = function () {
+        if (!gender || !dob.value) return;
+        var out = { gender: gender, birth_date: dob.value };
+        css.remove(); ov.remove();
+        resolve(out);
+      };
+    });
+  }
+
   // ---- main ------------------------------------------------------------
   async function main() {
     var ses = await sb.auth.getSession();
@@ -297,6 +368,16 @@
 
     var prof = await fetchProfile(uid);
     var isAdmin = !!prof.is_admin;
+
+    // First login: collect gender + birth date (needed for the competition
+    // category). Blocks the app until answered, then refetches the profile.
+    if (!prof.gender || !prof.birth_date) {
+      try {
+        var got = await askProfileDetails();
+        await sb.from("profiles").upsert({ id: uid, gender: got.gender, birth_date: got.birth_date });
+        prof.gender = got.gender; prof.birth_date = got.birth_date;
+      } catch (e) { console.error("[onboarding]", e); }
+    }
 
     // Nothing may pop up on its own. These flags are set BEFORE the app boots:
     //  - WELCOME_KEY : the guide opens only via the "❓ מדריך" button.
@@ -332,13 +413,15 @@
       .filter(function (p) { return p.id !== uid; })
       .map(function (p) {
         var r = byId[p.id];
-        return { id: p.id, name: (r && r.name) || p.name || "", weeks: (r && r.weeks) || [] };
+        return { id: p.id, name: (r && r.name) || p.name || "", weeks: (r && r.weeks) || [],
+                 category: categoryOf(p.gender, p.birth_date) };
       });
     var myRow = byId[uid];
     lsSetRaw(K.BOARD_KEY, {
       board: board,
       myName: (myRow && myRow.name) || prof.name || (session.user.email || "").split("@")[0],
-      myResults: (myRow && myRow.results) || {}
+      myResults: (myRow && myRow.results) || {},
+      myCategory: categoryOf(prof.gender, prof.birth_date)
     });
 
     // 3) intercept future writes
