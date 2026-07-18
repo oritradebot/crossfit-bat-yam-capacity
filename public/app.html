@@ -282,6 +282,11 @@
           <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; letter-spacing:.04em; color:var(--navy);">🏆 דירוג העונה</span>
           <span style="font-size:11.5px; color:var(--muted);">הניקוד המצטבר של כל המתחרים · פחות = מקום גבוה יותר</span>
         </div>
+        <div dir="rtl" style="display:flex; gap:7px; overflow-x:auto; padding-bottom:8px; margin-bottom:12px;">
+          <sc-for list="{{ catPills }}" as="c" hint-placeholder-count="7">
+            <button onClick="{{ onCategory }}" data-v="{{ c.v }}" style="{{ c.style }}">{{ c.label }}</button>
+          </sc-for>
+        </div>
         <div style="background:#fff; border:1px solid var(--line); border-radius:18px; padding:18px 20px; box-shadow:0 6px 24px rgba(20,31,56,.06);">
           <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">
             <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">השם שלך בטבלה</span>
@@ -974,6 +979,8 @@ class Component extends DCLogic {
     moves: this.MOVEMENTS.slice(),
     moveDraft: '',
     board: [],
+    myCategory: null,
+    selCategory: 'all',
     myName: '',
     editingName: false,
     nameDraft: '',
@@ -1009,9 +1016,9 @@ class Component extends DCLogic {
     // my display name, my results). saveBoard() writes this key; without a read
     // the board would be dropped on every load.
     try { const raw = localStorage.getItem(this.BOARD_KEY); if (raw) { const b = JSON.parse(raw); this.setState({
-      board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {} })),
+      board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {}, category: a.category || null })),
       myName: b.myName || '', nameDraft: b.myName || '', myResults: b.myResults || {},
-      myTarget: b.myTarget || this.WEEKLY_TARGET, myGoal: b.myGoal || ''
+      myTarget: b.myTarget || this.WEEKLY_TARGET, myGoal: b.myGoal || '', myCategory: b.myCategory || null
     }); } } catch (e) {}
   }
   EFFORT_PTS = { pr:100, good:80, average:55, missed:0 };
@@ -1021,14 +1028,19 @@ class Component extends DCLogic {
     this.state.data[wi].days.forEach(d=>{ if (d.done) c++; if (d.alt && d.alt.done) c++; if (d.rest && !d.done) rest++; });
     return { completed: Math.min(AV, c), rest };
   }
-  computeWeek(wi) {
+  computeWeek(wi, catFilter) {
     const AV = this.WEEKLY_TARGET;
     const RMAX = AV * (70/30);
     const mr = this.state.myResults || {};
     const entrants = [];
     const myWk = this.weekStats(wi);
-    entrants.push({ id:'me', you:true, name:(this.state.myName||'אני')+' (אתה)', completed:myWk.completed, rest:myWk.rest, result:+mr[wi]||0 });
-    this.state.board.forEach(a=>{ const wk=(a.weeks&&a.weeks[wi])||{}; entrants.push({ id:a.id, you:false, name:a.name||'ללא שם', completed:Math.min(AV,+wk.completed||0), rest:0, result:+wk.result||0 }); });
+    const meCat = this.state.myCategory || null;
+    // catFilter limits the ranking to one category (separate rankings). "me"
+    // only appears when the filter is off or matches my own category.
+    if (!catFilter || catFilter === meCat) {
+      entrants.push({ id:'me', you:true, name:(this.state.myName||'אני')+' (אתה)', completed:myWk.completed, rest:myWk.rest, result:+mr[wi]||0, category:meCat });
+    }
+    this.state.board.forEach(a=>{ if (catFilter && a.category !== catFilter) return; const wk=(a.weeks&&a.weeks[wi])||{}; entrants.push({ id:a.id, you:false, name:a.name||'ללא שם', completed:Math.min(AV,+wk.completed||0), rest:0, result:+wk.result||0, category:a.category||null }); });
     const posted = entrants.map(e=>e.result).filter(x=>x>0);
     const M = posted.length;
     entrants.forEach(e=>{
@@ -1050,7 +1062,10 @@ class Component extends DCLogic {
     });
     return entrants;
   }
-  myTotalScore() { let s=0; for (let w=0; w<8; w++) { const me=this.computeWeek(w).find(e=>e.you); s += me?me.points:0; } return Math.round(s*10)/10; }
+  myTotalScore(catFilter) { let s=0; for (let w=0; w<8; w++) { const me=this.computeWeek(w, catFilter).find(e=>e.you); s += me?me.points:0; } return Math.round(s*10)/10; }
+  CAT_LABELS = { 'teen men':'נוער · גברים', 'teen women':'נוער · נשים', 'elite men':'עלית · גברים', 'elite women':'עלית · נשים', 'masters men':'מאסטרס · גברים', 'masters women':'מאסטרס · נשים' };
+  catLabel(c) { return this.CAT_LABELS[c] || c || '—'; }
+  catPillStyle(active) { return 'border:none; cursor:pointer; padding:7px 14px; border-radius:999px; font-weight:700; font-size:12.5px; white-space:nowrap; transition:all .15s; ' + (active ? 'background:var(--orange); color:#fff;' : 'background:#eeede8; color:var(--muted);'); }
   segLight(active) { return 'border:none; cursor:pointer; padding:8px 18px; border-radius:999px; font-weight:700; font-size:13px; transition:all .15s; ' + (active ? 'background:var(--navy); color:#fff;' : 'background:#eeede8; color:var(--muted);'); }
   saveBoard() { try { localStorage.setItem(this.BOARD_KEY, JSON.stringify({ board:this.state.board, myName:this.state.myName, myResults:this.state.myResults, myTarget:this.state.myTarget, myGoal:this.state.myGoal })); } catch (e) {} }
   myTargetVal() { return this.state.myTarget || this.WEEKLY_TARGET; }
@@ -1391,14 +1406,15 @@ class Component extends DCLogic {
     const bw = this.state.selBoardWeek;
     const mode = 'total';
     const AV = this.WEEKLY_TARGET;
-    const wkEntrants = this.computeWeek(bw);
+    const catFilter = (this.state.selCategory && this.state.selCategory !== 'all') ? this.state.selCategory : null;
+    const wkEntrants = this.computeWeek(bw, catFilter);
     const postedCount = wkEntrants.filter(e=>e.result>0).length;
     const myE = wkEntrants.find(e=>e.you) || { points:0, resultPts:0, missed:0, placement:null, completed:0 };
-    const myTotal = this.myTotalScore();
+    const myTotal = this.myTotalScore(catFilter);
     let ranked;
     if (mode==='total') {
       const tot = {};
-      for (let w=0; w<8; w++) this.computeWeek(w).forEach(e=>{ const t = tot[e.id] || (tot[e.id] = { name:e.name, you:e.you, sum:0 }); t.sum += e.points; });
+      for (let w=0; w<8; w++) this.computeWeek(w, catFilter).forEach(e=>{ const t = tot[e.id] || (tot[e.id] = { name:e.name, you:e.you, sum:0 }); t.sum += e.points; });
       ranked = Object.keys(tot).map(k=>({ name:tot[k].name, you:tot[k].you, score:Math.round(tot[k].sum*10)/10, sub:'ממוצע '+(Math.round(tot[k].sum/8*10)/10) })).sort((a,b)=>a.score-b.score);
     } else {
       ranked = wkEntrants.map(e=>({ name:e.name, you:e.you, score:e.points, sub:e.placement?('#'+Math.round(e.placement)):'—' })).sort((a,b)=>a.score-b.score);
@@ -1411,7 +1427,7 @@ class Component extends DCLogic {
     }));
     const boardWeekPills = data.map((wk,wi)=>({ wi, n:wi+1, style:this.pillStyle(wi===bw) }));
     const MAXW = AV*(70/30)+AV;
-    const trend = data.map((wk,wi)=>{ const me=this.computeWeek(wi).find(e=>e.you); const s=me?me.points:0; return { wi, score:s, barStyle:'width:100%; border-radius:5px 5px 0 0; min-height:3px; height:'+Math.max(3,Math.min(100,s/MAXW*100))+'%; background:'+(wi===bw?'var(--orange)':'rgba(35,64,154,.45)')+'; transition:height .2s;', numStyle:'font-family:\'Oswald\',sans-serif; font-weight:700; font-size:11px; color:'+(wi===bw?'var(--orange)':'var(--muted)')+';' }; });
+    const trend = data.map((wk,wi)=>{ const me=this.computeWeek(wi, catFilter).find(e=>e.you); const s=me?me.points:0; return { wi, score:s, barStyle:'width:100%; border-radius:5px 5px 0 0; min-height:3px; height:'+Math.max(3,Math.min(100,s/MAXW*100))+'%; background:'+(wi===bw?'var(--orange)':'rgba(35,64,154,.45)')+'; transition:height .2s;', numStyle:'font-family:\'Oswald\',sans-serif; font-weight:700; font-size:11px; color:'+(wi===bw?'var(--orange)':'var(--muted)')+';' }; });
 
     return {
       logo: 'assets/logo.png',
@@ -1419,6 +1435,9 @@ class Component extends DCLogic {
       setBoard: ()=>this.setState({view:'board'}),
       tabBoardStyle: this.tabStyle(view==='board'),
       boardRows, boardCount: ranked.length,
+      catPills: [{ v:'all', label:'הכל' }].concat(Object.keys(this.CAT_LABELS).map(c=>({ v:c, label:this.CAT_LABELS[c] })))
+        .map(o=>({ v:o.v, label:o.label, style:this.catPillStyle((this.state.selCategory||'all')===o.v) })),
+      onCategory: (e)=>this.setState({ selCategory:e.currentTarget.dataset.v }),
       selBoardWeekNum: bw+1,
       boardWeekPills, trend,
       onBoardWeek: (e)=>this.setState({ selBoardWeek:+e.currentTarget.dataset.wi }),
