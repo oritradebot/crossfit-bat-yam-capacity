@@ -103,8 +103,15 @@
     var orig = localStorage.setItem.bind(localStorage);
     localStorage.setItem = function (key, val) {
       orig(key, val);
-      if (key === K.TRACKER_KEY) pushState(uid, isAdmin);
-      else if (key === K.BOARD_KEY) pushBoard(uid, isAdmin);
+      if (key === K.TRACKER_KEY) {
+        pushState(uid, isAdmin);
+        // A completed workout only writes the tracker, but the leaderboard's
+        // "completed" counts are derived from it — so sync the board too, or a
+        // user who just marks workouts done never appears on anyone's board.
+        pushBoard(uid, isAdmin);
+      } else if (key === K.BOARD_KEY) {
+        pushBoard(uid, isAdmin);
+      }
     };
   }
 
@@ -323,6 +330,11 @@
 
     // 3) intercept future writes
     installInterceptor(uid, isAdmin);
+
+    // One-time board sync on load: seeding above happens BEFORE the interceptor,
+    // so a user who already completed workouts (in their state) wouldn't be on
+    // the board until their next change. Push now so they appear immediately.
+    if (!isAdmin) pushBoard(uid, isAdmin);
 
     // expose a manual sign-out for the app if needed
     window.cfbySignOut = async function () { await sb.auth.signOut(); location.replace("index.html"); };
