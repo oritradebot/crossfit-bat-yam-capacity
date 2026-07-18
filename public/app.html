@@ -777,6 +777,18 @@
             <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">סה"כ אימונים</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--blue);">{{ profileTotalWorkouts }}</div></div>
             <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">מיקום בקטגוריה</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--orange);">{{ profileCatRank }}</div></div>
           </div>
+          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px;">
+            <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">🎖️ תגים</span>
+            <span style="font-size:11px; color:var(--muted); font-weight:700;">{{ badgeCount }}</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:18px;">
+            <sc-for list="{{ profileBadges }}" as="b" hint-placeholder-count="6">
+              <div style="{{ b.cardStyle }}">
+                <span style="{{ b.iconStyle }}">{{ b.icon }}</span>
+                <span style="{{ b.labelStyle }}">{{ b.label }}</span>
+              </div>
+            </sc-for>
+          </div>
           <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:10px;">🏆 שיאים אחרונים</div>
           <sc-if value="{{ profileHasPRs }}" hint-placeholder-val="{{ true }}">
             <div style="display:flex; flex-direction:column; gap:8px;">
@@ -1495,6 +1507,21 @@ class Component extends DCLogic {
       if (idx>=0) myCatRank = (idx+1)+' / '+r.length;
     }
     const genderLabel = this.state.myGender==='female' ? 'אישה' : (this.state.myGender==='male' ? 'גבר' : '—');
+    let fullWeek = false;
+    for (let w=0; w<8; w++) { if (this.weekStats(w).completed >= this.myTargetVal()) { fullWeek = true; break; } }
+    const badges = [
+      { icon:'🎯', label:'אימון ראשון', earned: totalDone>=1 },
+      { icon:'🏆', label:'שיא ראשון', earned: prList.length>=1 },
+      { icon:'🔥', label:'רצף 5', earned: best>=5 },
+      { icon:'💪', label:'שבוע מלא', earned: fullWeek },
+      { icon:'⭐', label:'10 אימונים', earned: totalDone>=10 },
+      { icon:'👑', label:'40 אימונים', earned: totalDone>=40 }
+    ];
+    const badgeCount = badges.filter(b=>b.earned).length + ' / ' + badges.length;
+    const badgeCards = badges.map(b=>({ icon:b.icon, label:b.label,
+      cardStyle:'display:flex; flex-direction:column; align-items:center; gap:5px; padding:12px 4px; border-radius:12px; text-align:center; ' + (b.earned ? 'background:rgba(239,91,37,.1); border:1px solid rgba(239,91,37,.35);' : 'background:var(--log); border:1px solid var(--line);'),
+      iconStyle:'font-size:24px; line-height:1; ' + (b.earned ? '' : 'filter:grayscale(1); opacity:.4;'),
+      labelStyle:'font-size:10.5px; font-weight:700; color:' + (b.earned ? 'var(--ink)' : 'var(--muted)') + ';' }));
 
     return {
       logo: 'assets/logo.png',
@@ -1517,6 +1544,7 @@ class Component extends DCLogic {
       profilePRs: prList.slice(0,3),
       profileHasPRs: prList.length>0,
       profileNoPRs: prList.length===0,
+      profileBadges: badgeCards, badgeCount,
       selBoardWeekNum: bw+1,
       boardWeekPills, trend,
       onBoardWeek: (e)=>this.setState({ selBoardWeek:+e.currentTarget.dataset.wi }),
