@@ -78,6 +78,7 @@
         <div style="font-size:12px; color:#b9c4e6; font-weight:500;">CAPACITY PROGRAM · מעקב 8 שבועות</div>
       </div>
       <div style="margin-inline-start:auto; display:flex; align-items:center; gap:10px;">
+        <button onClick="{{ openProfile }}" title="הפרופיל שלי" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 13px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">👤 פרופיל</button>
         <button onClick="{{ openWelcome }}" title="איך זה עובד?" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 13px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">❓ מדריך</button>
         <div style="display:flex; background:rgba(255,255,255,.1); border-radius:999px; padding:4px; gap:2px; overflow-x:auto; max-width:100%;">
           <button onClick="{{ setOverview }}" style="{{ tabOverviewStyle }}">סקירה</button>
@@ -751,6 +752,47 @@
     </div>
   </sc-if>
 
+  <sc-if value="{{ profileOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeProfile }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:130; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
+      <div dir="rtl" onClick="{{ stop }}" style="background:#fff; border-radius:20px; width:100%; max-width:400px; box-shadow:0 20px 60px rgba(12,18,34,.4); overflow:hidden;">
+        <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; padding:22px 24px; display:flex; align-items:center; gap:14px;">
+          <div style="width:56px; height:56px; border-radius:50%; background:var(--orange); display:flex; align-items:center; justify-content:center; font-size:26px; flex:none;">👤</div>
+          <div style="flex:1; min-width:0;">
+            <div dir="auto" style="font-family:'Oswald',sans-serif; font-weight:700; font-size:20px; letter-spacing:.03em;">{{ profileName }}</div>
+            <div style="display:inline-block; margin-top:5px; background:rgba(239,91,37,.25); border:1px solid rgba(239,91,37,.5); border-radius:999px; padding:3px 12px; font-size:12px; font-weight:700;">{{ profileCategory }}</div>
+          </div>
+          <button onClick="{{ closeProfile }}" style="flex:none; background:rgba(255,255,255,.14); border:none; color:#fff; width:32px; height:32px; border-radius:9px; font-size:16px; cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:20px 24px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
+            <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">מין</div><div style="font-weight:700; font-size:16px; color:var(--ink);">{{ profileGender }}</div></div>
+            <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">גיל</div><div style="font-weight:700; font-size:16px; color:var(--ink);">{{ profileAge }}</div></div>
+            <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">סה"כ אימונים</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--blue);">{{ profileTotalWorkouts }}</div></div>
+            <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">מיקום בקטגוריה</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--orange);">{{ profileCatRank }}</div></div>
+          </div>
+          <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:10px;">🏆 שיאים אחרונים</div>
+          <sc-if value="{{ profileHasPRs }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <sc-for list="{{ profilePRs }}" as="pr" hint-placeholder-count="3">
+                <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1px solid var(--line); border-inline-start:3px solid var(--orange); border-radius:10px; padding:10px 12px;">
+                  <span style="font-size:16px; flex:none;">🏆</span>
+                  <div style="flex:1; min-width:0;">
+                    <div dir="auto" style="font-weight:700; font-size:14px; color:var(--ink);">{{ pr.move }}</div>
+                    <div dir="auto" style="font-family:'Oswald',sans-serif; font-weight:700; font-size:13px; color:var(--blue);">{{ pr.res }}</div>
+                  </div>
+                  <span style="font-size:11px; color:var(--muted); flex:none;">{{ pr.week }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ profileNoPRs }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center; color:var(--muted); font-size:13px; padding:14px;">עדיין אין שיאים — סמן אימון כ-🏆 PR ביומן.</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--navy); color:#fff; padding:12px 22px; border-radius:999px; font-weight:600; font-size:14px; z-index:120; box-shadow:0 10px 30px rgba(0,0,0,.3); animation:fadeUp .2s ease both;">{{ toast }}</div>
   </sc-if>
@@ -980,6 +1022,9 @@ class Component extends DCLogic {
     moveDraft: '',
     board: [],
     myCategory: null,
+    myGender: null,
+    myAge: null,
+    profileOpen: false,
     selCategory: 'all',
     myName: '',
     editingName: false,
@@ -1018,7 +1063,8 @@ class Component extends DCLogic {
     try { const raw = localStorage.getItem(this.BOARD_KEY); if (raw) { const b = JSON.parse(raw); this.setState({
       board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {}, category: a.category || null })),
       myName: b.myName || '', nameDraft: b.myName || '', myResults: b.myResults || {},
-      myTarget: b.myTarget || this.WEEKLY_TARGET, myGoal: b.myGoal || '', myCategory: b.myCategory || null
+      myTarget: b.myTarget || this.WEEKLY_TARGET, myGoal: b.myGoal || '', myCategory: b.myCategory || null,
+      myGender: b.myGender || null, myAge: (b.myAge != null ? b.myAge : null)
     }); } } catch (e) {}
   }
   EFFORT_PTS = { pr:100, good:80, average:55, missed:0 };
@@ -1429,6 +1475,20 @@ class Component extends DCLogic {
     const MAXW = AV*(70/30)+AV;
     const trend = data.map((wk,wi)=>{ const me=this.computeWeek(wi, catFilter).find(e=>e.you); const s=me?me.points:0; return { wi, score:s, barStyle:'width:100%; border-radius:5px 5px 0 0; min-height:3px; height:'+Math.max(3,Math.min(100,s/MAXW*100))+'%; background:'+(wi===bw?'var(--orange)':'rgba(35,64,154,.45)')+'; transition:height .2s;', numStyle:'font-family:\'Oswald\',sans-serif; font-weight:700; font-size:11px; color:'+(wi===bw?'var(--orange)':'var(--muted)')+';' }; });
 
+    // ---- profile card ----
+    let totalDone = 0;
+    data.forEach(wk=>wk.days.forEach(d=>{ if(d.done) totalDone++; if(d.alt&&d.alt.done) totalDone++; }));
+    const myCat = this.state.myCategory || null;
+    let myCatRank = '—';
+    if (myCat) {
+      const tot = {};
+      for (let w=0; w<8; w++) this.computeWeek(w, myCat).forEach(e=>{ const t=tot[e.id]||(tot[e.id]={you:e.you,sum:0}); t.sum+=e.points; });
+      const r = Object.keys(tot).map(k=>({ you:tot[k].you, score:tot[k].sum })).sort((a,b)=>a.score-b.score);
+      const idx = r.findIndex(x=>x.you);
+      if (idx>=0) myCatRank = (idx+1)+' / '+r.length;
+    }
+    const genderLabel = this.state.myGender==='female' ? 'אישה' : (this.state.myGender==='male' ? 'גבר' : '—');
+
     return {
       logo: 'assets/logo.png',
       isOverview: view==='overview', isLog: view==='log', isPRs: view==='prs', isBoard: view==='board',
@@ -1438,6 +1498,18 @@ class Component extends DCLogic {
       catPills: [{ v:'all', label:'הכל' }].concat(Object.keys(this.CAT_LABELS).map(c=>({ v:c, label:this.CAT_LABELS[c] })))
         .map(o=>({ v:o.v, label:o.label, style:this.catPillStyle((this.state.selCategory||'all')===o.v) })),
       onCategory: (e)=>this.setState({ selCategory:e.currentTarget.dataset.v }),
+      openProfile: ()=>this.setState({ profileOpen:true }),
+      closeProfile: ()=>this.setState({ profileOpen:false }),
+      profileOpen: this.state.profileOpen,
+      profileName: this.state.myName || 'מתאמן',
+      profileGender: genderLabel,
+      profileAge: (this.state.myAge!=null ? String(this.state.myAge) : '—'),
+      profileCategory: this.catLabel(myCat),
+      profileTotalWorkouts: totalDone,
+      profileCatRank: myCatRank,
+      profilePRs: prList.slice(0,3),
+      profileHasPRs: prList.length>0,
+      profileNoPRs: prList.length===0,
       selBoardWeekNum: bw+1,
       boardWeekPills, trend,
       onBoardWeek: (e)=>this.setState({ selBoardWeek:+e.currentTarget.dataset.wi }),

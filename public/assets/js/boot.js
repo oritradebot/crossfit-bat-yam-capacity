@@ -421,7 +421,9 @@
       board: board,
       myName: (myRow && myRow.name) || prof.name || (session.user.email || "").split("@")[0],
       myResults: (myRow && myRow.results) || {},
-      myCategory: categoryOf(prof.gender, prof.birth_date)
+      myCategory: categoryOf(prof.gender, prof.birth_date),
+      myGender: prof.gender || null,
+      myAge: ageFrom(prof.birth_date)
     });
 
     // 3) intercept future writes
