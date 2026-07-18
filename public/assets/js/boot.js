@@ -51,6 +51,12 @@
     var r = await sb.from("profiles").select("name,is_admin,welcome_seen").eq("id", uid).maybeSingle();
     return r.data || { name: "", is_admin: false, welcome_seen: false };
   }
+  // Every registered athlete — the leaderboard is built from this so a user
+  // appears the moment their account exists, before they log any workout.
+  async function fetchAllProfiles() {
+    var r = await sb.from("profiles").select("id,name,is_admin");
+    return r.data || [];
+  }
 
   // ---- Supabase writes (debounced) ------------------------------------
   var t1 = null, t2 = null;
@@ -312,16 +318,26 @@
       // else: leave empty -> the app builds its built-in program
     }
 
-    // 2) board (shared leaderboard). Admin is invisible; each user appears once.
+    // 2) board (shared leaderboard). Built from the full roster of registered
+    //    athletes (profiles), so a new user shows up immediately — not only once
+    //    they log a workout. Their board row (completed counts + result) is
+    //    merged in when it exists. Admins are invisible; "you" is rendered by
+    //    the app separately, so exclude self here.
     if (isAdmin) {
       // wipe any leftover admin row so the admin never shows up to others
       try { await sb.from("board").delete().eq("user_id", uid); } catch (e) {}
     }
     var rows = await fetchBoard();
-    var board = rows
-      .filter(function (r) { return r.user_id !== uid; })  // the app renders "you" separately
-      .map(function (r) { return { id: r.user_id, name: r.name, weeks: r.weeks || [] }; });
-    var myRow = rows.filter(function (r) { return r.user_id === uid; })[0];
+    var byId = {};
+    rows.forEach(function (r) { byId[r.user_id] = r; });
+    var profiles = await fetchAllProfiles();
+    var board = profiles
+      .filter(function (p) { return !p.is_admin && p.id !== uid; })
+      .map(function (p) {
+        var r = byId[p.id];
+        return { id: p.id, name: (r && r.name) || p.name || "", weeks: (r && r.weeks) || [] };
+      });
+    var myRow = byId[uid];
     lsSetRaw(K.BOARD_KEY, {
       board: board,
       myName: (myRow && myRow.name) || prof.name || (session.user.email || "").split("@")[0],
