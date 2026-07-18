@@ -68,6 +68,22 @@ as $$
   select exists (select 1 from public.profiles where id = auth.uid() and is_admin);
 $$;
 
+-- Fully delete a user (admin-only). Removing the auth.users row cascades to
+-- profiles/states/board via their on-delete-cascade FKs, so the person can no
+-- longer sign in — unlike client-side deletes which leave the auth account.
+create or replace function public.admin_delete_user(target uuid)
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public, auth
+as $$
+begin
+  if not public.is_admin() then raise exception 'not authorized'; end if;
+  if target = auth.uid() then raise exception 'cannot delete yourself'; end if;
+  delete from auth.users where id = target;
+end;
+$$;
+
 -- Drop any legacy admin policies that used an INLINE "select ... from profiles"
 -- subquery. Such a policy on `profiles` causes RLS infinite-recursion the moment
 -- the table is read. The is_admin() helper above replaces all of them.

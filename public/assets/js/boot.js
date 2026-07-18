@@ -252,13 +252,12 @@
     }
 
     async function del(uid, name) {
-      if (!confirm('למחוק את "' + (name || "המשתמש") + '"?\nכל הנתונים שלו יימחקו והוא יוסר מהלוח.')) return;
+      if (!confirm('למחוק לצמיתות את "' + (name || "המשתמש") + '"?\nהחשבון וכל הנתונים יימחקו והוא לא יוכל להתחבר יותר.')) return;
       try {
-        // supabase-js does NOT throw on an RLS block — it returns { error }. Check each.
-        var err = (await sb.from("board").delete().eq("user_id", uid)).error
-               || (await sb.from("states").delete().eq("user_id", uid)).error
-               || (await sb.from("profiles").delete().eq("id", uid)).error;
-        if (err) throw err;
+        // admin_delete_user removes the auth account too (cascades to all tables),
+        // so a deleted user truly can't sign back in.
+        var r = await sb.rpc("admin_delete_user", { target: uid });
+        if (r.error) throw r.error;
         amsg("נמחק.", "ok"); refresh();
       } catch (e) { amsg("מחיקה נכשלה: " + (e.message || e), "err"); }
     }
