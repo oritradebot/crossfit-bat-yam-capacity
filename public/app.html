@@ -885,7 +885,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 7;
+  PROGRAM_VERSION = 8;
   programWeek1() {
     return {
       0: {
@@ -935,7 +935,12 @@ class Component extends DCLogic {
       0: {
         lift: { movement:'Clean & Jerk Complex', planned:'Every 1:30 x 6 sets:\nSquat clean\nHang squat clean (below knee)\nJerk\n\nSets 1-2 — 68%\nSets 3-4 — 72%\nSets 5-6 — 75%\n\nPull fully, speed under. Jerk vertical, locked.' },
         metcon: { name:'In Pairs — AMRAP 12:00', scheme:'AMRAP 12:00 (pairs)', score:'Total cals + reps', resultMode:'amount', note:'Partner 1 rows for calories. Partner 2 works on the reps.\nAlternate full rounds. Score — total calories + reps for the team.\nNo partner? Go for a 1:1 row:work.\n\nL1 = 40/30kg · L2 = 50/35kg · L3 = 60/40kg\n\nהקלינים בסינגלים מהירים. העבודה על הרצפה אמורה לקחת בערך דקה — ואז מתחלפים.', movements:[['Row for calories','Partner 1'],['Lateral burpees over the bar','6'],['Power cleans','6'],['Box jump overs','6']] },
-        extras: [['Front Squat','Every 2:30 x 5 sets:\n3 reps @72-75% of your 3RM Back squat\n\nלא בדקתם שלשה כבדה? עבדו על 3 חזרות נקיות עם עוד בטנק.']]
+        extras: [['Front Squat','Every 2:30 x 5 sets:\n3 reps @72-75% of your 3RM Back squat\n\nלא בדקתם שלשה כבדה? עבדו על 3 חזרות נקיות עם עוד בטנק.']],
+        alt: {
+          metcon: { name:'AMRAP 16:00 (Endurance)', scheme:'AMRAP 16:00', score:'Rounds + reps', resultMode:'rounds', note:'הזינו כמה סבבים (+חזרות) הושלמו.', movements:[['Run','400m'],['KBS','12 @24/16'],['Burpee box jump overs','12'],['Row','400m']] },
+          metcon2: { name:'METCON-B — E6MOM 18:00', scheme:'Every 6:00 for 18:00', score:'Total cals', resultMode:'amount', note:'800m Run, then max cal row in the remaining time.\nהזינו את סך הקלוריות משלושת הסבבים.', movements:[['Run','800m'],['Max cal row','remaining time']] },
+          extras: [['',''],['','']]
+        }
       },
       1: {
         lift: { movement:'Halting Snatch + Overhead Squat', planned:'Every 1:30 x 6 sets:\n*Halting snatch\nOverhead squat\n\nSets 1-2 — 60%\nSets 3-4 — 65%\nSets 5-6 — 70%\n\n*Pause 2s at the knee on the pull. Feel the position.\nPatient off the floor, fast under.' },
