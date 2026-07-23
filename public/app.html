@@ -238,12 +238,12 @@
               <div style="font-size:11px; color:#a9e0c0; margin-top:3px;">מתחרים</div>
             </div>
           </div>
-          <div dir="rtl" style="font-size:11.5px; color:#c7ecd6; margin-top:14px; line-height:1.6; background:rgba(0,0,0,.15); border-radius:10px; padding:9px 12px;">איך מחשבים? בסגנון קרוספיט — <b>פחות נקודות = טוב יותר</b>. <b>70% תוצאה</b>: מקום 1 בתוצאות = 0 נק', וכל מקום מתחת מוסיף נקודות. <b>30% נוכחות</b>: הגעת לכל 5 = 0, כל אימון שהוחמץ = +1. הסכום הנמוך ביותר בעונה = מקום ראשון.</div>
+          <div dir="rtl" style="font-size:11.5px; color:#c7ecd6; margin-top:14px; line-height:1.6; background:rgba(0,0,0,.15); border-radius:10px; padding:9px 12px;">איך מחשבים? כמו ב-Open — <b>פחות נקודות = טוב יותר</b>. כל מטקון שסימנת <b>RX</b> מדורג מול כל מי שעשה אותו RX ← אחוזון (ראשון = 0). <b>70% תוצאה</b>: ממוצע האחוזונים שלך. <b>30% נוכחות</b>: הגעת ליעד = 0, כל החמצה מוסיפה. LIFT ו-EXTRA לא נספרים, ואין הזנה ידנית.</div>
         </div>
 
         <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
           <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; letter-spacing:.04em; color:var(--navy);">📅 הניקוד השבועי שלך</span>
-          <span style="font-size:11.5px; color:var(--muted);">בחר שבוע לצפייה ולהזנת התוצאה שלך</span>
+          <span style="font-size:11.5px; color:var(--muted);">בחר שבוע לצפייה בניקוד שלך</span>
         </div>
         <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px;">
           <sc-for list="{{ boardWeekPills }}" as="p" hint-placeholder-count="8">
@@ -264,13 +264,10 @@
               <span style="font-size:12px; color:#9fb0dd;">נק' · פחות = טוב יותר</span>
             </div>
             <div style="display:flex; gap:18px; margin-top:14px;">
-              <div><div style="font-size:11px; color:#9fb0dd;">תוצאה</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px;">{{ myResultPts }}</div><div style="font-size:10.5px; color:#9fb0dd; margin-top:1px;">{{ myPlaceText }}</div></div>
-              <div><div style="font-size:11px; color:#9fb0dd;">החמצות</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px;">+{{ myMissed }}</div><div style="font-size:10.5px; color:#9fb0dd; margin-top:1px;">נק' לכל אימון שהוחמץ</div></div>
+              <div><div style="font-size:11px; color:#9fb0dd;">תוצאה (אחוזון)</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px;">{{ myResultPts }}</div><div style="font-size:10.5px; color:#9fb0dd; margin-top:1px;">{{ myPlaceText }}</div></div>
+              <div><div style="font-size:11px; color:#9fb0dd;">החמצות</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px;">+{{ myMissed }}</div><div style="font-size:10.5px; color:#9fb0dd; margin-top:1px;">אימונים שהוחמצו מהיעד</div></div>
             </div>
-            <label style="display:flex; flex-direction:column; gap:5px; margin-top:16px;">
-              <span style="font-size:11px; color:#9fb0dd;">התוצאה שלך בבלוק השבועי</span>
-              <input inputMode="numeric" value="{{ myResultVal }}" onChange="{{ onMyResult }}" placeholder="0" style="border:1px solid rgba(255,255,255,.25); border-radius:9px; padding:9px 12px; font-size:15px; background:rgba(255,255,255,.1); color:#fff; outline:none; max-width:160px; font-weight:600;">
-            </label>
+            <div style="margin-top:14px; font-size:11.5px; color:#9fb0dd; line-height:1.6; background:rgba(255,255,255,.07); border-radius:10px; padding:9px 12px;">הניקוד מחושב אוטומטית מתוצאות המטקון שסימנת <b style="color:#ffb08f;">RX</b> ביומן — אין הזנה ידנית.</div>
           </div>
           <div style="background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px 20px;">
             <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">הניקוד שלך לאורך 8 השבועות</div>
@@ -970,13 +967,14 @@ class Component extends DCLogic {
       nd.metcon.score = src.score || '';
       nd.metcon.note = (o.metcon ? (o.metcon.note || '') : (o.notes || ''));
       nd.metcon.resultMode = src.resultMode||'';
+      nd.metcon.rx = !!src.rx;
       const M = src.log || {};
       nd.metcon.log = { mode: M.mode||'time', time: M.time||'', rounds: M.rounds||'', reps: M.reps||'', amount: M.amount||'', note: M.note!==undefined ? M.note : (src.result||'') };
       if (Array.isArray(src.movements)) src.movements.forEach((m,i)=>{ if(i<4){ nd.metcon.movements[i].name=m.name||''; nd.metcon.movements[i].detail=m.detail||''; }});
     }
     const src2 = o.metcon2;
     if (src2) {
-      nd.metcon2.name = src2.name||''; nd.metcon2.scheme = src2.scheme||''; nd.metcon2.score = src2.score||''; nd.metcon2.note = src2.note||''; nd.metcon2.resultMode = src2.resultMode||'';
+      nd.metcon2.name = src2.name||''; nd.metcon2.scheme = src2.scheme||''; nd.metcon2.score = src2.score||''; nd.metcon2.note = src2.note||''; nd.metcon2.resultMode = src2.resultMode||''; nd.metcon2.rx = !!src2.rx;
       const M2 = src2.log || {};
       nd.metcon2.log = { mode: M2.mode||'time', time: M2.time||'', rounds: M2.rounds||'', reps: M2.reps||'', amount: M2.amount||'', note: M2.note||'' };
       if (Array.isArray(src2.movements)) src2.movements.forEach((m,i)=>{ if(i<4){ nd.metcon2.movements[i].name=m.name||''; nd.metcon2.movements[i].detail=m.detail||''; }});
@@ -1073,7 +1071,7 @@ class Component extends DCLogic {
     // my display name, my results). saveBoard() writes this key; without a read
     // the board would be dropped on every load.
     try { const raw = localStorage.getItem(this.BOARD_KEY); if (raw) { const b = JSON.parse(raw); this.setState({
-      board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {}, category: a.category || null })),
+      board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {}, category: a.category || null, metcons: a.metcons || {} })),
       myName: b.myName || '', nameDraft: b.myName || '', myResults: b.myResults || {},
       myTarget: b.myTarget || this.WEEKLY_TARGET, myGoal: b.myGoal || '', myCategory: b.myCategory || null,
       myGender: b.myGender || null, myAge: (b.myAge != null ? b.myAge : null)
@@ -1084,7 +1082,7 @@ class Component extends DCLogic {
   }
   reloadOthers() {
     try { const raw = localStorage.getItem(this.BOARD_KEY); if (raw) { const b = JSON.parse(raw);
-      this.setState({ board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {}, category: a.category || null })) });
+      this.setState({ board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {}, category: a.category || null, metcons: a.metcons || {} })) });
     } } catch (e) {}
   }
   EFFORT_PTS = { pr:100, good:80, average:55, missed:0 };
@@ -1094,37 +1092,70 @@ class Component extends DCLogic {
     this.state.data[wi].days.forEach(d=>{ if (d.done) c++; if (d.alt && d.alt.done) c++; if (d.rest && !d.done) rest++; });
     return { completed: Math.min(AV, c), rest };
   }
+  // My metcon results for week wi, keyed like boot.js keys the board data:
+  // "w_d" (main), "w_d_2" (metcon2), "w_d_a"/"w_d_a2" (alt session).
+  weekMetconsFromData(wi) {
+    const out = {};
+    const wk = this.state.data[wi]; if (!wk) return out;
+    wk.days.forEach((day, d) => {
+      if (!day) return;
+      const add = (m, suf) => { const s = this.metconScore(m); if (s) out[wi+'_'+d+suf] = { v:s.v, dir:s.dir, rx: !!(m && m.rx) }; };
+      add(day.metcon, '');
+      add(day.metcon2, '_2');
+      if (day.alt) { add(day.alt.metcon, '_a'); add(day.alt.metcon2, '_a2'); }
+    });
+    return out;
+  }
+  // Open-style engine: every metcon done at RX is ranked among everyone who did
+  // it RX -> percentile (0 = 1st, 100 = last). Weekly quality = the average of
+  // your percentiles; attendance = missed/target. Score = 70% quality + 30%
+  // attendance, fewer = better. LIFT and EXTRA never count; no manual entry.
   computeWeek(wi, catFilter) {
     const AV = this.WEEKLY_TARGET;
-    const RMAX = AV * (70/30);
-    const mr = this.state.myResults || {};
     const entrants = [];
     const myWk = this.weekStats(wi);
     const meCat = this.state.myCategory || null;
     // catFilter limits the ranking to one category (separate rankings). "me"
     // only appears when the filter is off or matches my own category.
     if (!catFilter || catFilter === meCat) {
-      entrants.push({ id:'me', you:true, name:(this.state.myName||'אני')+' (אתה)', completed:myWk.completed, rest:myWk.rest, result:+mr[wi]||0, category:meCat });
+      entrants.push({ id:'me', you:true, name:(this.state.myName||'אני')+' (אתה)', completed:myWk.completed, rest:myWk.rest, category:meCat, mets:this.weekMetconsFromData(wi) });
     }
-    this.state.board.forEach(a=>{ if (catFilter && a.category !== catFilter) return; const wk=(a.weeks&&a.weeks[wi])||{}; entrants.push({ id:a.id, you:false, name:a.name||'ללא שם', completed:Math.min(AV,+wk.completed||0), rest:0, result:+wk.result||0, category:a.category||null }); });
-    const posted = entrants.map(e=>e.result).filter(x=>x>0);
-    const M = posted.length;
-    entrants.forEach(e=>{
+    this.state.board.forEach(a=>{
+      if (catFilter && a.category !== catFilter) return;
+      const wk=(a.weeks&&a.weeks[wi])||{};
+      const mets={}; const src=a.metcons||{}; const pre=wi+'_';
+      Object.keys(src).forEach(k=>{ if(k.indexOf(pre)===0) mets[k]=src[k]; });
+      entrants.push({ id:a.id, you:false, name:a.name||'ללא שם', completed:Math.min(AV,+wk.completed||0), rest:0, category:a.category||null, mets });
+    });
+    // rank each metcon among its RX performers
+    const pct = {};   // pct[key][entrantIdx] = percentile
+    const keySet = {};
+    entrants.forEach(e=>Object.keys(e.mets).forEach(k=>{ const m=e.mets[k]; if(m && m.rx && m.v>0) keySet[k]=true; }));
+    Object.keys(keySet).forEach(k=>{
+      const field=[];
+      entrants.forEach((e,i)=>{ const m=e.mets[k]; if(m && m.rx && m.v>0) field.push({ i, v:+m.v, dir:m.dir||'high' }); });
+      if(!field.length) return;
+      const dir = field[0].dir;
+      field.forEach(f=>{
+        const better = field.filter(x=> dir==='low' ? x.v<f.v : x.v>f.v).length;
+        const eq = field.filter(x=>x.v===f.v).length;
+        const rank = 1 + better + (eq-1)/2;
+        const p = field.length>1 ? (rank-1)/(field.length-1)*100 : 0;
+        (pct[k]=pct[k]||{})[f.i]=p;
+      });
+    });
+    const anyRanked = Object.keys(pct).length>0;
+    entrants.forEach((e,i)=>{
       const base = e.you ? this.myTargetVal() : AV;
       const target = Math.max(0, base - (e.rest||0));
       e.missed = Math.max(0, target - Math.min(target, e.completed));
-      let rp, placement = null;
-      if (e.result > 0) {
-        const greater = posted.filter(x=>x>e.result).length;
-        const eq = posted.filter(x=>x===e.result).length;
-        placement = 1 + greater + (eq-1)/2;
-        rp = placement;              // place in the table IS the score: 1st = 1, 2nd = 2, ...
-      } else {
-        rp = M > 0 ? M + 1 : 0;      // no result posted -> ranked after everyone who did
-      }
-      e.placement = placement;
-      e.resultPts = Math.round(rp*10)/10;
-      e.points = Math.round((rp + e.missed)*10)/10;
+      const mine=[]; Object.keys(pct).forEach(k=>{ if(pct[k][i]!=null) mine.push(pct[k][i]); });
+      e.rxCount = mine.length;
+      const quality = mine.length ? mine.reduce((s,x)=>s+x,0)/mine.length : (anyRanked ? 100 : 0);
+      const attendance = target>0 ? (e.missed/target)*100 : 0;
+      e.placement = null;
+      e.resultPts = Math.round(quality*10)/10;
+      e.points = Math.round((0.7*quality + 0.3*attendance)*10)/10;
     });
     return entrants;
   }
@@ -1275,7 +1306,12 @@ class Component extends DCLogic {
         );
     return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } },
       fixed ? null : React.createElement('div', { style:{ display:'flex', gap:'2px', background:'#eeede8', borderRadius:'10px', padding:'3px', width:'fit-content' } }, seg('time','Time'), seg('rounds','Rounds + Reps')),
-      React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } }, inputs, this.unit(this.txtEl(base+'.log.note', M.note, 'הערה'), 'note'))
+      React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } }, inputs, this.unit(this.txtEl(base+'.log.note', M.note, 'הערה'), 'note')),
+      React.createElement('button', {
+        onClick: ()=>this.onEditPath(base+'.rx', !metcon.rx),
+        title: 'רק ביצוע במשקלי ה-RX שכתובים באימון נכנס לדירוג',
+        style:{ alignSelf:'flex-start', display:'inline-flex', alignItems:'center', gap:'6px', border:'1.5px solid '+(metcon.rx?'var(--orange)':'var(--line)'), background:metcon.rx?'rgba(239,91,37,.12)':'#fff', color:metcon.rx?'var(--orange)':'var(--muted)', borderRadius:'999px', padding:'7px 14px', fontWeight:700, fontSize:'12.5px', cursor:'pointer', transition:'all .15s' }
+      }, (metcon.rx?'✓':'○') + ' עשיתי RX — נכנס לדירוג')
     );
   }
   extraBar(i, ex) {
@@ -1295,6 +1331,23 @@ class Component extends DCLogic {
   liftLogged(day) { const L = (day.lift && day.lift.log) || {}; return !!(L.weight); }
   metconPresent(m) { return !!(m && (m.name || m.scheme || m.note || (m.movements||[]).some(x=>x.name||x.detail))); }
   metconLogged(m) { const M = (m && m.log) || {}; const mode = (m && m.resultMode) || M.mode || 'time'; if (mode==='amount') return !!M.amount; if (mode==='time') return !!M.time; return !!(M.rounds || M.reps); }
+  // One comparable number per metcon, for ranking across athletes.
+  // time -> seconds (lower = better); rounds+reps -> composite; amount -> number (higher = better).
+  metconScore(m) {
+    if (!m) return null;
+    const M = m.log || {};
+    const mode = m.resultMode || M.mode || 'time';
+    if (mode === 'time') {
+      if (!M.time) return null;
+      const p = String(M.time).trim().split(':').map(Number);
+      if (!p.length || p.some(isNaN)) return null;
+      const s = p.length === 3 ? p[0]*3600 + p[1]*60 + p[2] : (p.length === 2 ? p[0]*60 + p[1] : p[0]);
+      return s > 0 ? { v: s, dir: 'low' } : null;
+    }
+    if (mode === 'amount') { const a = parseFloat(M.amount); return a > 0 ? { v: a, dir: 'high' } : null; }
+    const r = (parseInt(M.rounds,10)||0)*100000 + (parseInt(M.reps,10)||0);
+    return r > 0 ? { v: r, dir: 'high' } : null;
+  }
   canComplete(day) {
     const missing = [];
     if (this.liftPresent(day) && !this.liftLogged(day)) missing.push('משקל ל-LIFT');
@@ -1474,8 +1527,7 @@ class Component extends DCLogic {
     const AV = this.WEEKLY_TARGET;
     const catFilter = (this.state.selCategory && this.state.selCategory !== 'all') ? this.state.selCategory : null;
     const wkEntrants = this.computeWeek(bw, catFilter);
-    const postedCount = wkEntrants.filter(e=>e.result>0).length;
-    const myE = wkEntrants.find(e=>e.you) || { points:0, resultPts:0, missed:0, placement:null, completed:0 };
+    const myE = wkEntrants.find(e=>e.you) || { points:0, resultPts:0, missed:0, placement:null, completed:0, rxCount:0 };
     const myTotal = this.myTotalScore(catFilter);
     let ranked;
     if (mode==='total') {
@@ -1492,7 +1544,7 @@ class Component extends DCLogic {
       rankStyle: "font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; text-align:center;" + (i<3 ? '' : ' color:var(--muted);')
     }));
     const boardWeekPills = data.map((wk,wi)=>({ wi, n:wi+1, style:this.pillStyle(wi===bw) }));
-    const MAXW = AV*(70/30)+AV;
+    const MAXW = 100;   // weekly scores are 0-100 now (percentile-based)
     const trend = data.map((wk,wi)=>{ const me=this.computeWeek(wi, catFilter).find(e=>e.you); const s=me?me.points:0; return { wi, score:s, barStyle:'width:100%; border-radius:5px 5px 0 0; min-height:3px; height:'+Math.max(3,Math.min(100,s/MAXW*100))+'%; background:'+(wi===bw?'var(--orange)':'rgba(35,64,154,.45)')+'; transition:height .2s;', numStyle:'font-family:\'Oswald\',sans-serif; font-weight:700; font-size:11px; color:'+(wi===bw?'var(--orange)':'var(--muted)')+';' }; });
 
     // ---- profile card ----
@@ -1555,9 +1607,7 @@ class Component extends DCLogic {
       modeWeekStyle: this.segLight(mode!=='total'), modeTotalStyle: this.segLight(mode==='total'),
       boardSubLabel: mode==='total' ? 'ממוצע' : 'מקום',
       myPoints: myE.points, myResultPts: myE.resultPts, myMissed: myE.missed, myTotal,
-      myPlaceText: (myE.placement ? ('מקום '+Math.round(myE.placement)+' מתוך '+postedCount) : 'לא הוזנה תוצאה'),
-      myResultVal: (this.state.myResults||{})[bw]||'',
-      onMyResult: (e)=>{ const v=parseInt(e.target.value,10)||0; const mr={ ...(this.state.myResults||{}) }; mr[bw]=v; this.setState({ myResults:mr }, ()=>this.saveBoard()); },
+      myPlaceText: (myE.rxCount ? (myE.rxCount + ' מטקוני RX בדירוג') : 'לא דורגת השבוע — סמן RX במטקון'),
       myNameDisplay: this.state.myName,
       nameEditing: this.state.editingName || !this.state.myName,
       notNameEditing: !(this.state.editingName || !this.state.myName),

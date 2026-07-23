@@ -37,6 +37,9 @@ create table if not exists public.board (
 );
 -- keep existing installs in sync
 alter table public.board add column if not exists weeks jsonb;
+-- per-metcon comparable results for the RX ranking engine:
+-- { "w_d": { v, dir, rx }, ... } keyed by week_day (+ _2/_a/_a2 variants)
+alter table public.board add column if not exists metcons jsonb;
 
 -- 4) SHARED_PROGRAM : single row (id=1) — the admin-authored 8-week program
 create table if not exists public.shared_program (

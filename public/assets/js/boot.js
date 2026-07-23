@@ -44,7 +44,7 @@
     return (r.data && r.data.tracker) || null;
   }
   async function fetchBoard() {
-    var r = await sb.from("board").select("user_id,name,results,weeks").order("name");
+    var r = await sb.from("board").select("user_id,name,results,weeks,metcons").order("name");
     return r.data || [];
   }
   async function fetchProfile(uid) {
@@ -107,6 +107,41 @@
     }
     return out;
   }
+  // Per-metcon comparable results for the ranking engine. Keys MUST match the
+  // app's weekMetconsFromData(): "w_d" (main), "w_d_2", "w_d_a", "w_d_a2".
+  // time -> seconds (lower = better); rounds*100000+reps / amount (higher = better).
+  function metconEntry(m) {
+    if (!m) return null;
+    var M = m.log || {};
+    var mode = m.resultMode || M.mode || "time";
+    if (mode === "time") {
+      if (!M.time) return null;
+      var p = String(M.time).trim().split(":").map(Number);
+      if (!p.length || p.some(function (x) { return isNaN(x); })) return null;
+      var s = p.length === 3 ? p[0]*3600 + p[1]*60 + p[2] : (p.length === 2 ? p[0]*60 + p[1] : p[0]);
+      return s > 0 ? { v: s, dir: "low", rx: !!m.rx } : null;
+    }
+    if (mode === "amount") { var a = parseFloat(M.amount); return a > 0 ? { v: a, dir: "high", rx: !!m.rx } : null; }
+    var r = (parseInt(M.rounds, 10) || 0) * 100000 + (parseInt(M.reps, 10) || 0);
+    return r > 0 ? { v: r, dir: "high", rx: !!m.rx } : null;
+  }
+  function extractMetcons(tracker) {
+    var out = {}, wk = (tracker && tracker.weeks) || [];
+    for (var w = 0; w < wk.length; w++) {
+      var days = (wk[w] && wk[w].days) || [];
+      for (var d = 0; d < days.length; d++) {
+        var day = days[d]; if (!day) continue;
+        var e1 = metconEntry(day.metcon);  if (e1) out[w + "_" + d] = e1;
+        var e2 = metconEntry(day.metcon2); if (e2) out[w + "_" + d + "_2"] = e2;
+        if (day.alt) {
+          var a1 = metconEntry(day.alt.metcon);  if (a1) out[w + "_" + d + "_a"] = a1;
+          var a2 = metconEntry(day.alt.metcon2); if (a2) out[w + "_" + d + "_a2"] = a2;
+        }
+      }
+    }
+    return out;
+  }
+
   function pushBoard(uid, isAdmin) {
     // Admins compete on the leaderboard like everyone else (their extra powers
     // are the panel + program editing, not board visibility).
@@ -119,6 +154,7 @@
         name: b.myName || "",
         results: b.myResults || {},
         weeks: summarizeWeeks(tracker, b.myResults),
+        metcons: extractMetcons(tracker),
         updated_at: new Date().toISOString()
       });
     }, 800);
@@ -157,7 +193,7 @@
     var profs = await fetchAllProfiles();
     var board = profs
       .filter(function (p) { return p.id !== uid; })
-      .map(function (p) { var r = byId[p.id]; return { id: p.id, name: (r && r.name) || p.name || "", weeks: (r && r.weeks) || [], category: categoryOf(p.gender, p.birth_date) }; });
+      .map(function (p) { var r = byId[p.id]; return { id: p.id, name: (r && r.name) || p.name || "", weeks: (r && r.weeks) || [], metcons: (r && r.metcons) || {}, category: categoryOf(p.gender, p.birth_date) }; });
     var cur = lsGet(K.BOARD_KEY) || {};
     cur.board = board;
     suppressPush = true;
@@ -447,7 +483,7 @@
       .map(function (p) {
         var r = byId[p.id];
         return { id: p.id, name: (r && r.name) || p.name || "", weeks: (r && r.weeks) || [],
-                 category: categoryOf(p.gender, p.birth_date) };
+                 metcons: (r && r.metcons) || {}, category: categoryOf(p.gender, p.birth_date) };
       });
     var myRow = byId[uid];
     lsSetRaw(K.BOARD_KEY, {
