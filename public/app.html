@@ -68,30 +68,64 @@
   ::-webkit-scrollbar-thumb { background: rgba(21,23,29,.2); border-radius: 8px; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+
+  /* ---- mobile (all styling in this app is inline, so phone fixes live here
+     and use !important to beat the style="" attributes) ------------------- */
+  html, body { overflow-x: hidden; }
+  html { -webkit-text-size-adjust: 100%; }
+  button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .hd-tabs { -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .hd-tabs::-webkit-scrollbar { display: none; }
+  .hd-tab { white-space: nowrap; }
+  @media (max-width: 720px) {
+    .hd-in { padding: 10px 12px 12px !important; gap: 8px 10px !important; }
+    .hd-logo img { width: 40px !important; height: 40px !important; }
+    .hd-title .hd-name { font-size: 16px !important; }
+    .hd-title .hd-sub { font-size: 10.5px !important; }
+    /* actions become a full-width second row: tabs stretch, buttons shrink */
+    .hd-actions { margin-inline-start: 0 !important; width: 100%; gap: 6px !important; min-width: 0; }
+    .hd-tabs { flex: 1 1 auto; min-width: 0; justify-content: space-between; }
+    .hd-tab { padding: 7px 9px !important; font-size: 12px !important; }
+    .hd-btn { padding: 6px 9px !important; font-size: 11px !important; }
+    main { padding: 14px 12px 56px !important; }
+    /* leaderboard rows: shrink the fixed columns so the name keeps real width */
+    div[style*="1fr 74px 74px"] { grid-template-columns: 30px minmax(0,1fr) 54px 58px !important; }
+    /* iOS Safari auto-zooms into any focused input whose font is under 16px,
+       which throws the whole layout around — keep form fields at 16px */
+    input, textarea, select { font-size: 16px !important; }
+  }
+  @media (max-width: 380px) {
+    .hd-tab { padding: 6px 7px !important; font-size: 11.5px !important; }
+    .hd-btn { padding: 6px 7px !important; font-size: 10.5px !important; }
+  }
+  /* narrow phones: grids that demand a 300px column collapse to one column */
+  @media (max-width: 400px) {
+    div[style*="minmax(300px"] { grid-template-columns: 1fr !important; }
+  }
 </style>
 </helmet>
 <div style="--blue:#23409a; --blue2:#2f52c4; --navy:#141f38; --ink:#15171d; --paper:#f4f3ef; --line:rgba(21,23,29,.12); --orange:#ef5b25; --muted:#6b6e78; --log:rgba(35,64,154,.06); min-height:100vh; display:flex; flex-direction:column; align-items:center;">
 
   <header style="width:100%; background:linear-gradient(115deg,#0f1830,#1a2848 60%,#23409a); color:#fff; display:flex; justify-content:center; box-shadow:0 2px 20px rgba(15,24,48,.25); position:sticky; top:0; z-index:40;">
-    <div style="width:100%; max-width:1040px; padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-      <button onClick="{{ openAdmin }}" title="לחיצה על הלוגו — כניסת מנהל" style="background:none; border:none; padding:0; cursor:pointer; flex:none; position:relative;">
+    <div class="hd-in" style="width:100%; max-width:1040px; padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <button class="hd-logo" onClick="{{ openAdmin }}" title="לחיצה על הלוגו — כניסת מנהל" style="background:none; border:none; padding:0; cursor:pointer; flex:none; position:relative;">
         <img src="assets/logo.png" alt="CrossFit Bat Yam" style="width:46px; height:46px; border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.25); display:block;">
         <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
           <span style="position:absolute; bottom:-4px; inset-inline-end:-6px; background:var(--orange); color:#fff; font:700 8px/1 'Oswald'; letter-spacing:.05em; padding:3px 5px; border-radius:6px; box-shadow:0 0 0 2px #16213c;">ADMIN</span>
         </sc-if>
       </button>
-      <div style="display:flex; flex-direction:column; gap:2px; min-width:0;">
-        <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:19px; letter-spacing:.06em; line-height:1;">CROSSFIT BAT YAM</div>
-        <div style="font-size:12px; color:#b9c4e6; font-weight:500;">CAPACITY PROGRAM · מעקב 8 שבועות</div>
+      <div class="hd-title" style="display:flex; flex-direction:column; gap:2px; min-width:0;">
+        <div class="hd-name" style="font-family:'Oswald',sans-serif; font-weight:700; font-size:19px; letter-spacing:.06em; line-height:1;">CROSSFIT BAT YAM</div>
+        <div class="hd-sub" style="font-size:12px; color:#b9c4e6; font-weight:500;">CAPACITY PROGRAM · מעקב 8 שבועות</div>
       </div>
-      <div style="margin-inline-start:auto; display:flex; align-items:center; gap:10px;">
-        <button onClick="{{ openProfile }}" title="הפרופיל שלי" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 13px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">👤 פרופיל</button>
-        <button onClick="{{ openWelcome }}" title="איך זה עובד?" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 13px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">❓ מדריך</button>
-        <div style="display:flex; background:rgba(255,255,255,.1); border-radius:999px; padding:4px; gap:2px; overflow-x:auto; max-width:100%;">
-          <button onClick="{{ setOverview }}" style="{{ tabOverviewStyle }}">סקירה</button>
-          <button onClick="{{ setLog }}" style="{{ tabLogStyle }}">יומן</button>
-          <button onClick="{{ setPRs }}" style="{{ tabPRStyle }}">🏆 שיאים אישיים</button>
-          <button onClick="{{ setBoard }}" style="{{ tabBoardStyle }}">🏅 דירוג</button>
+      <div class="hd-actions" style="margin-inline-start:auto; display:flex; align-items:center; gap:10px;">
+        <button class="hd-btn" onClick="{{ openProfile }}" title="הפרופיל שלי" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 13px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">👤 פרופיל</button>
+        <button class="hd-btn" onClick="{{ openWelcome }}" title="איך זה עובד?" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 13px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">❓ מדריך</button>
+        <div class="hd-tabs" style="display:flex; background:rgba(255,255,255,.1); border-radius:999px; padding:4px; gap:2px; overflow-x:auto; max-width:100%;">
+          <button class="hd-tab" onClick="{{ setOverview }}" style="{{ tabOverviewStyle }}">סקירה</button>
+          <button class="hd-tab" onClick="{{ setLog }}" style="{{ tabLogStyle }}">יומן</button>
+          <button class="hd-tab" onClick="{{ setPRs }}" style="{{ tabPRStyle }}">🏆 שיאים</button>
+          <button class="hd-tab" onClick="{{ setBoard }}" style="{{ tabBoardStyle }}">🏅 דירוג</button>
         </div>
       </div>
     </div>
@@ -315,7 +349,7 @@
               <div style="{{ r.rowStyle }}">
                 <span style="{{ r.rankStyle }}">{{ r.medal }}</span>
                 <div style="display:flex; align-items:center; gap:7px; min-width:0;">
-                  <span dir="auto" style="font-weight:700; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ r.name }}</span>
+                  <span dir="auto" style="font-weight:700; font-size:14px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ r.name }}</span>
                   <sc-if value="{{ r.you }}" hint-placeholder-val="{{ false }}">
                     <span style="flex:none; background:var(--orange); color:#fff; font-family:'Oswald',sans-serif; font-weight:700; font-size:10px; letter-spacing:.05em; padding:2px 7px; border-radius:999px;">אתה</span>
                   </sc-if>
@@ -1586,7 +1620,9 @@ class Component extends DCLogic {
       ranked = wkEntrants.map(e=>({ name:e.name, you:e.you, score:e.points, sub:e.placement?('#'+Math.round(e.placement)):'—' })).sort((a,b)=>a.score-b.score);
     }
     const boardRows = ranked.map((a,i)=>({
-      name:a.name, score:a.score, cons:a.sub, you:a.you,
+      // the "you" entrant's name carries a text suffix from computeWeek(); the row
+      // already renders a separate "אתה" pill, so showing both wastes phone width
+      name:(a.you ? String(a.name).replace(' (אתה)','') : a.name), score:a.score, cons:a.sub, you:a.you,
       medal: i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1),
       rowStyle: (a.you ? 'background:rgba(239,91,37,.1); border:1px solid rgba(239,91,37,.45);' : 'background:#fff; border:1px solid var(--line);') + ' display:grid; grid-template-columns:44px 1fr 74px 74px; align-items:center; gap:8px; padding:12px 14px; border-radius:12px;',
       rankStyle: "font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; text-align:center;" + (i<3 ? '' : ' color:var(--muted);')

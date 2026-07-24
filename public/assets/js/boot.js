@@ -428,8 +428,34 @@
     });
   }
 
+  // ---- local dev preview (no Supabase) ---------------------------------
+  // http://localhost:PORT/app.html?dev=1 renders the app with demo data so
+  // layout/CSS work doesn't require a real login. localhost-only — a hosted
+  // deployment never enters this branch.
+  async function devMain() {
+    try { localStorage.setItem(K.WELCOME_KEY, "1"); } catch (e) {}
+    try { localStorage.setItem("cfby_onb_v1", "1"); } catch (e) {}
+    try { localStorage.setItem("cfby_reset_v1", "1"); } catch (e) {}
+    localStorage.removeItem(K.TRACKER_KEY); // empty -> the app builds its built-in program
+    lsSetRaw(K.BOARD_KEY, {
+      board: [
+        { id: "d1", name: "דנה כהן", weeks: [{ completed: 5, result: 0 }, { completed: 2, result: 0 }], metcons: {}, category: "elite women" },
+        { id: "d2", name: "יוסי לוי", weeks: [{ completed: 3, result: 0 }], metcons: {}, category: "elite men" },
+        { id: "d3", name: "רון מזרחי", weeks: [{ completed: 4, result: 0 }], metcons: {}, category: "masters men" }
+      ],
+      myName: "אורי (dev)", myResults: {}, myCategory: "elite men", myGender: "male", myAge: 30
+    });
+    window.cfbySignOut = function () { location.reload(); };
+    window.cfbyIsAdmin = false;
+    await loadScript("assets/js/html2canvas.js");
+    await loadScript("assets/js/dc-runtime.js");
+    await revealApp();
+  }
+
   // ---- main ------------------------------------------------------------
   async function main() {
+    if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) &&
+        new URLSearchParams(location.search).has("dev")) { return devMain(); }
     var ses = await sb.auth.getSession();
     var session = ses.data && ses.data.session;
     if (!session) { location.replace("index.html"); return; }
