@@ -919,7 +919,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 8;
+  PROGRAM_VERSION = 9;
   programWeek1() {
     return {
       0: {
@@ -1009,6 +1009,46 @@ class Component extends DCLogic {
       }
     };
   }
+  programWeek3() {
+    return {
+      0: {
+        lift: { movement:'Power Clean + Hang Squat Clean', planned:'Every 2:00 for 6 sets:\nPower clean + Hang squat clean\n\n2 sets @65%\n2 sets @70%\n1 set @75%+\n1 set @80%+\n\nPower before squat → translate that pull into a perfect extension.' },
+        metcon: { name:'6 Rounds For Time', scheme:'6 Rounds For Time', score:'Time', resultMode:'time', note:'L1 = 40/30kg\nL2 = 50/35kg\nL3 = 60/40kg\n\nתחנות קצרות מאוד — זה אומר שהקצב צריך להיות גבוה בהתאם.', movements:[['Run','150m'],['Lateral burpees','10'],['Front squats','5']] },
+        extras: [['Capacity Pull Up Builder','Every 45s for 6-8 sets:\nStrict pull-up set\n\nChoose a number you can hold unbroken.\nDone the previous weeks? Add roughly 25% more reps per set.']]
+      },
+      1: {
+        lift: { movement:'Clean Pull + Power Clean + 2 Jerks', planned:'Every 2:00 x 6 sets:\nClean pull\nPower clean\n2 Jerks\n\nSets 1-2 — 74%\nSets 3-4 — 77%\nSets 5-6 — 80%+\n\nReset each rep.\nאפשר לערבב ג׳רקים: #1 פוש, #2 ספליט — או שניהם מאותו סוג. העיקר ששניהם חדים.' },
+        metcon: { name:'Conditioning — Mono Session', scheme:'2-3 sets', score:'Average interval time', resultMode:'time', note:'L1-2:\n2-3 Sets —\n1300m Run / 1700/1400m Row/Ski / 95/70 Cal bike\n\nL3-4:\n2-3 Sets —\n2000m Run / 2500/2000m Row/Ski / 120/85 Cal bike\n\nRest 2:00-2:30 between sets.\nSame movement you tested in CapaciTest #2.\nScore — average interval time.\nGoal — same pace you’ve held since W2.\n\nהאינטרוולים הארוכים. החזקתם בנוחות? לכו על 3 סטים. נלחמתם? שניים ישרים עדיפים על שלושה מכוערים.\nפעם ראשונה? רדו רמה, בחרו את החולשה שלכם, ונסו למצוא קצב.', movements:[['Run','1300m (L3-4: 2000m)'],['Row / Ski','1700/1400m (L3-4: 2500/2000m)'],['Bike','95/70 cal (L3-4: 120/85)'],['Rest','2:00-2:30 between sets']] },
+        extras: [['Blurred Strength','8 total sets:\nEvery 1:30 alternate —\n• 8 Pendlay rows + Max shuttle runs\n• 8 Power cleans + Max shuttle runs\n\nהריצה היא ריצה קלה, והדגש הוא על החתירה והקלינים. זה אימון משיכות עם טיפה זיעה במסווה של עבודת כוח.\nתבחרו משקל אחיד לשתי התנועות. זה אמור להתבצע בסט אחד רציף.']]
+      },
+      2: {
+        lift: { movement:'Front Squat', planned:'Every 2:30 for 4 sets:\n3 reps @77-80% of your Back Squat 3RM\nor ±7-8RPE' },
+        metcon: { name:'Hello Paincave', scheme:'For time · cap 14:00', score:'Time', resultMode:'time', note:'Chipper:\nWallballs\nBurpees to target\nT2B\nBurpees to target\nT2B\nBurpees to target\nWallballs\n\nL1 = 20 WB, 10 BP, 15 T2B\nL2 = 30 WB, 15 BP, 20 T2B\nL3 = 35 WB, 15 BP, 25 T2B\n\nScore — time.\nGoal — big (as fuck) sets. אל תהיו אסטרטגיים מדי — רוצים להרגיש את ההסלמה.', movements:[['Wallballs','20-35 (by level)'],['Burpees to target','10-15'],['Toes to bar','15-25']] },
+        extras: [['BY Extra','3 sets, for quality:\n8 Weighted dips\n10-12 Hip extensions (GHD or banded)\nStatic handstand hold practice set\n\nUse a band if needed for the dips.']]
+      },
+      3: {
+        lift: { movement:'Strength — Heavy DB Snatches + Core', planned:'Big Tuesday on a Wednesday.\n\nEvery 2:00 for 8:00:\n10 Alternating Heavy DB snatches\nMax Atomic sit-ups / V-Ups until the 1:15 mark\n\nGrab the heaviest DB possible.' },
+        metcon: { name:'Big Tuesday — Part 1', scheme:'0:00-9:00 · Every 1:30 for 6 sets', score:'Total HSPU', resultMode:'amount', note:'Every 1:30 for 6 sets:\nDouble unders\nMax HSPU in remaining time\n\nL1 = 20 DU or single unders (prefer practice DU)\nL2 = 30 DU\nL3 = 50 DU\n\nPick a HSPU progression that will allow big sets.\n\nחלק ראשון: איכות עם מעט דופק. בוחרים פרוגרשן להתמקד בו — ורצים עליו. המטרה להכניס לפחות 2 סטים גדולים על הידיים בכל חלון.', movements:[['Double unders','20-50 (by level)'],['Max HSPU','remaining time']] },
+        metcon2: { name:'Big Tuesday — AMRAP 15:00', scheme:'10:00-25:00 · AMRAP 15:00', score:'Total reps', resultMode:'amount', note:'Score — total reps.\nהחלק השני טכני הרבה פחות, ויהיה סביב להמשיך לזוז: תנועות פשוטות יחסית, וצבירת נפח.\nשימו לב שהעבודה צריכה להתבצע עם אותו קטלבל, והארגז אמור להיות נמוך. ניתן להחזיק את הקטלבל איך שתרצו כשעוברים אותו.', movements:[['KB swings (American)','25'],['Hand release push ups','20'],['Low box step overs','15 @with the KB']] },
+        extras: [['BY Extra','3 sets, for quality:\n10-15 GHD sit-ups (or weighted sit-ups)\n10 Hip extensions (GHD or banded)\nStatic Handstand hold practice set.']]
+      },
+      4: {
+        lift: { movement:'Power Snatch — EMOM 10:00', planned:'EMOM 10:00:\n2 Touch & go power snatches\n\n5 sets @weight 1\n5 sets @weight 2\n\nחצי מהזמן עם משקל ראשון, חצי מהזמן עם משקל שני. רוצים לעבוד על העקביות שלנו עם המוט.' },
+        metcon: { name:'Gymnastics — "Next Level" (Week 3)', scheme:'Every 45s x 8 · C2B / Pull-ups', score:'Total reps', resultMode:'amount', note:'Score — total reps.\nCan you add a few reps to your progression from last time?\n\nפעם ראשונה שלכם על הסשן הזה? קראו את זה. פעם שנייה? תקפצו לסוף.\n\nזו הפעם הראשונה שאנחנו נתקלים בטסט כזה, והוא יבוצע בשני אופנים:\nאם חזרות של מתח זה עניין חדש לכם — בחרו את הפרוגרשן הנכון ביותר עבורכם יחד עם המאמן, ובצעו חזרות איכותיות ממנו בכל דקה. משבוע לשבוע נרצה לעלות בכמות החזרות, לבצע אותן בטווח מלא יותר, או לעלות לפרוגרשן הבא.\nאם אתם שולטים במתח, המטרה שלכם תהיה להתחיל לצבור נפח ולפתח עמידות לסטים גדולים. בחרו מספר לביצוע בכל דקה — ונסו לשמור עליו למשך כל עשר הדקות. בשבוע הבא נרצה להוסיף חזרה אחת לדקה, לפחות לחצי מהזמן הזה.\n\nפעם שנייה ומעלה? אנחנו רוצים לבצע את אותה כמות החזרות כמו בפעם הקודמת — בצורה איכותית יותר, או להוסיף חזרה לדקה, לפחות למשך חמש הדקות הראשונות.', movements:[['C2B / Pull-ups','Every 45s x 8 sets']] },
+        extras: [['Conditioning — High Output','EMOM 12:00:\nMinute 1 — Row/Bike/Ski\nMinute 2 — Rest\n\nבגלל שזה יחס 1:1 — כשמגיע הזמן לעבוד — תעבדו קשה.'],['2:30 Work / 1:30 Rest x 3','Double unders\n10 Power snatches\nDouble unders\n10 Power snatches\nMax T2B in remaining time\n\nScore — total T2B accumulated.\nGoal — semi-fast. Legs did their job today, just keep the blood moving and focus on the hinge. Bar should feel light enough to cycle big sets.\n\nLevel 1 = 20 DU, 20/15kg\nLevel 2 = 30 DU, 30/20kg\nLevels 3 & 4 = 40 DU, 35/25kg']]
+      },
+      5: {
+        lift: { movement:'Squat Snatch + Hang Squat Snatch', planned:'Snatch — From the floor.\nEvery 2:00 x 6 sets:\nSquat Snatch\nBelow knee hang squat snatch\n\nSets 1-2 — 6RPE\nSets 3-4 — 7RPE\nSets 5-6 — 8RPE\n\n6RPE = מאמץ של שש מתוך עשר.\nזה אומר לנו ששני הסטים הראשונים טכניים ויחסית קלים,\nשני הסטים לאחר מכן טכניים וכמעט כבדים,\nושני הסטים האחרונים כבדים יותר.\n8 זה אומר שיש לנו עוד בטנק, ואנחנו לא בכשל.' },
+        metcon: { name:'3 x AMRAP 4:00', scheme:'AMRAP 4:00 x 3', score:'Rounds + reps', resultMode:'rounds', note:'Calories row buy-in — in remaining time, AMRAP of:\n10 DB clusters\n5 Burpee box jumps\n\nL1 = 12/9 cals\nL2 = 16/12 cals\nL3 = 20/15 cals\n\nהקלוריות אמורות לקחת עד דקה ורבע. משם והלאה — עבודה עם הדאמבל ועל הארגז.\nניתן להזניק כל 2 דקות כדי לרווח מעט.\nבכל סבב מתחילים מחדש.', movements:[['Cal row buy-in','12/9 → 20/15 cals'],['DB clusters','10'],['Burpee box jumps','5']] },
+        extras: [['Strength — Back Squat','Every 3:00 for 5 sets:\nSets 1-2: 3-4 reps @80%\nSets 3-4: 3-4 reps @82%\nSets 5-6: 3-4 reps @84-85%\n\nPercentages off your CapaciTest #1 3RM.\nזה הסקווט הכבד ביותר בבלוק. ווליום ממוצע גבוה על פני חמשת הסטים.'],['Successory','3 rounds, no rush:\n8 Sotts presses (empty or light bar)\n30s Hollow hold']]
+      },
+      6: {
+        lift: { movement:'Upper Body Strength — DB Bench + Rows', planned:'Every 1:30 for 8 sets, alternate:\n• 10 DB Bench presses\n• 8+8 Single arm DB bent rows\n\nHeavy but clean on both.' },
+        metcon: { name:'In Pairs — Runs + Cals', scheme:'2+2 Rounds (pairs)', score:'Time', resultMode:'time', note:'In pairs:\n2 Rounds —\n600m Run together\n60/50 Cal bike/row (split)\ninto\n2 Rounds —\n400m Run together\n40/30 Cal bike/row\n\nScore — time.', movements:[['Run together','600m x2, then 400m x2'],['Cal bike/row (split)','60/50, then 40/30']] },
+        extras: [['BY Extra','4 Sets for quality:\n20-30s Bottom of the Ring dip hold\nMax L hang hold\nRest 30s between movements']]
+      }
+    };
+  }
   applyProgram(weeks) {
     const fillMetcon = (dst, m) => { if (!m) return; dst.name=m.name||''; dst.scheme=m.scheme||''; dst.score=m.score||''; dst.note=m.note||''; dst.resultMode=m.resultMode||''; for (let i=0;i<4;i++){ const mv=(m.movements||[])[i]; dst.movements[i]={ name:mv?mv[0]:'', detail:mv?mv[1]:'' }; } };
     const fill = (day, src) => {
@@ -1028,6 +1068,7 @@ class Component extends DCLogic {
     };
     overlay(0, this.programWeek1());
     overlay(1, this.programWeek2());
+    overlay(2, this.programWeek3());
   }
 
   normalizeDay(o) {
@@ -1227,6 +1268,11 @@ class Component extends DCLogic {
       });
     });
     const anyRanked = Object.keys(pct).length>0;
+    // A week nobody has logged anything in (no completed days, no metcon
+    // results) hasn't happened yet — it must contribute 0 points, not a 30pt
+    // attendance penalty for every athlete. Exposed on the array as .active so
+    // season aggregations can average over started weeks only.
+    const anyActivity = entrants.some(e => e.completed > 0 || Object.keys(e.mets).length > 0);
     entrants.forEach((e,i)=>{
       const base = e.you ? this.myTargetVal() : AV;
       const target = Math.max(0, base - (e.rest||0));
@@ -1234,11 +1280,12 @@ class Component extends DCLogic {
       const mine=[]; Object.keys(pct).forEach(k=>{ if(pct[k][i]!=null) mine.push(pct[k][i]); });
       e.rxCount = mine.length;
       const quality = mine.length ? mine.reduce((s,x)=>s+x,0)/mine.length : (anyRanked ? 100 : 0);
-      const attendance = target>0 ? (e.missed/target)*100 : 0;
+      const attendance = (anyActivity && target>0) ? (e.missed/target)*100 : 0;
       e.placement = null;
       e.resultPts = Math.round(quality*10)/10;
-      e.points = Math.round((0.7*quality + 0.3*attendance)*10)/10;
+      e.points = anyActivity ? Math.round((0.7*quality + 0.3*attendance)*10)/10 : 0;
     });
+    entrants.active = anyActivity;
     return entrants;
   }
   myTotalScore(catFilter) { let s=0; for (let w=0; w<8; w++) { const me=this.computeWeek(w, catFilter).find(e=>e.you); s += me?me.points:0; } return Math.round(s*10)/10; }
@@ -1614,8 +1661,11 @@ class Component extends DCLogic {
     let ranked;
     if (mode==='total') {
       const tot = {};
-      for (let w=0; w<8; w++) this.computeWeek(w, catFilter).forEach(e=>{ const t = tot[e.id] || (tot[e.id] = { name:e.name, you:e.you, sum:0 }); t.sum += e.points; });
-      ranked = Object.keys(tot).map(k=>({ name:tot[k].name, you:tot[k].you, score:Math.round(tot[k].sum*10)/10, sub:'ממוצע '+(Math.round(tot[k].sum/8*10)/10) })).sort((a,b)=>a.score-b.score);
+      let activeWeeks = 0;
+      for (let w=0; w<8; w++) { const es = this.computeWeek(w, catFilter); if (es.active) activeWeeks++; es.forEach(e=>{ const t = tot[e.id] || (tot[e.id] = { name:e.name, you:e.you, sum:0 }); t.sum += e.points; }); }
+      // inactive (not-yet-started) weeks contribute 0 points, so the average
+      // divides by the weeks actually played — not a flat 8
+      ranked = Object.keys(tot).map(k=>({ name:tot[k].name, you:tot[k].you, score:Math.round(tot[k].sum*10)/10, sub:'ממוצע '+(activeWeeks ? Math.round(tot[k].sum/activeWeeks*10)/10 : 0) })).sort((a,b)=>a.score-b.score);
     } else {
       ranked = wkEntrants.map(e=>({ name:e.name, you:e.you, score:e.points, sub:e.placement?('#'+Math.round(e.placement)):'—' })).sort((a,b)=>a.score-b.score);
     }

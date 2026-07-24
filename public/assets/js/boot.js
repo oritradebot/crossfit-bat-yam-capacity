@@ -40,8 +40,8 @@
     return (r.data && r.data.weeks) || null;
   }
   async function fetchMyState(uid) {
-    var r = await sb.from("states").select("tracker").eq("user_id", uid).maybeSingle();
-    return (r.data && r.data.tracker) || null;
+    var r = await sb.from("states").select("tracker,updated_at").eq("user_id", uid).maybeSingle();
+    return r.data || null;
   }
   async function fetchBoard() {
     var r = await sb.from("board").select("user_id,name,results,weeks,metcons").order("name");
@@ -78,18 +78,54 @@
   window.cfbyCategoryOf = categoryOf;   // the app uses this for filtering/rankings
 
   // ---- Supabase writes (debounced) ------------------------------------
-  var t1 = null, t2 = null;
-  function pushState(uid, isAdmin) {
+  // DIRTY_KEY holds the timestamp of the last tracker write that has not been
+  // confirmed as pushed to Supabase. It is the recovery net for the mobile
+  // lifecycle: closing the PWA kills the debounce timer (or the push itself),
+  // and without this stamp the next boot would clobber the device's newer data
+  // with the stale server copy — silently losing the workout the user just
+  // logged. See the seeding logic in main().
+  var DIRTY_KEY = "cfby_dirty_v1";
+  function rawGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  // A push that fails on a stale JWT (app resumed from background after the
+  // token expired) refreshes the session once and retries.
+  async function upsertWithRetry(table, row) {
+    var r = await sb.from(table).upsert(row);
+    if (r.error) {
+      try { await sb.auth.refreshSession(); } catch (e) {}
+      r = await sb.from(table).upsert(row);
+    }
+    return r;
+  }
+
+  var t1 = null, t2 = null, retryT = null;
+  var pushCtx = { uid: null, isAdmin: false };
+
+  async function doPushState() {
+    if (!pushCtx.uid) return;
+    var tracker = lsGet(K.TRACKER_KEY);
+    if (!tracker) return;
+    var stamp = rawGet(DIRTY_KEY);
+    var r = await upsertWithRetry("states", { user_id: pushCtx.uid, tracker: tracker, updated_at: new Date().toISOString() });
+    if (r.error) {
+      console.error("[sync] states push failed:", r.error.message || r.error);
+      clearTimeout(retryT);
+      retryT = setTimeout(doPushState, 10000);   // dirty stamp survives either way
+      return;
+    }
+    // Clear the dirty stamp only if nothing was written while the push was in
+    // flight — a newer write must stay marked as unsynced.
+    if (stamp !== null && rawGet(DIRTY_KEY) === stamp) {
+      try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
+    }
+    // Admin also publishes the program scaffold for everyone
+    if (pushCtx.isAdmin && tracker.weeks) {
+      await upsertWithRetry("shared_program", { id: 1, weeks: tracker.weeks, updated_at: new Date().toISOString() });
+    }
+  }
+  function pushState() {
     clearTimeout(t1);
-    t1 = setTimeout(async function () {
-      var tracker = lsGet(K.TRACKER_KEY);
-      if (!tracker) return;
-      await sb.from("states").upsert({ user_id: uid, tracker: tracker, updated_at: new Date().toISOString() });
-      // Admin also publishes the program scaffold for everyone
-      if (isAdmin && tracker.weeks) {
-        await sb.from("shared_program").upsert({ id: 1, weeks: tracker.weeks, updated_at: new Date().toISOString() });
-      }
-    }, 800);
+    t1 = setTimeout(function () { t1 = null; doPushState(); }, 800);
   }
   // Per-week summary the leaderboard needs: completed days + shared result.
   // A day counts twice when its alternate session is also done — this must match
@@ -142,23 +178,45 @@
     return out;
   }
 
-  function pushBoard(uid, isAdmin) {
+  async function doPushBoard() {
+    if (!pushCtx.uid) return;
+    var b = lsGet(K.BOARD_KEY) || {};
+    var tracker = lsGet(K.TRACKER_KEY);
+    var r = await upsertWithRetry("board", {
+      user_id: pushCtx.uid,
+      name: b.myName || "",
+      results: b.myResults || {},
+      weeks: summarizeWeeks(tracker, b.myResults),
+      metcons: extractMetcons(tracker),
+      updated_at: new Date().toISOString()
+    });
+    // No retry loop needed: the board row is derived from the tracker and is
+    // rebuilt+pushed on every boot, so a lost board push self-heals.
+    if (r.error) console.error("[sync] board push failed:", r.error.message || r.error);
+  }
+  function pushBoard() {
     // Admins compete on the leaderboard like everyone else (their extra powers
     // are the panel + program editing, not board visibility).
     clearTimeout(t2);
-    t2 = setTimeout(async function () {
-      var b = lsGet(K.BOARD_KEY) || {};
-      var tracker = lsGet(K.TRACKER_KEY);
-      await sb.from("board").upsert({
-        user_id: uid,
-        name: b.myName || "",
-        results: b.myResults || {},
-        weeks: summarizeWeeks(tracker, b.myResults),
-        metcons: extractMetcons(tracker),
-        updated_at: new Date().toISOString()
-      });
-    }, 800);
+    t2 = setTimeout(function () { t2 = null; doPushBoard(); }, 800);
   }
+
+  // The debounce is the enemy on phones: switching away from the PWA can kill
+  // the page before an 800ms timer fires. Flush pending pushes the moment the
+  // page goes hidden (best effort — if the push itself is killed, the dirty
+  // stamp recovers it on the next boot).
+  function flushPending() {
+    if (t1) { clearTimeout(t1); t1 = null; doPushState(); }
+    if (t2) { clearTimeout(t2); t2 = null; doPushBoard(); }
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") flushPending();
+  });
+  window.addEventListener("pagehide", flushPending);
+  // Push again when connectivity returns, in case a push failed offline.
+  window.addEventListener("online", function () {
+    if (rawGet(DIRTY_KEY) !== null) { doPushState(); doPushBoard(); }
+  });
 
   // When boot.js itself rewrites the board (e.g. a realtime refresh of other
   // athletes), suppress the interceptor so it does not push our own row back
@@ -167,18 +225,22 @@
 
   // Intercept the app's own localStorage writes
   function installInterceptor(uid, isAdmin) {
+    pushCtx.uid = uid; pushCtx.isAdmin = isAdmin;
     var orig = localStorage.setItem.bind(localStorage);
     localStorage.setItem = function (key, val) {
       orig(key, val);
       if (suppressPush) return;
       if (key === K.TRACKER_KEY) {
-        pushState(uid, isAdmin);
+        // Mark the tracker as unsynced BEFORE scheduling the push; cleared only
+        // after Supabase confirms the upsert.
+        try { orig(DIRTY_KEY, String(Date.now())); } catch (e) {}
+        pushState();
         // A completed workout only writes the tracker, but the leaderboard's
         // "completed" counts are derived from it — so sync the board too, or a
         // user who just marks workouts done never appears on anyone's board.
-        pushBoard(uid, isAdmin);
+        pushBoard();
       } else if (key === K.BOARD_KEY) {
-        pushBoard(uid, isAdmin);
+        pushBoard();
       }
     };
   }
@@ -486,10 +548,27 @@
     try { localStorage.setItem("cfby_reset_v1", "1"); } catch (e) {}
 
     // 1) seed the tracker. The app reconciles shape + program version itself.
+    // If this device holds tracker changes that never reached Supabase (dirty
+    // stamp newer than the server row), the local copy wins and is pushed up —
+    // otherwise a push lost to the mobile lifecycle would be erased here by the
+    // stale server copy, which is exactly the "my workout disappeared" bug.
     var mine = await fetchMyState(uid);
-    if (mine && mine.weeks) {
-      lsSetRaw(K.TRACKER_KEY, mine);            // this user's own saved blob
+    var localTracker = lsGet(K.TRACKER_KEY);
+    var dirtyTs = parseInt(rawGet(DIRTY_KEY), 10) || 0;
+    var keepLocal = false;
+    if (mine && mine.tracker && mine.tracker.weeks) {
+      var serverTs = mine.updated_at ? Date.parse(mine.updated_at) || 0 : 0;
+      if (localTracker && localTracker.weeks && dirtyTs > serverTs) {
+        keepLocal = true;                       // unsynced local changes are newer
+      } else {
+        lsSetRaw(K.TRACKER_KEY, mine.tracker);  // this user's own saved blob
+        try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
+      }
     } else {
+      // No server row: fresh user, or an admin wiped this account's data. The
+      // server wins outright — clear any stale local copy so deleted data can
+      // never resurrect from a device, then seed the published program.
+      try { localStorage.removeItem(K.TRACKER_KEY); localStorage.removeItem(DIRTY_KEY); } catch (e) {}
       var prog = await fetchSharedProgram();    // fresh user -> admin's published program
       if (prog) lsSetRaw(K.TRACKER_KEY, { v: 2, weeks: prog });
       // else: leave empty -> the app builds its built-in program
@@ -524,10 +603,13 @@
     // 3) intercept future writes
     installInterceptor(uid, isAdmin);
 
+    // Local tracker was newer than the server (a push was lost) — sync it up now.
+    if (keepLocal) pushState();
+
     // One-time board sync on load: seeding above happens BEFORE the interceptor,
     // so a user who already completed workouts (in their state) wouldn't be on
     // the board until their next change. Push now so they appear immediately.
-    pushBoard(uid, isAdmin);
+    pushBoard();
 
     // expose a manual sign-out for the app if needed
     window.cfbySignOut = async function () { await sb.auth.signOut(); location.replace("index.html"); };
