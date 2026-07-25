@@ -585,7 +585,7 @@
                   </div>
                   <div style="padding:14px 16px; display:flex; flex-direction:column; gap:12px;">
                     <div>
-                      <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">סרגל מאמץ · איך הרגיש האימון</div>
+                      <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">סרגל מאמץ (RPE) · איך הרגיש האימון</div>
                       {{ effortBar }}
                     </div>
                     {{ prToggle }}
@@ -679,7 +679,7 @@
 
               <div style="margin-top:26px;">
                 <label style="display:flex; flex-direction:column; gap:6px;">
-                  <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">🏋️ סרגל מאמץ / Effort</span>
+                  <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">🏋️ סרגל מאמץ / RPE</span>
                   {{ effortBar }}
                 </label>
                 <div style="margin-top:10px;">{{ prToggle }}</div>
@@ -1116,6 +1116,11 @@ class Component extends DCLogic {
     // a standalone flag — old days keep their PR and free the rating slot.
     nd.pr = !!o.pr || o.rating === 'pr';
     nd.rating = o.rating === 'pr' ? '' : (o.rating || '');
+    // Older scales -> RPE: the short-lived feel scale (easy/good/hard/max,
+    // v1.1.0) and the original quality scale (good/average). 'missed' stays —
+    // it isn't an effort level, so inventing a number for it would be wrong.
+    const FEEL2RPE = { easy:'3', good:'6', average:'5', hard:'8', max:'10' };
+    nd.rating = FEEL2RPE[nd.rating] || nd.rating;
     if (o.lift) {
       nd.lift.movement = o.lift.movement || '';
       nd.lift.planned = o.lift.planned || '';
@@ -1411,47 +1416,55 @@ class Component extends DCLogic {
     this.save(d); this.setState({ data: d });
   }
 
-  // Effort = how the session FELT, nothing else. PR lives on its own 🏆 toggle
-  // (day.pr) so breaking a record no longer "uses up" the effort rating.
-  RATINGS = [
-    { k:'easy', label:'Easy', emoji:'😌', color:'#3fa9bf' },
-    { k:'good', label:'Good', emoji:'💪', color:'#3fbf6a' },
-    { k:'hard', label:'Hard', emoji:'🥵', color:'#ef8c25' },
-    { k:'max',  label:'Max Effort', emoji:'🔥', color:'#d8342b' }
-  ];
-  // Old scale (PR/Good/Average/Missed) still exists in saved days — keep the
-  // metas so historical badges and share texts render correctly. 'pr' itself is
-  // migrated to the pr flag in normalizeDay and should not appear after a load.
+  // Effort = RPE 1-10, matching how the program itself talks ("מאמץ 7 מ-10").
+  // Stored as day.rating = '1'..'10'. PR lives on its own 🏆 toggle (day.pr) so
+  // breaking a record doesn't "use up" the effort rating.
+  RPE_DESC = { 1:'קל מאוד', 2:'קל מאוד', 3:'קל', 4:'קל-בינוני', 5:'בינוני', 6:'בינוני-קשה', 7:'קשה — נשאר בטנק', 8:'קשה מאוד', 9:'כמעט מקסימלי', 10:'מאמץ מקסימלי' };
+  rpeVal(k) { const n = parseInt(k,10); return (n>=1 && n<=10 && String(n)===String(k).trim()) ? n : 0; }
+  rpeColor(n) { return n<=4 ? '#3fa9bf' : n<=6 ? '#3fbf6a' : n<=8 ? '#ef8c25' : '#d8342b'; }
+  rpeEmoji(n) { return n<=4 ? '😌' : n<=6 ? '💪' : n<=8 ? '🥵' : '🔥'; }
+  // Pre-RPE scales still exist in saved days — keep metas so historical badges
+  // and share texts render. 'pr' migrates to the pr flag; the feel scale
+  // (easy/good/hard/max) and old good/average migrate to RPE in normalizeDay.
   LEGACY_RATINGS = [
     { k:'pr',      label:'PR',      emoji:'🏆', color:'#e8a53a' },
-    { k:'average', label:'Average', emoji:'😐', color:'#7a8194' },
     { k:'missed',  label:'Missed',  emoji:'❌', color:'#d8342b' }
   ];
-  ratingMeta(k) { return this.RATINGS.find(r=>r.k===k) || this.LEGACY_RATINGS.find(r=>r.k===k) || null; }
+  ratingMeta(k) {
+    const n = this.rpeVal(k);
+    if (n) return { k:String(n), label:'RPE '+n, emoji:this.rpeEmoji(n), color:this.rpeColor(n) };
+    return this.LEGACY_RATINGS.find(r=>r.k===k) || null;
+  }
 
   effortBar(current, editable) {
-    // A day still carrying a legacy rating shows it as a selected extra button
-    // until the athlete picks a value from the new scale.
-    const list = this.RATINGS.slice();
-    if (current && !list.some(r=>r.k===current)) { const lg = this.ratingMeta(current); if (lg) list.push(lg); }
-    return React.createElement('div', { style:{ display:'flex', gap:'8px', flexWrap:'wrap' } },
-      list.map(r => {
-        const on = current === r.k;
-        return React.createElement('button', {
-          key: r.k,
-          onClick: editable ? (()=>this.onEditPath('rating', on ? '' : r.k)) : undefined,
-          disabled: !editable && !on,
-          style: {
-            flex:'1 1 0', minWidth:'70px', display:'flex', alignItems:'center', justifyContent:'center', gap:'6px',
-            padding:'10px 8px', borderRadius:'12px', fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'13px',
-            letterSpacing:'.04em', cursor: editable ? 'pointer' : 'default', transition:'all .15s',
-            border: on ? ('1.5px solid '+r.color) : '1.5px solid var(--line)',
-            background: on ? r.color : '#fff',
-            color: on ? '#fff' : (editable ? 'var(--ink)' : '#c9cace'),
-            opacity: (!editable && !on) ? .45 : 1
-          }
-        }, React.createElement('span', { style:{ fontSize:'15px' } }, r.emoji), r.label);
-      })
+    const cur = this.rpeVal(current);
+    const btns = [];
+    for (let n=1; n<=10; n++) {
+      const on = cur === n;
+      btns.push(React.createElement('button', {
+        key: n,
+        onClick: editable ? (()=>this.onEditPath('rating', on ? '' : String(n))) : undefined,
+        disabled: !editable && !on,
+        style: {
+          flex:'1 1 0', minWidth:'38px', padding:'10px 0', borderRadius:'10px',
+          fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'15px', textAlign:'center',
+          cursor: editable ? 'pointer' : 'default', transition:'all .15s',
+          border: on ? ('1.5px solid '+this.rpeColor(n)) : '1.5px solid var(--line)',
+          background: on ? this.rpeColor(n) : '#fff',
+          color: on ? '#fff' : (editable ? 'var(--ink)' : '#c9cace'),
+          opacity: (!editable && !on) ? .45 : 1
+        }
+      }, String(n)));
+    }
+    // A day still carrying a non-numeric legacy rating (e.g. 'missed') shows it
+    // in the caption until the athlete picks a number.
+    const lg = (!cur && current) ? this.ratingMeta(current) : null;
+    const desc = cur ? (this.rpeEmoji(cur)+' RPE '+cur+' — '+this.RPE_DESC[cur])
+               : lg  ? (lg.emoji+' '+lg.label+' (דירוג ישן — בחר מספר מהסרגל)')
+                     : '‏1 = קל מאוד · 10 = מאמץ מקסימלי';
+    return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'7px' } },
+      React.createElement('div', { style:{ display:'flex', gap:'5px', flexWrap:'wrap' } }, btns),
+      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: cur ? this.rpeColor(cur) : 'var(--muted)' } }, desc)
     );
   }
 
