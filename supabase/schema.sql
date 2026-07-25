@@ -90,6 +90,30 @@ begin
 end;
 $$;
 
+-- Set a user's password (admin-only) — for members who forgot theirs.
+-- Passwords live only as bcrypt hashes in auth.users, so "viewing" an existing
+-- password is impossible by design; the admin assigns a NEW one instead.
+-- Old refresh tokens are revoked so any leftover session dies with the reset.
+create extension if not exists pgcrypto with schema extensions;
+drop function if exists public.admin_set_password(uuid, text);
+create or replace function public.admin_set_password(target uuid, new_password text)
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public, auth, extensions
+as $$
+begin
+  if not public.is_admin() then raise exception 'not authorized'; end if;
+  if length(new_password) < 6 then raise exception 'password too short'; end if;
+  update auth.users
+     set encrypted_password = crypt(new_password, gen_salt('bf')),
+         updated_at = now()
+   where id = target;
+  if not found then raise exception 'user not found'; end if;
+  delete from auth.refresh_tokens where user_id = target::varchar;
+end;
+$$;
+
 -- Drop any legacy admin policies that used an INLINE "select ... from profiles"
 -- subquery. Such a policy on `profiles` causes RLS infinite-recursion the moment
 -- the table is read. The is_admin() helper above replaces all of them.

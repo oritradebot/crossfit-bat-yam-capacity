@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "1.2.1";
+  var BUILD = "1.3.0";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -445,6 +445,8 @@
       ".cfa-badge{font-size:10px;padding:1px 7px;border-radius:12px;background:#ef5b2533;color:#ff9f7a;font-weight:700}" +
       ".cfa-del{background:transparent;border:1px solid #e74c3c;color:#e74c3c;border-radius:6px;padding:5px 10px;font:700 11px 'Heebo',sans-serif;cursor:pointer}" +
       ".cfa-del:hover{background:#e74c3c;color:#fff}" +
+      ".cfa-key{background:transparent;border:1px solid #4a90d9;color:#7ab8f5;border-radius:6px;padding:5px 10px;font:700 11px 'Heebo',sans-serif;cursor:pointer;margin-left:6px}" +
+      ".cfa-key:hover{background:#4a90d9;color:#fff}" +
       ".cfa-stat{color:#8ea3c9;font-size:12px;margin-bottom:10px}";
     document.head.appendChild(css);
 
@@ -489,13 +491,39 @@
           '<td style="direction:ltr;text-align:right;color:#8ea3c9">' + (u.email || "—") + '</td>' +
           '<td>' + fmtWhen(s ? s.updated_at : null) + '</td>' +
           '<td>' + logged + '</td>' +
-          '<td>' + (isMe ? '—' : '<button class="cfa-del" data-id="' + u.id + '" data-name="' + (u.name || "") + '">מחק</button>') + '</td></tr>';
+          '<td><button class="cfa-key" data-id="' + u.id + '" data-name="' + (u.name || "") + '">🔑 סיסמה</button>' +
+            (isMe ? '' : '<button class="cfa-del" data-id="' + u.id + '" data-name="' + (u.name || "") + '">מחק</button>') + '</td></tr>';
       }).join("");
       document.getElementById("cfaList").innerHTML =
         '<table class="cfa-t"><thead><tr><th>שם</th><th>שם משתמש</th><th>פעילות</th><th>אימונים</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
       Array.prototype.forEach.call(document.querySelectorAll(".cfa-del"), function (b) {
         b.onclick = function () { del(b.getAttribute("data-id"), b.getAttribute("data-name")); };
       });
+      Array.prototype.forEach.call(document.querySelectorAll(".cfa-key"), function (b) {
+        b.onclick = function () { resetPass(b.getAttribute("data-id"), b.getAttribute("data-name")); };
+      });
+    }
+
+    // Passwords exist only as bcrypt hashes in Supabase — showing a member's
+    // current password is impossible, so "forgot password" = admin assigns a
+    // new one here and passes it on.
+    async function resetPass(uid, name) {
+      var p = prompt('סיסמה חדשה עבור "' + (name || "המשתמש") + '" (לפחות 6 תווים):');
+      if (p === null) return;
+      p = p.trim();
+      if (p.length < 6) { amsg("סיסמה: לפחות 6 תווים", "err"); return; }
+      amsg("מעדכן סיסמה…");
+      try {
+        var r = await sb.rpc("admin_set_password", { target: uid, new_password: p });
+        if (r.error) throw r.error;
+        amsg('הסיסמה של "' + (name || "המשתמש") + '" שונתה. מסור לו את הסיסמה החדשה: ' + p, "ok");
+      } catch (e) {
+        var m = (e && e.message) || String(e);
+        // The RPC lives in supabase/schema.sql — see the same note in del().
+        if (/admin_set_password/.test(m) && /schema cache|find the function/i.test(m))
+          m = "הפונקציה admin_set_password חסרה ב-Supabase — יש להריץ את supabase/schema.sql ב-SQL Editor ואז לנסות שוב";
+        amsg("שינוי הסיסמה נכשל: " + m, "err");
+      }
     }
 
     async function del(uid, name) {
