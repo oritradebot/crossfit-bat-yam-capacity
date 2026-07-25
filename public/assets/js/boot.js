@@ -87,6 +87,32 @@
   var DIRTY_KEY = "cfby_dirty_v1";
   function rawGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 
+  // ---- sync status badge ------------------------------------------------
+  // The user must SEE sync state — silent failures are exactly how workouts
+  // got lost before. One small pill, bottom-left, never intercepts touches.
+  var syncHideT = null;
+  function syncShow(kind) {
+    if (!document.body) return;
+    var el = document.getElementById("cfbySync");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "cfbySync";
+      el.style.cssText =
+        "position:fixed;left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:99990;" +
+        "color:#fff;font:600 12px 'Heebo',system-ui,sans-serif;padding:6px 12px;border-radius:20px;direction:rtl;" +
+        "box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none;transition:opacity .25s;opacity:0";
+      document.body.appendChild(el);
+    }
+    clearTimeout(syncHideT);
+    if (kind === "saving")       { el.textContent = "⏳ שומר…";                        el.style.background = "#233657"; }
+    else if (kind === "saved")   { el.textContent = "✓ נשמר בענן";                    el.style.background = "#1e7e46"; }
+    else if (kind === "error")   { el.textContent = "⚠️ לא מסונכרן — מנסה שוב";       el.style.background = "#a33b2e"; }
+    else if (kind === "offline") { el.textContent = "📡 אין אינטרנט — יסונכרן כשיחזור"; el.style.background = "#8a6d1a"; }
+    el.style.opacity = "1";
+    if (kind === "saved") syncHideT = setTimeout(function () { el.style.opacity = "0"; }, 1600);
+  }
+  window.__cfbySync = syncShow;
+
   // A push that fails on a stale JWT (app resumed from background after the
   // token expired) refreshes the session once and retries.
   async function upsertWithRetry(table, row) {
@@ -106,9 +132,11 @@
     var tracker = lsGet(K.TRACKER_KEY);
     if (!tracker) return;
     var stamp = rawGet(DIRTY_KEY);
+    if (stamp !== null) syncShow("saving");
     var r = await upsertWithRetry("states", { user_id: pushCtx.uid, tracker: tracker, updated_at: new Date().toISOString() });
     if (r.error) {
       console.error("[sync] states push failed:", r.error.message || r.error);
+      syncShow(navigator.onLine === false ? "offline" : "error");
       clearTimeout(retryT);
       retryT = setTimeout(doPushState, 10000);   // dirty stamp survives either way
       return;
@@ -117,6 +145,7 @@
     // flight — a newer write must stay marked as unsynced.
     if (stamp !== null && rawGet(DIRTY_KEY) === stamp) {
       try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
+      syncShow("saved");
     }
     // Admin also publishes the program scaffold for everyone
     if (pushCtx.isAdmin && tracker.weeks) {
@@ -201,22 +230,69 @@
     t2 = setTimeout(function () { t2 = null; doPushBoard(); }, 800);
   }
 
+  // A push that has to survive the page being killed (PWA closed / backgrounded)
+  // cannot go through supabase-js — its fetch dies with the page. keepalive
+  // hands the request to the browser's network stack, which finishes it even
+  // after the page is gone. Falls back silently on any failure (e.g. the 64KB
+  // keepalive body limit): the dirty stamp + boot-time recovery still cover it.
+  var accessToken = null;
+  sb.auth.onAuthStateChange(function (_e, s) { accessToken = (s && s.access_token) || null; });
+  function keepalivePush() {
+    if (!pushCtx.uid || !accessToken) return;
+    var raw = rawGet(K.TRACKER_KEY);
+    var stamp = rawGet(DIRTY_KEY);
+    if (!raw || stamp === null) return;
+    try {
+      fetch(window.SUPA_URL + "/rest/v1/states?on_conflict=user_id", {
+        method: "POST",
+        keepalive: true,
+        headers: {
+          apikey: window.SUPA_ANON_KEY,
+          Authorization: "Bearer " + accessToken,
+          "Content-Type": "application/json",
+          Prefer: "resolution=merge-duplicates"
+        },
+        body: JSON.stringify({ user_id: pushCtx.uid, tracker: JSON.parse(raw), updated_at: new Date().toISOString() })
+      }).then(function (res) {
+        if (res.ok && rawGet(DIRTY_KEY) === stamp) { try { localStorage.removeItem(DIRTY_KEY); } catch (e) {} }
+      }).catch(function () {});
+    } catch (e) {}
+  }
+
   // The debounce is the enemy on phones: switching away from the PWA can kill
   // the page before an 800ms timer fires. Flush pending pushes the moment the
-  // page goes hidden (best effort — if the push itself is killed, the dirty
-  // stamp recovers it on the next boot).
+  // page goes hidden — through BOTH channels (normal push may die with the
+  // page; keepalive survives it).
   function flushPending() {
     if (t1) { clearTimeout(t1); t1 = null; doPushState(); }
     if (t2) { clearTimeout(t2); t2 = null; doPushBoard(); }
   }
+  var BOOT_TS = Date.now();
   document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState === "hidden") flushPending();
+    if (document.visibilityState === "hidden") { flushPending(); keepalivePush(); }
+    else if (document.visibilityState === "visible" && pushCtx.uid) {
+      // Coming back to a live PWA: sync anything pending right away. If fully
+      // synced and this page has been running for >12h, reload — installed
+      // PWAs keep pages alive for days, which is how devices kept running
+      // old (buggy) bundles long after a fix was deployed.
+      if (rawGet(DIRTY_KEY) !== null) { doPushState(); doPushBoard(); }
+      else if (Date.now() - BOOT_TS > 43200000) location.reload();
+    }
   });
-  window.addEventListener("pagehide", flushPending);
+  window.addEventListener("pagehide", function () { flushPending(); keepalivePush(); });
   // Push again when connectivity returns, in case a push failed offline.
   window.addEventListener("online", function () {
     if (rawGet(DIRTY_KEY) !== null) { doPushState(); doPushBoard(); }
   });
+  window.addEventListener("offline", function () {
+    if (rawGet(DIRTY_KEY) !== null) syncShow("offline");
+  });
+  // Belt & braces: anything still unsynced is retried every 15s while the app
+  // is open — covers a retry timer lost to tab suspension. Skipped when a
+  // debounced push is already scheduled.
+  setInterval(function () {
+    if (pushCtx.uid && !t1 && rawGet(DIRTY_KEY) !== null && navigator.onLine !== false) doPushState();
+  }, 15000);
 
   // When boot.js itself rewrites the board (e.g. a realtime refresh of other
   // athletes), suppress the interceptor so it does not push our own row back
@@ -529,6 +605,7 @@
     var session = ses.data && ses.data.session;
     if (!session) { location.replace("index.html"); return; }
     var uid = session.user.id;
+    accessToken = session.access_token || accessToken;   // keepalive pushes need it synchronously
 
     var prof = await fetchProfile(uid);
     var isAdmin = !!prof.is_admin;
