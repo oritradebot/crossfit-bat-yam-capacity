@@ -74,7 +74,11 @@
   html, body { overflow-x: hidden; }
   html { -webkit-text-size-adjust: 100%; }
   button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-  .hd-tabs { -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  /* On an installed PWA the page draws under the iPhone status bar (clock /
+     battery) — push the header content below it; the navy gradient keeps
+     painting behind, so the status-bar strip stays blue. */
+  header { padding-top: calc(env(safe-area-inset-top, 0px)); }
+  .hd-tabs { scrollbar-width: none; }
   .hd-tabs::-webkit-scrollbar { display: none; }
   .hd-tab { white-space: nowrap; }
   @media (max-width: 720px) {
@@ -82,11 +86,13 @@
     .hd-logo img { width: 40px !important; height: 40px !important; }
     .hd-title .hd-name { font-size: 16px !important; }
     .hd-title .hd-sub { font-size: 10.5px !important; }
-    /* actions become a full-width second row: tabs stretch, buttons shrink */
+    /* actions become a full-width second row. Everything stretches to fill the
+       row exactly — nothing overflows, nothing scrolls sideways. */
     .hd-actions { margin-inline-start: 0 !important; width: 100%; gap: 6px !important; min-width: 0; }
-    .hd-tabs { flex: 1 1 auto; min-width: 0; justify-content: space-between; }
-    .hd-tab { padding: 7px 9px !important; font-size: 12px !important; }
-    .hd-btn { padding: 6px 9px !important; font-size: 11px !important; }
+    .hd-tabs { flex: 1 1 auto; min-width: 0; overflow: hidden !important; }
+    .hd-tab { flex: 1 1 0; min-width: 0; text-align: center; padding: 7px 4px !important; font-size: 12px !important; }
+    .hd-btn { padding: 6px 9px !important; font-size: 11px !important; flex: none; }
+    .hd-btn-ico { font-size: 14px !important; }
     main { padding: 14px 12px 56px !important; }
     /* leaderboard rows: shrink the fixed columns so the name keeps real width */
     div[style*="1fr 74px 74px"] { grid-template-columns: 30px minmax(0,1fr) 54px 58px !important; }
@@ -119,7 +125,7 @@
         <div class="hd-sub" style="font-size:12px; color:#b9c4e6; font-weight:500;">CAPACITY PROGRAM · מעקב 8 שבועות</div>
       </div>
       <div class="hd-actions" style="margin-inline-start:auto; display:flex; align-items:center; gap:10px;">
-        <button class="hd-btn" onClick="{{ openProfile }}" title="הפרופיל שלי" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 13px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">👤 פרופיל</button>
+        <button class="hd-btn hd-btn-ico" onClick="{{ openProfile }}" title="הפרופיל שלי" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 11px; font-weight:700; font-size:14px; cursor:pointer; white-space:nowrap; flex:none;">👤</button>
         <button class="hd-btn" onClick="{{ openWelcome }}" title="איך זה עובד?" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 13px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">❓ מדריך</button>
         <div class="hd-tabs" style="display:flex; background:rgba(255,255,255,.1); border-radius:999px; padding:4px; gap:2px; overflow-x:auto; max-width:100%;">
           <button class="hd-tab" onClick="{{ setOverview }}" style="{{ tabOverviewStyle }}">סקירה</button>
@@ -205,7 +211,6 @@
           </div>
           <div style="display:flex; gap:16px; margin-top:16px; flex-wrap:wrap; font-size:11px; color:var(--muted);">
             <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:var(--blue); display:inline-block;"></span>הושלם</span>
-            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#fff; border:1.5px solid var(--blue); display:inline-block;"></span>מתוכנן</span>
             <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#fff; box-shadow:0 0 0 2px #d8342b; display:inline-block;"></span>לא סומן</span>
             <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#eef1f6; border:1.5px dashed #b9c2d0; display:inline-block;"></span>מנוחה 🛌</span>
             <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#e7e6e1; display:inline-block;"></span>ריק / COMING SOON</span>
@@ -677,6 +682,7 @@
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📅</span><div style="line-height:1.45;"><b style="font-size:13px;">יומן</b> <span style="font-size:12px; color:var(--muted);">— האימון היומי. תעד תוצאות, דרג מאמץ וסמן "הושלם".</span></div></div>
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏅</span><div style="line-height:1.45;"><b style="font-size:13px;">דירוג</b> <span style="font-size:12px; color:var(--muted);">— מתחרים בקטגוריה שלך על סמך תוצאות המטקון.</span></div></div>
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏆</span><div style="line-height:1.45;"><b style="font-size:13px;">שיאים</b> <span style="font-size:12px; color:var(--muted);">— כל אימון שתדרג כ-PR נאסף לכאן אוטומטית.</span></div></div>
+          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">👤</span><div style="line-height:1.45;"><b style="font-size:13px;">פרופיל</b> <span style="font-size:12px; color:var(--muted);">— הכפתור העגול למעלה: הקטגוריה, ההישגים והנתונים האישיים שלך.</span></div></div>
           <div style="display:flex; flex-direction:column; gap:4px; background:rgba(239,91,37,.08); border:1px solid rgba(239,91,37,.3); border-radius:11px; padding:9px 12px;">
             <div style="display:flex; gap:7px; align-items:center;"><span style="font-size:16px;">📲</span><b style="font-size:13px;">התקינו כאפליקציה על הטלפון</b></div>
             <div style="font-size:11.5px; color:var(--ink); line-height:1.5;"><b>🍏 אייפון</b> (Safari): שיתוף ⬆️ ← «הוסף למסך הבית».</div>
@@ -1123,6 +1129,17 @@ class Component extends DCLogic {
     const idx = Math.floor((t - this.startDate) / 86400000);
     return (idx >= 0 && idx < 56) ? idx : -1;
   }
+  // Unclamped day index — negative before the program starts, 56+ after it ends.
+  // Future days are view-only: the plan is visible but results can't be logged
+  // until the day arrives.
+  rawTodayIdx() {
+    const t = new Date(); t.setHours(0,0,0,0);
+    return Math.floor((t - this.startDate) / 86400000);
+  }
+  selIsFuture() { return this.state.selWeek*7 + this.state.selDay > this.rawTodayIdx(); }
+  futureNote() {
+    return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'8px', background:'#f4f3ef', border:'1px dashed var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'12.5px', color:'var(--muted)', fontWeight:600 } }, '🔒 הזנת התוצאות תיפתח ביום האימון');
+  }
 
   state = {
     view: (this.props && this.props.startView) || 'overview',
@@ -1479,9 +1496,11 @@ class Component extends DCLogic {
   }
   canComplete(day) {
     const missing = [];
-    if (this.liftPresent(day) && !this.liftLogged(day)) missing.push('משקל ל-LIFT');
+    // Pure Hebrew — mixing Latin tokens (LIFT, B) into an RTL sentence scrambles
+    // the word order in the save bar.
+    if (this.liftPresent(day) && !this.liftLogged(day)) missing.push('משקל לתרגיל הכוח');
     if (this.metconPresent(day.metcon) && !this.metconLogged(day.metcon)) missing.push('תוצאה למטקון');
-    if (this.metconPresent(day.metcon2) && !this.metconLogged(day.metcon2)) missing.push('תוצאה למטקון B');
+    if (this.metconPresent(day.metcon2) && !this.metconLogged(day.metcon2)) missing.push('תוצאה למטקון השני');
     const anyPresent = this.liftPresent(day) || this.metconPresent(day.metcon) || this.metconPresent(day.metcon2);
     return { ok: anyPresent && missing.length===0, missing, anyPresent };
   }
@@ -1504,6 +1523,15 @@ class Component extends DCLogic {
     return weeks;
   }
   saveBarEl(day) {
+    if (this.selIsFuture()) {
+      return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'12px', background:'#f4f3ef', border:'1px dashed var(--line)', borderRadius:'14px', padding:'14px 16px' } },
+        React.createElement('span', { style:{ fontSize:'22px', flex:'none' } }, '🔒'),
+        React.createElement('div', { style:{ flex:1, minWidth:0 } },
+          React.createElement('div', { style:{ fontWeight:700, fontSize:'14px', color:'var(--ink)' } }, 'אימון עתידי — צפייה בלבד'),
+          React.createElement('div', { style:{ fontSize:'12px', color:'var(--muted)', marginTop:'2px' } }, 'אפשר לראות מה מחכה לכם. הזנת תוצאות וסימון הושלם ייפתחו ביום האימון.')
+        )
+      );
+    }
     if (day.done) {
       return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'12px', flexWrap:'wrap', background:'rgba(63,191,106,.1)', border:'1px solid rgba(63,191,106,.4)', borderRadius:'14px', padding:'14px 16px' } },
         React.createElement('span', { style:{ fontSize:'22px', flex:'none' } }, '✅'),
@@ -1515,7 +1543,7 @@ class Component extends DCLogic {
       );
     }
     const c = this.canComplete(day);
-    return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'10px', background:'#fff', border:'1px solid var(--line)', borderRadius:'14px', padding:'16px' } },
+    return React.createElement('div', { dir:'rtl', style:{ display:'flex', flexDirection:'column', gap:'10px', background:'#fff', border:'1px solid var(--line)', borderRadius:'14px', padding:'16px' } },
       React.createElement('div', { style:{ fontSize:'13px', color:'var(--muted)', lineHeight:1.6 } },
         c.ok ? 'הכול מוכן — לחיצה על שמור תזין את האימון כהושלם ותשמור את התוצאות שלך.'
              : (c.anyPresent ? ('כדי לשמור את האימון יש למלא: ' ) : 'אין עדיין אימון להשלים ליום הזה.'),
@@ -1529,6 +1557,7 @@ class Component extends DCLogic {
     );
   }
   saveDay() {
+    if (this.selIsFuture()) { this.toast('אימון עתידי — אפשר לשמור רק ביום האימון'); return; }
     const d = structuredClone(this.state.data);
     const dc = d[this.state.selWeek].days[this.state.selDay];
     const t = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
@@ -1610,7 +1639,8 @@ class Component extends DCLogic {
     const met2 = day.metcon2;
     const viewMovements = met.movements.map((m,i)=>({ num:i+1, name:m.name, detail:m.detail })).filter(m=>m.name||m.detail);
     const view2Movements = met2.movements.map((m,i)=>({ num:i+1, name:m.name, detail:m.detail })).filter(m=>m.name||m.detail);
-    const viewExtras = day.extras.map((e,i)=>({ i, num:i+1, name:e.name, detail:e.detail, result:e.result, resultBar:this.extraBar(i,e) })).filter(e=>e.name||e.detail);
+    const fut = this.selIsFuture();   // future day -> plan is view-only, no result inputs
+    const viewExtras = day.extras.map((e,i)=>({ i, num:i+1, name:e.name, detail:e.detail, result:e.result, resultBar: fut ? this.futureNote() : this.extraBar(i,e) })).filter(e=>e.name||e.detail);
 
     const vShowLift = !!(day.lift.movement || day.lift.planned);
     const vShowMetcon = !!(met.name || met.scheme || met.note || viewMovements.length);
@@ -1781,12 +1811,12 @@ class Component extends DCLogic {
 
       selWeekNum: selWeek+1,
       day: dayObj,
-      effortBar: this.effortBar(day.rating, true),
+      effortBar: fut ? this.futureNote() : this.effortBar(day.rating, true),
       effortBarView: this.effortBar(day.rating, false),
-      liftBar: this.liftBar(day.lift),
+      liftBar: fut ? this.futureNote() : this.liftBar(day.lift),
       saveBar: this.saveBarEl(day),
-      metconBar: this.metconBar(day.metcon, 'metcon'),
-      metcon2Bar: this.metconBar(day.metcon2, 'metcon2'),
+      metconBar: fut ? this.futureNote() : this.metconBar(day.metcon, 'metcon'),
+      metcon2Bar: fut ? this.futureNote() : this.metconBar(day.metcon2, 'metcon2'),
       hasRating: !!rMeta,
       ratingLabel: rMeta ? (rMeta.emoji + ' ' + rMeta.label) : '',
       ratingBadgeStyle: rMeta ? ('display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; font-family:\'Oswald\',sans-serif; font-weight:700; font-size:12px; letter-spacing:.04em; color:#fff; background:'+rMeta.color+';') : 'display:none;',
@@ -1796,7 +1826,7 @@ class Component extends DCLogic {
       vShowLift, vShowMetcon, vShowMetcon2, vShowExtra,
       plannedField: this.areaEl('lift.planned', day.lift.planned, 'סטים, חזרות, אחוזים, דגשים…', 80),
       noteField: this.areaEl('metcon.note', met.note, 'הערות / הסבר על המטקון…', 64),
-      summaryField: this.areaEl('summary', day.summary, 'איך היה האימון? תחושה, שיאים, מה לשפר בפעם הבאה…', 130),
+      summaryField: fut ? this.futureNote() : this.areaEl('summary', day.summary, 'איך היה האימון? תחושה, שיאים, מה לשפר בפעם הבאה…', 130),
       doneBtnStyle: this.doneBtnStyle(day.done),
       doneBtnLabel: day.done ? '✓ הושלם' : 'סמן כהושלם',
       restBtnStyle: this.restBtnStyle(day.rest),
@@ -1812,8 +1842,8 @@ class Component extends DCLogic {
       gotoToday: ()=>{ const t=this.todayIdx(); if(t>=0) this.setState({view:'log', selWeek:Math.floor(t/7), selDay:t%7, activeSession:'main'}); else this.setState({view:'log'}); },
       prevDay: ()=>this.step(-1),
       nextDay: ()=>this.step(1),
-      toggleDone: ()=>{ const d=structuredClone(this.state.data); const dc=d[selWeek].days[selDay]; const t=(this.state.activeSession==='alt'&&dc.alt)?dc.alt:dc; t.done=!t.done; if(t.done) t.rest=false; this.save(d); this.setState({data:d}); },
-      toggleRest: ()=>{ const d=structuredClone(this.state.data); const dc=d[selWeek].days[selDay]; const t=(this.state.activeSession==='alt'&&dc.alt)?dc.alt:dc; t.rest=!t.rest; if(t.rest) t.done=false; this.save(d); this.setState({data:d}); this.toast(t.rest?'סומן כיום מנוחה — לא ייחשב כהוחמצה':'מנוחה בוטלה'); },
+      toggleDone: ()=>{ if(this.selIsFuture()){ this.toast('אימון עתידי — אפשר לסמן רק ביום האימון'); return; } const d=structuredClone(this.state.data); const dc=d[selWeek].days[selDay]; const t=(this.state.activeSession==='alt'&&dc.alt)?dc.alt:dc; t.done=!t.done; if(t.done) t.rest=false; this.save(d); this.setState({data:d}); },
+      toggleRest: ()=>{ if(this.selIsFuture()){ this.toast('אימון עתידי — אפשר לסמן רק ביום האימון'); return; } const d=structuredClone(this.state.data); const dc=d[selWeek].days[selDay]; const t=(this.state.activeSession==='alt'&&dc.alt)?dc.alt:dc; t.rest=!t.rest; if(t.rest) t.done=false; this.save(d); this.setState({data:d}); this.toast(t.rest?'סומן כיום מנוחה — לא ייחשב כהוחמצה':'מנוחה בוטלה'); },
       onEdit: (e)=>{ const d=structuredClone(this.state.data); const dc=d[selWeek].days[selDay]; const t=(this.state.activeSession==='alt'&&dc.alt)?dc.alt:dc; this.setDeep(t, e.target.dataset.path, e.target.value); this.save(d); this.setState({data:d}); },
 
       hasAlt,
