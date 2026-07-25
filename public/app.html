@@ -925,7 +925,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 9;
+  PROGRAM_VERSION = 10;
   programWeek1() {
     return {
       0: {
@@ -1005,7 +1005,7 @@ class Component extends DCLogic {
       },
       5: {
         lift: { movement:'Power Snatch', planned:'Every 45 seconds for 10 sets:\n1 Rep\n\n5 sets @75%\n5 sets @75%+\n\nPause briefly at the receiving position. Fast turnover, confident catch.\nהמטרה כאן היא ללכת על 10 חזרות איכותיות, כשכולן עם אותו משקל. אפשר לשנות משקל פעם אחת (אחרי חמש חזרות), אבל מעבר לכך מחפשים דווקא את העקביות היום.' },
-        metcon: { name:'Row/Run + BBJO', scheme:'4-5 sets for time', score:'Total time', resultMode:'time', note:'Rest 1:00 between sets.\nL1-2 = 10 BBJO · L3 = 15 BBJO\nBBJO don\'t have to face the box.\n\nScore — total time.\nחצי מהקבוצה מתחילה עם חתירה, חצי עם ריצה. בכל סבב עוברים לתנועה אחרת (ארבעה סבבים, מתוכם שניים ריצה ושניים חתירה).\nאפשר לעלות לחמישה סבבים אם יש זמן.', movements:[['Row / Run','500/400m row or 400m run'],['Burpee box jump overs','10-15'],['Rest','1:00']] },
+        metcon: { name:'Row/Run + BBJO', scheme:'4-5 sets · Time cap 18:00', score:'Rounds + reps', resultMode:'rounds', note:'Time cap 18:00.\nRest 1:00 between sets.\nL1-2 = 10 BBJO · L3 = 15 BBJO\nBBJO don\'t have to face the box.\n\nScore — rounds + reps within the cap.\nהזינו כמה סבבים הושלמו (+חזרות מהסבב האחרון) בתוך 18 הדקות.\nחצי מהקבוצה מתחילה עם חתירה, חצי עם ריצה. בכל סבב עוברים לתנועה אחרת (ארבעה סבבים, מתוכם שניים ריצה ושניים חתירה).\nאפשר לעלות לחמישה סבבים אם יש זמן.', movements:[['Row / Run','500/400m row or 400m run'],['Burpee box jump overs','10-15'],['Rest','1:00']] },
         extras: [['Floating Snatch Pulls','Every 2:00 for 4 sets:\n3-4 reps\n\nקחו כמה דקות לבנות את התנועה מחדש אחרי הקונדישינינג אם ביצעתם אותו. המשקל אמור להיות מעט כבד אבל לא מעבר ל-90% מהסנאץ׳ שלכם.'],['Cashout','3 sets:\n10+10 Single arm DB high pulls\ninto\n15 Empty bar bicep curls\n60s Rest']]
       },
       6: {
@@ -1035,7 +1035,7 @@ class Component extends DCLogic {
       3: {
         lift: { movement:'Strength — Heavy DB Snatches + Core', planned:'Big Tuesday on a Wednesday.\n\nEvery 2:00 for 8:00:\n10 Alternating Heavy DB snatches\nMax Atomic sit-ups / V-Ups until the 1:15 mark\n\nGrab the heaviest DB possible.' },
         metcon: { name:'Big Tuesday — Part 1', scheme:'0:00-9:00 · Every 1:30 for 6 sets', score:'Total HSPU', resultMode:'amount', note:'Every 1:30 for 6 sets:\nDouble unders\nMax HSPU in remaining time\n\nL1 = 20 DU or single unders (prefer practice DU)\nL2 = 30 DU\nL3 = 50 DU\n\nPick a HSPU progression that will allow big sets.\n\nחלק ראשון: איכות עם מעט דופק. בוחרים פרוגרשן להתמקד בו — ורצים עליו. המטרה להכניס לפחות 2 סטים גדולים על הידיים בכל חלון.', movements:[['Double unders','20-50 (by level)'],['Max HSPU','remaining time']] },
-        metcon2: { name:'Big Tuesday — AMRAP 15:00', scheme:'10:00-25:00 · AMRAP 15:00', score:'Total reps', resultMode:'amount', note:'Score — total reps.\nהחלק השני טכני הרבה פחות, ויהיה סביב להמשיך לזוז: תנועות פשוטות יחסית, וצבירת נפח.\nשימו לב שהעבודה צריכה להתבצע עם אותו קטלבל, והארגז אמור להיות נמוך. ניתן להחזיק את הקטלבל איך שתרצו כשעוברים אותו.', movements:[['KB swings (American)','25'],['Hand release push ups','20'],['Low box step overs','15 @with the KB']] },
+        metcon2: { name:'Big Tuesday — AMRAP 15:00', scheme:'10:00-25:00 · AMRAP 15:00', score:'Rounds + reps', resultMode:'rounds', note:'Score — rounds + reps.\nהזינו כמה סבבים (+חזרות) הושלמו.\nהחלק השני טכני הרבה פחות, ויהיה סביב להמשיך לזוז: תנועות פשוטות יחסית, וצבירת נפח.\nשימו לב שהעבודה צריכה להתבצע עם אותו קטלבל, והארגז אמור להיות נמוך. ניתן להחזיק את הקטלבל איך שתרצו כשעוברים אותו.', movements:[['KB swings (American)','25'],['Hand release push ups','20'],['Low box step overs','15 @with the KB']] },
         extras: [['BY Extra','3 sets, for quality:\n10-15 GHD sit-ups (or weighted sit-ups)\n10 Hip extensions (GHD or banded)\nStatic Handstand hold practice set.']]
       },
       4: {
@@ -1139,6 +1139,11 @@ class Component extends DCLogic {
   selIsFuture() { return this.state.selWeek*7 + this.state.selDay > this.rawTodayIdx(); }
   futureNote() {
     return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'8px', background:'#f4f3ef', border:'1px dashed var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'12.5px', color:'var(--muted)', fontWeight:600 } }, '🔒 הזנת התוצאות תיפתח ביום האימון');
+  }
+  // Endurance days: one session per day. Shown on the session whose twin is done.
+  altLockNote(asAlt) {
+    return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'8px', background:'#f4f3ef', border:'1px dashed var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'12.5px', color:'var(--muted)', fontWeight:600 } },
+      asAlt ? '🔒 השלמת כבר את ה-WOD — ביום כזה מזינים אימון אחד בלבד' : '🔒 השלמת כבר את אימון האינדורנס — ביום כזה מזינים אימון אחד בלבד');
   }
 
   state = {
@@ -1476,7 +1481,10 @@ class Component extends DCLogic {
   liftPresent(day) { return !!(day.lift && (day.lift.movement || day.lift.planned)); }
   liftLogged(day) { const L = (day.lift && day.lift.log) || {}; return !!(L.weight); }
   metconPresent(m) { return !!(m && (m.name || m.scheme || m.note || (m.movements||[]).some(x=>x.name||x.detail))); }
-  metconLogged(m) { const M = (m && m.log) || {}; const mode = (m && m.resultMode) || M.mode || 'time'; if (mode==='amount') return !!M.amount; if (mode==='time') return !!M.time; return !!(M.rounds || M.reps); }
+  // A value logged under a previous scoring mode still counts as "logged" —
+  // program edits that switch a metcon's resultMode (e.g. time -> rounds) must
+  // not silently un-complete days athletes already saved.
+  metconLogged(m) { const M = (m && m.log) || {}; return !!(M.time || M.amount || M.rounds || M.reps); }
   // One comparable number per metcon, for ranking across athletes.
   // time -> seconds (lower = better); rounds+reps -> composite; amount -> number (higher = better).
   metconScore(m) {
@@ -1522,7 +1530,18 @@ class Component extends DCLogic {
     weeks.forEach(wk => wk.days.forEach(day => { this.clearDayLog(day); if (day.alt) this.clearDayLog(day.alt); }));
     return weeks;
   }
-  saveBarEl(day) {
+  saveBarEl(day, lockedByOther, asAlt) {
+    if (lockedByOther) {
+      return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'12px', background:'#f4f3ef', border:'1px dashed var(--line)', borderRadius:'14px', padding:'14px 16px' } },
+        React.createElement('span', { style:{ fontSize:'22px', flex:'none' } }, '🔒'),
+        React.createElement('div', { style:{ flex:1, minWidth:0 } },
+          React.createElement('div', { style:{ fontWeight:700, fontSize:'14px', color:'var(--ink)' } }, 'הושלם כבר אימון אחד ביום הזה'),
+          React.createElement('div', { style:{ fontSize:'12px', color:'var(--muted)', marginTop:'2px' } },
+            asAlt ? 'ביום אינדורנס נספר אימון אחד — WOD או אינדורנס. כדי להזין את האינדורנס במקום, בטלו קודם את השמירה של ה-WOD.'
+                  : 'ביום אינדורנס נספר אימון אחד — WOD או אינדורנס. כדי להזין את ה-WOD במקום, בטלו קודם את השמירה של האינדורנס.')
+        )
+      );
+    }
     if (this.selIsFuture()) {
       return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'12px', background:'#f4f3ef', border:'1px dashed var(--line)', borderRadius:'14px', padding:'14px 16px' } },
         React.createElement('span', { style:{ fontSize:'22px', flex:'none' } }, '🔒'),
@@ -1561,6 +1580,8 @@ class Component extends DCLogic {
     const d = structuredClone(this.state.data);
     const dc = d[this.state.selWeek].days[this.state.selDay];
     const t = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
+    const twin = (this.state.activeSession==='alt' && dc.alt) ? dc : dc.alt;
+    if (twin && twin.done && !t.done) { this.toast('ביום אינדורנס נספר אימון אחד — בטלו קודם את השמירה של האימון השני'); return; }
     const c = this.canComplete(t);
     if (!c.ok) { this.toast(c.anyPresent ? ('חסר: ' + c.missing.join(' · ')) : 'אין אימון להשלים'); return; }
     t.done = true; t.rest = false;
@@ -1634,13 +1655,16 @@ class Component extends DCLogic {
     const asAlt = this.state.activeSession==='alt' && !!dayC.alt;
     const hasAlt = !!(dayC.alt && this.dayHasPlan(dayC.alt));
     const day = asAlt ? dayC.alt : dayC;
+    // Endurance days offer two sessions but only ONE counts: once one of them
+    // is saved as done, the other becomes view-only until that save is undone.
+    const otherDone = hasAlt && !!((asAlt ? dayC : dayC.alt).done) && !day.done;
     const gi = selWeek*7+selDay;
     const met = day.metcon;
     const met2 = day.metcon2;
     const viewMovements = met.movements.map((m,i)=>({ num:i+1, name:m.name, detail:m.detail })).filter(m=>m.name||m.detail);
     const view2Movements = met2.movements.map((m,i)=>({ num:i+1, name:m.name, detail:m.detail })).filter(m=>m.name||m.detail);
     const fut = this.selIsFuture();   // future day -> plan is view-only, no result inputs
-    const viewExtras = day.extras.map((e,i)=>({ i, num:i+1, name:e.name, detail:e.detail, result:e.result, resultBar: fut ? this.futureNote() : this.extraBar(i,e) })).filter(e=>e.name||e.detail);
+    const viewExtras = day.extras.map((e,i)=>({ i, num:i+1, name:e.name, detail:e.detail, result:e.result, resultBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.extraBar(i,e)) })).filter(e=>e.name||e.detail);
 
     const vShowLift = !!(day.lift.movement || day.lift.planned);
     const vShowMetcon = !!(met.name || met.scheme || met.note || viewMovements.length);
@@ -1811,12 +1835,12 @@ class Component extends DCLogic {
 
       selWeekNum: selWeek+1,
       day: dayObj,
-      effortBar: fut ? this.futureNote() : this.effortBar(day.rating, true),
+      effortBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.effortBar(day.rating, true)),
       effortBarView: this.effortBar(day.rating, false),
-      liftBar: fut ? this.futureNote() : this.liftBar(day.lift),
-      saveBar: this.saveBarEl(day),
-      metconBar: fut ? this.futureNote() : this.metconBar(day.metcon, 'metcon'),
-      metcon2Bar: fut ? this.futureNote() : this.metconBar(day.metcon2, 'metcon2'),
+      liftBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.liftBar(day.lift)),
+      saveBar: this.saveBarEl(day, otherDone, asAlt),
+      metconBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.metconBar(day.metcon, 'metcon')),
+      metcon2Bar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.metconBar(day.metcon2, 'metcon2')),
       hasRating: !!rMeta,
       ratingLabel: rMeta ? (rMeta.emoji + ' ' + rMeta.label) : '',
       ratingBadgeStyle: rMeta ? ('display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; font-family:\'Oswald\',sans-serif; font-weight:700; font-size:12px; letter-spacing:.04em; color:#fff; background:'+rMeta.color+';') : 'display:none;',
@@ -1826,7 +1850,7 @@ class Component extends DCLogic {
       vShowLift, vShowMetcon, vShowMetcon2, vShowExtra,
       plannedField: this.areaEl('lift.planned', day.lift.planned, 'סטים, חזרות, אחוזים, דגשים…', 80),
       noteField: this.areaEl('metcon.note', met.note, 'הערות / הסבר על המטקון…', 64),
-      summaryField: fut ? this.futureNote() : this.areaEl('summary', day.summary, 'איך היה האימון? תחושה, שיאים, מה לשפר בפעם הבאה…', 130),
+      summaryField: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.areaEl('summary', day.summary, 'איך היה האימון? תחושה, שיאים, מה לשפר בפעם הבאה…', 130)),
       doneBtnStyle: this.doneBtnStyle(day.done),
       doneBtnLabel: day.done ? '✓ הושלם' : 'סמן כהושלם',
       restBtnStyle: this.restBtnStyle(day.rest),
@@ -1842,13 +1866,13 @@ class Component extends DCLogic {
       gotoToday: ()=>{ const t=this.todayIdx(); if(t>=0) this.setState({view:'log', selWeek:Math.floor(t/7), selDay:t%7, activeSession:'main'}); else this.setState({view:'log'}); },
       prevDay: ()=>this.step(-1),
       nextDay: ()=>this.step(1),
-      toggleDone: ()=>{ if(this.selIsFuture()){ this.toast('אימון עתידי — אפשר לסמן רק ביום האימון'); return; } const d=structuredClone(this.state.data); const dc=d[selWeek].days[selDay]; const t=(this.state.activeSession==='alt'&&dc.alt)?dc.alt:dc; t.done=!t.done; if(t.done) t.rest=false; this.save(d); this.setState({data:d}); },
+      toggleDone: ()=>{ if(this.selIsFuture()){ this.toast('אימון עתידי — אפשר לסמן רק ביום האימון'); return; } const d=structuredClone(this.state.data); const dc=d[selWeek].days[selDay]; const t=(this.state.activeSession==='alt'&&dc.alt)?dc.alt:dc; const twin=(this.state.activeSession==='alt'&&dc.alt)?dc:dc.alt; if(!t.done && twin && twin.done){ this.toast('ביום אינדורנס נספר אימון אחד — בטלו קודם את השמירה של האימון השני'); return; } t.done=!t.done; if(t.done) t.rest=false; this.save(d); this.setState({data:d}); },
       toggleRest: ()=>{ if(this.selIsFuture()){ this.toast('אימון עתידי — אפשר לסמן רק ביום האימון'); return; } const d=structuredClone(this.state.data); const dc=d[selWeek].days[selDay]; const t=(this.state.activeSession==='alt'&&dc.alt)?dc.alt:dc; t.rest=!t.rest; if(t.rest) t.done=false; this.save(d); this.setState({data:d}); this.toast(t.rest?'סומן כיום מנוחה — לא ייחשב כהוחמצה':'מנוחה בוטלה'); },
       onEdit: (e)=>{ const d=structuredClone(this.state.data); const dc=d[selWeek].days[selDay]; const t=(this.state.activeSession==='alt'&&dc.alt)?dc.alt:dc; this.setDeep(t, e.target.dataset.path, e.target.value); this.save(d); this.setState({data:d}); },
 
       hasAlt,
-      sessMainLabel: 'WOD',
-      sessAltLabel: 'ENDURANCE',
+      sessMainLabel: 'WOD' + (dayC.done ? ' ✓' : ''),
+      sessAltLabel: 'ENDURANCE' + (dayC.alt && dayC.alt.done ? ' ✓' : ''),
       sessMainTabStyle: this.segLight(!asAlt),
       sessAltTabStyle: this.segLight(asAlt),
       setSessMain: ()=>this.setState({activeSession:'main'}),

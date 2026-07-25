@@ -357,7 +357,14 @@
         var r = await sb.rpc("admin_delete_user", { target: uid });
         if (r.error) throw r.error;
         amsg("נמחק.", "ok"); refresh();
-      } catch (e) { amsg("מחיקה נכשלה: " + (e.message || e), "err"); }
+      } catch (e) {
+        var m = (e && e.message) || String(e);
+        // The RPC lives in supabase/schema.sql — a fresh/reset DB won't have it
+        // until the schema is (re)run in the Supabase SQL Editor.
+        if (/admin_delete_user/.test(m) && /schema cache|find the function/i.test(m))
+          m = "הפונקציה admin_delete_user חסרה ב-Supabase — יש להריץ את supabase/schema.sql ב-SQL Editor ואז לנסות שוב";
+        amsg("מחיקה נכשלה: " + m, "err");
+      }
     }
 
     async function addUser() {

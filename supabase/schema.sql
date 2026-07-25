@@ -74,6 +74,9 @@ $$;
 -- Fully delete a user (admin-only). Removing the auth.users row cascades to
 -- profiles/states/board via their on-delete-cascade FKs, so the person can no
 -- longer sign in — unlike client-side deletes which leave the auth account.
+-- Dropped first: CREATE OR REPLACE fails if an older copy exists with a
+-- different parameter name, and re-running this file must always heal the RPC.
+drop function if exists public.admin_delete_user(uuid);
 create or replace function public.admin_delete_user(target uuid)
   returns void
   language plpgsql
@@ -132,6 +135,10 @@ drop policy if exists prog_write on public.shared_program;
 create policy prog_read  on public.shared_program for select to authenticated using (true);
 create policy prog_write on public.shared_program for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
+
+-- PostgREST caches the schema; without this, a just-created function keeps
+-- returning "Could not find the function ... in the schema cache" for a while.
+notify pgrst, 'reload schema';
 
 -- ============================================================
 --  AFTER you sign up with YOUR email, make yourself admin:
