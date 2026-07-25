@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "1.0.1";
+  var BUILD = "1.1.0";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -86,10 +86,10 @@
   // admin himself kept "recovering" to that stale snapshot after a wipe).
   function stripDayLogs(d) {
     if (!d) return d;
-    d.done = false; d.rest = false; d.rating = ""; d.summary = "";
+    d.done = false; d.rest = false; d.rating = ""; d.summary = ""; d.pr = false;
     if (d.lift) delete d.lift.log;
-    if (d.metcon)  { delete d.metcon.log;  d.metcon.rx = false; }
-    if (d.metcon2) { delete d.metcon2.log; d.metcon2.rx = false; }
+    if (d.metcon)  { delete d.metcon.log;  d.metcon.rx = false;  d.metcon.scaled = false; }
+    if (d.metcon2) { delete d.metcon2.log; d.metcon2.rx = false; d.metcon2.scaled = false; }
     if (Array.isArray(d.extras)) d.extras.forEach(function (x) { if (x) { x.result = ""; delete x.log; } });
     if (d.alt) stripDayLogs(d.alt);
     return d;

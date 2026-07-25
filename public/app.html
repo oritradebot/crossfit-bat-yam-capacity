@@ -227,7 +227,7 @@
           <div style="font-size:40px; line-height:1;">🏆</div>
           <div style="flex:1; min-width:0;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:24px; letter-spacing:.05em;">PERSONAL RECORDS</div>
-            <div style="font-size:13px; color:#e8c98a; margin-top:2px;">לוח השיאים שלך — כל אימון שסימנת PR 🏆 נאסף לכאן אוטומטית</div>
+            <div style="font-size:13px; color:#e8c98a; margin-top:2px;">לוח השיאים שלך — המשקל הכבד לכל תרגיל מהיומן + כל אימון שסימנת 🏆</div>
           </div>
           <div style="text-align:center; background:rgba(255,255,255,.1); border:1px solid rgba(232,165,58,.4); border-radius:14px; padding:10px 18px;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:30px; line-height:1;">{{ prCount }}</div>
@@ -235,7 +235,33 @@
           </div>
         </div>
 
+        <sc-if value="{{ hasLiftPRs }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+            <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; letter-spacing:.04em; color:var(--navy);">🏋️ שיאים לפי תרגיל</span>
+            <span style="font-size:11.5px; color:var(--muted);">המשקל הכבד ביותר שנרשם ביומן לכל תרגיל · {{ liftPRCountLabel }}</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin-bottom:24px;">
+            <sc-for list="{{ liftPRList }}" as="lp" hint-placeholder-count="4">
+              <button onClick="{{ onCell }}" data-wi="{{ lp.wi }}" data-di="{{ lp.di }}" style="display:flex; flex-direction:column; gap:6px; text-align:start; background:#fff; border:1px solid var(--line); border-inline-start:4px solid var(--navy); border-radius:14px; padding:14px 16px; cursor:pointer; color:var(--ink); box-shadow:0 4px 16px rgba(20,31,56,.06);">
+                <div dir="auto" style="font-weight:700; font-size:14.5px;">{{ lp.move }}</div>
+                <div style="display:flex; align-items:baseline; gap:8px; width:100%;">
+                  <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:24px; color:var(--blue); direction:ltr;">{{ lp.bestLabel }}</span>
+                  <span style="margin-inline-start:auto; font-family:'Oswald',sans-serif; font-weight:700; font-size:13px; color:var(--navy);">{{ lp.week }}</span>
+                </div>
+                <div style="display:flex; gap:8px; width:100%; font-size:11px; color:var(--muted);">
+                  <span>{{ lp.countLabel }}</span>
+                  <span style="margin-inline-start:auto;">{{ lp.date }}</span>
+                </div>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+
         <sc-if value="{{ hasPRs }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+            <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; letter-spacing:.04em; color:var(--navy);">🏆 אימוני שיא</span>
+            <span style="font-size:11.5px; color:var(--muted);">אימונים שסימנת בהם "שברתי שיא"</span>
+          </div>
           <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px;">
             <sc-for list="{{ prList }}" as="pr" hint-placeholder-count="4">
               <button onClick="{{ onCell }}" data-wi="{{ pr.wi }}" data-di="{{ pr.di }}" style="display:flex; align-items:center; gap:14px; text-align:start; background:#fff; border:1px solid var(--line); border-inline-start:4px solid var(--orange); border-radius:14px; padding:16px 18px; cursor:pointer; color:var(--ink); box-shadow:0 4px 16px rgba(20,31,56,.06);">
@@ -252,12 +278,12 @@
             </sc-for>
           </div>
         </sc-if>
-        <sc-if value="{{ noPRs }}" hint-placeholder-val="{{ false }}">
+        <sc-if value="{{ noAnyPRs }}" hint-placeholder-val="{{ false }}">
           <div style="text-align:center; padding:56px 24px; background:#fff; border:1px solid var(--line); border-radius:18px;">
             <div style="width:96px; height:96px; margin:0 auto 18px; border-radius:50%; background:radial-gradient(circle at 50% 35%, rgba(232,165,58,.22), rgba(232,165,58,.05)); display:flex; align-items:center; justify-content:center; font-size:46px; animation:floaty 2.8s ease-in-out infinite;">🏆</div>
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; letter-spacing:.04em; color:var(--ink); margin-bottom:6px;">השיא הראשון שלך מחכה</div>
-            <div style="font-size:13.5px; color:var(--muted); line-height:1.6; max-width:320px; margin-inline:auto;">כל אימון שתדרג כ-<b style="color:var(--orange);">🏆 PR</b> בסרגל המאמץ ייאסף לכאן אוטומטית — עם התוצאה, התנועה והשבוע.</div>
-            <button onClick="{{ gotoToday }}" style="margin-top:22px; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:12px 26px; font-weight:700; font-size:14px; cursor:pointer;">← לך לאימון ותדרג PR</button>
+            <div style="font-size:13.5px; color:var(--muted); line-height:1.6; max-width:320px; margin-inline:auto;">כל משקל שתרשום ב-<b style="color:var(--navy);">LIFT</b> נכנס לטבלת השיאים לפי תרגיל, וכל אימון שתסמן בו <b style="color:var(--orange);">🏆 שברתי שיא</b> ייאסף לכאן — עם התוצאה, התנועה והשבוע.</div>
+            <button onClick="{{ gotoToday }}" style="margin-top:22px; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:12px 26px; font-weight:700; font-size:14px; cursor:pointer;">← לך לאימון של היום</button>
           </div>
         </sc-if>
       </div>
@@ -410,6 +436,9 @@
                 <sc-if value="{{ hasRating }}" hint-placeholder-val="{{ false }}">
                   <span style="{{ ratingBadgeStyle }}">{{ ratingLabel }}</span>
                 </sc-if>
+                <sc-if value="{{ hasPRBadge }}" hint-placeholder-val="{{ false }}">
+                  <span style="display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; font-family:'Oswald',sans-serif; font-weight:700; font-size:12px; letter-spacing:.04em; color:#fff; background:#e8a53a;">🏆 PR</span>
+                </sc-if>
               </div>
               <div style="font-size:13px; color:#b9c4e6;">{{ dayDate }} · WEEK {{ selWeekNum }}</div>
             </div>
@@ -559,6 +588,7 @@
                       <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">סרגל מאמץ · איך הרגיש האימון</div>
                       {{ effortBar }}
                     </div>
+                    {{ prToggle }}
                     {{ summaryField }}
                   </div>
                 </div>
@@ -652,6 +682,7 @@
                   <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">🏋️ סרגל מאמץ / Effort</span>
                   {{ effortBar }}
                 </label>
+                <div style="margin-top:10px;">{{ prToggle }}</div>
               </div>
 
               <div style="margin-top:26px;">
@@ -681,7 +712,7 @@
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📊</span><div style="line-height:1.45;"><b style="font-size:13px;">סקירה</b> <span style="font-size:12px; color:var(--muted);">— התקדמות, יעד שבועי, רצף ומפת התוכנית.</span></div></div>
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📅</span><div style="line-height:1.45;"><b style="font-size:13px;">יומן</b> <span style="font-size:12px; color:var(--muted);">— האימון היומי. תעד תוצאות, דרג מאמץ וסמן "הושלם".</span></div></div>
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏅</span><div style="line-height:1.45;"><b style="font-size:13px;">דירוג</b> <span style="font-size:12px; color:var(--muted);">— מתחרים בקטגוריה שלך על סמך תוצאות המטקון.</span></div></div>
-          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏆</span><div style="line-height:1.45;"><b style="font-size:13px;">שיאים</b> <span style="font-size:12px; color:var(--muted);">— כל אימון שתדרג כ-PR נאסף לכאן אוטומטית.</span></div></div>
+          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏆</span><div style="line-height:1.45;"><b style="font-size:13px;">שיאים</b> <span style="font-size:12px; color:var(--muted);">— שיאי המשקל שלך לפי תרגיל + אימונים שסימנת 🏆.</span></div></div>
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">👤</span><div style="line-height:1.45;"><b style="font-size:13px;">פרופיל</b> <span style="font-size:12px; color:var(--muted);">— הכפתור העגול למעלה: הקטגוריה, ההישגים והנתונים האישיים שלך.</span></div></div>
           <div style="display:flex; flex-direction:column; gap:4px; background:rgba(239,91,37,.08); border:1px solid rgba(239,91,37,.3); border-radius:11px; padding:9px 12px;">
             <div style="display:flex; gap:7px; align-items:center;"><span style="font-size:16px;">📲</span><b style="font-size:13px;">התקינו כאפליקציה על הטלפון</b></div>
@@ -834,7 +865,7 @@
             </div>
           </sc-if>
           <sc-if value="{{ profileNoPRs }}" hint-placeholder-val="{{ false }}">
-            <div style="text-align:center; color:var(--muted); font-size:13px; padding:14px;">עדיין אין שיאים — סמן אימון כ-🏆 PR ביומן.</div>
+            <div style="text-align:center; color:var(--muted); font-size:13px; padding:14px;">עדיין אין שיאים — סמן 🏆 "שברתי שיא" ביומן.</div>
           </sc-if>
         </div>
       </div>
@@ -891,8 +922,8 @@ class Component extends DCLogic {
   ];
 
   emptyDay() {
-    const mc = () => ({ name:'', scheme:'', score:'', note:'', result:'', resultMode:'', log:{ mode:'time', time:'', rounds:'', reps:'', amount:'', note:'' }, movements:[{name:'',detail:''},{name:'',detail:''},{name:'',detail:''},{name:'',detail:''}] });
-    return { done:false, rest:false, rating:'',
+    const mc = () => ({ name:'', scheme:'', score:'', note:'', result:'', resultMode:'', rx:false, scaled:false, log:{ mode:'time', time:'', rounds:'', reps:'', amount:'', note:'', scaled:'' }, movements:[{name:'',detail:''},{name:'',detail:''},{name:'',detail:''},{name:'',detail:''}] });
+    return { done:false, rest:false, rating:'', pr:false,
       lift:{ movement:'', planned:'', result:'', log:{ weight:'', reps:'', note:'' } },
       metcon: mc(), metcon2: mc(),
       extras:[{name:'',detail:'',result:'',log:{text:''}},{name:'',detail:'',result:'',log:{text:''}}],
@@ -1081,7 +1112,10 @@ class Component extends DCLogic {
     const nd = this.emptyDay();
     if (!o) return nd;
     nd.done = !!o.done;
-    nd.rating = o.rating || '';
+    // Legacy migration: 'pr' used to be a value on the effort scale. It is now
+    // a standalone flag — old days keep their PR and free the rating slot.
+    nd.pr = !!o.pr || o.rating === 'pr';
+    nd.rating = o.rating === 'pr' ? '' : (o.rating || '');
     if (o.lift) {
       nd.lift.movement = o.lift.movement || '';
       nd.lift.planned = o.lift.planned || '';
@@ -1097,15 +1131,16 @@ class Component extends DCLogic {
       nd.metcon.note = (o.metcon ? (o.metcon.note || '') : (o.notes || ''));
       nd.metcon.resultMode = src.resultMode||'';
       nd.metcon.rx = !!src.rx;
+      nd.metcon.scaled = !!src.scaled;
       const M = src.log || {};
-      nd.metcon.log = { mode: M.mode||'time', time: M.time||'', rounds: M.rounds||'', reps: M.reps||'', amount: M.amount||'', note: M.note!==undefined ? M.note : (src.result||'') };
+      nd.metcon.log = { mode: M.mode||'time', time: M.time||'', rounds: M.rounds||'', reps: M.reps||'', amount: M.amount||'', note: M.note!==undefined ? M.note : (src.result||''), scaled: M.scaled||'' };
       if (Array.isArray(src.movements)) src.movements.forEach((m,i)=>{ if(i<4){ nd.metcon.movements[i].name=m.name||''; nd.metcon.movements[i].detail=m.detail||''; }});
     }
     const src2 = o.metcon2;
     if (src2) {
-      nd.metcon2.name = src2.name||''; nd.metcon2.scheme = src2.scheme||''; nd.metcon2.score = src2.score||''; nd.metcon2.note = src2.note||''; nd.metcon2.resultMode = src2.resultMode||''; nd.metcon2.rx = !!src2.rx;
+      nd.metcon2.name = src2.name||''; nd.metcon2.scheme = src2.scheme||''; nd.metcon2.score = src2.score||''; nd.metcon2.note = src2.note||''; nd.metcon2.resultMode = src2.resultMode||''; nd.metcon2.rx = !!src2.rx; nd.metcon2.scaled = !!src2.scaled;
       const M2 = src2.log || {};
-      nd.metcon2.log = { mode: M2.mode||'time', time: M2.time||'', rounds: M2.rounds||'', reps: M2.reps||'', amount: M2.amount||'', note: M2.note||'' };
+      nd.metcon2.log = { mode: M2.mode||'time', time: M2.time||'', rounds: M2.rounds||'', reps: M2.reps||'', amount: M2.amount||'', note: M2.note||'', scaled: M2.scaled||'' };
       if (Array.isArray(src2.movements)) src2.movements.forEach((m,i)=>{ if(i<4){ nd.metcon2.movements[i].name=m.name||''; nd.metcon2.movements[i].detail=m.detail||''; }});
     }
     if (Array.isArray(o.extras)) o.extras.forEach((e,i)=>{ if(i<2){ const EL=e.log||{}; nd.extras[i]={name:e.name||'',detail:e.detail||'',result:e.result||'',log:{text: EL.text!==undefined ? EL.text : (e.result||'')}}; }});
@@ -1230,7 +1265,6 @@ class Component extends DCLogic {
       this.setState({ board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {}, category: a.category || null, metcons: a.metcons || {} })) });
     } } catch (e) {}
   }
-  EFFORT_PTS = { pr:100, good:80, average:55, missed:0 };
   weekStats(wi) {
     const AV = this.myTargetVal();
     let c = 0, rest = 0;
@@ -1377,17 +1411,31 @@ class Component extends DCLogic {
     this.save(d); this.setState({ data: d });
   }
 
+  // Effort = how the session FELT, nothing else. PR lives on its own 🏆 toggle
+  // (day.pr) so breaking a record no longer "uses up" the effort rating.
   RATINGS = [
+    { k:'easy', label:'Easy', emoji:'😌', color:'#3fa9bf' },
+    { k:'good', label:'Good', emoji:'💪', color:'#3fbf6a' },
+    { k:'hard', label:'Hard', emoji:'🥵', color:'#ef8c25' },
+    { k:'max',  label:'Max Effort', emoji:'🔥', color:'#d8342b' }
+  ];
+  // Old scale (PR/Good/Average/Missed) still exists in saved days — keep the
+  // metas so historical badges and share texts render correctly. 'pr' itself is
+  // migrated to the pr flag in normalizeDay and should not appear after a load.
+  LEGACY_RATINGS = [
     { k:'pr',      label:'PR',      emoji:'🏆', color:'#e8a53a' },
-    { k:'good',    label:'Good',    emoji:'💪', color:'#3fbf6a' },
     { k:'average', label:'Average', emoji:'😐', color:'#7a8194' },
     { k:'missed',  label:'Missed',  emoji:'❌', color:'#d8342b' }
   ];
-  ratingMeta(k) { return this.RATINGS.find(r=>r.k===k) || null; }
+  ratingMeta(k) { return this.RATINGS.find(r=>r.k===k) || this.LEGACY_RATINGS.find(r=>r.k===k) || null; }
 
   effortBar(current, editable) {
+    // A day still carrying a legacy rating shows it as a selected extra button
+    // until the athlete picks a value from the new scale.
+    const list = this.RATINGS.slice();
+    if (current && !list.some(r=>r.k===current)) { const lg = this.ratingMeta(current); if (lg) list.push(lg); }
     return React.createElement('div', { style:{ display:'flex', gap:'8px', flexWrap:'wrap' } },
-      this.RATINGS.map(r => {
+      list.map(r => {
         const on = current === r.k;
         return React.createElement('button', {
           key: r.k,
@@ -1405,6 +1453,18 @@ class Component extends DCLogic {
         }, React.createElement('span', { style:{ fontSize:'15px' } }, r.emoji), r.label);
       })
     );
+  }
+
+  // Standalone PR flag — independent of the effort rating. Feeds the שיאים tab.
+  prToggle(on, editable) {
+    return React.createElement('button', {
+      onClick: editable ? (()=>this.onEditPath('pr', !on)) : undefined,
+      disabled: !editable,
+      style:{ alignSelf:'flex-start', display:'inline-flex', alignItems:'center', gap:'7px',
+        border:'1.5px solid '+(on?'#e8a53a':'var(--line)'), background:on?'rgba(232,165,58,.14)':'#fff',
+        color:on?'#b07d1e':'var(--muted)', borderRadius:'999px', padding:'8px 15px', fontWeight:700,
+        fontSize:'12.5px', cursor:editable?'pointer':'default', transition:'all .15s', opacity:(!editable&&!on)?.45:1 }
+    }, '🏆', on ? '✓ שברתי שיא באימון הזה' : 'שברתי שיא באימון הזה');
   }
 
   numEl(path, val, ph, w) {
@@ -1455,15 +1515,29 @@ class Component extends DCLogic {
           React.createElement('span', { style:{ fontWeight:700, color:'var(--muted)', paddingBottom:'10px' } }, '+'),
           this.unit(this.numEl(base+'.log.reps', M.reps, '0'), 'reps / חזרות')
         );
+    const pill = (on, activeColor, activeBg, onClick, title, label) => React.createElement('button', {
+      onClick, title,
+      style:{ display:'inline-flex', alignItems:'center', gap:'6px', border:'1.5px solid '+(on?activeColor:'var(--line)'), background:on?activeBg:'#fff', color:on?activeColor:'var(--muted)', borderRadius:'999px', padding:'7px 14px', fontWeight:700, fontSize:'12.5px', cursor:'pointer', transition:'all .15s' }
+    }, (on?'✓':'○') + ' ' + label);
     return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } },
       fixed ? null : React.createElement('div', { style:{ display:'flex', gap:'2px', background:'#eeede8', borderRadius:'10px', padding:'3px', width:'fit-content' } }, seg('time','Time'), seg('rounds','Rounds + Reps')),
       React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } }, inputs, this.unit(this.txtEl(base+'.log.note', M.note, 'הערה'), 'note')),
-      React.createElement('button', {
-        onClick: ()=>this.onEditPath(base+'.rx', !metcon.rx),
-        title: 'רק ביצוע במשקלי ה-RX שכתובים באימון נכנס לדירוג',
-        style:{ alignSelf:'flex-start', display:'inline-flex', alignItems:'center', gap:'6px', border:'1.5px solid '+(metcon.rx?'var(--orange)':'var(--line)'), background:metcon.rx?'rgba(239,91,37,.12)':'#fff', color:metcon.rx?'var(--orange)':'var(--muted)', borderRadius:'999px', padding:'7px 14px', fontWeight:700, fontSize:'12.5px', cursor:'pointer', transition:'all .15s' }
-      }, (metcon.rx?'✓':'○') + ' עשיתי RX — נכנס לדירוג')
+      React.createElement('div', { style:{ display:'flex', gap:'8px', flexWrap:'wrap' } },
+        pill(!!metcon.rx, 'var(--orange)', 'rgba(239,91,37,.12)', ()=>this.setRxScaled(base,'rx'), 'רק ביצוע במשקלי ה-RX שכתובים באימון נכנס לדירוג', 'עשיתי RX — נכנס לדירוג'),
+        pill(!!metcon.scaled, 'var(--blue)', 'rgba(35,64,154,.1)', ()=>this.setRxScaled(base,'scaled'), 'ביצוע מותאם — רשום את משקלי העבודה שלך', 'עשיתי Scaled')
+      ),
+      metcon.scaled ? this.unit(this.txtEl(base+'.log.scaled', M.scaled, 'למשל: 40kg במקום 60, מתח עם גומייה…'), 'משקלי עבודה · Scaled') : null
     );
+  }
+  // RX and Scaled are mutually exclusive; clicking the active one turns it off.
+  setRxScaled(base, which) {
+    const d = structuredClone(this.state.data);
+    const dc = d[this.state.selWeek].days[this.state.selDay];
+    const t = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
+    const m = base==='metcon2' ? t.metcon2 : t.metcon;
+    if (which==='rx') { m.rx = !m.rx; if (m.rx) m.scaled = false; }
+    else { m.scaled = !m.scaled; if (m.scaled) m.rx = false; }
+    this.save(d); this.setState({ data:d });
   }
   extraBar(i, ex) {
     const E = ex.log || {};
@@ -1478,6 +1552,9 @@ class Component extends DCLogic {
     return parts.join(' · ');
   }
 
+  // Days saved before the split may still carry rating='pr' (if the device
+  // never re-normalized) — count both.
+  dayHasPR(d) { return !!(d && (d.pr || d.rating === 'pr')); }
   liftPresent(day) { return !!(day.lift && (day.lift.movement || day.lift.planned)); }
   liftLogged(day) { const L = (day.lift && day.lift.log) || {}; return !!(L.weight); }
   metconPresent(m) { return !!(m && (m.name || m.scheme || m.note || (m.movements||[]).some(x=>x.name||x.detail))); }
@@ -1520,10 +1597,10 @@ class Component extends DCLogic {
     return weeks;
   }
   clearDayLog(d) {
-    d.done = false; d.rest = false; d.rating = ''; d.summary = '';
+    d.done = false; d.rest = false; d.rating = ''; d.summary = ''; d.pr = false;
     if (d.lift) d.lift.log = { weight:'', reps:'', note:'' };
-    if (d.metcon) d.metcon.log = { mode:(d.metcon.log&&d.metcon.log.mode)||'time', time:'', rounds:'', reps:'', amount:'', note:'' };
-    if (d.metcon2) d.metcon2.log = { mode:(d.metcon2.log&&d.metcon2.log.mode)||'time', time:'', rounds:'', reps:'', amount:'', note:'' };
+    if (d.metcon) { d.metcon.rx = false; d.metcon.scaled = false; d.metcon.log = { mode:(d.metcon.log&&d.metcon.log.mode)||'time', time:'', rounds:'', reps:'', amount:'', note:'', scaled:'' }; }
+    if (d.metcon2) { d.metcon2.rx = false; d.metcon2.scaled = false; d.metcon2.log = { mode:(d.metcon2.log&&d.metcon2.log.mode)||'time', time:'', rounds:'', reps:'', amount:'', note:'', scaled:'' }; }
     if (Array.isArray(d.extras)) d.extras.forEach(e=>{ e.result=''; e.log = { text:'' }; });
   }
   resetLogs(weeks) {
@@ -1693,17 +1770,32 @@ class Component extends DCLogic {
     const rMeta = this.ratingMeta(day.rating);
 
     const prList = [];
+    // Per-movement records: the heaviest weight ever logged in LIFT, grouped by
+    // movement name (text before the ' — ' qualifier, case-insensitive).
+    const liftBest = {};
     for (let w=0; w<8; w++) for (let d=0; d<7; d++) {
       const base = data[w].days[d];
       const gi = w*7+d;
       [base, base.alt].forEach(dd=>{
-        if (!dd || dd.rating !== 'pr') return;
-        const move = dd.lift.movement || dd.metcon.name || (dd.extras.find(e=>e.name)||{}).name || 'Workout';
-        const res = this.logSummaryText(dd) || (dd.lift.log&&dd.lift.log.note) || (dd.metcon.log&&dd.metcon.log.note) || '';
-        prList.push({ wi:w, di:d, move, res, date:this.dateStr(this.dateAt(gi)), week:'W'+(w+1) });
+        if (!dd) return;
+        if (this.dayHasPR(dd)) {
+          const move = dd.lift.movement || dd.metcon.name || (dd.extras.find(e=>e.name)||{}).name || 'Workout';
+          const res = this.logSummaryText(dd) || (dd.lift.log&&dd.lift.log.note) || (dd.metcon.log&&dd.metcon.log.note) || '';
+          prList.push({ wi:w, di:d, move, res, date:this.dateStr(this.dateAt(gi)), week:'W'+(w+1) });
+        }
+        const rawName = (dd.lift && dd.lift.movement || '').split('—')[0].trim();
+        const wt = parseFloat(dd.lift && dd.lift.log && dd.lift.log.weight);
+        if (!rawName || !(wt > 0)) return;
+        const key = rawName.toLowerCase();
+        const e = liftBest[key] || (liftBest[key] = { move:rawName, best:0, count:0, wi:w, di:d, week:'', date:'' });
+        e.count++;
+        if (wt > e.best) { e.best = wt; e.move = rawName; e.wi = w; e.di = d; e.week = 'W'+(w+1); e.date = this.dateStr(this.dateAt(gi)); e.reps = (dd.lift.log.reps||''); }
       });
     }
     prList.reverse();
+    const liftPRList = Object.values(liftBest).sort((a,b)=>b.best-a.best).map(e=>({ ...e,
+      bestLabel: e.best + 'kg' + (e.reps ? (' × '+e.reps) : ''),
+      countLabel: e.count===1 ? 'אימון אחד' : (e.count+' אימונים') }));
 
     const bw = this.state.selBoardWeek;
     const mode = 'total';
@@ -1831,12 +1923,17 @@ class Component extends DCLogic {
       curWeekNum: cwi+1, curWeekRange: this.rangeStr(cwi), curWeekDone,
       dowHeaders: this.dowShort,
       heatWeeks, thisWeekCells, weekPills, dayChips,
-      prList, hasPRs: prList.length>0, noPRs: prList.length===0, prCount: prList.length,
+      prList, hasPRs: prList.length>0, noPRs: prList.length===0, prCount: prList.length + liftPRList.length,
+      liftPRList, hasLiftPRs: liftPRList.length>0,
+      liftPRCountLabel: liftPRList.length===1 ? 'תרגיל אחד' : (liftPRList.length+' תרגילים'),
+      noAnyPRs: prList.length===0 && liftPRList.length===0,
 
       selWeekNum: selWeek+1,
       day: dayObj,
       effortBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.effortBar(day.rating, true)),
       effortBarView: this.effortBar(day.rating, false),
+      prToggle: (fut || otherDone) ? null : this.prToggle(this.dayHasPR(day), true),
+      hasPRBadge: this.dayHasPR(day),
       liftBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.liftBar(day.lift)),
       saveBar: this.saveBarEl(day, otherDone, asAlt),
       metconBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.metconBar(day.metcon, 'metcon')),
@@ -2021,13 +2118,13 @@ class Component extends DCLogic {
     if (t==='prboard') {
       const lines = ['🏆 שיאים אישיים · CrossFit Bat Yam', ''];
       const items = [];
-      for (let w=0; w<8; w++) for (let d=0; d<7; d++) { const dd=data[w].days[d]; if (dd.rating!=='pr') continue; const move=dd.lift.movement||dd.metcon.name||'Workout'; const res=this.logSummaryText(dd)||(dd.lift.log&&dd.lift.log.note)||''; items.push('• '+move+(res?(' — '+res):'')+' (W'+(w+1)+')'); }
+      for (let w=0; w<8; w++) for (let d=0; d<7; d++) { const dd=data[w].days[d]; if (!this.dayHasPR(dd)) continue; const move=dd.lift.movement||dd.metcon.name||'Workout'; const res=this.logSummaryText(dd)||(dd.lift.log&&dd.lift.log.note)||''; items.push('• '+move+(res?(' — '+res):'')+' (W'+(w+1)+')'); }
       lines.push(items.length ? items.join('\n') : 'עדיין אין שיאים');
       return lines.join('\n');
     }
     const wi = this.state.shareWi;
     const lines = ['🔥 CrossFit Bat Yam — שבוע '+(wi+1), this.rangeStr(wi), ''];
-    data[wi].days.forEach((day,di)=>{ if (!this.dayHasPlan(day) && !day.done) return; const title=day.lift.movement||day.metcon.name||'אימון'; const res=this.logSummaryText(day); const rm=this.ratingMeta(day.rating); lines.push((day.done?'✅':'⬜')+' '+this.dowShort[di]+' — '+title+(res?(' · '+res):'')+(rm?(' '+rm.emoji):'')); });
+    data[wi].days.forEach((day,di)=>{ if (!this.dayHasPlan(day) && !day.done) return; const title=day.lift.movement||day.metcon.name||'אימון'; const res=this.logSummaryText(day); const rm=this.ratingMeta(day.rating); lines.push((day.done?'✅':'⬜')+' '+this.dowShort[di]+' — '+title+(res?(' · '+res):'')+(this.dayHasPR(day)?' 🏆':'')+(rm?(' '+rm.emoji):'')); });
     const dn = data[wi].days.filter(x=>x.done).length;
     lines.push('', 'סה"כ ' + dn + '/5 אימונים הושלמו');
     return lines.join('\n');
@@ -2072,7 +2169,7 @@ class Component extends DCLogic {
     let body;
     if (t==='prboard') {
       const items = [];
-      for (let w=0; w<8; w++) for (let d=0; d<7; d++) { const dd=data[w].days[d]; if (dd.rating!=='pr') continue; const move=dd.lift.movement||dd.metcon.name||'Workout'; const res=this.logSummaryText(dd)||(dd.lift.log&&dd.lift.log.note)||''; items.push({ move, res, w }); }
+      for (let w=0; w<8; w++) for (let d=0; d<7; d++) { const dd=data[w].days[d]; if (!this.dayHasPR(dd)) continue; const move=dd.lift.movement||dd.metcon.name||'Workout'; const res=this.logSummaryText(dd)||(dd.lift.log&&dd.lift.log.note)||''; items.push({ move, res, w }); }
       items.reverse();
       body = React.createElement('div', null,
         React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'22px', letterSpacing:'.04em', margin:'2px 0 14px' } }, '🏆 PERSONAL RECORDS'),
@@ -2110,15 +2207,21 @@ class Component extends DCLogic {
             r.res ? React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'14px', color:'#f0c064', marginTop:'2px' } }, r.res) : null
           )) : React.createElement('div', { style:{ fontSize:'13px', color:'#b9c4e6' } }, 'אין נתונים לאימון זה')
         ),
-        rm ? React.createElement('div', { style:{ marginTop:'12px', display:'inline-flex', alignItems:'center', gap:'6px', background:'rgba(239,91,37,.2)', border:'1px solid rgba(239,91,37,.5)', borderRadius:'999px', padding:'5px 14px' } },
-          React.createElement('span', { style:{ fontSize:'14px' } }, rm.emoji),
-          React.createElement('span', { style:{ fontWeight:700, fontSize:'12px' } }, rm.label)
+        (rm || this.dayHasPR(day)) ? React.createElement('div', { style:{ marginTop:'12px', display:'flex', gap:'8px', flexWrap:'wrap' } },
+          this.dayHasPR(day) ? React.createElement('div', { style:{ display:'inline-flex', alignItems:'center', gap:'6px', background:'rgba(232,165,58,.22)', border:'1px solid rgba(232,165,58,.6)', borderRadius:'999px', padding:'5px 14px' } },
+            React.createElement('span', { style:{ fontSize:'14px' } }, '🏆'),
+            React.createElement('span', { style:{ fontWeight:700, fontSize:'12px' } }, 'PR')
+          ) : null,
+          rm ? React.createElement('div', { style:{ display:'inline-flex', alignItems:'center', gap:'6px', background:'rgba(239,91,37,.2)', border:'1px solid rgba(239,91,37,.5)', borderRadius:'999px', padding:'5px 14px' } },
+            React.createElement('span', { style:{ fontSize:'14px' } }, rm.emoji),
+            React.createElement('span', { style:{ fontWeight:700, fontSize:'12px' } }, rm.label)
+          ) : null
         ) : null
       );
     } else {
       const wi = this.state.shareWi;
       const rows = [];
-      data[wi].days.forEach((day,di)=>{ if (!this.dayHasPlan(day) && !day.done) return; const title=day.lift.movement||day.metcon.name||'אימון'; const res=this.logSummaryText(day); const rm=this.ratingMeta(day.rating); rows.push({ di, title, res, done:day.done, emoji:rm?rm.emoji:'' }); });
+      data[wi].days.forEach((day,di)=>{ if (!this.dayHasPlan(day) && !day.done) return; const title=day.lift.movement||day.metcon.name||'אימון'; const res=this.logSummaryText(day); const rm=this.ratingMeta(day.rating); rows.push({ di, title, res, done:day.done, emoji:(this.dayHasPR(day)?'🏆':'')+(rm?rm.emoji:'') }); });
       const dn = data[wi].days.filter(x=>x.done).length;
       body = React.createElement('div', null,
         React.createElement('div', { style:{ display:'flex', alignItems:'baseline', gap:'8px', margin:'2px 0 12px' } },
