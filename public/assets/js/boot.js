@@ -36,26 +36,64 @@
 
   // ---- Supabase reads --------------------------------------------------
   async function fetchSharedProgram() {
-    var r = await sb.from("shared_program").select("weeks").eq("id", 1).maybeSingle();
-    return (r.data && r.data.weeks) || null;
+    try {
+      var r = await sb.from("shared_program").select("weeks").eq("id", 1).maybeSingle();
+      return (r.data && r.data.weeks) || null;
+    } catch (e) { return null; }
   }
+  // A failed query (offline / flaky signal / server hiccup) says NOTHING about
+  // whether the row exists — every fetch below reports errors separately so a
+  // network failure can never be mistaken for "fresh user, wipe the device".
   async function fetchMyState(uid) {
-    var r = await sb.from("states").select("tracker,updated_at").eq("user_id", uid).maybeSingle();
-    return r.data || null;
+    try {
+      var r = await sb.from("states").select("tracker,updated_at").eq("user_id", uid).maybeSingle();
+      return { row: r.data || null, error: r.error || null };
+    } catch (e) { return { row: null, error: e }; }
   }
   async function fetchBoard() {
-    var r = await sb.from("board").select("user_id,name,results,weeks,metcons").order("name");
-    return r.data || [];
+    try {
+      var r = await sb.from("board").select("user_id,name,results,weeks,metcons").order("name");
+      return { rows: r.data || [], error: r.error || null };
+    } catch (e) { return { rows: [], error: e }; }
   }
   async function fetchProfile(uid) {
-    var r = await sb.from("profiles").select("name,is_admin,welcome_seen,gender,birth_date").eq("id", uid).maybeSingle();
-    return r.data || { name: "", is_admin: false, welcome_seen: false, gender: null, birth_date: null };
+    try {
+      var r = await sb.from("profiles").select("name,is_admin,welcome_seen,gender,birth_date").eq("id", uid).maybeSingle();
+      if (r.error) throw r.error;
+      return r.data || { name: "", is_admin: false, welcome_seen: false, gender: null, birth_date: null };
+    } catch (e) {
+      return { name: "", is_admin: false, welcome_seen: false, gender: null, birth_date: null, _err: true };
+    }
   }
   // Every registered athlete — the leaderboard is built from this so a user
   // appears the moment their account exists, before they log any workout.
   async function fetchAllProfiles() {
-    var r = await sb.from("profiles").select("id,name,is_admin,gender,birth_date");
-    return r.data || [];
+    try {
+      var r = await sb.from("profiles").select("id,name,is_admin,gender,birth_date");
+      return r.data || [];
+    } catch (e) { return []; }
+  }
+
+  // ---- program scaffold hygiene ----------------------------------------
+  // The shared program must be a SCAFFOLD: plan text only, no personal data.
+  // It used to be published straight from the admin's tracker, logs included —
+  // so every fresh device booted with the admin's old results baked in (and the
+  // admin himself kept "recovering" to that stale snapshot after a wipe).
+  function stripDayLogs(d) {
+    if (!d) return d;
+    d.done = false; d.rest = false; d.rating = ""; d.summary = "";
+    if (d.lift) delete d.lift.log;
+    if (d.metcon)  { delete d.metcon.log;  d.metcon.rx = false; }
+    if (d.metcon2) { delete d.metcon2.log; d.metcon2.rx = false; }
+    if (Array.isArray(d.extras)) d.extras.forEach(function (x) { if (x) { x.result = ""; delete x.log; } });
+    if (d.alt) stripDayLogs(d.alt);
+    return d;
+  }
+  function stripLogs(weeks) {
+    var w;
+    try { w = JSON.parse(JSON.stringify(weeks || [])); } catch (e) { return []; }
+    w.forEach(function (wk) { ((wk && wk.days) || []).forEach(stripDayLogs); });
+    return w;
   }
 
   // ---- competition categories (gender x age bracket) -------------------
@@ -147,9 +185,10 @@
       try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
       syncShow("saved");
     }
-    // Admin also publishes the program scaffold for everyone
+    // Admin also publishes the program scaffold for everyone — STRIPPED of the
+    // admin's own logs (see stripLogs above).
     if (pushCtx.isAdmin && tracker.weeks) {
-      await upsertWithRetry("shared_program", { id: 1, weeks: tracker.weeks, updated_at: new Date().toISOString() });
+      await upsertWithRetry("shared_program", { id: 1, weeks: stripLogs(tracker.weeks), updated_at: new Date().toISOString() });
     }
   }
   function pushState() {
@@ -326,8 +365,9 @@
   // else's change appears live, without a page refresh.
   var rtTimer = null;
   async function refreshOthers(uid) {
-    var rows = await fetchBoard();
-    var byId = {}; rows.forEach(function (r) { byId[r.user_id] = r; });
+    var fb = await fetchBoard();
+    if (fb.error) return;   // keep showing the last good board, never a blank one
+    var byId = {}; fb.rows.forEach(function (r) { byId[r.user_id] = r; });
     var profs = await fetchAllProfiles();
     var board = profs
       .filter(function (p) { return p.id !== uid; })
@@ -573,6 +613,33 @@
     });
   }
 
+  // ---- no-connection gate ----------------------------------------------
+  // Shown only when the server is unreachable AND the device has no local copy
+  // to boot from. Retries until the server answers — never boots "blind empty",
+  // because an empty boot would later push an empty tracker over the cloud row.
+  function netOverlay(show) {
+    var el = document.getElementById("cfbyNet");
+    if (!show) { if (el) el.remove(); return; }
+    if (el || !document.body) return;
+    el = document.createElement("div");
+    el.id = "cfbyNet";
+    el.style.cssText = "position:fixed;inset:0;z-index:100001;background:#0f1830;color:#eaf0ff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font:600 15px 'Heebo',system-ui,sans-serif;direction:rtl;text-align:center;padding:24px";
+    el.innerHTML = '<div style="font-size:34px">📡</div><div>אין חיבור לשרת</div>' +
+      '<div style="font-size:13px;color:#8ea3c9;font-weight:400">הנתונים שלך שמורים בענן — מתחבר שוב אוטומטית…</div>';
+    document.body.appendChild(el);
+  }
+  window.__cfbyNet = netOverlay;
+  async function waitForServer(uid) {
+    netOverlay(true);
+    for (var i = 1; ; i++) {
+      await new Promise(function (r) { setTimeout(r, 3000); });
+      // A live network but a dead token also lands here — nudge auth every ~15s.
+      if (i % 5 === 0) { try { await sb.auth.refreshSession(); } catch (e) {} }
+      var st = await fetchMyState(uid);
+      if (!st.error) { netOverlay(false); return st; }
+    }
+  }
+
   // ---- local dev preview (no Supabase) ---------------------------------
   // http://localhost:PORT/app.html?dev=1 renders the app with demo data so
   // layout/CSS work doesn't require a real login. localhost-only — a hosted
@@ -612,7 +679,9 @@
 
     // First login: collect gender + birth date (needed for the competition
     // category). Blocks the app until answered, then refetches the profile.
-    if (!prof.gender || !prof.birth_date) {
+    // Skipped when the profile FETCH failed — no signal did the user never
+    // answer, and re-asking (then upserting over a good row) would be wrong.
+    if (!prof._err && (!prof.gender || !prof.birth_date)) {
       try {
         var got = await askProfileDetails();
         await sb.from("profiles").upsert({ id: uid, gender: got.gender, birth_date: got.birth_date });
@@ -636,11 +705,24 @@
     // stamp newer than the server row), the local copy wins and is pushed up —
     // otherwise a push lost to the mobile lifecycle would be erased here by the
     // stale server copy, which is exactly the "my workout disappeared" bug.
-    var mine = await fetchMyState(uid);
     var localTracker = lsGet(K.TRACKER_KEY);
+    var st = await fetchMyState(uid);
+    if (st.error && !(localTracker && localTracker.weeks)) {
+      // Server unreachable and nothing local to boot from — wait, don't guess.
+      st = await waitForServer(uid);
+    }
+    var mine = st.row;
     var dirtyTs = parseInt(rawGet(DIRTY_KEY), 10) || 0;
     var keepLocal = false;
-    if (mine && mine.tracker && mine.tracker.weeks) {
+    if (st.error) {
+      // Server unreachable but the device has a copy: boot from it, touch
+      // NOTHING. Only data that was already marked unsynced gets pushed once
+      // the connection returns. (This failure used to fall into the "fresh
+      // user" branch below — wiping the device and then overwriting the cloud
+      // row with an empty scaffold. That was the repeating data loss.)
+      keepLocal = dirtyTs > 0;
+      syncShow(navigator.onLine === false ? "offline" : "error");
+    } else if (mine && mine.tracker && mine.tracker.weeks) {
       var serverTs = mine.updated_at ? Date.parse(mine.updated_at) || 0 : 0;
       if (localTracker && localTracker.weeks && dirtyTs > serverTs) {
         keepLocal = true;                       // unsynced local changes are newer
@@ -649,12 +731,14 @@
         try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
       }
     } else {
-      // No server row: fresh user, or an admin wiped this account's data. The
-      // server wins outright — clear any stale local copy so deleted data can
-      // never resurrect from a device, then seed the published program.
+      // The server ANSWERED and there is no row: confirmed fresh user, or an
+      // admin wiped this account's data. The server wins outright — clear any
+      // stale local copy so deleted data can never resurrect from a device,
+      // then seed the published program (scaffold only, stripped of any logs
+      // an older buggy publish may have left in shared_program).
       try { localStorage.removeItem(K.TRACKER_KEY); localStorage.removeItem(DIRTY_KEY); } catch (e) {}
       var prog = await fetchSharedProgram();    // fresh user -> admin's published program
-      if (prog) lsSetRaw(K.TRACKER_KEY, { v: 2, weeks: prog });
+      if (prog) lsSetRaw(K.TRACKER_KEY, { v: 2, weeks: stripLogs(prog) });
       // else: leave empty -> the app builds its built-in program
     }
 
@@ -663,9 +747,9 @@
     //    they log a workout. Their board row (completed counts + result) is
     //    merged in when it exists. Everyone competes, admins included; "you" is
     //    rendered by the app separately, so exclude only self here.
-    var rows = await fetchBoard();
+    var fb = await fetchBoard();
     var byId = {};
-    rows.forEach(function (r) { byId[r.user_id] = r; });
+    fb.rows.forEach(function (r) { byId[r.user_id] = r; });
     var profiles = await fetchAllProfiles();
     var board = profiles
       .filter(function (p) { return p.id !== uid; })
@@ -675,10 +759,14 @@
                  metcons: (r && r.metcons) || {}, category: categoryOf(p.gender, p.birth_date) };
       });
     var myRow = byId[uid];
+    // If the board fetch failed, my own fields fall back to the previous local
+    // copy — otherwise a flaky load would blank myResults and the next push
+    // would erase the weekly results on the server too.
+    var prevB = lsGet(K.BOARD_KEY) || {};
     lsSetRaw(K.BOARD_KEY, {
-      board: board,
-      myName: (myRow && myRow.name) || prof.name || (session.user.email || "").split("@")[0],
-      myResults: (myRow && myRow.results) || {},
+      board: (fb.error && Array.isArray(prevB.board) && prevB.board.length) ? prevB.board : board,
+      myName: (myRow && myRow.name) || (fb.error && prevB.myName) || prof.name || (session.user.email || "").split("@")[0],
+      myResults: (myRow && myRow.results) || (fb.error && prevB.myResults) || {},
       myCategory: categoryOf(prof.gender, prof.birth_date),
       myGender: prof.gender || null,
       myAge: ageFrom(prof.birth_date)
@@ -692,8 +780,9 @@
 
     // One-time board sync on load: seeding above happens BEFORE the interceptor,
     // so a user who already completed workouts (in their state) wouldn't be on
-    // the board until their next change. Push now so they appear immediately.
-    pushBoard();
+    // the board until their next change. Push now so they appear immediately —
+    // but never after a failed board fetch (we'd be pushing fallback data).
+    if (!fb.error) pushBoard();
 
     // expose a manual sign-out for the app if needed
     window.cfbySignOut = async function () { await sb.auth.signOut(); location.replace("index.html"); };
