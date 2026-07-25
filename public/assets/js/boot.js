@@ -13,6 +13,10 @@
    ============================================================ */
 (function () {
   "use strict";
+  // Bumped on EVERY deploy, together with public/version.json. The pair powers
+  // the self-update check below — installed PWAs kept running stale bundles
+  // for days, and "close the app fully and reopen" proved unreliable advice.
+  var BUILD = "2026-07-25.4";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -150,6 +154,35 @@
     if (kind === "saved") syncHideT = setTimeout(function () { el.style.opacity = "0"; }, 1600);
   }
   window.__cfbySync = syncShow;
+
+  // ---- self-update ------------------------------------------------------
+  // version.json is bumped on every deploy. If the server says a newer build
+  // exists and everything is synced, reload — the SW is network-first, so the
+  // reload picks up the new bundle. One attempt per build (no reload loops),
+  // and NEVER over unsynced data.
+  async function checkFreshBundle() {
+    try {
+      var r = await fetch("version.json?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) return;
+      var j = await r.json();
+      if (!j || !j.build || j.build === BUILD) return;
+      if (rawGet(DIRTY_KEY) !== null) return;
+      if (rawGet("cfby_upd_v1") === j.build) return;
+      try { localStorage.setItem("cfby_upd_v1", j.build); } catch (e) {}
+      location.reload();
+    } catch (e) {}
+  }
+  // Tiny build tag so "which code is my phone actually running?" is answerable
+  // with one glance instead of another guessing round.
+  function versionTag() {
+    if (!document.body || document.getElementById("cfbyVer")) return;
+    var el = document.createElement("div");
+    el.id = "cfbyVer";
+    el.textContent = "v" + BUILD;
+    el.style.cssText = "position:fixed;right:8px;bottom:calc(4px + env(safe-area-inset-bottom,0px));z-index:99989;" +
+      "font:400 9px monospace;color:rgba(0,0,0,.35);pointer-events:none;direction:ltr";
+    document.body.appendChild(el);
+  }
 
   // A push that fails on a stale JWT (app resumed from background after the
   // token expired) refreshes the session once and retries.
@@ -306,16 +339,15 @@
     if (t1) { clearTimeout(t1); t1 = null; doPushState(); }
     if (t2) { clearTimeout(t2); t2 = null; doPushBoard(); }
   }
-  var BOOT_TS = Date.now();
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState === "hidden") { flushPending(); keepalivePush(); }
     else if (document.visibilityState === "visible" && pushCtx.uid) {
-      // Coming back to a live PWA: sync anything pending right away. If fully
-      // synced and this page has been running for >12h, reload — installed
-      // PWAs keep pages alive for days, which is how devices kept running
-      // old (buggy) bundles long after a fix was deployed.
+      // Coming back to a live PWA: sync anything pending right away, and ask
+      // the server whether a newer build exists (precise, replaces the old
+      // 12h-age heuristic) — installed PWAs keep pages alive for days, which
+      // is how devices kept running old (buggy) bundles after a fix shipped.
       if (rawGet(DIRTY_KEY) !== null) { doPushState(); doPushBoard(); }
-      else if (Date.now() - BOOT_TS > 43200000) location.reload();
+      else checkFreshBundle();
     }
   });
   window.addEventListener("pagehide", function () { flushPending(); keepalivePush(); });
@@ -662,6 +694,7 @@
     await loadScript("assets/js/html2canvas.js");
     await loadScript("assets/js/dc-runtime.js");
     await revealApp();
+    versionTag();
   }
 
   // ---- main ------------------------------------------------------------
@@ -792,6 +825,8 @@
     await loadScript("assets/js/html2canvas.js");
     await loadScript("assets/js/dc-runtime.js");
     await revealApp();
+    versionTag();
+    checkFreshBundle();   // fire-and-forget: reloads only if a newer build is live
 
     // 5) admins get the in-app user-management panel (floating button)
     if (isAdmin) { try { injectAdminPanel(uid); } catch (e) { console.error("[admin panel]", e); } }
