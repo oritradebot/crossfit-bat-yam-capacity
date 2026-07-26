@@ -379,7 +379,7 @@
           </div>
           <div style="display:flex; flex-direction:column; gap:7px;">
             <sc-for list="{{ boardRows }}" as="r" hint-placeholder-count="3">
-              <div style="{{ r.rowStyle }}">
+              <div onClick="{{ onBoardRow }}" data-id="{{ r.rid }}" title="לפרופיל המתאמן" style="{{ r.rowStyle }}">
                 <span style="{{ r.rankStyle }}">{{ r.medal }}</span>
                 <div style="display:flex; align-items:center; gap:7px; min-width:0;">
                   <span dir="auto" style="font-weight:700; font-size:14px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ r.name }}</span>
@@ -874,6 +874,62 @@
     </div>
   </sc-if>
 
+  <sc-if value="{{ peerOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closePeer }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:130; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
+      <div dir="rtl" onClick="{{ stop }}" style="background:#fff; border-radius:20px; width:100%; max-width:400px; max-height:86vh; overflow:auto; box-shadow:0 20px 60px rgba(12,18,34,.4);">
+        <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; padding:22px 24px; display:flex; align-items:center; gap:14px;">
+          <div style="width:56px; height:56px; border-radius:50%; background:var(--blue); display:flex; align-items:center; justify-content:center; font-size:26px; flex:none;">👤</div>
+          <div style="flex:1; min-width:0;">
+            <div dir="auto" style="font-family:'Oswald',sans-serif; font-weight:700; font-size:20px; letter-spacing:.03em;">{{ peerName }}</div>
+            <div style="display:inline-block; margin-top:5px; background:rgba(239,91,37,.25); border:1px solid rgba(239,91,37,.5); border-radius:999px; padding:3px 12px; font-size:12px; font-weight:700;">{{ peerCategory }}</div>
+          </div>
+          <button onClick="{{ closePeer }}" style="flex:none; background:rgba(255,255,255,.14); border:none; color:#fff; width:32px; height:32px; border-radius:9px; font-size:16px; cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:20px 24px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
+            <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">מין</div><div style="font-weight:700; font-size:16px; color:var(--ink);">{{ peerGender }}</div></div>
+            <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">גיל</div><div style="font-weight:700; font-size:16px; color:var(--ink);">{{ peerAge }}</div></div>
+            <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">סה"כ אימונים</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--blue);">{{ peerTotal }}</div></div>
+            <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">מיקום בקטגוריה</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--orange);">{{ peerCatRank }}</div></div>
+          </div>
+          <sc-if value="{{ peerStale }}" hint-placeholder-val="{{ false }}">
+            <div style="background:rgba(232,165,58,.12); border:1px solid rgba(232,165,58,.4); border-radius:10px; padding:10px 12px; font-size:12px; color:var(--muted); margin-bottom:14px;">התגים והשיאים יופיעו אחרי שהמתאמן יפתח את האפליקציה בפעם הבאה.</div>
+          </sc-if>
+          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px;">
+            <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">🎖️ תגים</span>
+            <span style="font-size:11px; color:var(--muted); font-weight:700;">{{ peerBadgeCount }}</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:18px;">
+            <sc-for list="{{ peerBadges }}" as="b" hint-placeholder-count="6">
+              <div style="{{ b.cardStyle }}">
+                <span style="{{ b.iconStyle }}">{{ b.icon }}</span>
+                <span style="{{ b.labelStyle }}">{{ b.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:10px;">🏆 שיאים אחרונים</div>
+          <sc-if value="{{ peerHasPRs }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <sc-for list="{{ peerPRs }}" as="pr" hint-placeholder-count="3">
+                <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1px solid var(--line); border-inline-start:3px solid var(--orange); border-radius:10px; padding:10px 12px;">
+                  <span style="font-size:16px; flex:none;">🏆</span>
+                  <div style="flex:1; min-width:0;">
+                    <div dir="auto" style="font-weight:700; font-size:14px; color:var(--ink);">{{ pr.move }}</div>
+                    <div dir="auto" style="font-family:'Oswald',sans-serif; font-weight:700; font-size:13px; color:var(--blue);">{{ pr.res }}</div>
+                  </div>
+                  <span style="font-size:11px; color:var(--muted); flex:none;">{{ pr.week }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ peerNoPRs }}" hint-placeholder-val="{{ true }}">
+            <div style="text-align:center; color:var(--muted); font-size:13px; padding:14px;">עדיין אין שיאים משותפים.</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ liftChartOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeLiftChart }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:130; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
       <div dir="rtl" onClick="{{ stop }}" style="background:#fff; border-radius:20px; width:100%; max-width:600px; box-shadow:0 20px 60px rgba(12,18,34,.4); overflow:hidden;">
@@ -1248,6 +1304,7 @@ class Component extends DCLogic {
     myGender: null,
     myAge: null,
     profileOpen: false,
+    peerId: null,
     selCategory: 'all',
     myName: '',
     editingName: false,
@@ -1284,7 +1341,7 @@ class Component extends DCLogic {
     // my display name, my results). saveBoard() writes this key; without a read
     // the board would be dropped on every load.
     try { const raw = localStorage.getItem(this.BOARD_KEY); if (raw) { const b = JSON.parse(raw); this.setState({
-      board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {}, category: a.category || null, metcons: a.metcons || {} })),
+      board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {}, category: a.category || null, metcons: a.metcons || {}, age: (a.age!=null?a.age:null), pub: a.pub || null })),
       myName: b.myName || '', nameDraft: b.myName || '', myResults: b.myResults || {},
       myTarget: b.myTarget || this.WEEKLY_TARGET, myGoal: b.myGoal || '', myCategory: b.myCategory || null,
       myGender: b.myGender || null, myAge: (b.myAge != null ? b.myAge : null)
@@ -1295,7 +1352,7 @@ class Component extends DCLogic {
   }
   reloadOthers() {
     try { const raw = localStorage.getItem(this.BOARD_KEY); if (raw) { const b = JSON.parse(raw);
-      this.setState({ board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {}, category: a.category || null, metcons: a.metcons || {} })) });
+      this.setState({ board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {}, category: a.category || null, metcons: a.metcons || {}, age: (a.age!=null?a.age:null), pub: a.pub || null })) });
     } } catch (e) {}
   }
   weekStats(wi) {
@@ -1380,6 +1437,38 @@ class Component extends DCLogic {
   myTotalScore(catFilter) { let s=0; for (let w=0; w<8; w++) { const me=this.computeWeek(w, catFilter).find(e=>e.you); s += me?me.points:0; } return Math.round(s*10)/10; }
   CAT_LABELS = { 'teen men':'TEEN · גברים', 'teen women':'TEEN · נשים', 'elite men':'ELITE · גברים', 'elite women':'ELITE · נשים', 'masters men':'MASTERS · גברים', 'masters women':'MASTERS · נשים' };
   catLabel(c) { return this.CAT_LABELS[c] || c || '—'; }
+  // Achievement badges, tiered. Computed from a small counter object so the
+  // SAME definitions serve both my own profile (counters from my tracker) and
+  // any peer's public card (counters from their published board.pub summary):
+  // t=total workouts, s=best streak, p=PRs, rx=RX metcons, r9=RPE9+ sessions,
+  // fw=full weeks. Thresholds must match boot.js publicSummary() semantics.
+  badgeList(c) {
+    c = c || {};
+    const t=c.t||0, s=c.s||0, p=c.p||0, rx=c.rx||0, r9=c.r9||0, fw=c.fw||0;
+    return [
+      { icon:'🎯', label:'אימון ראשון', earned:t>=1 },
+      { icon:'⭐', label:'10 אימונים', earned:t>=10 },
+      { icon:'🚀', label:'25 אימונים', earned:t>=25 },
+      { icon:'👑', label:'40 אימונים', earned:t>=40 },
+      { icon:'🏆', label:'שיא ראשון', earned:p>=1 },
+      { icon:'🥇', label:'5 שיאים', earned:p>=5 },
+      { icon:'💎', label:'10 שיאים', earned:p>=10 },
+      { icon:'🔥', label:'רצף 5 ימים', earned:s>=5 },
+      { icon:'⚡', label:'רצף 10 ימים', earned:s>=10 },
+      { icon:'💪', label:'שבוע מלא', earned:fw>=1 },
+      { icon:'📅', label:'3 שבועות מלאים', earned:fw>=3 },
+      { icon:'🏅', label:'בלוק מושלם', earned:fw>=8 },
+      { icon:'🔰', label:'RX ראשון', earned:rx>=1 },
+      { icon:'🎖️', label:'10 מטקוני RX', earned:rx>=10 },
+      { icon:'🥵', label:'5 אימוני RPE 9+', earned:r9>=5 }
+    ];
+  }
+  badgeCards(list) {
+    return list.map(b=>({ icon:b.icon, label:b.label,
+      cardStyle:'display:flex; flex-direction:column; align-items:center; gap:5px; padding:12px 4px; border-radius:12px; text-align:center; ' + (b.earned ? 'background:rgba(239,91,37,.1); border:1px solid rgba(239,91,37,.35);' : 'background:var(--log); border:1px solid var(--line);'),
+      iconStyle:'font-size:24px; line-height:1; ' + (b.earned ? '' : 'filter:grayscale(1); opacity:.4;'),
+      labelStyle:'font-size:10.5px; font-weight:700; color:' + (b.earned ? 'var(--ink)' : 'var(--muted)') + ';' }));
+  }
   catPillStyle(active) { return 'border:none; cursor:pointer; padding:7px 14px; border-radius:999px; font-weight:700; font-size:12.5px; white-space:nowrap; transition:all .15s; ' + (active ? 'background:var(--orange); color:#fff;' : 'background:#eeede8; color:var(--muted);'); }
   segLight(active) { return 'border:none; cursor:pointer; padding:8px 18px; border-radius:999px; font-weight:700; font-size:13px; transition:all .15s; ' + (active ? 'background:var(--navy); color:#fff;' : 'background:#eeede8; color:var(--muted);'); }
   saveBoard() { try { localStorage.setItem(this.BOARD_KEY, JSON.stringify({ board:this.state.board, myName:this.state.myName, myResults:this.state.myResults, myTarget:this.state.myTarget, myGoal:this.state.myGoal })); } catch (e) {} }
@@ -1901,16 +1990,17 @@ class Component extends DCLogic {
       for (let w=0; w<8; w++) { const es = this.computeWeek(w, catFilter); if (es.active) activeWeeks++; es.forEach(e=>{ const t = tot[e.id] || (tot[e.id] = { name:e.name, you:e.you, sum:0 }); t.sum += e.points; }); }
       // inactive (not-yet-started) weeks contribute 0 points, so the average
       // divides by the weeks actually played — not a flat 8
-      ranked = Object.keys(tot).map(k=>({ name:tot[k].name, you:tot[k].you, score:Math.round(tot[k].sum*10)/10, sub:'ממוצע '+(activeWeeks ? Math.round(tot[k].sum/activeWeeks*10)/10 : 0) })).sort((a,b)=>a.score-b.score);
+      ranked = Object.keys(tot).map(k=>({ id:k, name:tot[k].name, you:tot[k].you, score:Math.round(tot[k].sum*10)/10, sub:'ממוצע '+(activeWeeks ? Math.round(tot[k].sum/activeWeeks*10)/10 : 0) })).sort((a,b)=>a.score-b.score);
     } else {
-      ranked = wkEntrants.map(e=>({ name:e.name, you:e.you, score:e.points, sub:e.placement?('#'+Math.round(e.placement)):'—' })).sort((a,b)=>a.score-b.score);
+      ranked = wkEntrants.map(e=>({ id:e.id, name:e.name, you:e.you, score:e.points, sub:e.placement?('#'+Math.round(e.placement)):'—' })).sort((a,b)=>a.score-b.score);
     }
     const boardRows = ranked.map((a,i)=>({
       // the "you" entrant's name carries a text suffix from computeWeek(); the row
       // already renders a separate "אתה" pill, so showing both wastes phone width
       name:(a.you ? String(a.name).replace(' (אתה)','') : a.name), score:a.score, cons:a.sub, you:a.you,
+      rid: String(a.id),
       medal: i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1),
-      rowStyle: (a.you ? 'background:rgba(239,91,37,.1); border:1px solid rgba(239,91,37,.45);' : 'background:#fff; border:1px solid var(--line);') + ' display:grid; grid-template-columns:44px 1fr 74px 74px; align-items:center; gap:8px; padding:12px 14px; border-radius:12px;',
+      rowStyle: (a.you ? 'background:rgba(239,91,37,.1); border:1px solid rgba(239,91,37,.45);' : 'background:#fff; border:1px solid var(--line);') + ' display:grid; grid-template-columns:44px 1fr 74px 74px; align-items:center; gap:8px; padding:12px 14px; border-radius:12px; cursor:pointer;',
       rankStyle: "font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; text-align:center;" + (i<3 ? '' : ' color:var(--muted);')
     }));
     const boardWeekPills = data.map((wk,wi)=>({ wi, n:wi+1, style:this.pillStyle(wi===bw) }));
@@ -1948,21 +2038,33 @@ class Component extends DCLogic {
       'font-size:11px; font-weight:700; margin-top:6px; color:' +
       (rankDelta>0 ? '#1d6a3f' : rankDelta<0 ? '#d8342b' : 'var(--muted)') + ';';
     const genderLabel = this.state.myGender==='female' ? 'אישה' : (this.state.myGender==='male' ? 'גבר' : '—');
-    let fullWeek = false;
-    for (let w=0; w<8; w++) { if (this.weekStats(w).completed >= this.myTargetVal()) { fullWeek = true; break; } }
-    const badges = [
-      { icon:'🎯', label:'אימון ראשון', earned: totalDone>=1 },
-      { icon:'🏆', label:'שיא ראשון', earned: prList.length>=1 },
-      { icon:'🔥', label:'רצף 5', earned: best>=5 },
-      { icon:'💪', label:'שבוע מלא', earned: fullWeek },
-      { icon:'⭐', label:'10 אימונים', earned: totalDone>=10 },
-      { icon:'👑', label:'40 אימונים', earned: totalDone>=40 }
-    ];
+    // My badge counters — same shape as the pub summary boot.js publishes, so
+    // my card and what others see of me can never disagree.
+    let fullWeeks = 0;
+    for (let w=0; w<8; w++) { if (this.weekStats(w).completed >= this.myTargetVal()) fullWeeks++; }
+    let rxCount = 0, r9Count = 0;
+    data.forEach(wk=>wk.days.forEach(d0=>[d0, d0.alt].forEach(dd=>{
+      if (!dd) return;
+      if (dd.done && this.rpeVal(dd.rating)>=9) r9Count++;
+      [dd.metcon, dd.metcon2].forEach(m=>{ if (m && m.rx && this.metconScore(m)) rxCount++; });
+    })));
+    const badges = this.badgeList({ t: totalDone, s: best, p: prList.length, rx: rxCount, r9: r9Count, fw: fullWeeks });
     const badgeCount = badges.filter(b=>b.earned).length + ' / ' + badges.length;
-    const badgeCards = badges.map(b=>({ icon:b.icon, label:b.label,
-      cardStyle:'display:flex; flex-direction:column; align-items:center; gap:5px; padding:12px 4px; border-radius:12px; text-align:center; ' + (b.earned ? 'background:rgba(239,91,37,.1); border:1px solid rgba(239,91,37,.35);' : 'background:var(--log); border:1px solid var(--line);'),
-      iconStyle:'font-size:24px; line-height:1; ' + (b.earned ? '' : 'filter:grayscale(1); opacity:.4;'),
-      labelStyle:'font-size:10.5px; font-weight:700; color:' + (b.earned ? 'var(--ink)' : 'var(--muted)') + ';' }));
+    const badgeCards = this.badgeCards(badges);
+
+    // ---- peer profile (opened by tapping a row on the leaderboard) ----
+    const peer = this.state.peerId!=null ? this.state.board.find(a=>String(a.id)===String(this.state.peerId)) : null;
+    const peerPub = (peer && peer.pub) || {};
+    const peerBadgeList = this.badgeList(peerPub);
+    let peerCatRank = '—';
+    if (peer && peer.category) {
+      const tot = {};
+      for (let w=0; w<8; w++) this.computeWeek(w, peer.category).forEach(e=>{ const t=tot[e.id]||(tot[e.id]={id:e.id,sum:0}); t.sum+=e.points; });
+      const r = Object.values(tot).sort((a,b)=>a.sum-b.sum);
+      const idx = r.findIndex(x=>String(x.id)===String(peer.id));
+      if (idx>=0) peerCatRank = (idx+1)+' / '+r.length;
+    }
+    const peerPRs = (Array.isArray(peerPub.prs) ? peerPub.prs : []).map(x=>({ move:String(x.move||''), res:String(x.res||''), week:String(x.week||'') }));
 
     return {
       logo: 'assets/logo.png',
@@ -1976,6 +2078,21 @@ class Component extends DCLogic {
       openProfile: ()=>this.setState({ profileOpen:true }),
       closeProfile: ()=>this.setState({ profileOpen:false }),
       profileOpen: this.state.profileOpen,
+      onBoardRow: (e)=>{ const id=e.currentTarget.dataset.id; if (id==='me') this.setState({ profileOpen:true }); else this.setState({ peerId:id }); },
+      closePeer: ()=>this.setState({ peerId:null }),
+      peerOpen: !!peer,
+      peerName: peer ? (peer.name||'ללא שם') : '',
+      peerCategory: peer ? this.catLabel(peer.category) : '—',
+      peerGender: peer ? (String(peer.category||'').indexOf('women')>=0 ? 'אישה' : (peer.category ? 'גבר' : '—')) : '—',
+      peerAge: (peer && peer.age!=null) ? String(peer.age) : '—',
+      peerTotal: peerPub.t||0,
+      peerCatRank,
+      peerBadges: this.badgeCards(peerBadgeList),
+      peerBadgeCount: peerBadgeList.filter(b=>b.earned).length + ' / ' + peerBadgeList.length,
+      peerPRs,
+      peerHasPRs: peerPRs.length>0,
+      peerNoPRs: peerPRs.length===0,
+      peerStale: !!(peer && !peer.pub),
       profileName: this.state.myName || 'מתאמן',
       profileGender: genderLabel,
       profileAge: (this.state.myAge!=null ? String(this.state.myAge) : '—'),

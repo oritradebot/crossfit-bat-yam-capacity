@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "1.5.2";
+  var BUILD = "1.6.0";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -57,18 +57,27 @@
   }
   async function fetchBoard() {
     try {
-      var r = await sb.from("board").select("user_id,name,results,weeks,metcons").order("name");
+      var r = await sb.from("board").select("user_id,name,results,weeks,metcons,pub").order("name");
       return { rows: r.data || [], error: r.error || null };
     } catch (e) { return { rows: [], error: e }; }
   }
   async function fetchProfile(uid) {
     try {
-      var r = await sb.from("profiles").select("name,is_admin,welcome_seen,gender,birth_date").eq("id", uid).maybeSingle();
+      var r = await sb.from("profiles").select("name,is_admin,welcome_seen,gender,birth_date,announcement_seen").eq("id", uid).maybeSingle();
       if (r.error) throw r.error;
-      return r.data || { name: "", is_admin: false, welcome_seen: false, gender: null, birth_date: null };
+      return r.data || { name: "", is_admin: false, welcome_seen: false, gender: null, birth_date: null, announcement_seen: null };
     } catch (e) {
-      return { name: "", is_admin: false, welcome_seen: false, gender: null, birth_date: null, _err: true };
+      return { name: "", is_admin: false, welcome_seen: false, gender: null, birth_date: null, announcement_seen: null, _err: true };
     }
+  }
+  // The block announcement the admin published (or null). Fetched separately
+  // from the program: it is read on EVERY boot, while the program row's weeks
+  // blob is only pulled for fresh users.
+  async function fetchAnnouncement() {
+    try {
+      var r = await sb.from("shared_program").select("announcement").eq("id", 1).maybeSingle();
+      return (r.data && r.data.announcement) || null;
+    } catch (e) { return null; }
   }
   // Every registered athlete — the leaderboard is built from this so a user
   // appears the moment their account exists, before they log any workout.
@@ -280,6 +289,48 @@
     return out;
   }
 
+  // Public profile summary — the small card anyone can open from the board.
+  // Only aggregate counters + the last 3 PRs leave the device; the full private
+  // tracker stays in `states`. Counter thresholds must match the app's
+  // badgeList() or a viewer would see different badges than the owner does.
+  function publicSummary(tracker, myTarget) {
+    var wk = (tracker && tracker.weeks) || [];
+    var target = parseInt(myTarget, 10) || 5;
+    var t = 0, best = 0, run = 0, p = 0, rx = 0, r9 = 0, fw = 0, prs = [];
+    function prSummary(dd) {
+      var parts = [];
+      var L = (dd.lift && dd.lift.log) || {};
+      if (L.weight || L.reps) parts.push([L.weight && (L.weight + "kg"), L.reps && (L.reps + " reps")].filter(Boolean).join(" × "));
+      var M = (dd.metcon && dd.metcon.log) || {};
+      if (M.mode === "time" && M.time) parts.push(M.time);
+      else if (M.rounds || M.reps) parts.push([M.rounds && (M.rounds + " rds"), M.reps && (M.reps + " reps")].filter(Boolean).join(" + "));
+      return parts.join(" · ");
+    }
+    for (var w = 0; w < wk.length; w++) {
+      var days = (wk[w] && wk[w].days) || [], wDone = 0;
+      for (var d = 0; d < days.length; d++) {
+        var day = days[d]; if (!day) continue;
+        if (day.done) { t++; wDone++; }
+        if (day.alt && day.alt.done) { t++; wDone++; }
+        if (day.done || (day.alt && day.alt.done)) { run++; if (run > best) best = run; } else run = 0;
+        var sessions = [day, day.alt];
+        for (var s = 0; s < sessions.length; s++) {
+          var dd = sessions[s]; if (!dd) continue;
+          if (dd.pr || dd.rating === "pr") {
+            p++;
+            var move = (dd.lift && dd.lift.movement) || (dd.metcon && dd.metcon.name) || "אימון";
+            prs.push({ move: move, res: prSummary(dd), week: "W" + (w + 1) });
+          }
+          if (dd.done && parseInt(dd.rating, 10) >= 9) r9++;
+          var e1 = metconEntry(dd.metcon);  if (e1 && e1.rx) rx++;
+          var e2 = metconEntry(dd.metcon2); if (e2 && e2.rx) rx++;
+        }
+      }
+      if (wDone >= target) fw++;
+    }
+    return { t: t, s: best, p: p, rx: rx, r9: r9, fw: fw, prs: prs.slice(-3).reverse() };
+  }
+
   async function doPushBoard() {
     if (!pushCtx.uid) return;
     var b = lsGet(K.BOARD_KEY) || {};
@@ -290,6 +341,7 @@
       results: b.myResults || {},
       weeks: summarizeWeeks(tracker, b.myResults),
       metcons: extractMetcons(tracker),
+      pub: publicSummary(tracker, b.myTarget),
       updated_at: new Date().toISOString()
     });
     // No retry loop needed: the board row is derived from the tracker and is
@@ -409,7 +461,7 @@
     var profs = await fetchAllProfiles();
     var board = profs
       .filter(function (p) { return p.id !== uid; })
-      .map(function (p) { var r = byId[p.id]; return { id: p.id, name: (r && r.name) || p.name || "", weeks: (r && r.weeks) || [], metcons: (r && r.metcons) || {}, category: categoryOf(p.gender, p.birth_date) }; });
+      .map(function (p) { var r = byId[p.id]; return { id: p.id, name: (r && r.name) || p.name || "", weeks: (r && r.weeks) || [], metcons: (r && r.metcons) || {}, category: categoryOf(p.gender, p.birth_date), age: ageFrom(p.birth_date), pub: (r && r.pub) || null }; });
     var cur = lsGet(K.BOARD_KEY) || {};
     cur.board = board;
     suppressPush = true;
@@ -460,7 +512,17 @@
       ".cfa-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}" +
       ".cfa-bk{background:#1b2b4d;border:1px solid #2e4a7d;border-radius:8px;color:#9fc2ff;font:700 12px 'Heebo',sans-serif;padding:8px 12px;cursor:pointer}" +
       ".cfa-bk:hover{background:#2e4a7d;color:#fff}" +
-      ".cfa-bkinfo{font-size:12px;color:#8ea3c9}.cfa-bkinfo.warn{color:#ffb74d;font-weight:700}";
+      ".cfa-bkinfo{font-size:12px;color:#8ea3c9}.cfa-bkinfo.warn{color:#ffb74d;font-weight:700}" +
+      ".cfa-ann{background:#0f1830;border:1px solid #243657;border-radius:12px;padding:14px;margin-bottom:16px}" +
+      ".cfa-ann h3{font-size:14px;font-weight:800;margin:0 0 4px;color:#eaf0ff}" +
+      ".cfa-ann .sub{font-size:11px;color:#8ea3c9;margin:0 0 10px}" +
+      ".cfa-ann input,.cfa-ann textarea{width:100%;background:#16233f;border:1px solid #243657;border-radius:8px;padding:9px 10px;color:#eaf0ff;font:14px 'Heebo',sans-serif;margin-bottom:8px;box-sizing:border-box}" +
+      ".cfa-ann textarea{resize:vertical;min-height:90px}" +
+      ".cfa-ann .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}" +
+      ".cfa-pub{background:#ef5b25;color:#fff;border:none;border-radius:8px;padding:10px 14px;font:800 13px 'Heebo',sans-serif;cursor:pointer}" +
+      ".cfa-prev{background:#1b2b4d;border:1px solid #2e4a7d;color:#9fc2ff;border-radius:8px;padding:10px 14px;font:700 12px 'Heebo',sans-serif;cursor:pointer}" +
+      ".cfa-annclr{background:transparent;border:1px solid #e74c3c;color:#e74c3c;border-radius:8px;padding:10px 14px;font:700 12px 'Heebo',sans-serif;cursor:pointer}" +
+      ".cfa-annst{font-size:12px;color:#8ea3c9}";
     document.head.appendChild(css);
 
     var ov = document.createElement("div");
@@ -479,6 +541,18 @@
           '<button class="cfa-bk" id="cfaRs">♻️ שחזור מגיבוי</button>' +
           '<span class="cfa-bkinfo" id="cfaBkInfo"></span>' +
           '<input type="file" id="cfaRsFile" accept="application/json,.json" style="display:none">' +
+        '</div>' +
+        '<div class="cfa-ann">' +
+          '<h3>📣 הודעת בלוק חדש</h3>' +
+          '<p class="sub">תוצג כפופאפ חגיגי 🎖️ עם קונפטי — פעם אחת לכל מתאמן, בכניסה הבאה שלו לאפליקציה.</p>' +
+          '<input id="cfaAnnT" placeholder="כותרת — למשל: בלוק חדש יוצא לדרך! 🎉">' +
+          '<textarea id="cfaAnnB" placeholder="דגשים, הערות, רעיונות והכנה לבלוק…"></textarea>' +
+          '<div class="row">' +
+            '<button class="cfa-pub" id="cfaAnnPub">📣 פרסם לכולם</button>' +
+            '<button class="cfa-prev" id="cfaAnnPrev">👁 תצוגה מקדימה</button>' +
+            '<button class="cfa-annclr" id="cfaAnnClr">🗑 הסר הודעה</button>' +
+            '<span class="cfa-annst" id="cfaAnnSt"></span>' +
+          '</div>' +
         '</div>' +
         '<p class="cfa-msg" id="cfaMsg"></p>' +
         '<p class="cfa-stat" id="cfaStat"></p>' +
@@ -605,6 +679,56 @@
       refresh();
     }
 
+    // ---- block announcement (compose / publish / clear) ------------------
+    // Publishing swaps in a NEW id, so everyone (including people who saw the
+    // previous announcement) gets the popup exactly once more.
+    async function annStatus() {
+      var el = document.getElementById("cfaAnnSt");
+      if (!el) return;
+      try {
+        var r = await sb.from("shared_program").select("announcement").eq("id", 1).maybeSingle();
+        var a = r.data && r.data.announcement;
+        if (a && a.id) {
+          var when = a.created_at ? new Date(a.created_at).toLocaleDateString("he-IL") : "";
+          el.textContent = 'פעילה: "' + (a.title || "") + '"' + (when ? " · " + when : "");
+          // seed the editor with the live announcement so a small fix doesn't
+          // mean retyping it — but never clobber text the admin already typed
+          var t = document.getElementById("cfaAnnT"), b = document.getElementById("cfaAnnB");
+          if (t && !t.value) t.value = a.title || "";
+          if (b && !b.value) b.value = a.body || "";
+        } else el.textContent = "אין הודעה פעילה";
+      } catch (e) { el.textContent = ""; }
+    }
+    function annDraft() {
+      return { title: (document.getElementById("cfaAnnT").value || "").trim(),
+               body:  (document.getElementById("cfaAnnB").value || "").trim() };
+    }
+    async function annPublish() {
+      var d = annDraft();
+      if (!d.title && !d.body) { amsg("כתוב כותרת או תוכן להודעה", "err"); return; }
+      var ann = { id: "a" + Date.now(), title: d.title || "בלוק חדש התחיל!", body: d.body, created_at: new Date().toISOString() };
+      amsg("מפרסם…");
+      var r = await sb.from("shared_program").upsert({ id: 1, announcement: ann });
+      if (r.error) {
+        var m = r.error.message || String(r.error);
+        if (/announcement/.test(m) && /column|schema/i.test(m))
+          m = "עמודת announcement חסרה ב-Supabase — יש להריץ את supabase/schema.sql ב-SQL Editor ואז לנסות שוב";
+        amsg("הפרסום נכשל: " + m, "err"); return;
+      }
+      // the author doesn't need their own popup — mark it seen for the admin
+      try { localStorage.setItem("cfby_ann_seen", ann.id); } catch (e) {}
+      await sb.from("profiles").upsert({ id: meId, announcement_seen: ann.id });
+      amsg("ההודעה פורסמה — כל מתאמן יראה אותה פעם אחת בכניסה הבאה שלו 🎖️", "ok");
+      annStatus();
+    }
+    async function annClear() {
+      if (!confirm("להסיר את ההודעה הפעילה?\nמי שעדיין לא ראה אותה — כבר לא יראה אותה.")) return;
+      var r = await sb.from("shared_program").upsert({ id: 1, announcement: null });
+      if (r.error) { amsg("ההסרה נכשלה: " + (r.error.message || r.error), "err"); return; }
+      document.getElementById("cfaAnnT").value = ""; document.getElementById("cfaAnnB").value = "";
+      amsg("ההודעה הוסרה", "ok"); annStatus();
+    }
+
     // Passwords exist only as bcrypt hashes in Supabase — showing a member's
     // current password is impossible, so "forgot password" = admin assigns a
     // new one here and passes it on.
@@ -673,7 +797,13 @@
       }
     }
 
-    function openPanel() { ov.classList.add("open"); bkInfo(); refresh(); }
+    function openPanel() { ov.classList.add("open"); bkInfo(); annStatus(); refresh(); }
+    document.getElementById("cfaAnnPub").onclick = annPublish;
+    document.getElementById("cfaAnnClr").onclick = annClear;
+    document.getElementById("cfaAnnPrev").onclick = function () {
+      var d = annDraft();
+      window.__cfbyAnnPreview({ title: d.title || "בלוק חדש התחיל!", body: d.body }, function () {});
+    };
     document.getElementById("cfaX").onclick = function () { ov.classList.remove("open"); amsg(""); };
     ov.onclick = function (e) { if (e.target === ov) { ov.classList.remove("open"); amsg(""); } };
     document.getElementById("cfaAdd").onclick = addUser;
@@ -779,6 +909,74 @@
     });
   }
 
+  // ---- block announcement: one-time popup + confetti -------------------
+  // Pure CSS/JS confetti — no external lib (the app must work without CDNs).
+  // The container ignores touches and removes itself when the show is over.
+  function confettiBurst() {
+    var host = document.createElement("div");
+    host.style.cssText = "position:fixed;inset:0;z-index:100002;pointer-events:none;overflow:hidden";
+    if (!document.getElementById("cfbyConfettiCss")) {
+      var css = document.createElement("style");
+      css.id = "cfbyConfettiCss";
+      css.textContent =
+        "@keyframes cfbyFall{0%{transform:translateY(-6vh) rotate(0deg)}100%{transform:translateY(106vh) rotate(720deg)}}";
+      document.head.appendChild(css);
+    }
+    var colors = ["#ef5b25", "#23409a", "#e8a53a", "#2ecc71", "#3fa9bf", "#d8342b"];
+    for (var i = 0; i < 90; i++) {
+      var p = document.createElement("div");
+      var emoji = i % 18 === 0;   // a few 🎖️/🎉 ride along with the paper bits
+      var size = emoji ? 22 : (6 + Math.random() * 7);
+      var dur = 2.4 + Math.random() * 2.2;
+      p.style.cssText =
+        "position:absolute;top:-6vh;left:" + (Math.random() * 100) + "vw;" +
+        (emoji
+          ? "font-size:" + size + "px;line-height:1;"
+          : "width:" + size + "px;height:" + (size * 0.45) + "px;background:" + colors[i % colors.length] + ";" +
+            "border-radius:" + (i % 3 === 0 ? "50%" : "2px") + ";") +
+        "animation:cfbyFall " + dur + "s linear " + (Math.random() * 1.2) + "s both;will-change:transform";
+      if (emoji) p.textContent = i % 36 === 0 ? "🎖️" : "🎉";
+      host.appendChild(p);
+    }
+    document.body.appendChild(host);
+    setTimeout(function () { host.remove(); }, 6000);
+  }
+  // Festive one-time popup. Built with textContent (never innerHTML on the
+  // admin-authored text) so the message can't inject markup.
+  function showAnnouncement(ann, onClose) {
+    var ov = document.createElement("div");
+    ov.id = "cfbyAnn";
+    ov.style.cssText =
+      "position:fixed;inset:0;z-index:100001;background:rgba(12,18,34,.62);backdrop-filter:blur(3px);" +
+      "display:flex;align-items:center;justify-content:center;padding:20px;direction:rtl;font-family:'Heebo',system-ui,sans-serif";
+    var box = document.createElement("div");
+    box.style.cssText = "background:#fff;border-radius:22px;width:100%;max-width:420px;box-shadow:0 24px 70px rgba(12,18,34,.5);overflow:hidden;max-height:86vh;display:flex;flex-direction:column";
+    var head = document.createElement("div");
+    head.style.cssText = "background:linear-gradient(120deg,#141f38,#23409a);color:#fff;padding:26px 24px 22px;text-align:center";
+    var medal = document.createElement("div");
+    medal.style.cssText = "font-size:44px;line-height:1;margin-bottom:10px";
+    medal.textContent = "🎖️";
+    var h = document.createElement("div");
+    h.style.cssText = "font-weight:800;font-size:20px;line-height:1.35";
+    h.textContent = (ann && ann.title) || "בלוק חדש התחיל!";
+    head.appendChild(medal); head.appendChild(h);
+    var body = document.createElement("div");
+    body.style.cssText = "padding:20px 24px;color:#1e2430;font-size:14.5px;line-height:1.7;white-space:pre-line;overflow:auto";
+    body.textContent = (ann && ann.body) || "";
+    var foot = document.createElement("div");
+    foot.style.cssText = "padding:0 24px 22px";
+    var go = document.createElement("button");
+    go.style.cssText = "width:100%;background:#ef5b25;color:#fff;border:none;border-radius:12px;padding:14px;font:800 15px 'Heebo',sans-serif;cursor:pointer";
+    go.textContent = "קדימה לבלוק! 💪";
+    go.onclick = function () { ov.remove(); if (onClose) onClose(); };
+    foot.appendChild(go);
+    box.appendChild(head); box.appendChild(body); box.appendChild(foot);
+    ov.appendChild(box);
+    document.body.appendChild(ov);
+    confettiBurst();
+  }
+  window.__cfbyAnnPreview = showAnnouncement;   // admin panel preview hook
+
   // ---- no-connection gate ----------------------------------------------
   // Shown only when the server is unreachable AND the device has no local copy
   // to boot from. Retries until the server answers — never boots "blind empty",
@@ -817,9 +1015,14 @@
     localStorage.removeItem(K.TRACKER_KEY); // empty -> the app builds its built-in program
     lsSetRaw(K.BOARD_KEY, {
       board: [
-        { id: "d1", name: "דנה כהן", weeks: [{ completed: 5, result: 0 }, { completed: 2, result: 0 }], metcons: {}, category: "elite women" },
-        { id: "d2", name: "יוסי לוי", weeks: [{ completed: 3, result: 0 }], metcons: {}, category: "elite men" },
-        { id: "d3", name: "רון מזרחי", weeks: [{ completed: 4, result: 0 }], metcons: {}, category: "masters men" }
+        { id: "d1", name: "דנה כהן", weeks: [{ completed: 5, result: 0 }, { completed: 2, result: 0 }], metcons: {}, category: "elite women", age: 28,
+          pub: { t: 12, s: 6, p: 4, rx: 3, r9: 2, fw: 1, prs: [
+            { move: "Back Squat", res: "95kg × 1", week: "W2" },
+            { move: "Fran", res: "4:12", week: "W2" },
+            { move: "Deadlift", res: "120kg × 1", week: "W1" } ] } },
+        { id: "d2", name: "יוסי לוי", weeks: [{ completed: 3, result: 0 }], metcons: {}, category: "elite men", age: 31,
+          pub: { t: 3, s: 2, p: 0, rx: 1, r9: 0, fw: 0, prs: [] } },
+        { id: "d3", name: "רון מזרחי", weeks: [{ completed: 4, result: 0 }], metcons: {}, category: "masters men", age: 42, pub: null }
       ],
       myName: "אורי (dev)", myResults: {}, myCategory: "elite men", myGender: "male", myAge: 30
     });
@@ -923,7 +1126,8 @@
       .map(function (p) {
         var r = byId[p.id];
         return { id: p.id, name: (r && r.name) || p.name || "", weeks: (r && r.weeks) || [],
-                 metcons: (r && r.metcons) || {}, category: categoryOf(p.gender, p.birth_date) };
+                 metcons: (r && r.metcons) || {}, category: categoryOf(p.gender, p.birth_date),
+                 age: ageFrom(p.birth_date), pub: (r && r.pub) || null };
       });
     var myRow = byId[uid];
     // If the board fetch failed, my own fields fall back to the previous local
@@ -961,6 +1165,23 @@
     await revealApp();
     versionTag();
     checkFreshBundle();   // fire-and-forget: reloads only if a newer build is live
+
+    // Block announcement: pops ONCE per user, and only when the admin has
+    // published one whose id this user hasn't seen. No announcement row (the
+    // state today) -> nothing pops for anyone. Skipped when the profile fetch
+    // failed: without the seen-marker we'd re-show on every flaky load.
+    if (!prof._err) {
+      fetchAnnouncement().then(function (ann) {
+        if (!ann || !ann.id) return;
+        if (prof.announcement_seen === ann.id) return;
+        if (rawGet("cfby_ann_seen") === ann.id) return;   // device fallback if the upsert below failed
+        showAnnouncement(ann, function () {
+          try { localStorage.setItem("cfby_ann_seen", ann.id); } catch (e) {}
+          sb.from("profiles").upsert({ id: uid, announcement_seen: ann.id })
+            .then(function () {}, function () {});
+        });
+      }).catch(function () {});
+    }
 
     // 5) admins get the in-app user-management panel (floating button)
     if (isAdmin) { try { injectAdminPanel(uid); } catch (e) { console.error("[admin panel]", e); } }

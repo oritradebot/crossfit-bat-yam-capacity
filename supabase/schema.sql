@@ -19,6 +19,8 @@ alter table public.profiles add column if not exists email        text;
 alter table public.profiles add column if not exists welcome_seen boolean not null default false;
 alter table public.profiles add column if not exists gender       text;
 alter table public.profiles add column if not exists birth_date   date;
+-- id of the last block announcement this user saw (popup shows once per user)
+alter table public.profiles add column if not exists announcement_seen text;
 
 -- 2) STATES : each user's full tracker blob (program + their own results)
 create table if not exists public.states (
@@ -40,6 +42,10 @@ alter table public.board add column if not exists weeks jsonb;
 -- per-metcon comparable results for the RX ranking engine:
 -- { "w_d": { v, dir, rx }, ... } keyed by week_day (+ _2/_a/_a2 variants)
 alter table public.board add column if not exists metcons jsonb;
+-- public profile summary each user publishes about themselves (viewable by all):
+-- { t: total workouts, s: best streak, p: PR count, rx: RX metcons,
+--   r9: RPE9+ sessions, fw: full weeks, prs: [last 3 {move,res,week}] }
+alter table public.board add column if not exists pub jsonb;
 
 -- 4) SHARED_PROGRAM : single row (id=1) — the admin-authored 8-week program
 create table if not exists public.shared_program (
@@ -50,6 +56,10 @@ create table if not exists public.shared_program (
 );
 insert into public.shared_program (id, weeks) values (1, null)
   on conflict (id) do nothing;
+-- block announcement the admin publishes with a new block:
+-- { id, title, body, created_at } — popup shows once per user (see
+-- profiles.announcement_seen). NULL = no active announcement, nothing pops.
+alter table public.shared_program add column if not exists announcement jsonb;
 
 -- ============================================================
 --  ROW LEVEL SECURITY
