@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "1.4.0";
+  var BUILD = "1.5.0";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -396,7 +396,12 @@
   // ---- realtime leaderboard -------------------------------------------
   // Refresh ONLY the other athletes' rows (never our own fields) so anyone
   // else's change appears live, without a page refresh.
-  var rtTimer = null;
+  var rtTimer = null, rtLast = 0;
+  // Each refresh refetches the FULL board + roster on every device. At ~100
+  // athletes an evening burst (everyone saving the WOD at once) would make
+  // every phone refetch dozens of times — so refreshes are rate-limited to one
+  // per RT_MIN_GAP. Reads only; the user's own saves are never delayed by this.
+  var RT_MIN_GAP = 15000;
   async function refreshOthers(uid) {
     var fb = await fetchBoard();
     if (fb.error) return;   // keep showing the last good board, never a blank one
@@ -415,8 +420,12 @@
     try {
       sb.channel("cfby-board")
         .on("postgres_changes", { event: "*", schema: "public", table: "board" }, function () {
-          clearTimeout(rtTimer);
-          rtTimer = setTimeout(function () { refreshOthers(uid).catch(function () {}); }, 500);
+          if (rtTimer) return;   // a refresh is already on its way — this event rides along
+          var wait = Math.max(500, rtLast + RT_MIN_GAP - Date.now());
+          rtTimer = setTimeout(function () {
+            rtTimer = null; rtLast = Date.now();
+            refreshOthers(uid).catch(function () {});
+          }, wait);
         })
         .subscribe();
     } catch (e) { console.error("[realtime]", e); }
@@ -447,7 +456,11 @@
       ".cfa-del:hover{background:#e74c3c;color:#fff}" +
       ".cfa-key{background:transparent;border:1px solid #4a90d9;color:#7ab8f5;border-radius:6px;padding:5px 10px;font:700 11px 'Heebo',sans-serif;cursor:pointer;margin-left:6px}" +
       ".cfa-key:hover{background:#4a90d9;color:#fff}" +
-      ".cfa-stat{color:#8ea3c9;font-size:12px;margin-bottom:10px}";
+      ".cfa-stat{color:#8ea3c9;font-size:12px;margin-bottom:10px}" +
+      ".cfa-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}" +
+      ".cfa-bk{background:#1b2b4d;border:1px solid #2e4a7d;border-radius:8px;color:#9fc2ff;font:700 12px 'Heebo',sans-serif;padding:8px 12px;cursor:pointer}" +
+      ".cfa-bk:hover{background:#2e4a7d;color:#fff}" +
+      ".cfa-bkinfo{font-size:12px;color:#8ea3c9}.cfa-bkinfo.warn{color:#ffb74d;font-weight:700}";
     document.head.appendChild(css);
 
     var ov = document.createElement("div");
@@ -460,6 +473,12 @@
           '<div><label>שם לתצוגה</label><input id="cfaN" placeholder="השם"></div>' +
           '<div><label>סיסמה</label><input id="cfaP" class="ltr" placeholder="סיסמה"></div>' +
           '<button id="cfaAdd">+ הוסף</button>' +
+        '</div>' +
+        '<div class="cfa-tools">' +
+          '<button class="cfa-bk" id="cfaBk">💾 גיבוי לקובץ</button>' +
+          '<button class="cfa-bk" id="cfaRs">♻️ שחזור מגיבוי</button>' +
+          '<span class="cfa-bkinfo" id="cfaBkInfo"></span>' +
+          '<input type="file" id="cfaRsFile" accept="application/json,.json" style="display:none">' +
         '</div>' +
         '<p class="cfa-msg" id="cfaMsg"></p>' +
         '<p class="cfa-stat" id="cfaStat"></p>' +
@@ -502,6 +521,88 @@
       Array.prototype.forEach.call(document.querySelectorAll(".cfa-key"), function (b) {
         b.onclick = function () { resetPass(b.getAttribute("data-id"), b.getAttribute("data-name")); };
       });
+    }
+
+    // ---- backup / restore ------------------------------------------------
+    // The free Supabase tier has NO automatic backups — one bad delete and the
+    // data is gone forever. This exports every table to a JSON file on the
+    // admin's device; restore upserts it back row by row. RLS already grants
+    // admins full read/write on all four tables, so no server changes needed.
+    var BK_KEY = "cfby_backup_last";
+    function bkInfo() {
+      var el = document.getElementById("cfaBkInfo");
+      if (!el) return;
+      var t = parseInt(rawGet(BK_KEY), 10) || 0;
+      if (!t) { el.textContent = "⚠️ עדיין לא נעשה גיבוי מהמכשיר הזה"; el.className = "cfa-bkinfo warn"; return; }
+      var days = Math.floor((Date.now() - t) / 86400000);
+      el.textContent = days < 1 ? "גיבוי אחרון: היום" : (days === 1 ? "גיבוי אחרון: אתמול" : "גיבוי אחרון: לפני " + days + " ימים");
+      el.className = "cfa-bkinfo" + (days >= 7 ? " warn" : "");
+    }
+
+    async function backup() {
+      amsg("מוריד את כל הנתונים מהענן…");
+      try {
+        var q = await Promise.all([
+          sb.from("profiles").select("*"),
+          sb.from("states").select("*"),
+          sb.from("board").select("*"),
+          sb.from("shared_program").select("*")
+        ]);
+        // A partial backup is worse than none — it restores silently incomplete.
+        for (var i = 0; i < q.length; i++) if (q[i].error) throw q[i].error;
+        var payload = {
+          format: "cfby-backup", ver: 1,
+          created_at: new Date().toISOString(), build: BUILD,
+          profiles: q[0].data || [], states: q[1].data || [],
+          board: q[2].data || [], shared_program: q[3].data || []
+        };
+        var stamp = payload.created_at.slice(0, 16).replace("T", "_").replace(":", "");
+        var blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "batyam-backup-" + stamp + ".json";
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+        try { localStorage.setItem(BK_KEY, String(Date.now())); } catch (e) {}
+        bkInfo();
+        amsg("הגיבוי ירד למכשיר: " + payload.profiles.length + " משתמשים, " +
+             payload.states.length + " טבלאות תוצאות. שמור את הקובץ במקום בטוח (דרייב/מחשב).", "ok");
+      } catch (e) {
+        amsg("הגיבוי נכשל: " + ((e && e.message) || e), "err");
+      }
+    }
+
+    async function restore(file) {
+      var data;
+      try { data = JSON.parse(await file.text()); }
+      catch (e) { amsg("הקובץ שנבחר אינו קובץ גיבוי תקין", "err"); return; }
+      if (!data || data.format !== "cfby-backup" || !Array.isArray(data.profiles)) {
+        amsg("הקובץ שנבחר אינו קובץ גיבוי של המערכת", "err"); return;
+      }
+      var when = data.created_at ? new Date(data.created_at).toLocaleString("he-IL") : "תאריך לא ידוע";
+      if (!confirm("לשחזר גיבוי מ-" + when + "?\n" +
+                   data.profiles.length + " משתמשים, " + (data.states || []).length + " טבלאות תוצאות.\n\n" +
+                   "נתונים קיימים בענן יידרסו על ידי הגיבוי. מומלץ לעשות גיבוי טרי לפני השחזור.")) return;
+      // Row-by-row on purpose: a member deleted since the backup still has rows
+      // in the file, and their FK to auth.users fails — one batched upsert
+      // would take the whole table down with it; per-row just skips them.
+      var ok = 0, skip = 0;
+      async function putRows(table, rows, key) {
+        for (var i = 0; i < rows.length; i++) {
+          var r = await sb.from(table).upsert(rows[i], { onConflict: key });
+          if (r.error) skip++; else ok++;
+          if ((ok + skip) % 20 === 0) amsg("משחזר… " + (ok + skip) + " רשומות");
+        }
+      }
+      amsg("משחזר…");
+      await putRows("profiles", data.profiles || [], "id");
+      await putRows("states", data.states || [], "user_id");
+      await putRows("board", data.board || [], "user_id");
+      await putRows("shared_program", data.shared_program || [], "id");
+      amsg("השחזור הסתיים: " + ok + " רשומות שוחזרו" +
+           (skip ? ", " + skip + " דולגו (כנראה משתמשים שנמחקו מאז הגיבוי)" : "") +
+           ". משתתפים יראו את הנתונים בפתיחה הבאה של האפליקציה.", skip ? "" : "ok");
+      refresh();
     }
 
     // Passwords exist only as bcrypt hashes in Supabase — showing a member's
@@ -572,10 +673,14 @@
       }
     }
 
-    function openPanel() { ov.classList.add("open"); refresh(); }
+    function openPanel() { ov.classList.add("open"); bkInfo(); refresh(); }
     document.getElementById("cfaX").onclick = function () { ov.classList.remove("open"); amsg(""); };
     ov.onclick = function (e) { if (e.target === ov) { ov.classList.remove("open"); amsg(""); } };
     document.getElementById("cfaAdd").onclick = addUser;
+    document.getElementById("cfaBk").onclick = backup;
+    var rsFile = document.getElementById("cfaRsFile");
+    document.getElementById("cfaRs").onclick = function () { rsFile.value = ""; rsFile.click(); };
+    rsFile.onchange = function () { if (rsFile.files && rsFile.files[0]) restore(rsFile.files[0]); };
 
     // Inject a "משתתפים" tab into the top bar, right next to the "❓ מדריך" button.
     // The app may re-render its header, so a MutationObserver re-inserts it if removed.
