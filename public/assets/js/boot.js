@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "1.6.0";
+  var BUILD = "1.6.1";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -58,12 +58,21 @@
   async function fetchBoard() {
     try {
       var r = await sb.from("board").select("user_id,name,results,weeks,metcons,pub").order("name");
+      // Transitional: until the v1.6.0 ALTERs run in the SQL editor, the pub
+      // column doesn't exist and the select 42703s — retry without it so the
+      // leaderboard never breaks on a schema lag.
+      if (r.error && /\bpub\b/.test(r.error.message || ""))
+        r = await sb.from("board").select("user_id,name,results,weeks,metcons").order("name");
       return { rows: r.data || [], error: r.error || null };
     } catch (e) { return { rows: [], error: e }; }
   }
   async function fetchProfile(uid) {
     try {
       var r = await sb.from("profiles").select("name,is_admin,welcome_seen,gender,birth_date,announcement_seen").eq("id", uid).maybeSingle();
+      // Transitional: schema not migrated yet — retry without the new column
+      // (a profile-fetch failure here would wrongly skip onboarding + popup).
+      if (r.error && /announcement_seen/.test(r.error.message || ""))
+        r = await sb.from("profiles").select("name,is_admin,welcome_seen,gender,birth_date").eq("id", uid).maybeSingle();
       if (r.error) throw r.error;
       return r.data || { name: "", is_admin: false, welcome_seen: false, gender: null, birth_date: null, announcement_seen: null };
     } catch (e) {
@@ -335,7 +344,7 @@
     if (!pushCtx.uid) return;
     var b = lsGet(K.BOARD_KEY) || {};
     var tracker = lsGet(K.TRACKER_KEY);
-    var r = await upsertWithRetry("board", {
+    var row = {
       user_id: pushCtx.uid,
       name: b.myName || "",
       results: b.myResults || {},
@@ -343,7 +352,14 @@
       metcons: extractMetcons(tracker),
       pub: publicSummary(tracker, b.myTarget),
       updated_at: new Date().toISOString()
-    });
+    };
+    var r = await upsertWithRetry("board", row);
+    // Transitional: pub column not migrated yet — never let that block the
+    // board push itself (completed counts + metcon results must still sync).
+    if (r.error && /\bpub\b/.test(r.error.message || "")) {
+      delete row.pub;
+      r = await upsertWithRetry("board", row);
+    }
     // No retry loop needed: the board row is derived from the tracker and is
     // rebuilt+pushed on every boot, so a lost board push self-heals.
     if (r.error) console.error("[sync] board push failed:", r.error.message || r.error);
