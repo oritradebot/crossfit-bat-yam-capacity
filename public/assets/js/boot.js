@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "1.6.14";
+  var BUILD = "1.6.15";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -207,6 +207,7 @@
     else if (kind === "saved")   { el.textContent = "✓ נשמר בענן";                    el.style.background = "#1e7e46"; }
     else if (kind === "error")   { el.textContent = "⚠️ לא מסונכרן — מנסה שוב";       el.style.background = "#a33b2e"; }
     else if (kind === "offline") { el.textContent = "📡 אין אינטרנט — יסונכרן כשיחזור"; el.style.background = "#8a6d1a"; }
+    else if (kind === "localfail") { el.textContent = "⚠️ השמירה במכשיר נכשלה — האחסון מלא?"; el.style.background = "#a33b2e"; }
     el.style.opacity = "1";
     if (kind === "saved") syncHideT = setTimeout(function () { el.style.opacity = "0"; }, 1600);
   }
@@ -229,16 +230,40 @@
       location.reload();
     } catch (e) {}
   }
-  // Tiny build tag so "which code is my phone actually running?" is answerable
-  // with one glance instead of another guessing round.
+  // Build tag so "which code is my phone actually running?" is answerable with
+  // one glance. A static footer at the very bottom of the page (per Ori) — the
+  // old fixed corner tag was black-on-transparent, i.e. invisible in dark mode.
+  // The runtime rebuilds <body> into #dc-root on renders, which throws the
+  // footer out — the observer puts it back so it survives every re-render.
   function versionTag() {
-    if (!document.body || document.getElementById("cfbyVer")) return;
-    var el = document.createElement("div");
-    el.id = "cfbyVer";
-    el.textContent = "v" + BUILD;
-    el.style.cssText = "position:fixed;right:8px;bottom:calc(4px + env(safe-area-inset-bottom,0px));z-index:99989;" +
-      "font:400 9px monospace;color:rgba(0,0,0,.35);pointer-events:none;direction:ltr";
-    document.body.appendChild(el);
+    if (!document.body) return;
+    function ensure() {
+      if (document.getElementById("cfbyVer")) return;
+      var el = document.createElement("div");
+      el.id = "cfbyVer";
+      el.textContent = "גרסה " + BUILD;
+      el.style.cssText = "text-align:center;direction:rtl;" +
+        "padding:14px 0 calc(18px + env(safe-area-inset-bottom,0px));" +
+        "font:500 11px 'Heebo',system-ui,sans-serif;color:var(--muted,#8a8d94)";
+      document.body.appendChild(el);
+    }
+    ensure();
+    new MutationObserver(ensure).observe(document.body, { childList: true });
+  }
+
+  // A freshly deployed service worker pings every open page (see sw.js).
+  // Answering marks this page as self-updating — it refreshes politely via
+  // checkFreshBundle, never over unsynced data. Pages running builds older
+  // than this listener can't answer, and the SW force-reloads them: the only
+  // channel that reaches installed PWAs stuck on old bundles for days.
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("message", function (ev) {
+      if (!ev || ev.data !== "cfby-sw-updated") return;
+      try {
+        if (navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage("cfby-alive");
+      } catch (e) {}
+      checkFreshBundle();
+    });
   }
 
   // A push that fails on a stale JWT (app resumed from background after the
@@ -455,6 +480,12 @@
       // is how devices kept running old (buggy) bundles after a fix shipped.
       if (rawGet(DIRTY_KEY) !== null) { doPushState(); doPushBoard(); }
       else checkFreshBundle();
+      // Also nudge the SW update check — for long-lived PWA pages the browser
+      // may not look for a new sw.js on its own for up to 24h.
+      try {
+        if ("serviceWorker" in navigator && navigator.serviceWorker.getRegistration)
+          navigator.serviceWorker.getRegistration().then(function (r) { if (r) r.update(); }).catch(function () {});
+      } catch (e) {}
     }
   });
   window.addEventListener("pagehide", function () { flushPending(); keepalivePush(); });
@@ -482,7 +513,14 @@
     pushCtx.uid = uid; pushCtx.isAdmin = isAdmin;
     var orig = localStorage.setItem.bind(localStorage);
     localStorage.setItem = function (key, val) {
-      orig(key, val);
+      // The app swallows setItem failures (quota full / restricted mode) — the
+      // user would keep logging workouts while NOTHING persists, not even on
+      // the device. Surface it loudly instead of losing entries in silence.
+      try { orig(key, val); }
+      catch (e) {
+        if (key === K.TRACKER_KEY || key === K.BOARD_KEY) syncShow("localfail");
+        throw e;
+      }
       if (suppressPush) return;
       if (key === K.TRACKER_KEY) {
         // Mark the tracker as unsynced BEFORE scheduling the push; cleared only
