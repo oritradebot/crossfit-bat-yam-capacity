@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "1.6.13";
+  var BUILD = "1.6.14";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -576,7 +576,12 @@
       ".cfa-pub{background:#ef5b25;color:#fff;border:none;border-radius:8px;padding:10px 14px;font:800 13px 'Heebo',sans-serif;cursor:pointer}" +
       ".cfa-prev{background:#1b2b4d;border:1px solid #2e4a7d;color:#9fc2ff;border-radius:8px;padding:10px 14px;font:700 12px 'Heebo',sans-serif;cursor:pointer}" +
       ".cfa-annclr{background:transparent;border:1px solid #e74c3c;color:#e74c3c;border-radius:8px;padding:10px 14px;font:700 12px 'Heebo',sans-serif;cursor:pointer}" +
-      ".cfa-annst{font-size:12px;color:#8ea3c9}";
+      ".cfa-annst{font-size:12px;color:#8ea3c9}" +
+      // the panel's own scrollbar was invisible (dark thumb on dark bg) — make
+      // it clearly visible so desktop users see THIS is the thing to scroll
+      "#cfbyAdminOv::-webkit-scrollbar{width:10px}" +
+      "#cfbyAdminOv::-webkit-scrollbar-thumb{background:rgba(255,255,255,.28);border-radius:8px}" +
+      "#cfbyAdminOv::-webkit-scrollbar-track{background:rgba(255,255,255,.06)}";
     document.head.appendChild(css);
 
     var ov = document.createElement("div");
@@ -851,20 +856,33 @@
       }
     }
 
-    function openPanel() { ov.classList.add("open"); bkInfo(); annStatus(); refresh(); }
+    // While the panel is open, the app behind it must not scroll: its (body)
+    // scrollbar sits at the same right edge as the panel's and swallowed the
+    // scrolling on desktop — the app scrolled invisibly while the panel stood
+    // still. Lock the page scroll on open, restore on close.
+    function openPanel() {
+      ov.classList.add("open");
+      document.documentElement.style.overflow = "hidden";
+      bkInfo(); annStatus(); refresh();
+    }
+    function closePanel() {
+      ov.classList.remove("open");
+      document.documentElement.style.overflow = "";
+      amsg("");
+    }
     document.getElementById("cfaAnnPub").onclick = annPublish;
     document.getElementById("cfaAnnClr").onclick = annClear;
     document.getElementById("cfaAnnPrev").onclick = function () {
       var d = annDraft();
       window.__cfbyAnnPreview({ title: d.title || "בלוק חדש התחיל!", body: d.body }, function () {});
     };
-    document.getElementById("cfaX").onclick = function () { ov.classList.remove("open"); amsg(""); };
+    document.getElementById("cfaX").onclick = closePanel;
     // NO backdrop-click close: the box has no background of its own, so on wide
     // screens the overlay margins look like part of the panel — and on Windows,
     // clicking the overlay's own scrollbar targets the overlay too. Both used to
     // slam the panel shut on desktop. Close only via ✕ or Escape.
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && ov.classList.contains("open")) { ov.classList.remove("open"); amsg(""); }
+      if (e.key === "Escape" && ov.classList.contains("open")) closePanel();
     });
     document.getElementById("cfaAdd").onclick = addUser;
     document.getElementById("cfaBk").onclick = backup;
@@ -889,7 +907,8 @@
       // User management is only relevant inside the app's admin mode.
       if (!appAdminMode()) {
         if (existing) existing.remove();
-        ov.classList.remove("open");        // close the panel if admin mode was just exited
+        // close the panel if admin mode was just exited
+        if (ov.classList.contains("open")) closePanel();
         return;
       }
       if (existing) return;
