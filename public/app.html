@@ -728,7 +728,7 @@
 
   <sc-if value="{{ welcomeOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeWelcome }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .25s ease both;">
-      <div onClick="{{ stop }}" style="background:var(--card); border-radius:24px; width:100%; max-width:440px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto;">
+      <div onClick="{{ stop }}" style="background:var(--card); border-radius:24px; width:100%; max-width:440px; max-height:calc(100vh - 40px); box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:auto; margin:auto;">
         <div style="background:linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a); color:#fff; padding:15px 22px 13px; text-align:center;">
           <img src="assets/logo.png" alt="" style="width:38px; height:38px; border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.25); margin-bottom:5px;">
           <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; letter-spacing:.05em;">ברוכים הבאים 👋</div>
@@ -757,7 +757,7 @@
 
   <sc-if value="{{ onbOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed; inset:0; background:rgba(12,18,34,.72); backdrop-filter:blur(4px); z-index:110; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .25s ease both;">
-      <div style="background:var(--card); border-radius:24px; width:100%; max-width:430px; box-shadow:0 24px 70px rgba(12,18,34,.5); overflow:hidden; margin:auto;">
+      <div style="background:var(--card); border-radius:24px; width:100%; max-width:430px; max-height:calc(100vh - 40px); box-shadow:0 24px 70px rgba(12,18,34,.5); overflow:auto; margin:auto;">
         <div style="background:linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a); color:#fff; padding:26px 24px 22px; text-align:center;">
           <img src="assets/logo.png" alt="" style="width:56px; height:56px; border-radius:50%; box-shadow:0 0 0 3px rgba(255,255,255,.25); margin-bottom:12px;">
           <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:23px; letter-spacing:.04em;">בוא נכיר 💪</div>
@@ -847,7 +847,7 @@
 
   <sc-if value="{{ profileOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeProfile }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:130; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
-      <div dir="rtl" onClick="{{ stop }}" style="background:var(--card); border-radius:20px; width:100%; max-width:400px; box-shadow:0 20px 60px rgba(12,18,34,.4); overflow:hidden;">
+      <div dir="rtl" onClick="{{ stop }}" style="background:var(--card); border-radius:20px; width:100%; max-width:400px; max-height:calc(100vh - 40px); box-shadow:0 20px 60px rgba(12,18,34,.4); overflow:auto;">
         <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; padding:22px 24px; display:flex; align-items:center; gap:14px;">
           <div style="width:56px; height:56px; border-radius:50%; background:var(--orange); display:flex; align-items:center; justify-content:center; font-size:26px; flex:none;">👤</div>
           <div style="flex:1; min-width:0;">
@@ -965,7 +965,7 @@
 
   <sc-if value="{{ liftChartOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeLiftChart }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:130; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
-      <div dir="rtl" onClick="{{ stop }}" style="background:var(--card); border-radius:20px; width:100%; max-width:600px; box-shadow:0 20px 60px rgba(12,18,34,.4); overflow:hidden;">
+      <div dir="rtl" onClick="{{ stop }}" style="background:var(--card); border-radius:20px; width:100%; max-width:600px; max-height:calc(100vh - 40px); box-shadow:0 20px 60px rgba(12,18,34,.4); overflow:auto;">
         <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; padding:18px 22px; display:flex; align-items:center; gap:12px;">
           <span style="font-size:24px; flex:none;">📈</span>
           <div style="flex:1; min-width:0;">
