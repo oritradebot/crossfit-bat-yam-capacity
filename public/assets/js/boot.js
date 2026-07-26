@@ -17,10 +17,48 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "1.6.1";
+  var BUILD = "1.7.0";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
+
+  // ---- theme (light / dark / auto) --------------------------------------
+  // Stored per-device on purpose (NOT in the synced state blob) — moving it
+  // into the blob later makes it roam between devices with no schema change.
+  // Runs here, in <head>, so <html> carries data-theme before first paint.
+  var THEME_KEY = "cfby_theme";
+  function themePref() {
+    var p = null;
+    try { p = localStorage.getItem(THEME_KEY); } catch (e) {}
+    return (p === "light" || p === "dark") ? p : "auto";
+  }
+  function applyTheme() {
+    var pref = themePref();
+    var mq = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+    var dark = pref === "dark" || (pref === "auto" && mq && mq.matches);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    // The app header is a navy gradient in BOTH themes, so the status-bar
+    // color only needs to change on pages without it (login / confirm).
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && meta.getAttribute("data-follow-theme") === "1") {
+      meta.setAttribute("content", dark ? "#0d0e11" : "#0f1830");
+    }
+  }
+  window.cfbyThemePref = themePref;
+  window.cfbySetTheme = function (mode) {
+    try {
+      if (mode === "light" || mode === "dark") localStorage.setItem(THEME_KEY, mode);
+      else localStorage.removeItem(THEME_KEY);
+    } catch (e) {}
+    applyTheme();
+  };
+  applyTheme();
+  if (window.matchMedia) {
+    var mql = window.matchMedia("(prefers-color-scheme: dark)");
+    var onOs = function () { if (themePref() === "auto") applyTheme(); };
+    if (mql.addEventListener) mql.addEventListener("change", onOs);
+    else if (mql.addListener) mql.addListener(onOs);
+  }
 
   // ---- helpers ---------------------------------------------------------
   function loadScript(src) {

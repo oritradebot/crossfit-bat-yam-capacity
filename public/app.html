@@ -57,15 +57,39 @@
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
+  /* ---- theme palettes. boot.js resolves auto/light/dark and stamps
+     data-theme on <html> before first paint; inline style="" all over the
+     app reference these vars, so flipping the attribute reskins everything.
+     Definitions use UPPERCASE hex on purpose — keep it that way. */
+  :root {
+    color-scheme: light;
+    --bg:#E6E5E0; --card:#FFFFFF; --paper:#F4F3EF; --field:#FAFAF8; --chip:#EEEDE8; --dim:#E7E6E1;
+    --ink:#15171D; --muted:#6B6E78; --faint:#8A8D94; --ghost:#C9CACE; --ph:#A7A9B0;
+    --line:rgba(21,23,29,.12); --grid:#ECEEF3; --dash:#B9C2D0; --dot:#D3D3CD;
+    --blue:#23409A; --blue2:#2F52C4; --bluehov:#16255E; --navy:#141F38; --navy-bg:#141F38;
+    --orange:#EF5B25; --log:rgba(35,64,154,.06); --tabbg:#EEF1FB; --restbg:#EEF1F6;
+    --red:#D8342B; --redbg:#FDECEA; --greenink:#1D6A3F; --goldink:#B07D1E;
+    --shcol:var(--shcol); --shcol2:var(--shcol2); --scrollthumb:rgba(21,23,29,.2);
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --bg:#0D0E11; --card:#1A1C22; --paper:#22242B; --field:#1F2127; --chip:#2A2D35; --dim:#262931;
+    --ink:#E9EAEE; --muted:#A2A6B3; --faint:#8B8F9C; --ghost:#4D515C; --ph:#6F7380;
+    --line:rgba(255,255,255,.13); --grid:#272A32; --dash:#4A4E5A; --dot:#3A3D46;
+    --blue:#5E7CE2; --blue2:#7B96E8; --bluehov:#A3B6F0; --navy:#CDD6EE; --navy-bg:#141F38;
+    --orange:#EF5B25; --log:rgba(94,124,226,.12); --tabbg:#20263A; --restbg:#252A36;
+    --red:#F16A60; --redbg:rgba(216,52,43,.22); --greenink:#7EDDA4; --goldink:#E3B566;
+    --shcol:rgba(0,0,0,.3); --shcol2:rgba(0,0,0,.45); --scrollthumb:rgba(255,255,255,.2);
+  }
   html, body { margin: 0; padding: 0; }
-  body { font-family: 'Heebo', system-ui, sans-serif; background: #e6e5e0; color: #15171d; -webkit-font-smoothing: antialiased; }
-  a { color: #23409a; text-decoration: none; }
-  a:hover { color: #16255e; }
+  body { font-family: 'Heebo', system-ui, sans-serif; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { color: var(--bluehov); }
   input, textarea, button { font-family: inherit; }
-  input::placeholder, textarea::placeholder { color: #a7a9b0; }
+  input::placeholder, textarea::placeholder { color: var(--ph); }
   textarea { line-height: 1.5; }
   ::-webkit-scrollbar { height: 8px; width: 8px; }
-  ::-webkit-scrollbar-thumb { background: rgba(21,23,29,.2); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--scrollthumb); border-radius: 8px; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
 
@@ -110,7 +134,7 @@
   }
 </style>
 </helmet>
-<div style="--blue:#23409a; --blue2:#2f52c4; --navy:#141f38; --ink:#15171d; --paper:#f4f3ef; --line:rgba(21,23,29,.12); --orange:#ef5b25; --muted:#6b6e78; --log:rgba(35,64,154,.06); min-height:100vh; display:flex; flex-direction:column; align-items:center;">
+<div style="min-height:100vh; display:flex; flex-direction:column; align-items:center;">
 
   <header style="width:100%; background:linear-gradient(115deg,#0f1830,#1a2848 60%,#23409a); color:#fff; display:flex; justify-content:center; box-shadow:0 2px 20px rgba(15,24,48,.25); position:sticky; top:0; z-index:40;">
     <div class="hd-in" style="width:100%; max-width:1040px; padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
@@ -147,11 +171,11 @@
     <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
       <div style="animation:fadeUp .35s ease both;">
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:22px;">
-          <div style="background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px;">
+          <div style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--blue); line-height:1;">{{ statSessions }}<span style="font-size:16px; color:var(--muted);">/{{ statTarget }}</span></div>
             <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">אימונים שהושלמו</div>
           </div>
-          <div style="background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px;">
+          <div style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--ink); line-height:1;">{{ statPct }}<span style="font-size:18px; color:var(--muted);">%</span></div>
             <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">מהיעד · 5 בשבוע</div>
           </div>
@@ -159,18 +183,18 @@
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; line-height:1;">{{ statWeekly }}</div>
             <div style="font-size:12px; color:#ffe0d3; font-weight:600; letter-spacing:.04em; margin-top:6px;">יעד השבוע</div>
           </div>
-          <button onClick="{{ setBoard }}" style="background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px; text-align:start; cursor:pointer; font-family:inherit;">
+          <button onClick="{{ setBoard }}" style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px; text-align:start; cursor:pointer; font-family:inherit;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--orange); line-height:1;">{{ statRank }}<span style="font-size:16px; color:var(--muted);">{{ statRankField }}</span></div>
             <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">המקום שלי בקטגוריה</div>
             <div dir="rtl" style="{{ rankDeltaStyle }}">{{ rankDeltaLabel }}</div>
           </button>
-          <div style="background:var(--navy); color:#fff; border-radius:16px; padding:16px 18px;">
+          <div style="background:var(--navy-bg); color:#fff; border-radius:16px; padding:16px 18px;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; line-height:1;">{{ curWeekNum }}<span style="font-size:16px; color:#9fb0dd;">/8</span></div>
             <div style="font-size:12px; color:#9fb0dd; font-weight:600; letter-spacing:.04em; margin-top:6px;">שבוע נוכחי</div>
           </div>
         </div>
 
-        <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; border-radius:18px; padding:20px 22px; margin-bottom:22px; box-shadow:0 8px 28px rgba(20,31,56,.22);">
+        <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; border-radius:18px; padding:20px 22px; margin-bottom:22px; box-shadow:0 8px 28px var(--shcol2);">
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <span style="font-family:'Oswald',sans-serif; font-weight:600; font-size:13px; letter-spacing:.14em; color:#8fa4d8;">THIS WEEK</span>
             <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:20px;">WEEK {{ curWeekNum }}</span>
@@ -189,7 +213,7 @@
         </div>
 
         <sc-if value="{{ showProgramMap }}" hint-placeholder-val="{{ true }}">
-        <div style="background:#fff; border:1px solid var(--line); border-radius:18px; padding:20px 22px;">
+        <div style="background:var(--card); border:1px solid var(--line); border-radius:18px; padding:20px 22px;">
           <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:6px;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; letter-spacing:.03em;">PROGRAM MAP</div>
             <div style="font-size:12px; color:var(--muted);">8 שבועות · 12/07 → 05/09</div>
@@ -212,10 +236,10 @@
           </div>
           <div style="display:flex; gap:16px; margin-top:16px; flex-wrap:wrap; font-size:11px; color:var(--muted);">
             <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:var(--blue); display:inline-block;"></span>הושלם</span>
-            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#fff; box-shadow:0 0 0 2px #d8342b; display:inline-block;"></span>לא סומן</span>
-            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#eef1f6; border:1.5px dashed #b9c2d0; display:inline-block;"></span>מנוחה 🛌</span>
-            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#e7e6e1; display:inline-block;"></span>ריק / COMING SOON</span>
-            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:#fff; box-shadow:0 0 0 2px var(--orange); display:inline-block;"></span>היום</span>
+            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:var(--card); box-shadow:0 0 0 2px var(--red); display:inline-block;"></span>לא סומן</span>
+            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:var(--restbg); border:1.5px dashed var(--dash); display:inline-block;"></span>מנוחה 🛌</span>
+            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:var(--dim); display:inline-block;"></span>ריק / COMING SOON</span>
+            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:4px; background:var(--card); box-shadow:0 0 0 2px var(--orange); display:inline-block;"></span>היום</span>
           </div>
         </div>
         </sc-if>
@@ -243,7 +267,7 @@
           </div>
           <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin-bottom:24px;">
             <sc-for list="{{ liftPRList }}" as="lp" hint-placeholder-count="4">
-              <button onClick="{{ onLiftChart }}" data-key="{{ lp.key }}" style="display:flex; flex-direction:column; gap:6px; text-align:start; background:#fff; border:1px solid var(--line); border-inline-start:4px solid var(--navy); border-radius:14px; padding:14px 16px; cursor:pointer; color:var(--ink); box-shadow:0 4px 16px rgba(20,31,56,.06);">
+              <button onClick="{{ onLiftChart }}" data-key="{{ lp.key }}" style="display:flex; flex-direction:column; gap:6px; text-align:start; background:var(--card); border:1px solid var(--line); border-inline-start:4px solid var(--navy); border-radius:14px; padding:14px 16px; cursor:pointer; color:var(--ink); box-shadow:0 4px 16px var(--shcol);">
                 <div dir="auto" style="font-weight:700; font-size:14.5px;">{{ lp.move }}</div>
                 <div style="display:flex; align-items:baseline; gap:8px; width:100%;">
                   <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:24px; color:var(--blue); direction:ltr;">{{ lp.bestLabel }}</span>
@@ -266,7 +290,7 @@
           </div>
           <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px;">
             <sc-for list="{{ prList }}" as="pr" hint-placeholder-count="4">
-              <button onClick="{{ onCell }}" data-wi="{{ pr.wi }}" data-di="{{ pr.di }}" style="display:flex; align-items:center; gap:14px; text-align:start; background:#fff; border:1px solid var(--line); border-inline-start:4px solid var(--orange); border-radius:14px; padding:16px 18px; cursor:pointer; color:var(--ink); box-shadow:0 4px 16px rgba(20,31,56,.06);">
+              <button onClick="{{ onCell }}" data-wi="{{ pr.wi }}" data-di="{{ pr.di }}" style="display:flex; align-items:center; gap:14px; text-align:start; background:var(--card); border:1px solid var(--line); border-inline-start:4px solid var(--orange); border-radius:14px; padding:16px 18px; cursor:pointer; color:var(--ink); box-shadow:0 4px 16px var(--shcol);">
                 <span style="font-size:22px; flex:none;">🏆</span>
                 <div style="flex:1; min-width:0;">
                   <div dir="auto" style="font-weight:700; font-size:16px; margin-bottom:3px;">{{ pr.move }}</div>
@@ -281,7 +305,7 @@
           </div>
         </sc-if>
         <sc-if value="{{ noAnyPRs }}" hint-placeholder-val="{{ false }}">
-          <div style="text-align:center; padding:56px 24px; background:#fff; border:1px solid var(--line); border-radius:18px;">
+          <div style="text-align:center; padding:56px 24px; background:var(--card); border:1px solid var(--line); border-radius:18px;">
             <div style="width:96px; height:96px; margin:0 auto 18px; border-radius:50%; background:radial-gradient(circle at 50% 35%, rgba(232,165,58,.22), rgba(232,165,58,.05)); display:flex; align-items:center; justify-content:center; font-size:46px; animation:floaty 2.8s ease-in-out infinite;">🏆</div>
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; letter-spacing:.04em; color:var(--ink); margin-bottom:6px;">השיא הראשון שלך מחכה</div>
             <div style="font-size:13.5px; color:var(--muted); line-height:1.6; max-width:320px; margin-inline:auto;">כל משקל שתרשום ב-<b style="color:var(--navy);">LIFT</b> נכנס לטבלת השיאים לפי תרגיל, וכל אימון שתסמן בו <b style="color:var(--orange);">🏆 שברתי שיא</b> ייאסף לכאן — עם התוצאה, התנועה והשבוע.</div>
@@ -336,7 +360,7 @@
             </div>
             <div style="margin-top:14px; font-size:11.5px; color:#9fb0dd; line-height:1.6; background:rgba(255,255,255,.07); border-radius:10px; padding:9px 12px;">הניקוד מחושב אוטומטית מתוצאות המטקון שסימנת <b style="color:#ffb08f;">RX</b> ביומן — אין הזנה ידנית.</div>
           </div>
-          <div style="background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px 20px;">
+          <div style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px 20px;">
             <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">הניקוד שלך לאורך 8 השבועות</div>
             <div style="display:flex; align-items:flex-end; gap:6px; height:92px;">
               <sc-for list="{{ trend }}" as="t" hint-placeholder-count="8">
@@ -358,19 +382,19 @@
             <button onClick="{{ onCategory }}" data-v="{{ c.v }}" style="{{ c.style }}">{{ c.label }}</button>
           </sc-for>
         </div>
-        <div style="background:#fff; border:1px solid var(--line); border-radius:18px; padding:18px 20px; box-shadow:0 6px 24px rgba(20,31,56,.06);">
+        <div style="background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px 20px; box-shadow:0 6px 24px var(--shcol);">
           <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">
             <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">השם שלך בטבלה</span>
             <sc-if value="{{ nameEditing }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex; gap:8px; max-width:380px;">
-                <input dir="auto" value="{{ nameDraft }}" onChange="{{ onNameDraft }}" placeholder="איך יקראו לך בדירוג?" style="flex:1; min-width:0; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:15px; background:#fafaf8; color:var(--ink); outline:none;">
+                <input dir="auto" value="{{ nameDraft }}" onChange="{{ onNameDraft }}" placeholder="איך יקראו לך בדירוג?" style="flex:1; min-width:0; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:15px; background:var(--field); color:var(--ink); outline:none;">
                 <button onClick="{{ confirmName }}" style="flex:none; background:var(--blue); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-weight:700; font-size:14px; cursor:pointer;">אשר</button>
               </div>
             </sc-if>
             <sc-if value="{{ notNameEditing }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex; align-items:center; gap:10px;">
                 <span dir="auto" style="font-weight:700; font-size:16px; color:var(--ink);">{{ myNameDisplay }}</span>
-                <button onClick="{{ editName }}" style="background:#f4f3ef; color:var(--muted); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">✎ ערוך</button>
+                <button onClick="{{ editName }}" style="background:var(--paper); color:var(--muted); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">✎ ערוך</button>
               </div>
             </sc-if>
           </div>
@@ -404,10 +428,10 @@
           <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.04em; color:var(--navy);">יומן אימונים</div>
           <div style="margin-inline-start:auto; display:flex; gap:8px;">
             <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
-              <button onClick="{{ openMoves }}" style="background:#fff; color:var(--navy); border:1px solid var(--line); border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">🏃 תנועות</button>
-              <button onClick="{{ openBuilder }}" style="background:var(--navy); color:#fff; border:none; border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">🛠️ בנה שבוע</button>
+              <button onClick="{{ openMoves }}" style="background:var(--card); color:var(--navy); border:1px solid var(--line); border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">🏃 תנועות</button>
+              <button onClick="{{ openBuilder }}" style="background:var(--navy-bg); color:#fff; border:none; border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">🛠️ בנה שבוע</button>
             </sc-if>
-            <button onClick="{{ openShareWeek }}" style="background:#fff; color:var(--blue); border:1px solid var(--blue); border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">📤 שתף שבוע</button>
+            <button onClick="{{ openShareWeek }}" style="background:var(--card); color:var(--blue); border:1px solid var(--blue); border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">📤 שתף שבוע</button>
           </div>
         </div>
         <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px;">
@@ -429,7 +453,7 @@
           </sc-for>
         </div>
 
-        <div style="background:#fff; border:1px solid var(--line); border-radius:18px; overflow:hidden; box-shadow:0 6px 24px rgba(20,31,56,.06);">
+        <div style="background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden; box-shadow:0 6px 24px var(--shcol);">
           <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; padding:15px 20px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <button onClick="{{ prevDay }}" style="background:rgba(255,255,255,.12); border:none; color:#fff; width:34px; height:34px; border-radius:10px; cursor:pointer; font-size:18px; flex:none;">‹</button>
             <div style="display:flex; flex-direction:column; gap:2px;">
@@ -457,7 +481,7 @@
           </div>
 
           <sc-if value="{{ hasAlt }}" hint-placeholder-val="{{ false }}">
-            <div style="display:flex; gap:6px; padding:10px 18px; background:#eef1fb; border-bottom:1px solid var(--line);">
+            <div style="display:flex; gap:6px; padding:10px 18px; background:var(--tabbg); border-bottom:1px solid var(--line);">
               <button onClick="{{ setSessMain }}" style="{{ sessMainTabStyle }}">💪 {{ sessMainLabel }}</button>
               <button onClick="{{ setSessAlt }}" style="{{ sessAltTabStyle }}">🚴 {{ sessAltLabel }}</button>
             </div>
@@ -474,15 +498,15 @@
                     <button onClick="{{ setEditMode }}" style="margin-top:20px; background:var(--blue); color:#fff; border:none; border-radius:999px; padding:11px 24px; font-weight:700; font-size:14px; cursor:pointer;">+ הזן אימון עכשיו</button>
                   </sc-if>
                   <sc-if value="{{ notAdmin }}" hint-placeholder-val="{{ true }}">
-                    <button onClick="{{ gotoToday }}" style="margin-top:20px; background:#f4f3ef; color:var(--navy); border:1px solid var(--line); border-radius:999px; padding:11px 24px; font-weight:700; font-size:14px; cursor:pointer;">← חזרה לאימון של היום</button>
+                    <button onClick="{{ gotoToday }}" style="margin-top:20px; background:var(--paper); color:var(--navy); border:1px solid var(--line); border-radius:999px; padding:11px 24px; font-weight:700; font-size:14px; cursor:pointer;">← חזרה לאימון של היום</button>
                   </sc-if>
                 </div>
               </sc-if>
 
               <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; align-items:start;">
                 <sc-if value="{{ vShowLift }}" hint-placeholder-val="{{ true }}">
-                  <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:#fff;">
-                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:#f4f3ef; border-bottom:1px solid var(--line);">
+                  <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card);">
+                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:var(--paper); border-bottom:1px solid var(--line);">
                       <span style="font-size:15px;">🏋️</span>
                       <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">LIFT</span>
                     </div>
@@ -498,8 +522,8 @@
                 </sc-if>
 
                 <sc-if value="{{ vShowMetcon }}" hint-placeholder-val="{{ true }}">
-                  <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:#fff;">
-                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:#f4f3ef; border-bottom:1px solid var(--line);">
+                  <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card);">
+                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:var(--paper); border-bottom:1px solid var(--line);">
                       <span style="font-size:15px;">⏱️</span>
                       <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">METCON</span>
                     </div>
@@ -532,8 +556,8 @@
                 </sc-if>
 
                 <sc-if value="{{ vShowMetcon2 }}" hint-placeholder-val="{{ false }}">
-                  <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:#fff;">
-                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:#f4f3ef; border-bottom:1px solid var(--line);">
+                  <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card);">
+                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:var(--paper); border-bottom:1px solid var(--line);">
                       <span style="font-size:15px;">⏱️</span>
                       <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">METCON B</span>
                     </div>
@@ -563,8 +587,8 @@
                 </sc-if>
 
                 <sc-if value="{{ vShowExtra }}" hint-placeholder-val="{{ false }}">
-                  <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:#fff;">
-                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:#f4f3ef; border-bottom:1px solid var(--line);">
+                  <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card);">
+                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:var(--paper); border-bottom:1px solid var(--line);">
                       <span style="font-size:15px;">➕</span>
                       <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">EXTRA</span>
                     </div>
@@ -596,7 +620,7 @@
                 </div>
 
                 <div style="grid-column:1 / -1;">{{ saveBar }}</div>
-                <div style="grid-column:1 / -1;"><button onClick="{{ openShareDay }}" style="width:100%; background:#fff; color:var(--blue); border:1px solid var(--blue); border-radius:12px; padding:11px; font-weight:700; font-size:14px; cursor:pointer;">📤 שתף את האימון כתמונה</button></div>
+                <div style="grid-column:1 / -1;"><button onClick="{{ openShareDay }}" style="width:100%; background:var(--card); color:var(--blue); border:1px solid var(--blue); border-radius:12px; padding:11px; font-weight:700; font-size:14px; cursor:pointer;">📤 שתף את האימון כתמונה</button></div>
               </div>
             </div>
           </sc-if>
@@ -642,7 +666,7 @@
                       <input dir="auto" data-path="metcon.scheme" value="{{ day.metcon.scheme }}" onChange="{{ onEdit }}" placeholder="AMRAP / For Time / Rounds" style="{{ inputStyle }}">
                     </label>
                   </div>
-                  <div style="display:flex; flex-direction:column; gap:7px; background:#faf9f6; border:1px solid var(--line); border-radius:12px; padding:12px;">
+                  <div style="display:flex; flex-direction:column; gap:7px; background:var(--field); border:1px solid var(--line); border-radius:12px; padding:12px;">
                     <sc-for list="{{ day.metcon.movements }}" as="mv" hint-placeholder-count="4">
                       <div style="display:grid; grid-template-columns:26px 1fr 1.1fr; gap:8px; align-items:center;">
                         <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:12px; color:var(--orange); text-align:center;">{{ mv.num }}</span>
@@ -664,7 +688,7 @@
 
               <div style="margin-top:26px;">
                 <div style="display:flex; align-items:center; gap:9px; margin-bottom:12px;">
-                  <span style="width:4px; height:20px; background:#7a8194; border-radius:3px;"></span>
+                  <span style="width:4px; height:20px; background:var(--faint); border-radius:3px;"></span>
                   <span style="font-size:17px;">➕</span>
                   <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.06em;">EXTRA / ACCESSORY</span>
                 </div>
@@ -704,7 +728,7 @@
 
   <sc-if value="{{ welcomeOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeWelcome }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .25s ease both;">
-      <div onClick="{{ stop }}" style="background:#fff; border-radius:24px; width:100%; max-width:440px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto;">
+      <div onClick="{{ stop }}" style="background:var(--card); border-radius:24px; width:100%; max-width:440px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto;">
         <div style="background:linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a); color:#fff; padding:15px 22px 13px; text-align:center;">
           <img src="assets/logo.png" alt="" style="width:38px; height:38px; border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.25); margin-bottom:5px;">
           <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; letter-spacing:.05em;">ברוכים הבאים 👋</div>
@@ -715,13 +739,13 @@
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📅</span><div style="line-height:1.45;"><b style="font-size:13px;">יומן</b> <span style="font-size:12px; color:var(--muted);">— האימון היומי. תעד תוצאות, דרג מאמץ וסמן "הושלם".</span></div></div>
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏅</span><div style="line-height:1.45;"><b style="font-size:13px;">דירוג</b> <span style="font-size:12px; color:var(--muted);">— מתחרים בקטגוריה שלך על סמך תוצאות המטקון.</span></div></div>
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏆</span><div style="line-height:1.45;"><b style="font-size:13px;">שיאים</b> <span style="font-size:12px; color:var(--muted);">— שיאי המשקל שלך לפי תרגיל + אימונים שסימנת 🏆.</span></div></div>
-          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">👤</span><div style="line-height:1.45;"><b style="font-size:13px;">פרופיל</b> <span style="font-size:12px; color:var(--muted);">— הכפתור העגול למעלה: הקטגוריה, ההישגים והנתונים האישיים שלך.</span></div></div>
+          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">👤</span><div style="line-height:1.45;"><b style="font-size:13px;">פרופיל</b> <span style="font-size:12px; color:var(--muted);">— הכפתור העגול למעלה: הקטגוריה, ההישגים והנתונים האישיים שלך, וגם מצב תצוגה: בהיר / כהה / אוטומטי 🌙.</span></div></div>
           <div style="display:flex; flex-direction:column; gap:4px; background:rgba(239,91,37,.08); border:1px solid rgba(239,91,37,.3); border-radius:11px; padding:9px 12px;">
             <div style="display:flex; gap:7px; align-items:center;"><span style="font-size:16px;">📲</span><b style="font-size:13px;">התקינו כאפליקציה על הטלפון</b></div>
             <div style="font-size:11.5px; color:var(--ink); line-height:1.5;"><b>🍏 אייפון</b> (Safari): שיתוף ⬆️ ← «הוסף למסך הבית».</div>
             <div style="font-size:11.5px; color:var(--ink); line-height:1.5;"><b>🤖 אנדרואיד</b> (Chrome): תפריט ⋮ ← «הוספה למסך הבית».</div>
           </div>
-          <div style="display:flex; gap:8px; align-items:center; background:#f4f3ef; border-radius:11px; padding:9px 12px;">
+          <div style="display:flex; gap:8px; align-items:center; background:var(--paper); border-radius:11px; padding:9px 12px;">
             <span style="font-size:16px; flex:none;">💬</span>
             <div style="font-size:12px; color:var(--muted); line-height:1.4;">נתקעת? <a href="https://wa.me/972523330954" target="_blank" style="font-weight:700; white-space:nowrap;">אורי · 052-333-0954</a></div>
           </div>
@@ -733,7 +757,7 @@
 
   <sc-if value="{{ onbOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed; inset:0; background:rgba(12,18,34,.72); backdrop-filter:blur(4px); z-index:110; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .25s ease both;">
-      <div style="background:#fff; border-radius:24px; width:100%; max-width:430px; box-shadow:0 24px 70px rgba(12,18,34,.5); overflow:hidden; margin:auto;">
+      <div style="background:var(--card); border-radius:24px; width:100%; max-width:430px; box-shadow:0 24px 70px rgba(12,18,34,.5); overflow:hidden; margin:auto;">
         <div style="background:linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a); color:#fff; padding:26px 24px 22px; text-align:center;">
           <img src="assets/logo.png" alt="" style="width:56px; height:56px; border-radius:50%; box-shadow:0 0 0 3px rgba(255,255,255,.25); margin-bottom:12px;">
           <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:23px; letter-spacing:.04em;">בוא נכיר 💪</div>
@@ -743,7 +767,7 @@
           <label style="display:flex; flex-direction:column; gap:7px;">
             <span style="font-weight:700; font-size:14px; color:var(--ink);">איך קוראים לך?</span>
             <span style="font-size:12px; color:var(--muted); margin-top:-4px;">השם שיופיע בטבלת הדירוג של הבוקס.</span>
-            <input dir="auto" value="{{ onbName }}" onChange="{{ onOnbName }}" placeholder="השם שלך" style="border:1px solid var(--line); border-radius:11px; padding:12px 14px; font-size:16px; background:#fafaf8; color:var(--ink); outline:none;">
+            <input dir="auto" value="{{ onbName }}" onChange="{{ onOnbName }}" placeholder="השם שלך" style="border:1px solid var(--line); border-radius:11px; padding:12px 14px; font-size:16px; background:var(--field); color:var(--ink); outline:none;">
           </label>
           <div style="display:flex; flex-direction:column; gap:7px;">
             <span style="font-weight:700; font-size:14px; color:var(--ink);">כמה אימונים בשבוע? 🎯</span>
@@ -757,7 +781,7 @@
           <label style="display:flex; flex-direction:column; gap:7px;">
             <span style="font-weight:700; font-size:14px; color:var(--ink);">מה המטרה שלך בבלוק הזה?</span>
             <span style="font-size:12px; color:var(--muted); margin-top:-4px;">אופציונלי — נזכיר לך אותה כשתצטרך מוטיבציה.</span>
-            <input dir="auto" value="{{ onbGoal }}" onChange="{{ onOnbGoal }}" placeholder="למשל: להוציא Muscle-up ראשון" style="border:1px solid var(--line); border-radius:11px; padding:12px 14px; font-size:16px; background:#fafaf8; color:var(--ink); outline:none;">
+            <input dir="auto" value="{{ onbGoal }}" onChange="{{ onOnbGoal }}" placeholder="למשל: להוציא Muscle-up ראשון" style="border:1px solid var(--line); border-radius:11px; padding:12px 14px; font-size:16px; background:var(--field); color:var(--ink); outline:none;">
           </label>
           <div style="display:flex; flex-direction:column; gap:8px;">
             <button onClick="{{ finishOnb }}" style="{{ finishOnbStyle }}">בוא נתחיל 🚀</button>
@@ -770,7 +794,7 @@
 
   <sc-if value="{{ movesOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeMoves }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .25s ease both;">
-      <div onClick="{{ stop }}" dir="rtl" style="background:#fff; border-radius:22px; width:100%; max-width:460px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto; display:flex; flex-direction:column; max-height:calc(100vh - 40px);">
+      <div onClick="{{ stop }}" dir="rtl" style="background:var(--card); border-radius:22px; width:100%; max-width:460px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto; display:flex; flex-direction:column; max-height:calc(100vh - 40px);">
         <div style="background:linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a); color:#fff; padding:20px 22px; display:flex; align-items:center; gap:12px;">
           <span style="font-size:26px;">🏃</span>
           <div style="flex:1; min-width:0;">
@@ -780,14 +804,14 @@
           <button onClick="{{ closeMoves }}" style="background:rgba(255,255,255,.14); border:none; color:#fff; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; flex:none;">✕</button>
         </div>
         <div style="padding:16px 20px; border-bottom:1px solid var(--line); display:flex; gap:8px;">
-          <input dir="auto" value="{{ moveDraft }}" onChange="{{ onMoveDraft }}" placeholder="הוסף תנועה חדשה — למשל: Sandbag Clean" style="flex:1; min-width:0; border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:15px; background:#fafaf8; color:var(--ink); outline:none;">
+          <input dir="auto" value="{{ moveDraft }}" onChange="{{ onMoveDraft }}" placeholder="הוסף תנועה חדשה — למשל: Sandbag Clean" style="flex:1; min-width:0; border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:15px; background:var(--field); color:var(--ink); outline:none;">
           <button onClick="{{ addMove }}" style="flex:none; background:var(--orange); color:#fff; border:none; border-radius:10px; padding:11px 20px; font-weight:700; font-size:14px; cursor:pointer;">הוסף</button>
         </div>
         <div style="padding:12px 16px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
           <sc-for list="{{ moveList }}" as="m" hint-placeholder-count="8">
-            <div style="display:flex; align-items:center; gap:10px; background:#faf9f6; border:1px solid var(--line); border-radius:10px; padding:10px 14px;">
+            <div style="display:flex; align-items:center; gap:10px; background:var(--field); border:1px solid var(--line); border-radius:10px; padding:10px 14px;">
               <span dir="auto" style="flex:1; min-width:0; font-weight:600; font-size:14px; color:var(--ink);">{{ m.name }}</span>
-              <button onClick="{{ removeMove }}" data-m="{{ m.name }}" title="הסר" style="flex:none; background:#fdecea; color:#d8342b; border:none; border-radius:8px; padding:6px 10px; font-weight:700; font-size:13px; cursor:pointer;">✕</button>
+              <button onClick="{{ removeMove }}" data-m="{{ m.name }}" title="הסר" style="flex:none; background:var(--redbg); color:var(--red); border:none; border-radius:8px; padding:6px 10px; font-weight:700; font-size:13px; cursor:pointer;">✕</button>
             </div>
           </sc-for>
         </div>
@@ -798,15 +822,15 @@
 
   <sc-if value="{{ shareOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeShare }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:95; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .2s ease both;">
-      <div onClick="{{ stop }}" style="background:#fff; border-radius:22px; padding:20px; width:100%; max-width:424px; box-shadow:0 24px 70px rgba(12,18,34,.45); margin:auto;">
+      <div onClick="{{ stop }}" style="background:var(--card); border-radius:22px; padding:20px; width:100%; max-width:424px; box-shadow:0 24px 70px rgba(12,18,34,.45); margin:auto;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
           <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.04em; color:var(--navy);">{{ shareTitle }}</div>
-          <button onClick="{{ closeShare }}" style="background:#f4f3ef; border:none; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; color:var(--muted);">✕</button>
+          <button onClick="{{ closeShare }}" style="background:var(--paper); border:none; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; color:var(--muted);">✕</button>
         </div>
         <div style="display:flex; justify-content:center; margin-bottom:16px;">{{ shareCard }}</div>
         <div style="display:flex; gap:10px;">
           <button onClick="{{ shareDownload }}" style="flex:1; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📸 הורד תמונה</button>
-          <button onClick="{{ shareCopy }}" style="flex:1; background:#f4f3ef; color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📋 העתק טקסט</button>
+          <button onClick="{{ shareCopy }}" style="flex:1; background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📋 העתק טקסט</button>
         </div>
         <div style="text-align:center; font-size:11px; color:var(--muted); margin-top:12px;">שתף בוואטסאפ, שמור למכשיר או שלח למאמן</div>
       </div>
@@ -815,7 +839,7 @@
 
   <sc-if value="{{ builderOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeBuilder }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:95; display:flex; align-items:flex-start; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .2s ease both;">
-      <div onClick="{{ stop }}" style="background:#f4f3ef; border-radius:22px; width:100%; max-width:680px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto;">
+      <div onClick="{{ stop }}" style="background:var(--paper); border-radius:22px; width:100%; max-width:680px; box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:hidden; margin:auto;">
         {{ builderBody }}
       </div>
     </div>
@@ -823,7 +847,7 @@
 
   <sc-if value="{{ profileOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeProfile }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:130; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
-      <div dir="rtl" onClick="{{ stop }}" style="background:#fff; border-radius:20px; width:100%; max-width:400px; box-shadow:0 20px 60px rgba(12,18,34,.4); overflow:hidden;">
+      <div dir="rtl" onClick="{{ stop }}" style="background:var(--card); border-radius:20px; width:100%; max-width:400px; box-shadow:0 20px 60px rgba(12,18,34,.4); overflow:hidden;">
         <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; padding:22px 24px; display:flex; align-items:center; gap:14px;">
           <div style="width:56px; height:56px; border-radius:50%; background:var(--orange); display:flex; align-items:center; justify-content:center; font-size:26px; flex:none;">👤</div>
           <div style="flex:1; min-width:0;">
@@ -855,7 +879,7 @@
           <sc-if value="{{ profileHasPRs }}" hint-placeholder-val="{{ true }}">
             <div style="display:flex; flex-direction:column; gap:8px;">
               <sc-for list="{{ profilePRs }}" as="pr" hint-placeholder-count="3">
-                <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1px solid var(--line); border-inline-start:3px solid var(--orange); border-radius:10px; padding:10px 12px;">
+                <div style="display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--line); border-inline-start:3px solid var(--orange); border-radius:10px; padding:10px 12px;">
                   <span style="font-size:16px; flex:none;">🏆</span>
                   <div style="flex:1; min-width:0;">
                     <div dir="auto" style="font-weight:700; font-size:14px; color:var(--ink);">{{ pr.move }}</div>
@@ -869,6 +893,15 @@
           <sc-if value="{{ profileNoPRs }}" hint-placeholder-val="{{ false }}">
             <div style="text-align:center; color:var(--muted); font-size:13px; padding:14px;">עדיין אין שיאים — סמן 🏆 "שברתי שיא" ביומן.</div>
           </sc-if>
+          <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line);">
+            <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:10px;">🌓 מצב תצוגה</div>
+            <div style="display:flex; gap:2px; background:var(--chip); border-radius:999px; padding:3px; width:fit-content;">
+              <sc-for list="{{ themePills }}" as="tp" hint-placeholder-count="3">
+                <button onClick="{{ onThemeMode }}" data-m="{{ tp.m }}" style="{{ tp.style }}">{{ tp.label }}</button>
+              </sc-for>
+            </div>
+            <div style="font-size:11px; color:var(--muted); margin-top:8px;">באוטומטי האפליקציה עוקבת אחרי מצב התצוגה של הטלפון. הבחירה נשמרת במכשיר הזה.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -876,7 +909,7 @@
 
   <sc-if value="{{ peerOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closePeer }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:130; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
-      <div dir="rtl" onClick="{{ stop }}" style="background:#fff; border-radius:20px; width:100%; max-width:400px; max-height:86vh; overflow:auto; box-shadow:0 20px 60px rgba(12,18,34,.4);">
+      <div dir="rtl" onClick="{{ stop }}" style="background:var(--card); border-radius:20px; width:100%; max-width:400px; max-height:86vh; overflow:auto; box-shadow:0 20px 60px rgba(12,18,34,.4);">
         <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; padding:22px 24px; display:flex; align-items:center; gap:14px;">
           <div style="width:56px; height:56px; border-radius:50%; background:var(--blue); display:flex; align-items:center; justify-content:center; font-size:26px; flex:none;">👤</div>
           <div style="flex:1; min-width:0;">
@@ -911,7 +944,7 @@
           <sc-if value="{{ peerHasPRs }}" hint-placeholder-val="{{ false }}">
             <div style="display:flex; flex-direction:column; gap:8px;">
               <sc-for list="{{ peerPRs }}" as="pr" hint-placeholder-count="3">
-                <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1px solid var(--line); border-inline-start:3px solid var(--orange); border-radius:10px; padding:10px 12px;">
+                <div style="display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--line); border-inline-start:3px solid var(--orange); border-radius:10px; padding:10px 12px;">
                   <span style="font-size:16px; flex:none;">🏆</span>
                   <div style="flex:1; min-width:0;">
                     <div dir="auto" style="font-weight:700; font-size:14px; color:var(--ink);">{{ pr.move }}</div>
@@ -932,7 +965,7 @@
 
   <sc-if value="{{ liftChartOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeLiftChart }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:130; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
-      <div dir="rtl" onClick="{{ stop }}" style="background:#fff; border-radius:20px; width:100%; max-width:600px; box-shadow:0 20px 60px rgba(12,18,34,.4); overflow:hidden;">
+      <div dir="rtl" onClick="{{ stop }}" style="background:var(--card); border-radius:20px; width:100%; max-width:600px; box-shadow:0 20px 60px rgba(12,18,34,.4); overflow:hidden;">
         <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; padding:18px 22px; display:flex; align-items:center; gap:12px;">
           <span style="font-size:24px; flex:none;">📈</span>
           <div style="flex:1; min-width:0;">
@@ -950,25 +983,25 @@
   </sc-if>
 
   <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
-    <div style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--navy); color:#fff; padding:12px 22px; border-radius:999px; font-weight:600; font-size:14px; z-index:120; box-shadow:0 10px 30px rgba(0,0,0,.3); animation:fadeUp .2s ease both;">{{ toast }}</div>
+    <div style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--navy-bg); color:#fff; padding:12px 22px; border-radius:999px; font-weight:600; font-size:14px; z-index:120; box-shadow:0 10px 30px rgba(0,0,0,.3); animation:fadeUp .2s ease both;">{{ toast }}</div>
   </sc-if>
 
   <sc-if value="{{ adminOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeAdmin }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:90; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
-      <div onClick="{{ stop }}" style="background:#fff; border-radius:20px; padding:26px 26px 24px; width:100%; max-width:340px; box-shadow:0 20px 60px rgba(12,18,34,.4);">
+      <div onClick="{{ stop }}" style="background:var(--card); border-radius:20px; padding:26px 26px 24px; width:100%; max-width:340px; box-shadow:0 20px 60px rgba(12,18,34,.4);">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
           <img src="assets/logo.png" alt="" style="width:34px; height:34px; border-radius:50%;">
           <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; letter-spacing:.05em; color:var(--navy);">ADMIN ACCESS</div>
         </div>
         <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
           <div style="font-size:13px; color:var(--muted); margin:10px 0 18px;">אתה מחובר כמנהל — יש לך הרשאות עריכה מלאות.</div>
-          <button onClick="{{ adminLogout }}" style="width:100%; background:#f4f3ef; color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">התנתק ממצב מנהל</button>
+          <button onClick="{{ adminLogout }}" style="width:100%; background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">התנתק ממצב מנהל</button>
         </sc-if>
         <sc-if value="{{ notAdmin }}" hint-placeholder-val="{{ true }}">
           <div style="font-size:13px; color:var(--muted); margin:10px 0 14px;">הזן קוד מנהל כדי לפתוח עריכת אימונים. שאר המשתמשים יכולים לצפות ולסמן אימון כהושלם.</div>
           {{ adminInputField }}
           <sc-if value="{{ adminError }}" hint-placeholder-val="{{ false }}">
-            <div style="font-size:12px; color:#d8342b; font-weight:600; margin-top:8px;">קוד שגוי, נסה שוב.</div>
+            <div style="font-size:12px; color:var(--red); font-weight:600; margin-top:8px;">קוד שגוי, נסה שוב.</div>
           </sc-if>
           <button onClick="{{ adminSubmit }}" style="width:100%; margin-top:14px; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">כניסה</button>
         </sc-if>
@@ -1261,11 +1294,11 @@ class Component extends DCLogic {
   }
   selIsFuture() { return this.state.selWeek*7 + this.state.selDay > this.rawTodayIdx(); }
   futureNote() {
-    return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'8px', background:'#f4f3ef', border:'1px dashed var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'12.5px', color:'var(--muted)', fontWeight:600 } }, '🔒 הזנת התוצאות תיפתח ביום האימון');
+    return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'8px', background:'var(--paper)', border:'1px dashed var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'12.5px', color:'var(--muted)', fontWeight:600 } }, '🔒 הזנת התוצאות תיפתח ביום האימון');
   }
   // Endurance days: one session per day. Shown on the session whose twin is done.
   altLockNote(asAlt) {
-    return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'8px', background:'#f4f3ef', border:'1px dashed var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'12.5px', color:'var(--muted)', fontWeight:600 } },
+    return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'8px', background:'var(--paper)', border:'1px dashed var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'12.5px', color:'var(--muted)', fontWeight:600 } },
       asAlt ? '🔒 השלמת כבר את ה-WOD — ביום כזה מזינים אימון אחד בלבד' : '🔒 השלמת כבר את אימון האינדורנס — ביום כזה מזינים אימון אחד בלבד');
   }
 
@@ -1469,8 +1502,8 @@ class Component extends DCLogic {
       iconStyle:'font-size:24px; line-height:1; ' + (b.earned ? '' : 'filter:grayscale(1); opacity:.4;'),
       labelStyle:'font-size:10.5px; font-weight:700; color:' + (b.earned ? 'var(--ink)' : 'var(--muted)') + ';' }));
   }
-  catPillStyle(active) { return 'border:none; cursor:pointer; padding:7px 14px; border-radius:999px; font-weight:700; font-size:12.5px; white-space:nowrap; transition:all .15s; ' + (active ? 'background:var(--orange); color:#fff;' : 'background:#eeede8; color:var(--muted);'); }
-  segLight(active) { return 'border:none; cursor:pointer; padding:8px 18px; border-radius:999px; font-weight:700; font-size:13px; transition:all .15s; ' + (active ? 'background:var(--navy); color:#fff;' : 'background:#eeede8; color:var(--muted);'); }
+  catPillStyle(active) { return 'border:none; cursor:pointer; padding:7px 14px; border-radius:999px; font-weight:700; font-size:12.5px; white-space:nowrap; transition:all .15s; ' + (active ? 'background:var(--orange); color:#fff;' : 'background:var(--chip); color:var(--muted);'); }
+  segLight(active) { return 'border:none; cursor:pointer; padding:8px 18px; border-radius:999px; font-weight:700; font-size:13px; transition:all .15s; ' + (active ? 'background:var(--navy-bg); color:#fff;' : 'background:var(--chip); color:var(--muted);'); }
   saveBoard() { try { localStorage.setItem(this.BOARD_KEY, JSON.stringify({ board:this.state.board, myName:this.state.myName, myResults:this.state.myResults, myTarget:this.state.myTarget, myGoal:this.state.myGoal })); } catch (e) {} }
   myTargetVal() { return this.state.myTarget || this.WEEKLY_TARGET; }
   saveMoves() { try { localStorage.setItem(this.MOVES_KEY, JSON.stringify(this.state.moves)); } catch (e) {} }
@@ -1483,18 +1516,18 @@ class Component extends DCLogic {
   removeAthlete(id) { const board = this.state.board.filter(a=>a.id!==id); this.setState({ board }, ()=>this.saveBoard()); }
   boardEditorEl() {
     const bw = this.state.selBoardWeek;
-    const numStyle = { border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 4px', fontSize:'14px', background:'#fff', color:'var(--ink)', outline:'none', textAlign:'center', fontWeight:600, boxSizing:'border-box', width:'100%' };
-    const selStyle = { border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 6px', fontSize:'12.5px', background:'#fff', color:'var(--ink)', outline:'none', boxSizing:'border-box', width:'100%', fontFamily:'inherit', cursor:'pointer' };
+    const numStyle = { border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 4px', fontSize:'14px', background:'var(--card)', color:'var(--ink)', outline:'none', textAlign:'center', fontWeight:600, boxSizing:'border-box', width:'100%' };
+    const selStyle = { border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 6px', fontSize:'12.5px', background:'var(--card)', color:'var(--ink)', outline:'none', boxSizing:'border-box', width:'100%', fontFamily:'inherit', cursor:'pointer' };
     const rows = this.state.board.map((a)=>{
       const wk = (a.weeks && a.weeks[bw]) || {};
       return React.createElement('div', { key:a.id, style:{ display:'grid', gridTemplateColumns:'1fr 58px 72px 36px', gap:'8px', alignItems:'center' } },
-        React.createElement('input', { dir:'auto', value:a.name||'', placeholder:'שם המתחרה', onChange:(e)=>this.editAthleteName(a.id,e.target.value), style:{ border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 10px', fontSize:'14px', background:'#fff', color:'var(--ink)', outline:'none', boxSizing:'border-box', width:'100%' } }),
+        React.createElement('input', { dir:'auto', value:a.name||'', placeholder:'שם המתחרה', onChange:(e)=>this.editAthleteName(a.id,e.target.value), style:{ border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 10px', fontSize:'14px', background:'var(--card)', color:'var(--ink)', outline:'none', boxSizing:'border-box', width:'100%' } }),
         React.createElement('input', { inputMode:'numeric', value:wk.completed||0, onChange:(e)=>this.editAthleteWeek(a.id,bw,'completed',e.target.value), style:numStyle }),
         React.createElement('input', { inputMode:'numeric', value:wk.result||0, onChange:(e)=>this.editAthleteWeek(a.id,bw,'result',e.target.value), style:numStyle }),
-        React.createElement('button', { onClick:()=>this.removeAthlete(a.id), title:'הסר', style:{ background:'#fdecea', color:'#d8342b', border:'none', borderRadius:'9px', padding:'8px 0', fontWeight:700, fontSize:'14px', cursor:'pointer' } }, '✕')
+        React.createElement('button', { onClick:()=>this.removeAthlete(a.id), title:'הסר', style:{ background:'var(--redbg)', color:'var(--red)', border:'none', borderRadius:'9px', padding:'8px 0', fontWeight:700, fontSize:'14px', cursor:'pointer' } }, '✕')
       );
     });
-    return React.createElement('div', { style:{ background:'#fff', border:'1px solid var(--line)', borderRadius:'16px', padding:'18px 20px', marginTop:'14px' } },
+    return React.createElement('div', { style:{ background:'var(--card)', border:'1px solid var(--line)', borderRadius:'16px', padding:'18px 20px', marginTop:'14px' } },
       React.createElement('div', { style:{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'4px', flexWrap:'wrap', gap:'8px' } },
         React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'15px', letterSpacing:'.04em', color:'var(--navy)' } }, '🔧 ניהול מתחרים · שבוע '+(bw+1)),
         React.createElement('div', { style:{ fontSize:'11px', color:'var(--muted)' } }, 'שם · הושלמו · תוצאה')
@@ -1522,7 +1555,7 @@ class Component extends DCLogic {
     return React.createElement('textarea', {
       dir: 'auto', value: val || '', placeholder: ph,
       onChange: (e) => this.onEditPath(path, e.target.value),
-      style: { border:'1px solid var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'14px', background:'#fafaf8', color:'var(--ink)', outline:'none', width:'100%', minHeight:(min||64)+'px', resize:'vertical', whiteSpace:'pre-wrap', fontFamily:'inherit', lineHeight:1.5 }
+      style: { border:'1px solid var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'14px', background:'var(--field)', color:'var(--ink)', outline:'none', width:'100%', minHeight:(min||64)+'px', resize:'vertical', whiteSpace:'pre-wrap', fontFamily:'inherit', lineHeight:1.5 }
     });
   }
   onEditPath(path, val) {
@@ -1538,14 +1571,14 @@ class Component extends DCLogic {
   // breaking a record doesn't "use up" the effort rating.
   RPE_DESC = { 1:'קל מאוד', 2:'קל מאוד', 3:'קל', 4:'קל-בינוני', 5:'בינוני', 6:'בינוני-קשה', 7:'קשה — נשאר בטנק', 8:'קשה מאוד', 9:'כמעט מקסימלי', 10:'מאמץ מקסימלי' };
   rpeVal(k) { const n = parseInt(k,10); return (n>=1 && n<=10 && String(n)===String(k).trim()) ? n : 0; }
-  rpeColor(n) { return n<=4 ? '#3fa9bf' : n<=6 ? '#3fbf6a' : n<=8 ? '#ef8c25' : '#d8342b'; }
+  rpeColor(n) { return n<=4 ? '#3fa9bf' : n<=6 ? '#3fbf6a' : n<=8 ? '#ef8c25' : 'var(--red)'; }
   rpeEmoji(n) { return n<=4 ? '😌' : n<=6 ? '💪' : n<=8 ? '🥵' : '🔥'; }
   // Pre-RPE scales still exist in saved days — keep metas so historical badges
   // and share texts render. 'pr' migrates to the pr flag; the feel scale
   // (easy/good/hard/max) and old good/average migrate to RPE in normalizeDay.
   LEGACY_RATINGS = [
     { k:'pr',      label:'PR',      emoji:'🏆', color:'#e8a53a' },
-    { k:'missed',  label:'Missed',  emoji:'❌', color:'#d8342b' }
+    { k:'missed',  label:'Missed',  emoji:'❌', color:'var(--red)' }
   ];
   ratingMeta(k) {
     const n = this.rpeVal(k);
@@ -1567,8 +1600,8 @@ class Component extends DCLogic {
           fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'15px', textAlign:'center',
           cursor: editable ? 'pointer' : 'default', transition:'all .15s',
           border: on ? ('1.5px solid '+this.rpeColor(n)) : '1.5px solid var(--line)',
-          background: on ? this.rpeColor(n) : '#fff',
-          color: on ? '#fff' : (editable ? 'var(--ink)' : '#c9cace'),
+          background: on ? this.rpeColor(n) : 'var(--card)',
+          color: on ? '#fff' : (editable ? 'var(--ink)' : 'var(--ghost)'),
           opacity: (!editable && !on) ? .45 : 1
         }
       }, String(n)));
@@ -1591,8 +1624,8 @@ class Component extends DCLogic {
       onClick: editable ? (()=>this.onEditPath('pr', !on)) : undefined,
       disabled: !editable,
       style:{ alignSelf:'flex-start', display:'inline-flex', alignItems:'center', gap:'7px',
-        border:'1.5px solid '+(on?'#e8a53a':'var(--line)'), background:on?'rgba(232,165,58,.14)':'#fff',
-        color:on?'#b07d1e':'var(--muted)', borderRadius:'999px', padding:'8px 15px', fontWeight:700,
+        border:'1.5px solid '+(on?'#e8a53a':'var(--line)'), background:on?'rgba(232,165,58,.14)':'var(--card)',
+        color:on?'var(--goldink)':'var(--muted)', borderRadius:'999px', padding:'8px 15px', fontWeight:700,
         fontSize:'12.5px', cursor:editable?'pointer':'default', transition:'all .15s', opacity:(!editable&&!on)?.45:1 }
     }, '🏆', on ? '✓ שברתי שיא באימון הזה' : 'שברתי שיא באימון הזה');
   }
@@ -1612,8 +1645,8 @@ class Component extends DCLogic {
     const kids = [];
     for (let g=0; g<=3; g++) {
       const v = lo + (hi-lo)*g/3, y = Y(v);
-      kids.push(React.createElement('line', { key:'g'+g, x1:padL, x2:W-padR, y1:y, y2:y, stroke:'#eceef3', strokeWidth:1 }));
-      kids.push(React.createElement('text', { key:'gl'+g, x:padL-8, y:y+3.5, textAnchor:'end', fontSize:10, fill:'#8a8d94' }, String(Math.round(v))));
+      kids.push(React.createElement('line', { key:'g'+g, x1:padL, x2:W-padR, y1:y, y2:y, stroke:'var(--grid)', strokeWidth:1 }));
+      kids.push(React.createElement('text', { key:'gl'+g, x:padL-8, y:y+3.5, textAnchor:'end', fontSize:10, fill:'var(--faint)' }, String(Math.round(v))));
     }
     if (h.length > 1) {
       const pts = h.map((p,i)=>X(i)+','+Y(p.wt)).join(' ');
@@ -1625,12 +1658,12 @@ class Component extends DCLogic {
     h.forEach((p,i)=>{
       const isBest = p.wt === entry.best;
       const x = X(i), y = Y(p.wt);
-      kids.push(React.createElement('circle', { key:'c'+i, cx:x, cy:y, r:isBest?5.5:4, fill:isBest?'var(--orange)':'#fff', stroke:isBest?'var(--orange)':'var(--blue)', strokeWidth:2 },
+      kids.push(React.createElement('circle', { key:'c'+i, cx:x, cy:y, r:isBest?5.5:4, fill:isBest?'var(--orange)':'var(--card)', stroke:isBest?'var(--orange)':'var(--blue)', strokeWidth:2 },
         React.createElement('title', null, 'W'+p.week+' · '+p.date+' · '+p.wt+'kg'+(p.reps?(' × '+p.reps):''))));
       if (i % vstep === 0 || isBest || i === h.length-1)
         kids.push(React.createElement('text', { key:'v'+i, x, y:y-10, textAnchor:'middle', fontSize:11, fontWeight:700, fontFamily:"'Oswald',sans-serif", fill:isBest?'var(--orange)':'var(--navy)' }, String(p.wt)));
       if (i % step === 0 || i === h.length-1)
-        kids.push(React.createElement('text', { key:'w'+i, x, y:H-padB+16, textAnchor:'middle', fontSize:10, fontWeight:700, fill:'#8a8d94' }, 'W'+p.week));
+        kids.push(React.createElement('text', { key:'w'+i, x, y:H-padB+16, textAnchor:'middle', fontSize:10, fontWeight:700, fill:'var(--faint)' }, 'W'+p.week));
     });
     const svg = React.createElement('svg', { viewBox:'0 0 '+W+' '+H, style:{ width:'100%', height:'auto', display:'block', direction:'ltr' } }, kids);
     return React.createElement('div', null, svg,
@@ -1687,10 +1720,10 @@ class Component extends DCLogic {
         );
     const pill = (on, activeColor, activeBg, onClick, title, label) => React.createElement('button', {
       onClick, title,
-      style:{ display:'inline-flex', alignItems:'center', gap:'6px', border:'1.5px solid '+(on?activeColor:'var(--line)'), background:on?activeBg:'#fff', color:on?activeColor:'var(--muted)', borderRadius:'999px', padding:'7px 14px', fontWeight:700, fontSize:'12.5px', cursor:'pointer', transition:'all .15s' }
+      style:{ display:'inline-flex', alignItems:'center', gap:'6px', border:'1.5px solid '+(on?activeColor:'var(--line)'), background:on?activeBg:'var(--card)', color:on?activeColor:'var(--muted)', borderRadius:'999px', padding:'7px 14px', fontWeight:700, fontSize:'12.5px', cursor:'pointer', transition:'all .15s' }
     }, (on?'✓':'○') + ' ' + label);
     return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } },
-      fixed ? null : React.createElement('div', { style:{ display:'flex', gap:'2px', background:'#eeede8', borderRadius:'10px', padding:'3px', width:'fit-content' } }, seg('time','Time'), seg('rounds','Rounds + Reps')),
+      fixed ? null : React.createElement('div', { style:{ display:'flex', gap:'2px', background:'var(--chip)', borderRadius:'10px', padding:'3px', width:'fit-content' } }, seg('time','Time'), seg('rounds','Rounds + Reps')),
       React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } }, inputs, this.unit(this.txtEl(base+'.log.note', M.note, 'הערה'), 'note')),
       React.createElement('div', { style:{ display:'flex', gap:'8px', flexWrap:'wrap' } },
         pill(!!metcon.rx, 'var(--orange)', 'rgba(239,91,37,.12)', ()=>this.setRxScaled(base,'rx'), 'רק ביצוע במשקלי ה-RX שכתובים באימון נכנס לדירוג', 'עשיתי RX — נכנס לדירוג'),
@@ -1779,7 +1812,7 @@ class Component extends DCLogic {
   }
   saveBarEl(day, lockedByOther, asAlt) {
     if (lockedByOther) {
-      return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'12px', background:'#f4f3ef', border:'1px dashed var(--line)', borderRadius:'14px', padding:'14px 16px' } },
+      return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'12px', background:'var(--paper)', border:'1px dashed var(--line)', borderRadius:'14px', padding:'14px 16px' } },
         React.createElement('span', { style:{ fontSize:'22px', flex:'none' } }, '🔒'),
         React.createElement('div', { style:{ flex:1, minWidth:0 } },
           React.createElement('div', { style:{ fontWeight:700, fontSize:'14px', color:'var(--ink)' } }, 'הושלם כבר אימון אחד ביום הזה'),
@@ -1790,7 +1823,7 @@ class Component extends DCLogic {
       );
     }
     if (this.selIsFuture()) {
-      return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'12px', background:'#f4f3ef', border:'1px dashed var(--line)', borderRadius:'14px', padding:'14px 16px' } },
+      return React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:'12px', background:'var(--paper)', border:'1px dashed var(--line)', borderRadius:'14px', padding:'14px 16px' } },
         React.createElement('span', { style:{ fontSize:'22px', flex:'none' } }, '🔒'),
         React.createElement('div', { style:{ flex:1, minWidth:0 } },
           React.createElement('div', { style:{ fontWeight:700, fontSize:'14px', color:'var(--ink)' } }, 'אימון עתידי — צפייה בלבד'),
@@ -1805,11 +1838,11 @@ class Component extends DCLogic {
           React.createElement('div', { style:{ fontWeight:700, fontSize:'14px', color:'var(--ink)' } }, 'האימון נשמר ונספר כהושלם'),
           React.createElement('div', { style:{ fontSize:'12px', color:'var(--muted)', marginTop:'2px' } }, 'אפשר לעדכן תוצאות ולשמור שוב, או לבטל את השמירה.')
         ),
-        React.createElement('button', { onClick:()=>this.unsaveDay(), style:{ flex:'none', background:'#fff', color:'var(--muted)', border:'1px solid var(--line)', borderRadius:'999px', padding:'10px 18px', fontWeight:700, fontSize:'13px', cursor:'pointer' } }, 'בטל שמירה')
+        React.createElement('button', { onClick:()=>this.unsaveDay(), style:{ flex:'none', background:'var(--card)', color:'var(--muted)', border:'1px solid var(--line)', borderRadius:'999px', padding:'10px 18px', fontWeight:700, fontSize:'13px', cursor:'pointer' } }, 'בטל שמירה')
       );
     }
     const c = this.canComplete(day);
-    return React.createElement('div', { dir:'rtl', style:{ display:'flex', flexDirection:'column', gap:'10px', background:'#fff', border:'1px solid var(--line)', borderRadius:'14px', padding:'16px' } },
+    return React.createElement('div', { dir:'rtl', style:{ display:'flex', flexDirection:'column', gap:'10px', background:'var(--card)', border:'1px solid var(--line)', borderRadius:'14px', padding:'16px' } },
       React.createElement('div', { style:{ fontSize:'13px', color:'var(--muted)', lineHeight:1.6 } },
         c.ok ? 'הכול מוכן — לחיצה על שמור תזין את האימון כהושלם ותשמור את התוצאות שלך.'
              : (c.anyPresent ? ('כדי לשמור את האימון יש למלא: ' ) : 'אין עדיין אימון להשלים ליום הזה.'),
@@ -1818,7 +1851,7 @@ class Component extends DCLogic {
       React.createElement('button', {
         onClick:()=>this.saveDay(),
         disabled: !c.anyPresent,
-        style:{ background: c.ok ? 'var(--orange)' : '#e7e6e1', color: c.ok ? '#fff' : '#9a9ca4', border:'none', borderRadius:'12px', padding:'14px', fontWeight:700, fontSize:'15px', cursor: c.anyPresent ? 'pointer' : 'not-allowed' }
+        style:{ background: c.ok ? 'var(--orange)' : 'var(--dim)', color: c.ok ? '#fff' : 'var(--faint)', border:'none', borderRadius:'12px', padding:'14px', fontWeight:700, fontSize:'15px', cursor: c.anyPresent ? 'pointer' : 'not-allowed' }
       }, '💾 שמור אימון והשלם')
     );
   }
@@ -2000,7 +2033,7 @@ class Component extends DCLogic {
       name:(a.you ? String(a.name).replace(' (אתה)','') : a.name), score:a.score, cons:a.sub, you:a.you,
       rid: String(a.id),
       medal: i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1),
-      rowStyle: (a.you ? 'background:rgba(239,91,37,.1); border:1px solid rgba(239,91,37,.45);' : 'background:#fff; border:1px solid var(--line);') + ' display:grid; grid-template-columns:44px 1fr 74px 74px; align-items:center; gap:8px; padding:12px 14px; border-radius:12px; cursor:pointer;',
+      rowStyle: (a.you ? 'background:rgba(239,91,37,.1); border:1px solid rgba(239,91,37,.45);' : 'background:var(--card); border:1px solid var(--line);') + ' display:grid; grid-template-columns:44px 1fr 74px 74px; align-items:center; gap:8px; padding:12px 14px; border-radius:12px; cursor:pointer;',
       rankStyle: "font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; text-align:center;" + (i<3 ? '' : ' color:var(--muted);')
     }));
     const boardWeekPills = data.map((wk,wi)=>({ wi, n:wi+1, style:this.pillStyle(wi===bw) }));
@@ -2036,7 +2069,7 @@ class Component extends DCLogic {
       '= ללא שינוי משבוע שעבר';
     const rankDeltaStyle = rankDelta==null ? 'display:none;' :
       'font-size:11px; font-weight:700; margin-top:6px; color:' +
-      (rankDelta>0 ? '#1d6a3f' : rankDelta<0 ? '#d8342b' : 'var(--muted)') + ';';
+      (rankDelta>0 ? 'var(--greenink)' : rankDelta<0 ? 'var(--red)' : 'var(--muted)') + ';';
     const genderLabel = this.state.myGender==='female' ? 'אישה' : (this.state.myGender==='male' ? 'גבר' : '—');
     // My badge counters — same shape as the pub summary boot.js publishes, so
     // my card and what others see of me can never disagree.
@@ -2103,6 +2136,10 @@ class Component extends DCLogic {
       profileHasPRs: prList.length>0,
       profileNoPRs: prList.length===0,
       profileBadges: badgeCards, badgeCount,
+      themePills: (()=>{ const cur=this.state.themeMode || (window.cfbyThemePref ? window.cfbyThemePref() : 'auto');
+        return [{m:'auto',label:'🌗 אוטומטי'},{m:'light',label:'☀️ בהיר'},{m:'dark',label:'🌙 כהה'}]
+          .map(o=>({ m:o.m, label:o.label, style:this.segLight(cur===o.m) })); })(),
+      onThemeMode: (e)=>{ const m=e.currentTarget.dataset.m; if (window.cfbySetTheme) window.cfbySetTheme(m==='auto' ? null : m); this.setState({ themeMode:m }); },
       selBoardWeekNum: bw+1,
       boardWeekPills, trend,
       onBoardWeek: (e)=>this.setState({ selBoardWeek:+e.currentTarget.dataset.wi }),
@@ -2186,8 +2223,8 @@ class Component extends DCLogic {
       restBtnStyle: this.restBtnStyle(day.rest),
       restBtnLabel: day.rest ? '🛌 מנוחה' : '🛌 סמן מנוחה',
 
-      inputStyle: 'border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:15px; background:#fafaf8; color:var(--ink); outline:none; width:100%;',
-      inputSm: 'border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:14px; background:#fff; color:var(--ink); outline:none; width:100%;',
+      inputStyle: 'border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:15px; background:var(--field); color:var(--ink); outline:none; width:100%;',
+      inputSm: 'border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:14px; background:var(--card); color:var(--ink); outline:none; width:100%;',
       logStyle: 'border:1px solid rgba(35,64,154,.35); border-radius:10px; padding:10px 12px; font-size:15px; background:var(--log); color:var(--ink); outline:none; width:100%; font-weight:500;',
 
       onCell: (e)=>{ const wi=+e.currentTarget.dataset.wi, di=+e.currentTarget.dataset.di; this.setState({view:'log', selWeek:wi, selDay:di, activeSession:'main'}); },
@@ -2243,7 +2280,7 @@ class Component extends DCLogic {
       removeMove: (e)=>{ const nm=e.currentTarget.dataset.m; const moves=this.state.moves.filter(m=>m!==nm); this.setState({ moves }, ()=>this.saveMoves()); },
       onbName: this.state.onbName,
       onbGoal: this.state.onbGoal,
-      onbTargetOpts: [3,4,5,6].map(v=>({ v, style: 'flex:1; padding:12px 0; border-radius:11px; cursor:pointer; font-family:\'Oswald\',sans-serif; font-weight:700; font-size:18px; transition:all .12s; ' + (this.state.onbTarget===v ? 'background:var(--blue); color:#fff; border:1.5px solid var(--blue);' : 'background:#fafaf8; color:var(--muted); border:1.5px solid var(--line);') })),
+      onbTargetOpts: [3,4,5,6].map(v=>({ v, style: 'flex:1; padding:12px 0; border-radius:11px; cursor:pointer; font-family:\'Oswald\',sans-serif; font-weight:700; font-size:18px; transition:all .12s; ' + (this.state.onbTarget===v ? 'background:var(--blue); color:#fff; border:1.5px solid var(--blue);' : 'background:var(--field); color:var(--muted); border:1.5px solid var(--line);') })),
       onOnbName: (e)=>this.setState({ onbName:e.target.value }),
       onOnbGoal: (e)=>this.setState({ onbGoal:e.target.value }),
       onOnbTarget: (e)=>this.setState({ onbTarget:+e.currentTarget.dataset.t }),
@@ -2261,20 +2298,20 @@ class Component extends DCLogic {
 
   tabStyle(active) {
     return 'border:none; cursor:pointer; padding:8px 16px; border-radius:999px; font-weight:700; font-size:13px; transition:all .15s; ' +
-      (active ? 'background:#fff; color:var(--navy);' : 'background:transparent; color:#c3cdea;');
+      (active ? 'background:var(--card); color:var(--navy);' : 'background:transparent; color:#c3cdea;');
   }
   segStyle(active) {
     return 'border:none; cursor:pointer; padding:6px 14px; border-radius:999px; font-weight:700; font-size:12px; transition:all .15s; ' +
-      (active ? 'background:#fff; color:var(--navy);' : 'background:transparent; color:#c3cdea;');
+      (active ? 'background:var(--card); color:var(--navy);' : 'background:transparent; color:#c3cdea;');
   }
   cellStyle(st, today, missed) {
     const base = 'aspect-ratio:1/1; border-radius:8px; cursor:pointer; font-family:\'Oswald\',sans-serif; font-weight:600; font-size:12px; display:flex; align-items:center; justify-content:center; transition:transform .1s; ';
     let s;
     if (st==='done') s = 'background:var(--blue); color:#fff; border:none;';
-    else if (missed) s = 'background:#fdecea; color:#d8342b; border:1.5px solid #d8342b;';
-    else if (st==='rest') s = 'background:#eef1f6; color:#8a94a6; border:1.5px dashed #b9c2d0;';
-    else if (st==='planned') s = 'background:#fff; color:var(--blue); border:1.5px solid var(--blue);';
-    else s = 'background:#e7e6e1; color:#a7a9b0; border:none;';
+    else if (missed) s = 'background:var(--redbg); color:var(--red); border:1.5px solid var(--red);';
+    else if (st==='rest') s = 'background:var(--restbg); color:var(--faint); border:1.5px dashed var(--dash);';
+    else if (st==='planned') s = 'background:var(--card); color:var(--blue); border:1.5px solid var(--blue);';
+    else s = 'background:var(--dim); color:var(--ph); border:none;';
     if (today) s += ' box-shadow:0 0 0 2px var(--orange);';
     return base + s;
   }
@@ -2291,17 +2328,17 @@ class Component extends DCLogic {
   }
   pillStyle(active) {
     return 'flex:none; display:flex; flex-direction:column; align-items:center; gap:1px; min-width:52px; padding:8px 12px; border-radius:12px; cursor:pointer; transition:all .15s; ' +
-      (active ? 'background:var(--navy); color:#fff; border:1px solid var(--navy);' : 'background:#fff; color:var(--muted); border:1px solid var(--line);');
+      (active ? 'background:var(--navy-bg); color:#fff; border:1px solid var(--navy);' : 'background:var(--card); color:var(--muted); border:1px solid var(--line);');
   }
   chipStyle(st, active, today, missed) {
     const base = 'display:flex; flex-direction:column; align-items:center; padding:9px 0 8px; border-radius:12px; cursor:pointer; transition:all .12s; ';
     let s;
     if (active) s = 'background:var(--blue); color:#fff; border:1px solid var(--blue);';
     else if (st==='done') s = 'background:rgba(35,64,154,.12); color:var(--blue); border:1px solid rgba(35,64,154,.3);';
-    else if (missed) s = 'background:#fdecea; color:#d8342b; border:1.5px solid #d8342b;';
-    else if (st==='rest') s = 'background:#eef1f6; color:#8a94a6; border:1px dashed #b9c2d0;';
-    else if (st==='planned') s = 'background:#fff; color:var(--ink); border:1px solid var(--line);';
-    else s = 'background:#eeede8; color:#9a9ca4; border:1px solid transparent;';
+    else if (missed) s = 'background:var(--redbg); color:var(--red); border:1.5px solid var(--red);';
+    else if (st==='rest') s = 'background:var(--restbg); color:var(--faint); border:1px dashed var(--dash);';
+    else if (st==='planned') s = 'background:var(--card); color:var(--ink); border:1px solid var(--line);';
+    else s = 'background:var(--chip); color:var(--faint); border:1px solid transparent;';
     if (today && !active) s += ' box-shadow:0 0 0 2px var(--orange);';
     return base + s;
   }
@@ -2311,7 +2348,7 @@ class Component extends DCLogic {
       autoFocus: true,
       onChange: (e) => this.setState({ adminInput: e.target.value, adminError: false }),
       onKeyDown: (e) => { if (e.key === 'Enter') this.submitAdmin(); },
-      style: { width:'100%', border:'1px solid var(--line)', borderRadius:'12px', padding:'12px 14px', fontSize:'15px', background:'#fafaf8', color:'var(--ink)', outline:'none', letterSpacing:'.1em' }
+      style: { width:'100%', border:'1px solid var(--line)', borderRadius:'12px', padding:'12px 14px', fontSize:'15px', background:'var(--field)', color:'var(--ink)', outline:'none', letterSpacing:'.1em' }
     });
   }
   submitAdmin() {
@@ -2367,7 +2404,13 @@ class Component extends DCLogic {
   shareImage() {
     const el = document.getElementById('share-card');
     if (!el || !window.html2canvas) { this.toast('מכין תמונה…'); this.shareCopyText(); return; }
+    // Shared images always render in the LIGHT palette so everyone's WhatsApp
+    // gets the same look — flip the theme just for the capture, then restore.
+    const html = document.documentElement, prevTheme = html.getAttribute('data-theme');
+    html.setAttribute('data-theme', 'light');
+    const restore = ()=>{ if (prevTheme) html.setAttribute('data-theme', prevTheme); };
     window.html2canvas(el, { backgroundColor:null, scale:2, useCORS:true }).then(canvas=>{
+      restore();
       canvas.toBlob(async (blob)=>{
         try {
           const file = new File([blob], 'capacity.png', { type:'image/png' });
@@ -2378,7 +2421,7 @@ class Component extends DCLogic {
         setTimeout(()=>URL.revokeObjectURL(url), 3000);
         this.toast('התמונה הורדה 📸');
       }, 'image/png');
-    }).catch(()=>this.toast('שגיאה ביצירת התמונה'));
+    }).catch(()=>{ restore(); this.toast('שגיאה ביצירת התמונה'); });
   }
 
   shareCardEl() {
@@ -2485,8 +2528,8 @@ class Component extends DCLogic {
     const wi = this.state.builderWi;
     const data = this.state.data;
     const get = (di,p)=>this.getAt(wi,di,p);
-    const inp = (di,p,ph,useList)=>React.createElement('input', { dir:'auto', list:useList?'movelib':undefined, value:get(di,p)||'', placeholder:ph, onChange:(e)=>this.editAt(wi,di,p,e.target.value), style:{ width:'100%', border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 10px', fontSize:'13.5px', background:'#fff', color:'var(--ink)', outline:'none', boxSizing:'border-box' } });
-    const area = (di,p,ph,min)=>React.createElement('textarea', { dir:'auto', value:get(di,p)||'', placeholder:ph, onChange:(e)=>this.editAt(wi,di,p,e.target.value), style:{ width:'100%', border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 10px', fontSize:'13px', background:'#fff', color:'var(--ink)', outline:'none', minHeight:(min||50)+'px', resize:'vertical', fontFamily:'inherit', lineHeight:1.5, boxSizing:'border-box' } });
+    const inp = (di,p,ph,useList)=>React.createElement('input', { dir:'auto', list:useList?'movelib':undefined, value:get(di,p)||'', placeholder:ph, onChange:(e)=>this.editAt(wi,di,p,e.target.value), style:{ width:'100%', border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 10px', fontSize:'13.5px', background:'var(--card)', color:'var(--ink)', outline:'none', boxSizing:'border-box' } });
+    const area = (di,p,ph,min)=>React.createElement('textarea', { dir:'auto', value:get(di,p)||'', placeholder:ph, onChange:(e)=>this.editAt(wi,di,p,e.target.value), style:{ width:'100%', border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 10px', fontSize:'13px', background:'var(--card)', color:'var(--ink)', outline:'none', minHeight:(min||50)+'px', resize:'vertical', fontFamily:'inherit', lineHeight:1.5, boxSizing:'border-box' } });
     const lab = (txt)=>React.createElement('div', { style:{ font:"600 10px/1 'Oswald'", letterSpacing:'.08em', textTransform:'uppercase', color:'var(--muted)', margin:'2px 0 6px' } }, txt);
 
     const weekBtns = React.createElement('div', { style:{ display:'flex', gap:'4px', flexWrap:'wrap', marginTop:'12px' } },
@@ -2496,7 +2539,7 @@ class Component extends DCLogic {
       React.createElement('span', { style:{ fontSize:'12px', color:'#b9c4e6' } }, 'שכפל תוכנית משבוע:'),
       React.createElement('select', { value:'', onChange:(e)=>{ if (e.target.value!=='') this.planCopy(+e.target.value); }, style:{ border:'none', borderRadius:'8px', padding:'6px 10px', fontSize:'13px', background:'rgba(255,255,255,.14)', color:'#fff', cursor:'pointer', fontFamily:'inherit' } },
         React.createElement('option', { value:'' }, 'בחר שבוע…'),
-        data.map((_,i)=>i===wi?null:React.createElement('option', { key:i, value:i, style:{ color:'#15171d' } }, 'שבוע '+(i+1)))
+        data.map((_,i)=>i===wi?null:React.createElement('option', { key:i, value:i, style:{ color:'var(--ink)' } }, 'שבוע '+(i+1)))
       )
     );
     const header = React.createElement('div', { style:{ background:'linear-gradient(120deg,#141f38,#22336a)', color:'#fff', padding:'18px 20px', position:'sticky', top:0, zIndex:2 } },
@@ -2513,19 +2556,19 @@ class Component extends DCLogic {
     const days = data[wi].days.map((day,di)=>{
       const open = this.state.builderDay===di;
       const filled = this.dayHasPlan(day);
-      const hdr = React.createElement('button', { onClick:()=>this.setState({ builderDay:open?-1:di }), style:{ width:'100%', display:'flex', alignItems:'center', gap:'10px', padding:'12px 14px', background:open?'#eef1fb':'#fff', border:'none', borderBottom:open?'1px solid var(--line)':'none', cursor:'pointer', textAlign:'start' } },
-        React.createElement('span', { style:{ width:'9px', height:'9px', borderRadius:'50%', flex:'none', background:filled?'#3fbf6a':'#d3d3cd' } }),
+      const hdr = React.createElement('button', { onClick:()=>this.setState({ builderDay:open?-1:di }), style:{ width:'100%', display:'flex', alignItems:'center', gap:'10px', padding:'12px 14px', background:open?'var(--tabbg)':'var(--card)', border:'none', borderBottom:open?'1px solid var(--line)':'none', cursor:'pointer', textAlign:'start' } },
+        React.createElement('span', { style:{ width:'9px', height:'9px', borderRadius:'50%', flex:'none', background:filled?'#3fbf6a':'var(--dot)' } }),
         React.createElement('span', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'14px', color:'var(--navy)' } }, this.weekdays[di]),
         React.createElement('span', { style:{ fontSize:'12px', color:'var(--muted)' } }, this.dateStr(this.dateAt(wi*7+di))),
         React.createElement('span', { style:{ marginInlineStart:'auto', fontSize:'12px', color:'var(--muted)' } }, filled?'✎ ערוך':'הזן'),
         React.createElement('span', { style:{ fontSize:'12px', color:'var(--muted)', transform:open?'rotate(180deg)':'none', transition:'transform .15s' } }, '▾')
       );
-      if (!open) return React.createElement('div', { key:di, style:{ background:'#fff', border:'1px solid var(--line)', borderRadius:'12px', overflow:'hidden' } }, hdr);
+      if (!open) return React.createElement('div', { key:di, style:{ background:'var(--card)', border:'1px solid var(--line)', borderRadius:'12px', overflow:'hidden' } }, hdr);
       const body = React.createElement('div', { style:{ padding:'14px', display:'flex', flexDirection:'column', gap:'16px' } },
         React.createElement('div', null, lab('🏋️ Lift — תרגיל'), inp(di,'lift.movement','שם התרגיל',true), React.createElement('div',{style:{height:'8px'}}), area(di,'lift.planned','סטים · חזרות · אחוזים · דגשים',60)),
         React.createElement('div', null, lab('⏱️ Metcon'),
           React.createElement('div', { style:{ display:'grid', gridTemplateColumns:'1.5fr 1fr', gap:'8px' } }, inp(di,'metcon.name','שם המטקון'), inp(di,'metcon.scheme','AMRAP / For Time')),
-          React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'6px', marginTop:'8px', background:'#faf9f6', border:'1px solid var(--line)', borderRadius:'10px', padding:'10px' } },
+          React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'6px', marginTop:'8px', background:'var(--field)', border:'1px solid var(--line)', borderRadius:'10px', padding:'10px' } },
             [0,1,2,3].map(mi=>React.createElement('div', { key:mi, style:{ display:'grid', gridTemplateColumns:'20px 1fr 1.1fr', gap:'7px', alignItems:'center' } },
               React.createElement('span', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'11px', color:'var(--orange)', textAlign:'center' } }, mi+1),
               inp(di,'metcon.movements.'+mi+'.name','תנועה',true),
@@ -2543,14 +2586,14 @@ class Component extends DCLogic {
           )
         ),
         React.createElement('div', { style:{ display:'flex', justifyContent:'flex-end' } },
-          React.createElement('button', { onClick:()=>this.clearDay(di), style:{ background:'#fdecea', color:'#d8342b', border:'none', borderRadius:'9px', padding:'8px 14px', fontWeight:700, fontSize:'12px', cursor:'pointer' } }, 'נקה יום')
+          React.createElement('button', { onClick:()=>this.clearDay(di), style:{ background:'var(--redbg)', color:'var(--red)', border:'none', borderRadius:'9px', padding:'8px 14px', fontWeight:700, fontSize:'12px', cursor:'pointer' } }, 'נקה יום')
         )
       );
-      return React.createElement('div', { key:di, style:{ background:'#fff', border:'1px solid var(--line)', borderRadius:'12px', overflow:'hidden' } }, hdr, body);
+      return React.createElement('div', { key:di, style:{ background:'var(--card)', border:'1px solid var(--line)', borderRadius:'12px', overflow:'hidden' } }, hdr, body);
     });
 
     const bodyWrap = React.createElement('div', { style:{ padding:'16px', display:'flex', flexDirection:'column', gap:'8px' } }, days);
-    const footer = React.createElement('div', { style:{ padding:'14px 16px', background:'#fff', borderTop:'1px solid var(--line)', display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', bottom:0 } },
+    const footer = React.createElement('div', { style:{ padding:'14px 16px', background:'var(--card)', borderTop:'1px solid var(--line)', display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', bottom:0 } },
       React.createElement('span', { style:{ fontSize:'12px', color:'var(--muted)' } }, 'נשמר אוטומטית'),
       React.createElement('button', { onClick:()=>this.setState({ builderOpen:false }), style:{ background:'var(--blue)', color:'#fff', border:'none', borderRadius:'10px', padding:'10px 22px', fontWeight:700, fontSize:'14px', cursor:'pointer' } }, 'סיום')
     );
