@@ -159,10 +159,11 @@
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; line-height:1;">{{ statWeekly }}</div>
             <div style="font-size:12px; color:#ffe0d3; font-weight:600; letter-spacing:.04em; margin-top:6px;">יעד השבוע</div>
           </div>
-          <div style="background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px;">
-            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--orange); line-height:1;">{{ statStreak }}🔥</div>
-            <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">רצף שיא (ימים)</div>
-          </div>
+          <button onClick="{{ setBoard }}" style="background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px; text-align:start; cursor:pointer; font-family:inherit;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--orange); line-height:1;">{{ statRank }}<span style="font-size:16px; color:var(--muted);">{{ statRankField }}</span></div>
+            <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">המקום שלי בקטגוריה</div>
+            <div dir="rtl" style="{{ rankDeltaStyle }}">{{ rankDeltaLabel }}</div>
+          </button>
           <div style="background:var(--navy); color:#fff; border-radius:16px; padding:16px 18px;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; line-height:1;">{{ curWeekNum }}<span style="font-size:16px; color:#9fb0dd;">/8</span></div>
             <div style="font-size:12px; color:#9fb0dd; font-weight:600; letter-spacing:.04em; margin-top:6px;">שבוע נוכחי</div>
@@ -242,7 +243,7 @@
           </div>
           <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin-bottom:24px;">
             <sc-for list="{{ liftPRList }}" as="lp" hint-placeholder-count="4">
-              <button onClick="{{ onCell }}" data-wi="{{ lp.wi }}" data-di="{{ lp.di }}" style="display:flex; flex-direction:column; gap:6px; text-align:start; background:#fff; border:1px solid var(--line); border-inline-start:4px solid var(--navy); border-radius:14px; padding:14px 16px; cursor:pointer; color:var(--ink); box-shadow:0 4px 16px rgba(20,31,56,.06);">
+              <button onClick="{{ onLiftChart }}" data-key="{{ lp.key }}" style="display:flex; flex-direction:column; gap:6px; text-align:start; background:#fff; border:1px solid var(--line); border-inline-start:4px solid var(--navy); border-radius:14px; padding:14px 16px; cursor:pointer; color:var(--ink); box-shadow:0 4px 16px rgba(20,31,56,.06);">
                 <div dir="auto" style="font-weight:700; font-size:14.5px;">{{ lp.move }}</div>
                 <div style="display:flex; align-items:baseline; gap:8px; width:100%;">
                   <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:24px; color:var(--blue); direction:ltr;">{{ lp.bestLabel }}</span>
@@ -252,6 +253,7 @@
                   <span>{{ lp.countLabel }}</span>
                   <span style="margin-inline-start:auto;">{{ lp.date }}</span>
                 </div>
+                <div style="font-size:10.5px; color:var(--blue); font-weight:700;">📈 לחץ לגרף ההתקדמות</div>
               </button>
             </sc-for>
           </div>
@@ -709,7 +711,7 @@
           <div dir="rtl" style="font-size:12px; color:#b9c4e6; margin-top:2px; line-height:1.4;">לוח המעקב של <bdi>Capacity</bdi> — 8 שבועות</div>
         </div>
         <div dir="rtl" style="padding:13px 18px; display:flex; flex-direction:column; gap:8px;">
-          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📊</span><div style="line-height:1.45;"><b style="font-size:13px;">סקירה</b> <span style="font-size:12px; color:var(--muted);">— התקדמות, יעד שבועי, רצף ומפת התוכנית.</span></div></div>
+          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📊</span><div style="line-height:1.45;"><b style="font-size:13px;">סקירה</b> <span style="font-size:12px; color:var(--muted);">— התקדמות, יעד שבועי, המקום שלך בקטגוריה ומפת התוכנית.</span></div></div>
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📅</span><div style="line-height:1.45;"><b style="font-size:13px;">יומן</b> <span style="font-size:12px; color:var(--muted);">— האימון היומי. תעד תוצאות, דרג מאמץ וסמן "הושלם".</span></div></div>
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏅</span><div style="line-height:1.45;"><b style="font-size:13px;">דירוג</b> <span style="font-size:12px; color:var(--muted);">— מתחרים בקטגוריה שלך על סמך תוצאות המטקון.</span></div></div>
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏆</span><div style="line-height:1.45;"><b style="font-size:13px;">שיאים</b> <span style="font-size:12px; color:var(--muted);">— שיאי המשקל שלך לפי תרגיל + אימונים שסימנת 🏆.</span></div></div>
@@ -867,6 +869,25 @@
           <sc-if value="{{ profileNoPRs }}" hint-placeholder-val="{{ false }}">
             <div style="text-align:center; color:var(--muted); font-size:13px; padding:14px;">עדיין אין שיאים — סמן 🏆 "שברתי שיא" ביומן.</div>
           </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ liftChartOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeLiftChart }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:130; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
+      <div dir="rtl" onClick="{{ stop }}" style="background:#fff; border-radius:20px; width:100%; max-width:600px; box-shadow:0 20px 60px rgba(12,18,34,.4); overflow:hidden;">
+        <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; padding:18px 22px; display:flex; align-items:center; gap:12px;">
+          <span style="font-size:24px; flex:none;">📈</span>
+          <div style="flex:1; min-width:0;">
+            <div dir="auto" style="font-family:'Oswald',sans-serif; font-weight:700; font-size:19px; letter-spacing:.03em;">{{ liftChartTitle }}</div>
+            <div style="font-size:12px; color:#b9c4e6; margin-top:2px;">{{ liftChartSub }}</div>
+          </div>
+          <button onClick="{{ closeLiftChart }}" style="flex:none; background:rgba(255,255,255,.14); border:none; color:#fff; width:32px; height:32px; border-radius:9px; font-size:16px; cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:18px 18px 8px;">{{ liftChartBody }}</div>
+        <div style="padding:0 18px 18px;">
+          <button onClick="{{ gotoPRDay }}" style="width:100%; background:var(--orange); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">← פתח את אימון השיא</button>
         </div>
       </div>
     </div>
@@ -1201,6 +1222,7 @@ class Component extends DCLogic {
     shareWi: 0,
     shareDi: 0,
     builderOpen: false,
+    liftChartKey: null,
     builderWi: 0,
     builderDay: -1,
     reminderDismissed: false,
@@ -1478,6 +1500,46 @@ class Component extends DCLogic {
         color:on?'#b07d1e':'var(--muted)', borderRadius:'999px', padding:'8px 15px', fontWeight:700,
         fontSize:'12.5px', cursor:editable?'pointer':'default', transition:'all .15s', opacity:(!editable&&!on)?.45:1 }
     }, '🏆', on ? '✓ שברתי שיא באימון הזה' : 'שברתי שיא באימון הזה');
+  }
+
+  // SVG line chart of every weight logged for one movement, opened from the
+  // שיאים tab. Pure SVG — no chart library in the bundle.
+  liftChartSVG(entry) {
+    const h = entry.history;
+    const W = 560, H = 250, padL = 46, padR = 22, padT = 30, padB = 36;
+    const ws = h.map(p=>p.wt);
+    let lo = Math.min.apply(null, ws), hi = Math.max.apply(null, ws);
+    if (hi === lo) { lo = Math.max(0, lo - 5); hi = hi + 5; }
+    const span = hi - lo;
+    lo = Math.max(0, lo - span*0.15); hi = hi + span*0.15;
+    const X = i => h.length===1 ? padL + (W-padL-padR)/2 : padL + i*(W-padL-padR)/(h.length-1);
+    const Y = v => padT + (hi - v)/(hi - lo)*(H-padT-padB);
+    const kids = [];
+    for (let g=0; g<=3; g++) {
+      const v = lo + (hi-lo)*g/3, y = Y(v);
+      kids.push(React.createElement('line', { key:'g'+g, x1:padL, x2:W-padR, y1:y, y2:y, stroke:'#eceef3', strokeWidth:1 }));
+      kids.push(React.createElement('text', { key:'gl'+g, x:padL-8, y:y+3.5, textAnchor:'end', fontSize:10, fill:'#8a8d94' }, String(Math.round(v))));
+    }
+    if (h.length > 1) {
+      const pts = h.map((p,i)=>X(i)+','+Y(p.wt)).join(' ');
+      kids.push(React.createElement('polygon', { key:'a', points: pts+' '+X(h.length-1)+','+(H-padB)+' '+X(0)+','+(H-padB), fill:'rgba(35,64,154,.08)' }));
+      kids.push(React.createElement('polyline', { key:'l', points: pts, fill:'none', stroke:'var(--blue)', strokeWidth:2.5, strokeLinejoin:'round', strokeLinecap:'round' }));
+    }
+    const step = Math.max(1, Math.ceil(h.length/8));
+    const vstep = h.length > 12 ? step : 1;   // value labels collide on dense charts
+    h.forEach((p,i)=>{
+      const isBest = p.wt === entry.best;
+      const x = X(i), y = Y(p.wt);
+      kids.push(React.createElement('circle', { key:'c'+i, cx:x, cy:y, r:isBest?5.5:4, fill:isBest?'var(--orange)':'#fff', stroke:isBest?'var(--orange)':'var(--blue)', strokeWidth:2 },
+        React.createElement('title', null, 'W'+p.week+' · '+p.date+' · '+p.wt+'kg'+(p.reps?(' × '+p.reps):''))));
+      if (i % vstep === 0 || isBest || i === h.length-1)
+        kids.push(React.createElement('text', { key:'v'+i, x, y:y-10, textAnchor:'middle', fontSize:11, fontWeight:700, fontFamily:"'Oswald',sans-serif", fill:isBest?'var(--orange)':'var(--navy)' }, String(p.wt)));
+      if (i % step === 0 || i === h.length-1)
+        kids.push(React.createElement('text', { key:'w'+i, x, y:H-padB+16, textAnchor:'middle', fontSize:10, fontWeight:700, fill:'#8a8d94' }, 'W'+p.week));
+    });
+    const svg = React.createElement('svg', { viewBox:'0 0 '+W+' '+H, style:{ width:'100%', height:'auto', display:'block', direction:'ltr' } }, kids);
+    return React.createElement('div', null, svg,
+      h.length===1 ? React.createElement('div', { dir:'rtl', style:{ textAlign:'center', fontSize:'12px', color:'var(--muted)', marginTop:'4px' } }, 'רישום אחד בלבד — הגרף יתמלא ככל שתרשום עוד משקלים ביומן') : null);
   }
 
   numEl(path, val, ph, w) {
@@ -1806,8 +1868,10 @@ class Component extends DCLogic {
         const wt = parseFloat(dd.lift && dd.lift.log && dd.lift.log.weight);
         if (!rawName || !(wt > 0)) return;
         const key = rawName.toLowerCase();
-        const e = liftBest[key] || (liftBest[key] = { move:rawName, best:0, count:0, wi:w, di:d, week:'', date:'' });
+        const e = liftBest[key] || (liftBest[key] = { key, move:rawName, best:0, count:0, wi:w, di:d, week:'', date:'', history:[] });
         e.count++;
+        // Chronological weight log per movement — feeds the progression chart modal.
+        e.history.push({ gi, wt, week:w+1, date:this.dateStr(this.dateAt(gi)), reps:(dd.lift.log.reps||'') });
         if (wt > e.best) { e.best = wt; e.move = rawName; e.wi = w; e.di = d; e.week = 'W'+(w+1); e.date = this.dateStr(this.dateAt(gi)); e.reps = (dd.lift.log.reps||''); }
       });
     }
@@ -1815,6 +1879,7 @@ class Component extends DCLogic {
     const liftPRList = Object.values(liftBest).sort((a,b)=>b.best-a.best).map(e=>({ ...e,
       bestLabel: e.best + 'kg' + (e.reps ? (' × '+e.reps) : ''),
       countLabel: e.count===1 ? 'אימון אחד' : (e.count+' אימונים') }));
+    const chartE = this.state.liftChartKey ? liftBest[this.state.liftChartKey] : null;
 
     const bw = this.state.selBoardWeek;
     const mode = 'total';
@@ -1851,13 +1916,31 @@ class Component extends DCLogic {
     data.forEach(wk=>wk.days.forEach(d=>{ if(d.done) totalDone++; if(d.alt&&d.alt.done) totalDone++; }));
     const myCat = this.state.myCategory || null;
     let myCatRank = '—';
+    let statRank = '—', statRankField = '', rankDelta = null;
     if (myCat) {
-      const tot = {};
-      for (let w=0; w<8; w++) this.computeWeek(w, myCat).forEach(e=>{ const t=tot[e.id]||(tot[e.id]={you:e.you,sum:0}); t.sum+=e.points; });
-      const r = Object.keys(tot).map(k=>({ you:tot[k].you, score:tot[k].sum })).sort((a,b)=>a.score-b.score);
-      const idx = r.findIndex(x=>x.you);
-      if (idx>=0) myCatRank = (idx+1)+' / '+r.length;
+      // Season standings within my category, counting weeks 0..lastW only —
+      // rankThrough(7) is "now", rankThrough(cwi-1) is "as of last week".
+      const rankThrough = (lastW) => {
+        const tot = {};
+        for (let w=0; w<=lastW; w++) this.computeWeek(w, myCat).forEach(e=>{ const t=tot[e.id]||(tot[e.id]={you:e.you,sum:0}); t.sum+=e.points; });
+        const r = Object.keys(tot).map(k=>({ you:tot[k].you, score:tot[k].sum })).sort((a,b)=>a.score-b.score);
+        const idx = r.findIndex(x=>x.you);
+        return idx>=0 ? { rank:idx+1, field:r.length } : null;
+      };
+      const curR = rankThrough(7);
+      if (curR) {
+        myCatRank = curR.rank+' / '+curR.field;
+        statRank = String(curR.rank); statRankField = '/'+curR.field;
+        if (cwi > 0) { const prevR = rankThrough(cwi-1); if (prevR) rankDelta = prevR.rank - curR.rank; }
+      }
     }
+    const rankDeltaLabel = rankDelta==null ? '' :
+      rankDelta>0 ? ('▲ עלית '+(rankDelta===1?'מקום אחד':rankDelta+' מקומות')+' משבוע שעבר') :
+      rankDelta<0 ? ('▼ ירדת '+(rankDelta===-1?'מקום אחד':(-rankDelta)+' מקומות')+' משבוע שעבר') :
+      '= ללא שינוי משבוע שעבר';
+    const rankDeltaStyle = rankDelta==null ? 'display:none;' :
+      'font-size:11px; font-weight:700; margin-top:6px; color:' +
+      (rankDelta>0 ? '#1d6a3f' : rankDelta<0 ? '#d8342b' : 'var(--muted)') + ';';
     const genderLabel = this.state.myGender==='female' ? 'אישה' : (this.state.myGender==='male' ? 'גבר' : '—');
     let fullWeek = false;
     for (let w=0; w<8; w++) { if (this.weekStats(w).completed >= this.myTargetVal()) { fullWeek = true; break; } }
@@ -1937,7 +2020,8 @@ class Component extends DCLogic {
       viewTabStyle: this.segStyle(!editMode),
       editTabStyle: this.segStyle(editMode),
 
-      statSessions: done, statTarget: target, statPct: pct, statStreak: best,
+      statSessions: done, statTarget: target, statPct: pct,
+      statRank, statRankField, rankDeltaLabel, rankDeltaStyle,
       statWeekly: curWeekDone + '/' + this.myTargetVal(),
       curWeekNum: cwi+1, curWeekRange: this.rangeStr(cwi), curWeekDone,
       dowHeaders: this.dowShort,
@@ -1946,6 +2030,13 @@ class Component extends DCLogic {
       liftPRList, hasLiftPRs: liftPRList.length>0,
       liftPRCountLabel: liftPRList.length===1 ? 'תרגיל אחד' : (liftPRList.length+' תרגילים'),
       noAnyPRs: prList.length===0 && liftPRList.length===0,
+      onLiftChart: (e)=>this.setState({ liftChartKey: e.currentTarget.dataset.key }),
+      closeLiftChart: ()=>this.setState({ liftChartKey: null }),
+      liftChartOpen: !!chartE,
+      liftChartTitle: chartE ? chartE.move : '',
+      liftChartSub: chartE ? ('שיא: '+chartE.best+'kg · '+(chartE.count===1?'רישום אחד':chartE.count+' רישומים')) : '',
+      liftChartBody: chartE ? this.liftChartSVG(chartE) : null,
+      gotoPRDay: chartE ? (()=>this.setState({ liftChartKey:null, view:'log', selWeek:chartE.wi, selDay:chartE.di, activeSession:'main' })) : null,
 
       selWeekNum: selWeek+1,
       day: dayObj,
