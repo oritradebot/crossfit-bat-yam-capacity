@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "1.6.12";
+  var BUILD = "1.6.13";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -859,7 +859,13 @@
       window.__cfbyAnnPreview({ title: d.title || "בלוק חדש התחיל!", body: d.body }, function () {});
     };
     document.getElementById("cfaX").onclick = function () { ov.classList.remove("open"); amsg(""); };
-    ov.onclick = function (e) { if (e.target === ov) { ov.classList.remove("open"); amsg(""); } };
+    // NO backdrop-click close: the box has no background of its own, so on wide
+    // screens the overlay margins look like part of the panel — and on Windows,
+    // clicking the overlay's own scrollbar targets the overlay too. Both used to
+    // slam the panel shut on desktop. Close only via ✕ or Escape.
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && ov.classList.contains("open")) { ov.classList.remove("open"); amsg(""); }
+    });
     document.getElementById("cfaAdd").onclick = addUser;
     document.getElementById("cfaBk").onclick = backup;
     var rsFile = document.getElementById("cfaRsFile");
