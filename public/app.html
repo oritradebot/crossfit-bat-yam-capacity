@@ -977,7 +977,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 11;
+  PROGRAM_VERSION = 12;
   programWeek1() {
     return {
       0: {
@@ -1092,8 +1092,9 @@ class Component extends DCLogic {
       },
       5: {
         lift: { movement:'Power Snatch — EMOM 10:00', planned:'EMOM 10:00:\n2 Touch & go power snatches\n\n5 sets @weight 1\n5 sets @weight 2\n\nחצי מהזמן עם משקל ראשון, חצי מהזמן עם משקל שני. רוצים לעבוד על העקביות שלנו עם המוט.' },
-        metcon: { name:'Gymnastics — "Next Level" (Week 3)', scheme:'Every 45s x 8 · C2B / Pull-ups', score:'Total reps', resultMode:'amount', note:'Score — total reps.\nCan you add a few reps to your progression from last time?\n\nפעם ראשונה שלכם על הסשן הזה? קראו את זה. פעם שנייה? תקפצו לסוף.\n\nזו הפעם הראשונה שאנחנו נתקלים בטסט כזה, והוא יבוצע בשני אופנים:\nאם חזרות של מתח זה עניין חדש לכם — בחרו את הפרוגרשן הנכון ביותר עבורכם יחד עם המאמן, ובצעו חזרות איכותיות ממנו בכל דקה. משבוע לשבוע נרצה לעלות בכמות החזרות, לבצע אותן בטווח מלא יותר, או לעלות לפרוגרשן הבא.\nאם אתם שולטים במתח, המטרה שלכם תהיה להתחיל לצבור נפח ולפתח עמידות לסטים גדולים. בחרו מספר לביצוע בכל דקה — ונסו לשמור עליו למשך כל עשר הדקות. בשבוע הבא נרצה להוסיף חזרה אחת לדקה, לפחות לחצי מהזמן הזה.\n\nפעם שנייה ומעלה? אנחנו רוצים לבצע את אותה כמות החזרות כמו בפעם הקודמת — בצורה איכותית יותר, או להוסיף חזרה לדקה, לפחות למשך חמש הדקות הראשונות.', movements:[['C2B / Pull-ups','Every 45s x 8 sets']] },
-        extras: [['Conditioning — High Output','EMOM 12:00:\nMinute 1 — Row/Bike/Ski\nMinute 2 — Rest\n\nבגלל שזה יחס 1:1 — כשמגיע הזמן לעבוד — תעבדו קשה.'],['2:30 Work / 1:30 Rest x 3','Double unders\n10 Power snatches\nDouble unders\n10 Power snatches\nMax T2B in remaining time\n\nScore — total T2B accumulated.\nGoal — semi-fast. Legs did their job today, just keep the blood moving and focus on the hinge. Bar should feel light enough to cycle big sets.\n\nLevel 1 = 20 DU, 20/15kg\nLevel 2 = 30 DU, 30/20kg\nLevels 3 & 4 = 40 DU, 35/25kg']]
+        metcon: { name:'Conditioning — High Output', scheme:'EMOM 12:00', score:'Total cals/meters', resultMode:'amount', note:'Minute 1 — Row/Bike/Ski\nMinute 2 — Rest\n\nבגלל שזה יחס 1:1 — כשמגיע הזמן לעבוד — תעבדו קשה.\nהזינו כמה קלוריות (או מטרים) נצברו בסך הכל.', movements:[['Row / Bike / Ski','Minute 1'],['Rest','Minute 2']] },
+        metcon2: { name:'Gymnastics — "Next Level" (Week 3)', scheme:'Every 45s x 8 · C2B / Pull-ups', score:'Total reps', resultMode:'amount', note:'Score — total reps.\nCan you add a few reps to your progression from last time?\n\nפעם ראשונה שלכם על הסשן הזה? קראו את זה. פעם שנייה? תקפצו לסוף.\n\nזו הפעם הראשונה שאנחנו נתקלים בטסט כזה, והוא יבוצע בשני אופנים:\nאם חזרות של מתח זה עניין חדש לכם — בחרו את הפרוגרשן הנכון ביותר עבורכם יחד עם המאמן, ובצעו חזרות איכותיות ממנו בכל דקה. משבוע לשבוע נרצה לעלות בכמות החזרות, לבצע אותן בטווח מלא יותר, או לעלות לפרוגרשן הבא.\nאם אתם שולטים במתח, המטרה שלכם תהיה להתחיל לצבור נפח ולפתח עמידות לסטים גדולים. בחרו מספר לביצוע בכל דקה — ונסו לשמור עליו למשך כל עשר הדקות. בשבוע הבא נרצה להוסיף חזרה אחת לדקה, לפחות לחצי מהזמן הזה.\n\nפעם שנייה ומעלה? אנחנו רוצים לבצע את אותה כמות החזרות כמו בפעם הקודמת — בצורה איכותית יותר, או להוסיף חזרה לדקה, לפחות למשך חמש הדקות הראשונות.', movements:[['C2B / Pull-ups','Every 45s x 8 sets']] },
+        extras: [['2:30 Work / 1:30 Rest x 3','Double unders\n10 Power snatches\nDouble unders\n10 Power snatches\nMax T2B in remaining time\n\nScore — total T2B accumulated.\nGoal — semi-fast. Legs did their job today, just keep the blood moving and focus on the hinge. Bar should feel light enough to cycle big sets.\n\nLevel 1 = 20 DU, 20/15kg\nLevel 2 = 30 DU, 30/20kg\nLevels 3 & 4 = 40 DU, 35/25kg'],['','']]
       },
       0: {
         lift: { movement:'Squat Snatch + Hang Squat Snatch', planned:'Snatch — From the floor.\nEvery 2:00 x 6 sets:\nSquat Snatch\nBelow knee hang squat snatch\n\nSets 1-2 — 6RPE\nSets 3-4 — 7RPE\nSets 5-6 — 8RPE\n\n6RPE = מאמץ של שש מתוך עשר.\nזה אומר לנו ששני הסטים הראשונים טכניים ויחסית קלים,\nשני הסטים לאחר מכן טכניים וכמעט כבדים,\nושני הסטים האחרונים כבדים יותר.\n8 זה אומר שיש לנו עוד בטנק, ואנחנו לא בכשל.' },
