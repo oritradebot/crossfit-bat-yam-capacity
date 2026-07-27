@@ -264,7 +264,8 @@
         else pick = preferLocal ? "l" : "s";
         days.push(pick === "l" ? ld[d] : sd[d]);
         if (pick === "l" && (sd[d] === undefined || logSig(ld[d]) !== logSig(sd[d]))) localWon = true;
-        dts[k] = Math.max(lts, sts);
+        var mx = Math.max(lts, sts);
+        if (mx > 0) dts[k] = mx;   // never-touched days carry no stamp (keeps the map lean)
       }
       base.days = days;
       weeks.push(base);
