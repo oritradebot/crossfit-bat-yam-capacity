@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "1.7.0";
+  var BUILD = "1.7.1";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -221,7 +221,7 @@
     try { prev = JSON.parse(prevRaw); } catch (e) {}
     try { next = JSON.parse(newRaw); } catch (e) {}
     var nw = (next && next.weeks) || [], pw = (prev && prev.weeks) || [];
-    var dts = lsGet(DTS_KEY) || {}, changed = false, now = Date.now();
+    var dts = dtsGet(), changed = false, now = Date.now();
     for (var w = 0; w < nw.length; w++) {
       var nd = (nw[w] && nw[w].days) || [], pd = (pw[w] && pw[w].days) || [];
       for (var d = 0; d < nd.length; d++) {
@@ -238,7 +238,7 @@
         }
       }
     }
-    if (changed) { try { lsSetRaw(DTS_KEY, dts); } catch (e) {} }
+    if (changed) { memDts = dts; try { lsSetRaw(DTS_KEY, dts); } catch (e) {} }
   }
   // Merge two tracker copies day by day. preferLocal breaks ties for days with
   // equal (usually missing/legacy) stamps — callers pass the old whole-blob
@@ -306,18 +306,50 @@
   var DIRTY_KEY = "cfby_dirty_v1";
   function rawGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 
+  // In-memory mirrors of the tracker, day stamps, and dirty flag (v1.7.1).
+  // localStorage on iOS can start failing silently mid-session (quota /
+  // restricted mode) — and every push used to RE-READ storage, so a dead
+  // storage meant nothing reached the cloud while the UI kept saying "saved".
+  // That was the 27/07 bug: a logged workout lived only in React state, the
+  // pushes carried the stale persisted copy, and the next reload reverted the
+  // day. Pushes now read these mirrors first; storage is just the cache.
+  var memTracker = null;   // last tracker JSON string (boot seed / app write)
+  var memBoard = null;     // last board JSON string the USER wrote (not realtime refreshes)
+  var memDts = null;       // per-day stamp map (see DTS_KEY)
+  var memDirty = false;    // true while a write is not yet confirmed pushed
+  var memSeq = 0;          // bumps on every tracker write (push-race token)
+  // DIRTY_KEY can get STUCK when storage stops accepting writes: the push
+  // succeeds but removeItem fails, and the stale stamp would block self-update
+  // forever and re-push every 15s. dirtyStuck marks that state (set only when
+  // a push confirmed everything current is up) so the stamp stops counting.
+  var dirtyStuck = false;
+  function unsynced() { return memDirty || (!dirtyStuck && rawGet(DIRTY_KEY) !== null); }
+  function dtsGet() { return memDts || lsGet(DTS_KEY) || {}; }
+
   // ---- sync status badge ------------------------------------------------
   // The user must SEE sync state — silent failures are exactly how workouts
   // got lost before. One small pill, bottom-left, never intercepts touches.
   var syncHideT = null;
+  var lastLocalFailAt = 0;
   function syncShow(kind) {
     if (!document.body) return;
+    // A device-storage failure must stay on screen long enough to be read —
+    // the scheduled push showed "saving…"/"saved" within a second and wiped
+    // the warning before anyone saw it.
+    if ((kind === "saving" || kind === "saved") && Date.now() - lastLocalFailAt < 5000) return;
+    if (kind === "localfail") lastLocalFailAt = Date.now();
     var el = document.getElementById("cfbySync");
     if (!el) {
       el = document.createElement("div");
       el.id = "cfbySync";
+      // In a browser tab (not the installed PWA) Safari's bottom URL bar
+      // OVERLAYS the page bottom — a 10px-offset pill is invisible exactly
+      // when it matters (the 27/07 lost-workout video: the storage-failure
+      // alert was showing, hidden behind the toolbar). Clear it.
+      var standalone = false;
+      try { standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true; } catch (e) {}
       el.style.cssText =
-        "position:fixed;left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:99990;" +
+        "position:fixed;left:10px;bottom:calc(" + (standalone ? "10px" : "88px") + " + env(safe-area-inset-bottom,0px));z-index:99990;" +
         "color:#fff;font:600 12px 'Heebo',system-ui,sans-serif;padding:6px 12px;border-radius:20px;direction:rtl;" +
         "box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none;transition:opacity .25s;opacity:0";
       document.body.appendChild(el);
@@ -344,7 +376,7 @@
       if (!r.ok) return;
       var j = await r.json();
       if (!j || !j.build || j.build === BUILD) return;
-      if (rawGet(DIRTY_KEY) !== null) return;
+      if (unsynced()) return;
       if (rawGet("cfby_upd_v1") === j.build) return;
       try { localStorage.setItem("cfby_upd_v1", j.build); } catch (e) {}
       location.reload();
@@ -376,14 +408,32 @@
   // checkFreshBundle, never over unsynced data. Pages running builds older
   // than this listener can't answer, and the SW force-reloads them: the only
   // channel that reaches installed PWAs stuck on old bundles for days.
+  //
+  // Answer through BOTH routes: on a page that loaded uncontrolled (first
+  // visit in this storage context), the ping can arrive before clients.claim()
+  // propagates — controller is still null, the answer is silently skipped, and
+  // the SW force-reloads a perfectly current page. That forced reload is what
+  // exposed the 27/07 lost-workout bug mid-session.
+  function answerAlive() {
+    try {
+      if (navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage("cfby-alive");
+    } catch (e) {}
+    try {
+      navigator.serviceWorker.getRegistration().then(function (r) {
+        var w = r && (r.active || r.waiting || r.installing);
+        if (w) w.postMessage("cfby-alive");
+      }).catch(function () {});
+    } catch (e) {}
+  }
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.addEventListener("message", function (ev) {
       if (!ev || ev.data !== "cfby-sw-updated") return;
-      try {
-        if (navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage("cfby-alive");
-      } catch (e) {}
+      answerAlive();
       checkFreshBundle();
     });
+    // A takeover (claim) means a new SW just activated — its rescue timer may
+    // already be running. Announce ourselves the moment it becomes reachable.
+    navigator.serviceWorker.addEventListener("controllerchange", function () { answerAlive(); });
   }
 
   // A push that fails on a stale JWT (app resumed from background after the
@@ -400,16 +450,38 @@
   var t1 = null, t2 = null, retryT = null;
   var pushCtx = { uid: null, isAdmin: false };
 
+  // Serialized: one states push in flight at a time. Two concurrent pushes
+  // (a slow retry racing a fresh save) are last-write-wins on the server —
+  // the OLDER payload can land second and clobber the newer one.
+  var pushBusy = false, pushQueued = false, pushStartedAt = 0;
   async function doPushState() {
     if (!pushCtx.uid) return;
-    var tracker = lsGet(K.TRACKER_KEY);
+    if (pushBusy) { pushQueued = true; return; }
+    // The memory mirror is the source of truth — storage is only the fallback
+    // for the first push after boot. A dead localStorage must never stop (or
+    // stale-ify) the cloud push; that silently lost workouts (27/07).
+    var traw = memTracker !== null ? memTracker : rawGet(K.TRACKER_KEY);
+    if (!traw) return;
+    var tracker;
+    try { tracker = JSON.parse(traw); } catch (e) { return; }
     if (!tracker) return;
     var stamp = rawGet(DIRTY_KEY);
-    if (stamp !== null) syncShow("saving");
+    var seqAtStart = memSeq;
+    if (stamp !== null || memDirty) syncShow("saving");
     // The per-day stamps ride inside the blob (tracker._dts) so other devices
     // can merge day-by-day; boot strips the field before the app sees it.
-    var payload = Object.assign({}, tracker, { _dts: lsGet(DTS_KEY) || {} });
-    var r = await upsertWithRetry("states", { user_id: pushCtx.uid, tracker: payload, updated_at: new Date().toISOString() });
+    // SNAPSHOT the stamp map — dtsGet() returns the live memDts, which
+    // stampChangedDays mutates on every write. upsertWithRetry re-serializes
+    // the row on its JWT-refresh retry, and a write landing in that window
+    // would ship OLD day data under a NEW stamp — a stamp that then beats the
+    // real data in merges.
+    var payload = Object.assign({}, tracker, { _dts: Object.assign({}, dtsGet()) });
+    pushBusy = true;
+    pushStartedAt = Date.now();
+    var r;
+    try { r = await upsertWithRetry("states", { user_id: pushCtx.uid, tracker: payload, updated_at: new Date().toISOString() }); }
+    finally { pushBusy = false; }
+    if (pushQueued) { pushQueued = false; setTimeout(doPushState, 0); }
     if (r.error) {
       console.error("[sync] states push failed:", r.error.message || r.error);
       syncShow(navigator.onLine === false ? "offline" : "error");
@@ -417,11 +489,19 @@
       retryT = setTimeout(doPushState, 10000);   // dirty stamp survives either way
       return;
     }
-    // Clear the dirty stamp only if nothing was written while the push was in
-    // flight — a newer write must stay marked as unsynced.
-    if (stamp !== null && rawGet(DIRTY_KEY) === stamp) {
-      try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
-      syncShow("saved");
+    // Clear the dirty markers only if nothing was written while the push was
+    // in flight — a newer write must stay marked as unsynced.
+    if (memSeq === seqAtStart) {
+      var showSaved = memDirty || stamp !== null;
+      memDirty = false;
+      if (stamp !== null && rawGet(DIRTY_KEY) === stamp) {
+        try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
+      }
+      // No new writes happened, so a DIRTY stamp that survived the clear above
+      // is storage refusing writes — stop letting it block self-update or
+      // trigger the 15s re-push loop (memDirty covers real unsynced data).
+      dirtyStuck = rawGet(DIRTY_KEY) !== null;
+      if (showSaved) syncShow("saved");
     }
     // Admin also publishes the program scaffold for everyone — STRIPPED of the
     // admin's own logs (see stripLogs above).
@@ -528,8 +608,15 @@
 
   async function doPushBoard() {
     if (!pushCtx.uid) return;
-    var b = lsGet(K.BOARD_KEY) || {};
-    var tracker = lsGet(K.TRACKER_KEY);
+    // Memory mirrors first — same dead-storage rule as doPushState: the board
+    // row (completed counts, metcon results, weekly results) must be derived
+    // from what the user actually did this session, not the last persisted copy.
+    var b = null;
+    if (memBoard !== null) { try { b = JSON.parse(memBoard); } catch (e) {} }
+    if (!b) b = lsGet(K.BOARD_KEY) || {};
+    var tracker = null;
+    if (memTracker !== null) { try { tracker = JSON.parse(memTracker); } catch (e) {} }
+    if (!tracker) tracker = lsGet(K.TRACKER_KEY);
     var row = {
       user_id: pushCtx.uid,
       name: b.myName || "",
@@ -566,9 +653,9 @@
   sb.auth.onAuthStateChange(function (_e, s) { accessToken = (s && s.access_token) || null; });
   function keepalivePush() {
     if (!pushCtx.uid || !accessToken) return;
-    var raw = rawGet(K.TRACKER_KEY);
+    var raw = memTracker !== null ? memTracker : rawGet(K.TRACKER_KEY);
     var stamp = rawGet(DIRTY_KEY);
-    if (!raw || stamp === null) return;
+    if (!raw || !unsynced()) return;
     try {
       fetch(window.SUPA_URL + "/rest/v1/states?on_conflict=user_id", {
         method: "POST",
@@ -579,7 +666,7 @@
           "Content-Type": "application/json",
           Prefer: "resolution=merge-duplicates"
         },
-        body: JSON.stringify({ user_id: pushCtx.uid, tracker: Object.assign(JSON.parse(raw), { _dts: lsGet(DTS_KEY) || {} }), updated_at: new Date().toISOString() })
+        body: JSON.stringify({ user_id: pushCtx.uid, tracker: Object.assign(JSON.parse(raw), { _dts: dtsGet() }), updated_at: new Date().toISOString() })
       }).then(function (res) {
         if (res.ok && rawGet(DIRTY_KEY) === stamp) { try { localStorage.removeItem(DIRTY_KEY); } catch (e) {} }
       }).catch(function () {});
@@ -601,7 +688,7 @@
       // the server whether a newer build exists (precise, replaces the old
       // 12h-age heuristic) — installed PWAs keep pages alive for days, which
       // is how devices kept running old (buggy) bundles after a fix shipped.
-      if (rawGet(DIRTY_KEY) !== null) { doPushState(); doPushBoard(); }
+      if (unsynced()) { doPushState(); doPushBoard(); }
       else checkFreshBundle();
       // Also nudge the SW update check — for long-lived PWA pages the browser
       // may not look for a new sw.js on its own for up to 24h.
@@ -614,16 +701,20 @@
   window.addEventListener("pagehide", function () { flushPending(); keepalivePush(); });
   // Push again when connectivity returns, in case a push failed offline.
   window.addEventListener("online", function () {
-    if (rawGet(DIRTY_KEY) !== null) { doPushState(); doPushBoard(); }
+    if (unsynced()) { doPushState(); doPushBoard(); }
   });
   window.addEventListener("offline", function () {
-    if (rawGet(DIRTY_KEY) !== null) syncShow("offline");
+    if (unsynced()) syncShow("offline");
   });
   // Belt & braces: anything still unsynced is retried every 15s while the app
   // is open — covers a retry timer lost to tab suspension. Skipped when a
   // debounced push is already scheduled.
   setInterval(function () {
-    if (pushCtx.uid && !t1 && rawGet(DIRTY_KEY) !== null && navigator.onLine !== false) doPushState();
+    // Watchdog: iOS can strand an in-flight fetch forever (background
+    // suspension / network handoff) — a wedged pushBusy would silently stop
+    // every future states push until reload.
+    if (pushBusy && Date.now() - pushStartedAt > 60000) pushBusy = false;
+    if (pushCtx.uid && !t1 && unsynced() && navigator.onLine !== false) doPushState();
   }, 15000);
 
   // When boot.js itself rewrites the board (e.g. a realtime refresh of other
@@ -636,24 +727,36 @@
     pushCtx.uid = uid; pushCtx.isAdmin = isAdmin;
     var orig = localStorage.setItem.bind(localStorage);
     localStorage.setItem = function (key, val) {
-      var prevRaw = (key === K.TRACKER_KEY && !suppressPush) ? rawGet(K.TRACKER_KEY) : null;
-      // The app swallows setItem failures (quota full / restricted mode) — the
-      // user would keep logging workouts while NOTHING persists, not even on
-      // the device. Surface it loudly instead of losing entries in silence.
-      try { orig(key, val); }
-      catch (e) {
-        if (key === K.TRACKER_KEY || key === K.BOARD_KEY) syncShow("localfail");
-        throw e;
-      }
-      if (suppressPush) return;
-      if (key === K.TRACKER_KEY) {
-        // Stamp each changed day for the day-level merge, mark the tracker as
-        // unsynced BEFORE scheduling the push (cleared only after Supabase
-        // confirms), and give the user instant feedback — the badge used to
-        // appear only after the 800ms debounce, i.e. after a fast app close.
+      var isTracker = key === K.TRACKER_KEY && !suppressPush;
+      // Board mirror: only USER writes — realtime refreshes (suppressPush)
+      // carry other athletes' rows read from possibly-stale storage, and must
+      // not overwrite the user's own latest myResults/myName in the mirror.
+      if (key === K.BOARD_KEY && !suppressPush) memBoard = val;
+      // Diff against the previous write's mirror, not storage — if storage is
+      // dead, rawGet keeps answering with the last persisted copy and every
+      // write would re-diff (and re-stamp) against that stale base.
+      var prevRaw = isTracker ? (memTracker !== null ? memTracker : rawGet(K.TRACKER_KEY)) : null;
+      if (isTracker) {
+        // Mirror BEFORE attempting to persist: the cloud push must carry this
+        // exact value even if the device write below fails (see doPushState).
+        memTracker = val; memSeq++; memDirty = true;
         try { stampChangedDays(prevRaw, val); } catch (e) {}
         try { orig(DIRTY_KEY, String(Date.now())); } catch (e) {}
-        syncShow("saving");
+      }
+      // The app swallows setItem failures (quota full / restricted mode) — the
+      // user would keep logging workouts while NOTHING persists on the device.
+      // Verify by reading back (iOS can also fail without throwing), alert
+      // loudly, and STILL push to Supabase — the cloud copy is the real net.
+      var failed = false;
+      try { orig(key, val); if (rawGet(key) !== val) failed = true; }
+      catch (e) { failed = true; }
+      if (failed && (key === K.TRACKER_KEY || key === K.BOARD_KEY)) syncShow("localfail");
+      if (suppressPush) return;
+      if (key === K.TRACKER_KEY) {
+        // Stamped + marked unsynced above, BEFORE the persist attempt (cleared
+        // only after Supabase confirms). Instant feedback — the badge used to
+        // appear only after the 800ms debounce, i.e. after a fast app close.
+        if (!failed) syncShow("saving");
         pushState();
         // A completed workout only writes the tracker, but the leaderboard's
         // "completed" counts are derived from it — so sync the board too, or a
@@ -1344,7 +1447,11 @@
       var serverTs = mine.updated_at ? Date.parse(mine.updated_at) || 0 : 0;
       if (localTracker && localTracker.weeks) {
         var mg = mergeTrackers(localTracker, localDts, mine.tracker, serverDts, dirtyTs > serverTs);
-        lsSetRaw(K.TRACKER_KEY, mg.tracker);
+        // Mirrors first, storage best-effort: the merged truth must survive a
+        // storage that throws (quota) — that used to be a fatal boot crash on
+        // the very devices whose storage failure we are recovering from.
+        memTracker = JSON.stringify(mg.tracker); memDts = mg.dts;
+        try { lsSetRaw(K.TRACKER_KEY, mg.tracker); } catch (e) {}
         try { lsSetRaw(DTS_KEY, mg.dts); } catch (e) {}
         if (mg.localWon) {
           // The merge carries days the cloud doesn't have — push it up. Mark
@@ -1355,7 +1462,9 @@
           try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
         }
       } else {
-        lsSetRaw(K.TRACKER_KEY, mine.tracker);  // fresh device: adopt the cloud copy
+        // fresh device: adopt the cloud copy (mirrors first, storage best-effort)
+        memTracker = JSON.stringify(mine.tracker); memDts = serverDts;
+        try { lsSetRaw(K.TRACKER_KEY, mine.tracker); } catch (e) {}
         try { lsSetRaw(DTS_KEY, serverDts); } catch (e) {}
         try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
       }
@@ -1372,9 +1481,14 @@
       // Clear any stale local copy so deleted data can never resurrect, then
       // seed the published program (scaffold only, stripped of any logs an
       // older buggy publish may have left in shared_program).
+      memTracker = null; memDts = null;         // deleted data must not resurrect from mirrors either
       try { localStorage.removeItem(K.TRACKER_KEY); localStorage.removeItem(DIRTY_KEY); localStorage.removeItem(DTS_KEY); } catch (e) {}
       var prog = await fetchSharedProgram();    // fresh user -> admin's published program
-      if (prog) lsSetRaw(K.TRACKER_KEY, { v: 2, weeks: stripLogs(prog) });
+      if (prog) {
+        var seedT = { v: 2, weeks: stripLogs(prog) };
+        memTracker = JSON.stringify(seedT);
+        try { lsSetRaw(K.TRACKER_KEY, seedT); } catch (e) {}
+      }
       // else: leave empty -> the app builds its built-in program
     }
 
@@ -1400,14 +1514,16 @@
     // copy — otherwise a flaky load would blank myResults and the next push
     // would erase the weekly results on the server too.
     var prevB = lsGet(K.BOARD_KEY) || {};
-    lsSetRaw(K.BOARD_KEY, {
+    var seedB = {
       board: (fb.error && Array.isArray(prevB.board) && prevB.board.length) ? prevB.board : board,
       myName: (myRow && myRow.name) || (fb.error && prevB.myName) || prof.name || (session.user.email || "").split("@")[0],
       myResults: (myRow && myRow.results) || (fb.error && prevB.myResults) || {},
       myCategory: categoryOf(prof.gender, prof.birth_date),
       myGender: prof.gender || null,
       myAge: ageFrom(prof.birth_date)
-    });
+    };
+    memBoard = JSON.stringify(seedB);
+    try { lsSetRaw(K.BOARD_KEY, seedB); } catch (e) {}
 
     // 3) intercept future writes
     installInterceptor(uid, isAdmin);

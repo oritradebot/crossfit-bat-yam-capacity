@@ -1228,6 +1228,10 @@ class Component extends DCLogic {
     const nd = this.emptyDay();
     if (!o) return nd;
     nd.done = !!o.done;
+    // rest must round-trip: dropping it changed the day's sync signature on
+    // every boot, which re-stamped untouched rest days as "just edited" — a
+    // fresh stamp that beats the real data in cross-device day merges.
+    nd.rest = !!o.rest;
     // Legacy migration: 'pr' used to be a value on the effort scale. It is now
     // a standalone flag — old days keep their PR and free the rating slot.
     nd.pr = !!o.pr || o.rating === 'pr';
