@@ -106,8 +106,24 @@
         var r = await sb.auth.signUp({ email:email, password:pass });
         if(r.error) throw r.error;
         var uid = r.data.user && r.data.user.id;
-        // store display name + the plain username (shown in the admin panel)
-        if(uid){ await sb.from("profiles").upsert({ id:uid, name:(name||uname), email:uname }); }
+        // store display name + the plain username (shown in the admin panel).
+        // The row itself is created by a signup trigger; this fills in the
+        // names. The result used to be discarded, so a failure here left an
+        // athlete showing up unnamed with nobody the wiser. Retry once, then
+        // report it — but never block the redirect: the account already
+        // EXISTS at this point, so sending the user back to signup would only
+        // greet them with "username already taken".
+        if(uid){
+          var pu = await sb.from("profiles").upsert({ id:uid, name:(name||uname), email:uname });
+          if(pu.error){
+            await new Promise(function(res){ setTimeout(res,700); });
+            pu = await sb.from("profiles").upsert({ id:uid, name:(name||uname), email:uname });
+          }
+          if(pu.error){
+            console.error("[signup] profile upsert failed:", pu.error.message || pu.error);
+            try{ sessionStorage.setItem("cfby_profile_warn","1"); }catch(e){}
+          }
+        }
         if(!r.data.session){ location.replace("confirmed.html?pending=1"); return; }
         location.replace("confirmed.html");
       } else {

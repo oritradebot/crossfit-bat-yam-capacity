@@ -24,6 +24,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8137", "--directory", "public"],
       "port": 8137
+    },
+    {
+      "name": "capacity-static-5",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8149", "--directory", "public"],
+      "port": 8149
     }
   ]
 }

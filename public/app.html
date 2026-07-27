@@ -1870,7 +1870,11 @@ class Component extends DCLogic {
     if (!c.ok) { this.toast(c.anyPresent ? ('חסר: ' + c.missing.join(' · ')) : 'אין אימון להשלים'); return; }
     t.done = true; t.rest = false;
     this.save(d); this.setState({ data:d });
-    this.toast('🎉 האימון נשמר והושלם!');
+    // Device-scoped claim ONLY. This toast fires before any network I/O, so it
+    // cannot know whether the cloud got it — it used to say "saved" outright,
+    // which is what made a workout look safe seconds before it vanished. The
+    // cloud claim belongs solely to boot.js's sync badge ("✓ נשמר בענן").
+    this.toast('🎉 האימון הושלם ונשמר במכשיר');
   }
   unsaveDay() {
     const d = structuredClone(this.state.data);

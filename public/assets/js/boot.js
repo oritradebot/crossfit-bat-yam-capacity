@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "1.7.1";
+  var BUILD = "1.7.2";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -304,6 +304,13 @@
   // with the stale server copy — silently losing the workout the user just
   // logged. See the seeding logic in main().
   var DIRTY_KEY = "cfby_dirty_v1";
+  // Why the last close-time keepalive push failed, read back on the next open.
+  // The page is dying when that push fires, so there is no one to show a badge
+  // to — this is the only way the failure can ever reach the user.
+  var KA_KEY = "cfby_ka_fail_v1";
+  // Browsers reject a keepalive request whose total body exceeds 64KB. Stay
+  // under it with margin for headers.
+  var KEEPALIVE_MAX = 60000;
   function rawGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 
   // In-memory mirrors of the tracker, day stamps, and dirty flag (v1.7.1).
@@ -331,6 +338,24 @@
   // got lost before. One small pill, bottom-left, never intercepts touches.
   var syncHideT = null;
   var lastLocalFailAt = 0;
+  // A dead session (revoked or expired refresh token) used to produce an
+  // endless red "retrying" badge with no way out. We never auto-redirect:
+  // location.replace() destroys memTracker, which is the ONLY copy of a
+  // just-logged workout when device storage is silently dead. Re-login is an
+  // explicit tap, and it refuses to leave unsynced work behind without asking.
+  var sessionDead = false, signingOut = false;
+  async function reauthTap() {
+    if (unsynced()) {
+      syncShow("saving");
+      try { await doPushState(); } catch (e) {}
+      if (unsynced() &&
+          !confirm("יש אימון שעדיין לא נשמר בענן — התחברות מחדש עלולה לאבד אותו.\n\nלהתחבר מחדש בכל זאת?")) {
+        syncShow("reauth");
+        return;
+      }
+    }
+    location.replace("index.html");
+  }
   function syncShow(kind) {
     if (!document.body) return;
     // A device-storage failure must stay on screen long enough to be read —
@@ -360,6 +385,14 @@
     else if (kind === "error")   { el.textContent = "⚠️ לא מסונכרן — מנסה שוב";       el.style.background = "#a33b2e"; }
     else if (kind === "offline") { el.textContent = "📡 אין אינטרנט — יסונכרן כשיחזור"; el.style.background = "#8a6d1a"; }
     else if (kind === "localfail") { el.textContent = "⚠️ השמירה במכשיר נכשלה — האחסון מלא?"; el.style.background = "#a33b2e"; }
+    else if (kind === "reauth")  { el.textContent = "🔑 ההתחברות פגה — הקישו כדי להתחבר מחדש"; el.style.background = "#7a3ea8"; }
+    else if (kind === "pubfail") { el.textContent = "⚠️ האימון נשמר, אך פרסום התוכנית נכשל"; el.style.background = "#a3702e"; }
+    // The pill is normally inert so it can never swallow a tap meant for the
+    // app. The reauth state is the ONE exception: it is the user's only way
+    // out of a dead session, so it must be tappable.
+    el.style.pointerEvents = (kind === "reauth") ? "auto" : "none";
+    el.style.cursor = (kind === "reauth") ? "pointer" : "";
+    el.onclick = (kind === "reauth") ? reauthTap : null;
     el.style.opacity = "1";
     if (kind === "saved") syncHideT = setTimeout(function () { el.style.opacity = "0"; }, 3000);
   }
@@ -484,10 +517,31 @@
     if (pushQueued) { pushQueued = false; setTimeout(doPushState, 0); }
     if (r.error) {
       console.error("[sync] states push failed:", r.error.message || r.error);
-      syncShow(navigator.onLine === false ? "offline" : "error");
+      // upsertWithRetry already refreshed the session once and retried. If it
+      // STILL reads as an auth failure while the network is up, the session is
+      // genuinely dead — an endless red "retrying" badge would never resolve.
+      // Say so instead, but never block the write and never navigate.
+      var em = String((r.error && (r.error.message || r.error.code)) || "");
+      if (navigator.onLine !== false &&
+          (r.error.code === "PGRST301" || r.error.status === 401 ||
+           /jwt|token|unauthorized|not authenticated/i.test(em))) sessionDead = true;
+      syncShow(navigator.onLine === false ? "offline" : (sessionDead ? "reauth" : "error"));
       clearTimeout(retryT);
-      retryT = setTimeout(doPushState, 10000);   // dirty stamp survives either way
+      // Keep retrying underneath either way — a session that heals on its own
+      // re-syncs with no user action — just back off against an auth wall.
+      retryT = setTimeout(doPushState, sessionDead ? 60000 : 10000);
       return;
+    }
+    sessionDead = false;   // a clean push proves the session is alive
+    // Admin also publishes the program scaffold for everyone — STRIPPED of the
+    // admin's own logs (see stripLogs above). This used to run AFTER the badge
+    // already said "saved", with its result never inspected: the admin saw
+    // "✓ נשמר בענן" while the program push to every athlete had failed.
+    // Publish FIRST, and let its outcome decide the badge.
+    var pubErr = null;
+    if (pushCtx.isAdmin && tracker.weeks) {
+      var pr = await upsertWithRetry("shared_program", { id: 1, weeks: stripLogs(tracker.weeks), updated_at: new Date().toISOString() });
+      if (pr.error) { pubErr = pr.error; console.error("[sync] shared_program publish failed:", pr.error.message || pr.error); }
     }
     // Clear the dirty markers only if nothing was written while the push was
     // in flight — a newer write must stay marked as unsynced.
@@ -501,12 +555,10 @@
       // is storage refusing writes — stop letting it block self-update or
       // trigger the 15s re-push loop (memDirty covers real unsynced data).
       dirtyStuck = rawGet(DIRTY_KEY) !== null;
-      if (showSaved) syncShow("saved");
-    }
-    // Admin also publishes the program scaffold for everyone — STRIPPED of the
-    // admin's own logs (see stripLogs above).
-    if (pushCtx.isAdmin && tracker.weeks) {
-      await upsertWithRetry("shared_program", { id: 1, weeks: stripLogs(tracker.weeks), updated_at: new Date().toISOString() });
+      // The athlete's OWN data did land — only the program publish failed, so
+      // say exactly that rather than a generic sync error.
+      if (pubErr) syncShow("pubfail");
+      else if (showSaved) syncShow("saved");
     }
   }
   function pushState() {
@@ -650,13 +702,34 @@
   // after the page is gone. Falls back silently on any failure (e.g. the 64KB
   // keepalive body limit): the dirty stamp + boot-time recovery still cover it.
   var accessToken = null;
-  sb.auth.onAuthStateChange(function (_e, s) { accessToken = (s && s.access_token) || null; });
+  sb.auth.onAuthStateChange(function (e, s) {
+    accessToken = (s && s.access_token) || null;
+    // A sign-out we did not initiate means the session died under us (revoked
+    // refresh token, or a refresh that can never succeed). Surface it — and
+    // NEVER navigate: unsynced work may exist only in memTracker.
+    if (e === "SIGNED_OUT" && !signingOut) { sessionDead = true; syncShow("reauth"); }
+    // Healed on its own: drop the warning and flush whatever piled up.
+    else if (e === "SIGNED_IN" || e === "TOKEN_REFRESHED") {
+      if (sessionDead) { sessionDead = false; if (unsynced()) { doPushState(); doPushBoard(); } }
+    }
+  });
   function keepalivePush() {
     if (!pushCtx.uid || !accessToken) return;
     var raw = memTracker !== null ? memTracker : rawGet(K.TRACKER_KEY);
     var stamp = rawGet(DIRTY_KEY);
     if (!raw || !unsynced()) return;
     try {
+      var body = JSON.stringify({ user_id: pushCtx.uid, tracker: Object.assign(JSON.parse(raw), { _dts: dtsGet() }), updated_at: new Date().toISOString() });
+      // Browsers cap a keepalive request body at 64KB TOTAL and reject beyond
+      // it. The tracker blob passed that cap once the program grew, so this
+      // channel has been failing on every close — silently, because the
+      // rejection landed in an empty catch. Don't burn a guaranteed-failed
+      // request: say so, and let the dirty stamp + boot merge do the work.
+      if (body.length > KEEPALIVE_MAX) {
+        console.warn("[sync] keepalive skipped: body " + body.length + "B > " + KEEPALIVE_MAX + "B cap — relying on dirty-stamp recovery");
+        try { localStorage.setItem(KA_KEY, "size"); } catch (e) {}
+        return;
+      }
       fetch(window.SUPA_URL + "/rest/v1/states?on_conflict=user_id", {
         method: "POST",
         keepalive: true,
@@ -666,11 +739,23 @@
           "Content-Type": "application/json",
           Prefer: "resolution=merge-duplicates"
         },
-        body: JSON.stringify({ user_id: pushCtx.uid, tracker: Object.assign(JSON.parse(raw), { _dts: dtsGet() }), updated_at: new Date().toISOString() })
+        body: body
       }).then(function (res) {
-        if (res.ok && rawGet(DIRTY_KEY) === stamp) { try { localStorage.removeItem(DIRTY_KEY); } catch (e) {} }
-      }).catch(function () {});
-    } catch (e) {}
+        if (res.ok) {
+          if (rawGet(DIRTY_KEY) === stamp) { try { localStorage.removeItem(DIRTY_KEY); } catch (e) {} }
+          try { localStorage.removeItem(KA_KEY); } catch (e) {}
+          return;
+        }
+        // Non-ok used to have no branch at all. The dirty stamp is deliberately
+        // left in place so boot recovery re-pushes; record WHY so the next open
+        // can tell a dead session apart from a network blip.
+        console.warn("[sync] keepalive push rejected: HTTP " + res.status);
+        try { localStorage.setItem(KA_KEY, res.status === 401 || res.status === 403 ? "auth" : String(res.status)); } catch (e) {}
+      }).catch(function (e) {
+        console.warn("[sync] keepalive push failed:", (e && e.message) || e);
+        try { localStorage.setItem(KA_KEY, "neterr"); } catch (e2) {}
+      });
+    } catch (e) { console.warn("[sync] keepalive push threw:", (e && e.message) || e); }
   }
 
   // The debounce is the enemy on phones: switching away from the PWA can kill
@@ -1392,6 +1477,16 @@
     var uid = session.user.id;
     accessToken = session.access_token || accessToken;   // keepalive pushes need it synchronously
 
+    // Why the previous close-time push failed, if it did. That push runs while
+    // the page is dying, so this read-back is the only way the reason ever
+    // surfaces. Diagnostic only — the day-level boot merge below already
+    // recovers the DATA, so this must never alarm the user.
+    var kaFail = rawGet(KA_KEY);
+    if (kaFail) {
+      console.warn("[sync] previous close-time push did not land (" + kaFail + ") — recovering via boot merge");
+      try { localStorage.removeItem(KA_KEY); } catch (e) {}
+    }
+
     var prof = await fetchProfile(uid);
     var isAdmin = !!prof.is_admin;
 
@@ -1538,7 +1633,14 @@
     if (!fb.error) pushBoard();
 
     // expose a manual sign-out for the app if needed
-    window.cfbySignOut = async function () { await sb.auth.signOut(); location.replace("index.html"); };
+    // scope:"local" — the default is "global", which revokes the refresh token
+    // on EVERY device. Signing out on the phone would kill the tablet's session
+    // mid-workout, which is one way sessions died under users in the first place.
+    window.cfbySignOut = async function () {
+      signingOut = true;                       // a deliberate sign-out is not a fault
+      try { await sb.auth.signOut({ scope: "local" }); } catch (e) {}
+      location.replace("index.html");
+    };
     window.cfbyIsAdmin = isAdmin;
 
     // 4) NOW boot the app (data is already in localStorage)
