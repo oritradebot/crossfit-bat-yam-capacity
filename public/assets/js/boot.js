@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "1.6.15";
+  var BUILD = "1.7.0";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -157,6 +157,125 @@
     return w;
   }
 
+  // ---- day-level merge (v1.7.0) ----------------------------------------
+  // The sync model used to be "last whole notebook wins": every push replaced
+  // the entire tracker, so ANY two storage contexts (phone + computer, or on
+  // iOS even Safari + the home-screen app — separate storages!) silently erased
+  // each other's workouts. Now every day carries a "last touched" stamp
+  // (DTS_KEY, keyed "week_day"), the stamps ride inside the states blob as
+  // tracker._dts (no schema change), and boot MERGES local+server per day —
+  // each day survives from whichever side touched it last.
+  var DTS_KEY = "cfby_dts_v1";
+
+  // JSON.stringify with sorted keys. Postgres jsonb does NOT preserve key
+  // order, so a naive stringify of the same log round-tripped through the
+  // server would differ — and every boot would look like a change to push.
+  function stable(o) {
+    if (o === null || typeof o !== "object") return JSON.stringify(o);
+    if (Array.isArray(o)) return "[" + o.map(stable).join(",") + "]";
+    return "{" + Object.keys(o).sort().map(function (k) { return JSON.stringify(k) + ":" + stable(o[k]); }).join(",") + "}";
+  }
+  // A log object holding only empty fields counts as NO log — the app
+  // initializes empty {weight:'',time:''...} shells on days it touches, and a
+  // shell must compare equal to a stripped/absent log, or an app-initialized
+  // empty day could outrank a day someone actually logged.
+  function cleanLog(L) {
+    if (!L || typeof L !== "object") return L || null;
+    var out = {}, has = false;
+    for (var k in L) {
+      if (k === "mode") continue;               // mode alone (default UI state) isn't data
+      var v = L[k];
+      if (v === "" || v == null || v === false) continue;
+      out[k] = v; has = true;
+    }
+    if (!has) return null;
+    if (L.mode) out.mode = L.mode;              // but with real values, mode matters (scoring)
+    return out;
+  }
+  // Signature of a day's USER LOG only — plan text is deliberately excluded,
+  // so program edits by the admin never look like log changes on athletes'
+  // days (the app re-overlays plan text via applyProgram/pv anyway).
+  function logSig(d) {
+    if (!d) return "";
+    function m(x) {
+      if (!x) return null;
+      var l = cleanLog(x.log);
+      return (x.rx || x.scaled || l) ? [!!x.rx, !!x.scaled, l] : null;
+    }
+    var core = {
+      done: !!d.done, rest: !!d.rest, rating: d.rating || "", summary: d.summary || "", pr: !!d.pr,
+      lift: cleanLog(d.lift && d.lift.log),
+      mc: m(d.metcon), mc2: m(d.metcon2),
+      ex: Array.isArray(d.extras) ? d.extras.map(function (x) {
+        if (!x) return null;
+        var l = cleanLog(x.log);
+        return (x.result || l) ? [x.result || "", l] : null;
+      }) : null
+    };
+    if (d.alt) core.alt = logSig(d.alt);
+    return stable(core);
+  }
+  // Called on every tracker write: stamp "now" on each day whose log changed.
+  function stampChangedDays(prevRaw, newRaw) {
+    var prev = null, next = null;
+    try { prev = JSON.parse(prevRaw); } catch (e) {}
+    try { next = JSON.parse(newRaw); } catch (e) {}
+    var nw = (next && next.weeks) || [], pw = (prev && prev.weeks) || [];
+    var dts = lsGet(DTS_KEY) || {}, changed = false, now = Date.now();
+    for (var w = 0; w < nw.length; w++) {
+      var nd = (nw[w] && nw[w].days) || [], pd = (pw[w] && pw[w].days) || [];
+      for (var d = 0; d < nd.length; d++) {
+        var sNew = logSig(nd[d]);
+        if (pd[d] === undefined) {
+          // Day appeared (first write on this device / program grew): stamp it
+          // only if it already carries logs — a blank scaffold day must never
+          // win a merge against a day someone actually logged.
+          var blank;
+          try { blank = logSig(stripDayLogs(JSON.parse(JSON.stringify(nd[d])))); } catch (e) { blank = ""; }
+          if (sNew !== blank) { dts[w + "_" + d] = now; changed = true; }
+        } else if (sNew !== logSig(pd[d])) {
+          dts[w + "_" + d] = now; changed = true;
+        }
+      }
+    }
+    if (changed) { try { lsSetRaw(DTS_KEY, dts); } catch (e) {} }
+  }
+  // Merge two tracker copies day by day. preferLocal breaks ties for days with
+  // equal (usually missing/legacy) stamps — callers pass the old whole-blob
+  // rule (device dirty-stamp newer than the server row), so pre-1.7.0 data
+  // behaves exactly as before until stamps accumulate.
+  // Returns localWon=true when the merged result carries anything the server
+  // copy doesn't — i.e. it must be pushed up.
+  function mergeTrackers(localT, localDts, serverT, serverDts, preferLocal) {
+    var lw = (localT && localT.weeks) || [], sw = (serverT && serverT.weeks) || [];
+    var weeks = [], dts = {}, localWon = false;
+    var W = Math.max(lw.length, sw.length);
+    for (var w = 0; w < W; w++) {
+      var base = JSON.parse(JSON.stringify(sw[w] || lw[w]));
+      var ld = (lw[w] && lw[w].days) || [], sd = (sw[w] && sw[w].days) || [];
+      var D = Math.max(ld.length, sd.length), days = [];
+      for (var d = 0; d < D; d++) {
+        var k = w + "_" + d;
+        var lts = localDts[k] || 0, sts = serverDts[k] || 0;
+        var pick;
+        if (ld[d] === undefined) pick = "s";
+        else if (sd[d] === undefined) pick = "l";
+        else if (lts !== sts) pick = lts > sts ? "l" : "s";
+        else pick = preferLocal ? "l" : "s";
+        days.push(pick === "l" ? ld[d] : sd[d]);
+        if (pick === "l" && (sd[d] === undefined || logSig(ld[d]) !== logSig(sd[d]))) localWon = true;
+        dts[k] = Math.max(lts, sts);
+      }
+      base.days = days;
+      weeks.push(base);
+    }
+    return {
+      tracker: { v: 2, pv: Math.max((localT && localT.pv) || 0, (serverT && serverT.pv) || 0), weeks: weeks },
+      dts: dts,
+      localWon: localWon
+    };
+  }
+
   // ---- competition categories (gender x age bracket) -------------------
   function ageFrom(birthDate) {
     if (!birthDate) return null;
@@ -209,7 +328,7 @@
     else if (kind === "offline") { el.textContent = "📡 אין אינטרנט — יסונכרן כשיחזור"; el.style.background = "#8a6d1a"; }
     else if (kind === "localfail") { el.textContent = "⚠️ השמירה במכשיר נכשלה — האחסון מלא?"; el.style.background = "#a33b2e"; }
     el.style.opacity = "1";
-    if (kind === "saved") syncHideT = setTimeout(function () { el.style.opacity = "0"; }, 1600);
+    if (kind === "saved") syncHideT = setTimeout(function () { el.style.opacity = "0"; }, 3000);
   }
   window.__cfbySync = syncShow;
 
@@ -286,7 +405,10 @@
     if (!tracker) return;
     var stamp = rawGet(DIRTY_KEY);
     if (stamp !== null) syncShow("saving");
-    var r = await upsertWithRetry("states", { user_id: pushCtx.uid, tracker: tracker, updated_at: new Date().toISOString() });
+    // The per-day stamps ride inside the blob (tracker._dts) so other devices
+    // can merge day-by-day; boot strips the field before the app sees it.
+    var payload = Object.assign({}, tracker, { _dts: lsGet(DTS_KEY) || {} });
+    var r = await upsertWithRetry("states", { user_id: pushCtx.uid, tracker: payload, updated_at: new Date().toISOString() });
     if (r.error) {
       console.error("[sync] states push failed:", r.error.message || r.error);
       syncShow(navigator.onLine === false ? "offline" : "error");
@@ -456,7 +578,7 @@
           "Content-Type": "application/json",
           Prefer: "resolution=merge-duplicates"
         },
-        body: JSON.stringify({ user_id: pushCtx.uid, tracker: JSON.parse(raw), updated_at: new Date().toISOString() })
+        body: JSON.stringify({ user_id: pushCtx.uid, tracker: Object.assign(JSON.parse(raw), { _dts: lsGet(DTS_KEY) || {} }), updated_at: new Date().toISOString() })
       }).then(function (res) {
         if (res.ok && rawGet(DIRTY_KEY) === stamp) { try { localStorage.removeItem(DIRTY_KEY); } catch (e) {} }
       }).catch(function () {});
@@ -513,6 +635,7 @@
     pushCtx.uid = uid; pushCtx.isAdmin = isAdmin;
     var orig = localStorage.setItem.bind(localStorage);
     localStorage.setItem = function (key, val) {
+      var prevRaw = (key === K.TRACKER_KEY && !suppressPush) ? rawGet(K.TRACKER_KEY) : null;
       // The app swallows setItem failures (quota full / restricted mode) — the
       // user would keep logging workouts while NOTHING persists, not even on
       // the device. Surface it loudly instead of losing entries in silence.
@@ -523,9 +646,13 @@
       }
       if (suppressPush) return;
       if (key === K.TRACKER_KEY) {
-        // Mark the tracker as unsynced BEFORE scheduling the push; cleared only
-        // after Supabase confirms the upsert.
+        // Stamp each changed day for the day-level merge, mark the tracker as
+        // unsynced BEFORE scheduling the push (cleared only after Supabase
+        // confirms), and give the user instant feedback — the badge used to
+        // appear only after the 800ms debounce, i.e. after a fast app close.
+        try { stampChangedDays(prevRaw, val); } catch (e) {}
         try { orig(DIRTY_KEY, String(Date.now())); } catch (e) {}
+        syncShow("saving");
         pushState();
         // A completed workout only writes the tracker, but the leaderboard's
         // "completed" counts are derived from it — so sync the board too, or a
@@ -1188,11 +1315,12 @@
     try { localStorage.setItem("cfby_reset_v1", "1"); } catch (e) {}
 
     // 1) seed the tracker. The app reconciles shape + program version itself.
-    // If this device holds tracker changes that never reached Supabase (dirty
-    // stamp newer than the server row), the local copy wins and is pushed up —
-    // otherwise a push lost to the mobile lifecycle would be erased here by the
-    // stale server copy, which is exactly the "my workout disappeared" bug.
+    // v1.7.0: local and server are MERGED day by day (see mergeTrackers) —
+    // each day survives from whichever side touched it last. This replaces
+    // "last whole notebook wins", which let any second device/storage-context
+    // silently erase workouts synced from the first.
     var localTracker = lsGet(K.TRACKER_KEY);
+    var localDts = lsGet(DTS_KEY) || {};
     var st = await fetchMyState(uid);
     if (st.error && !(localTracker && localTracker.weeks)) {
       // Server unreachable and nothing local to boot from — wait, don't guess.
@@ -1210,20 +1338,40 @@
       keepLocal = dirtyTs > 0;
       syncShow(navigator.onLine === false ? "offline" : "error");
     } else if (mine && mine.tracker && mine.tracker.weeks) {
+      var serverDts = mine.tracker._dts || {};
+      delete mine.tracker._dts;                 // internal — the app must never see it
       var serverTs = mine.updated_at ? Date.parse(mine.updated_at) || 0 : 0;
-      if (localTracker && localTracker.weeks && dirtyTs > serverTs) {
-        keepLocal = true;                       // unsynced local changes are newer
+      if (localTracker && localTracker.weeks) {
+        var mg = mergeTrackers(localTracker, localDts, mine.tracker, serverDts, dirtyTs > serverTs);
+        lsSetRaw(K.TRACKER_KEY, mg.tracker);
+        try { lsSetRaw(DTS_KEY, mg.dts); } catch (e) {}
+        if (mg.localWon) {
+          // The merge carries days the cloud doesn't have — push it up. Mark
+          // dirty so every retry channel covers this push too.
+          try { localStorage.setItem(DIRTY_KEY, String(Date.now())); } catch (e) {}
+          keepLocal = true;
+        } else {
+          try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
+        }
       } else {
-        lsSetRaw(K.TRACKER_KEY, mine.tracker);  // this user's own saved blob
+        lsSetRaw(K.TRACKER_KEY, mine.tracker);  // fresh device: adopt the cloud copy
+        try { lsSetRaw(DTS_KEY, serverDts); } catch (e) {}
         try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
       }
+    } else if (localTracker && localTracker.weeks && dirtyTs > 0) {
+      // The server answered "no row" BUT this device holds unsynced data: the
+      // cloud simply never received it (a brand-new user whose first-session
+      // pushes all died with the mobile lifecycle / gym reception). The old
+      // code wiped the device here — THE data-loss bug for new users. Keep
+      // local; the push below creates the row.
+      keepLocal = true;
     } else {
-      // The server ANSWERED and there is no row: confirmed fresh user, or an
-      // admin wiped this account's data. The server wins outright — clear any
-      // stale local copy so deleted data can never resurrect from a device,
-      // then seed the published program (scaffold only, stripped of any logs
-      // an older buggy publish may have left in shared_program).
-      try { localStorage.removeItem(K.TRACKER_KEY); localStorage.removeItem(DIRTY_KEY); } catch (e) {}
+      // The server ANSWERED, there is no row, and nothing unsynced is at
+      // stake: confirmed fresh user, or an admin wiped this account's data.
+      // Clear any stale local copy so deleted data can never resurrect, then
+      // seed the published program (scaffold only, stripped of any logs an
+      // older buggy publish may have left in shared_program).
+      try { localStorage.removeItem(K.TRACKER_KEY); localStorage.removeItem(DIRTY_KEY); localStorage.removeItem(DTS_KEY); } catch (e) {}
       var prog = await fetchSharedProgram();    // fresh user -> admin's published program
       if (prog) lsSetRaw(K.TRACKER_KEY, { v: 2, weeks: stripLogs(prog) });
       // else: leave empty -> the app builds its built-in program
