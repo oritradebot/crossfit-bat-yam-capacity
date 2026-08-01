@@ -723,7 +723,7 @@
       </div>
     </sc-if>
 
-    <div style="text-align:center; margin-top:30px; font-size:11px; color:var(--muted);">הנתונים נשמרים אוטומטית במכשיר הזה · CrossFit Bat Yam</div>
+    <div style="text-align:center; margin-top:30px; font-size:11px; color:var(--muted);">הנתונים מסתנכרנים לענן אוטומטית · CrossFit Bat Yam</div>
   </main>
 
   <sc-if value="{{ welcomeOpen }}" hint-placeholder-val="{{ false }}">
@@ -815,7 +815,7 @@
             </div>
           </sc-for>
         </div>
-        <div style="padding:12px 20px; border-top:1px solid var(--line); font-size:11.5px; color:var(--muted); line-height:1.6;">שמות אחידים = השוואת שיאים מדויקת. השינויים נשמרים במכשיר זה. ההשלמה מציעה שמות אך עדיין מאפשרת להקליד שם חופשי.</div>
+        <div style="padding:12px 20px; border-top:1px solid var(--line); font-size:11.5px; color:var(--muted); line-height:1.6;">שמות אחידים = השוואת שיאים מדויקת. השינויים נשמרים ומסתנכרנים לענן. ההשלמה מציעה שמות אך עדיין מאפשרת להקליד שם חופשי.</div>
       </div>
     </div>
   </sc-if>
@@ -1870,11 +1870,11 @@ class Component extends DCLogic {
     if (!c.ok) { this.toast(c.anyPresent ? ('חסר: ' + c.missing.join(' · ')) : 'אין אימון להשלים'); return; }
     t.done = true; t.rest = false;
     this.save(d); this.setState({ data:d });
-    // Device-scoped claim ONLY. This toast fires before any network I/O, so it
-    // cannot know whether the cloud got it — it used to say "saved" outright,
-    // which is what made a workout look safe seconds before it vanished. The
-    // cloud claim belongs solely to boot.js's sync badge ("✓ נשמר בענן").
-    this.toast('🎉 האימון הושלם ונשמר במכשיר');
+    // This toast fires before any network I/O, so it must not CLAIM the cloud
+    // — "מסתנכרן…" states the push has started, which is true (the write just
+    // scheduled it); whether it LANDED belongs to boot.js's badge and footer
+    // line. "נשמר במכשיר" was read as "device-only, no cloud sync" (01/08).
+    this.toast('🎉 האימון הושלם ונשמר — מסתנכרן לענן…');
   }
   unsaveDay() {
     const d = structuredClone(this.state.data);

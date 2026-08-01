@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "1.7.3";
+  var BUILD = "1.7.4";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -346,6 +346,15 @@
   // got lost before. One small pill, bottom-left, never intercepts touches.
   var syncHideT = null;
   var lastLocalFailAt = 0;
+  // The pill is held by REFERENCE and re-appended by versionTag's observer:
+  // the runtime rebuilds <body> on every render (a save triggers several —
+  // toast in/out, the day flipping to ✓), and each rebuild threw the pill out
+  // of the DOM at the exact moment it was showing. On phones the user then
+  // locks the screen and never catches it alive — "there is no badge" (01/08).
+  var pillEl = null;
+  // Last sync state, re-painted onto the footer line (which survives rebuilds)
+  // so the cloud state is ALWAYS readable, not a 3-second pill.
+  var lastCloud = { kind: null, at: 0 };
   // A dead session (revoked or expired refresh token) used to produce an
   // endless red "retrying" badge with no way out. We never auto-redirect:
   // location.replace() destroys memTracker, which is the ONLY copy of a
@@ -371,22 +380,28 @@
     // the warning before anyone saw it.
     if ((kind === "saving" || kind === "saved") && Date.now() - lastLocalFailAt < 5000) return;
     if (kind === "localfail") lastLocalFailAt = Date.now();
-    var el = document.getElementById("cfbySync");
+    var el = pillEl;
     if (!el) {
       el = document.createElement("div");
       el.id = "cfbySync";
       // In a browser tab (not the installed PWA) Safari's bottom URL bar
       // OVERLAYS the page bottom — a 10px-offset pill is invisible exactly
       // when it matters (the 27/07 lost-workout video: the storage-failure
-      // alert was showing, hidden behind the toolbar). Clear it.
+      // alert was showing, hidden behind the toolbar). In the installed PWA
+      // there is no toolbar, but the app's own toast pops at bottom:24px —
+      // 72px clears that band too.
       var standalone = false;
       try { standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true; } catch (e) {}
       el.style.cssText =
-        "position:fixed;left:10px;bottom:calc(" + (standalone ? "10px" : "88px") + " + env(safe-area-inset-bottom,0px));z-index:99990;" +
+        "position:fixed;left:10px;bottom:calc(" + (standalone ? "72px" : "88px") + " + env(safe-area-inset-bottom,0px));z-index:99990;" +
         "color:#fff;font:600 12px 'Heebo',system-ui,sans-serif;padding:6px 12px;border-radius:20px;direction:rtl;" +
         "box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none;transition:opacity .25s;opacity:0";
-      document.body.appendChild(el);
+      pillEl = el;
     }
+    // The runtime may have rebuilt <body> since the last show and orphaned the
+    // pill — re-append by reference (state intact). versionTag's observer does
+    // the same between shows.
+    if (!el.parentNode) document.body.appendChild(el);
     clearTimeout(syncHideT);
     if (kind === "saving")       { el.textContent = "⏳ שומר…";                        el.style.background = "#233657"; }
     else if (kind === "saved")   { el.textContent = "✓ נשמר בענן";                    el.style.background = "#1e7e46"; }
@@ -403,8 +418,38 @@
     el.onclick = (kind === "reauth") ? reauthTap : null;
     el.style.opacity = "1";
     if (kind === "saved") syncHideT = setTimeout(function () { el.style.opacity = "0"; }, 3000);
+    // Mirror every state onto the footer line — the pill is transient and can
+    // be missed; the footer answer to "did it reach the cloud?" is permanent.
+    lastCloud = { kind: kind, at: Date.now() };
+    cloudPaint();
   }
   window.__cfbySync = syncShow;
+  // Permanent cloud-state line inside the version footer. This replaces the
+  // exported app's static "הנתונים נשמרים אוטומטית במכשיר הזה" claim as the
+  // thing users actually read at the page bottom (01/08: Ori read that line,
+  // believed sync was device-only, and had never once caught the pill alive).
+  function cloudPaint() {
+    var el = document.getElementById("cfbyCloud");
+    if (!el) return;
+    var k = lastCloud.kind;
+    var t = lastCloud.at ? new Date(lastCloud.at) : null;
+    var hm = t ? ("0" + t.getHours()).slice(-2) + ":" + ("0" + t.getMinutes()).slice(-2) : "";
+    var txt, color = "", tap = false;
+    if (k === "saved")         { txt = "☁️ מסונכרן לענן · " + hm; color = "#1e7e46"; }
+    else if (k === "saving")   { txt = "☁️ שומר בענן…"; }
+    else if (k === "error")    { txt = "⚠️ לא מסונכרן — מנסה שוב"; color = "#a33b2e"; }
+    else if (k === "offline")  { txt = "📡 אין אינטרנט — יסונכרן כשיחזור"; color = "#8a6d1a"; }
+    else if (k === "reauth")   { txt = "🔑 ההתחברות פגה — הקישו כאן"; color = "#7a3ea8"; tap = true; }
+    else if (k === "localfail"){ txt = "⚠️ בעיית אחסון במכשיר — הענן הוא הגיבוי"; color = "#a33b2e"; }
+    else if (k === "pubfail")  { txt = "⚠️ נשמר; פרסום התוכנית נכשל"; color = "#a3702e"; }
+    else                       { txt = pushCtx.uid ? "☁️ מסונכרן לענן" : ""; }
+    el.textContent = txt;
+    el.style.color = color;
+    el.style.fontWeight = k && k !== "saved" ? "700" : "500";
+    el.style.pointerEvents = tap ? "auto" : "none";
+    el.style.cursor = tap ? "pointer" : "";
+    el.onclick = tap ? reauthTap : null;
+  }
 
   // ---- self-update ------------------------------------------------------
   // version.json is bumped on every deploy. If the server says a newer build
@@ -423,6 +468,33 @@
       location.reload();
     } catch (e) {}
   }
+  // Cross-device freshness (v1.7.4): the tracker used to be reconciled at BOOT
+  // only, so a workout pushed from the phone reached an already-open computer
+  // only after a manual refresh — which reads as "it didn't save" (01/08).
+  // On every return to a CLEAN page, ask the server for the states row's
+  // updated_at ALONE (a few bytes — never the blob) and reload when another
+  // device has pushed since; boot's day-merge then brings the data in. Only
+  // ever over a clean page: a dirty page is busy pushing its own data, and
+  // the server must never win mid-session over unsynced local work.
+  var freshBusy = false, lastFreshAt = 0;
+  async function checkCloudFresh() {
+    if (freshBusy || pushBusy || !pushCtx.uid || !lastServerStamp) return;
+    if (unsynced() || sessionDead || navigator.onLine === false) return;
+    if (Date.now() - lastFreshAt < 30000) return;
+    freshBusy = true;
+    try {
+      var r = await sb.from("states").select("updated_at").eq("user_id", pushCtx.uid).maybeSingle();
+      lastFreshAt = Date.now();
+      // Errors and "no row" prove NOTHING (a dead session reads as empty under
+      // RLS) — reload only on a positively newer server stamp, and only if the
+      // page is still clean after the await.
+      if (!r.error && r.data && r.data.updated_at &&
+          Date.parse(r.data.updated_at) - Date.parse(lastServerStamp) > 1500 &&
+          !unsynced() && !pushBusy) {
+        location.reload();
+      }
+    } catch (e) {} finally { freshBusy = false; }
+  }
   // Build tag so "which code is my phone actually running?" is answerable with
   // one glance. A static footer at the very bottom of the page (per Ori) — the
   // old fixed corner tag was black-on-transparent, i.e. invisible in dark mode.
@@ -431,14 +503,23 @@
   function versionTag() {
     if (!document.body) return;
     function ensure() {
+      // The pill rides the same rescue: a body rebuild orphans it mid-display.
+      if (pillEl && !pillEl.parentNode) document.body.appendChild(pillEl);
       if (document.getElementById("cfbyVer")) return;
       var el = document.createElement("div");
       el.id = "cfbyVer";
-      el.textContent = "גרסה " + BUILD;
       el.style.cssText = "text-align:center;direction:rtl;" +
         "padding:14px 0 calc(18px + env(safe-area-inset-bottom,0px));" +
         "font:500 11px 'Heebo',system-ui,sans-serif;color:var(--muted,#8a8d94)";
+      var cloud = document.createElement("span");
+      cloud.id = "cfbyCloud";
+      var sep = document.createElement("span");
+      sep.textContent = " · ";
+      var ver = document.createElement("span");
+      ver.textContent = "גרסה " + BUILD;
+      el.appendChild(cloud); el.appendChild(sep); el.appendChild(ver);
       document.body.appendChild(el);
+      cloudPaint();
     }
     ensure();
     new MutationObserver(ensure).observe(document.body, { childList: true });
@@ -490,6 +571,10 @@
 
   var t1 = null, t2 = null, retryT = null;
   var pushCtx = { uid: null, isAdmin: false };
+  // ISO stamp of the newest server states row this page knows about — set at
+  // boot and after every confirmed full push. checkCloudFresh compares the
+  // live row against it to spot pushes made by OTHER devices meanwhile.
+  var lastServerStamp = null;
 
   // Serialized: one states push in flight at a time. Two concurrent pushes
   // (a slow retry racing a fresh save) are last-write-wins on the server —
@@ -520,7 +605,8 @@
     pushBusy = true;
     pushStartedAt = Date.now();
     var r;
-    try { r = await upsertWithRetry("states", { user_id: pushCtx.uid, tracker: payload, updated_at: new Date().toISOString() }); }
+    var nowIso = new Date().toISOString();
+    try { r = await upsertWithRetry("states", { user_id: pushCtx.uid, tracker: payload, updated_at: nowIso }); }
     finally { pushBusy = false; }
     if (pushQueued) { pushQueued = false; setTimeout(doPushState, 0); }
     if (r.error) {
@@ -541,6 +627,7 @@
       return;
     }
     sessionDead = false;   // a clean push proves the session is alive
+    lastServerStamp = nowIso;   // the server row now carries exactly this stamp
     // Admin also publishes the program scaffold for everyone — STRIPPED of the
     // admin's own logs (see stripLogs above). This used to run AFTER the badge
     // already said "saved", with its result never inspected: the admin saw
@@ -831,7 +918,7 @@
       // 12h-age heuristic) — installed PWAs keep pages alive for days, which
       // is how devices kept running old (buggy) bundles after a fix shipped.
       if (unsynced()) { doPushState(); doPushBoard(); }
-      else checkFreshBundle();
+      else { checkCloudFresh(); checkFreshBundle(); }
       // Also nudge the SW update check — for long-lived PWA pages the browser
       // may not look for a new sw.js on its own for up to 24h.
       try {
@@ -1586,6 +1673,7 @@
       st = await waitForServer(uid);
     }
     var mine = st.row;
+    if (mine && mine.updated_at) lastServerStamp = mine.updated_at;
     var dirtyTs = parseInt(rawGet(DIRTY_KEY), 10) || 0;
     var keepLocal = false;
     if (st.error) {
