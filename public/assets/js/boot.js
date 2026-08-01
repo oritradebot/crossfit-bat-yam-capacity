@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "1.7.2";
+  var BUILD = "1.7.3";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -221,7 +221,7 @@
     try { prev = JSON.parse(prevRaw); } catch (e) {}
     try { next = JSON.parse(newRaw); } catch (e) {}
     var nw = (next && next.weeks) || [], pw = (prev && prev.weeks) || [];
-    var dts = dtsGet(), changed = false, now = Date.now();
+    var dts = dtsGet(), changed = false, now = Date.now(), keys = [];
     for (var w = 0; w < nw.length; w++) {
       var nd = (nw[w] && nw[w].days) || [], pd = (pw[w] && pw[w].days) || [];
       for (var d = 0; d < nd.length; d++) {
@@ -232,13 +232,14 @@
           // win a merge against a day someone actually logged.
           var blank;
           try { blank = logSig(stripDayLogs(JSON.parse(JSON.stringify(nd[d])))); } catch (e) { blank = ""; }
-          if (sNew !== blank) { dts[w + "_" + d] = now; changed = true; }
+          if (sNew !== blank) { dts[w + "_" + d] = now; changed = true; keys.push(w + "_" + d); }
         } else if (sNew !== logSig(pd[d])) {
-          dts[w + "_" + d] = now; changed = true;
+          dts[w + "_" + d] = now; changed = true; keys.push(w + "_" + d);
         }
       }
     }
     if (changed) { memDts = dts; try { lsSetRaw(DTS_KEY, dts); } catch (e) {} }
+    return keys;
   }
   // Merge two tracker copies day by day. preferLocal breaks ties for days with
   // equal (usually missing/legacy) stamps — callers pass the old whole-blob
@@ -307,6 +308,8 @@
   // Why the last close-time keepalive push failed, read back on the next open.
   // The page is dying when that push fires, so there is no one to show a badge
   // to — this is the only way the failure can ever reach the user.
+  // Values: "size" (body over the cap), "auth", "neterr", "norpc" (push_days
+  // not installed on the DB yet), "rpc<status>", or an HTTP status.
   var KA_KEY = "cfby_ka_fail_v1";
   // Browsers reject a keepalive request whose total body exceeds 64KB. Stay
   // under it with margin for headers.
@@ -325,6 +328,11 @@
   var memDts = null;       // per-day stamp map (see DTS_KEY)
   var memDirty = false;    // true while a write is not yet confirmed pushed
   var memSeq = 0;          // bumps on every tracker write (push-race token)
+  // Day keys ("w_d") written since the last confirmed FULL states push — the
+  // close-time RPC's payload (v1.7.3). A handful of days is ~2KB and always
+  // fits under the 64KB keepalive cap that the full blob outgrew; and because
+  // it lives in memory, it survives a dead localStorage just like memTracker.
+  var memDirtyDays = {};
   // DIRTY_KEY can get STUCK when storage stops accepting writes: the push
   // succeeds but removeItem fails, and the stale stamp would block self-update
   // forever and re-push every 15s. dirtyStuck marks that state (set only when
@@ -548,6 +556,7 @@
     if (memSeq === seqAtStart) {
       var showSaved = memDirty || stamp !== null;
       memDirty = false;
+      memDirtyDays = {};   // the full blob covered every day — nothing pending for the close-time RPC
       if (stamp !== null && rawGet(DIRTY_KEY) === stamp) {
         try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
       }
@@ -719,6 +728,54 @@
     var stamp = rawGet(DIRTY_KEY);
     if (!raw || !unsynced()) return;
     try {
+      // Preferred channel (v1.7.3): push ONLY the days written this session
+      // through the push_days RPC — a few days are ~2KB and always fit under
+      // the 64KB keepalive cap that the full blob outgrew. The RPC applies
+      // day-level last-writer-wins server-side (same stamps as the boot
+      // merge), so a stale device can't clobber a newer day through it.
+      // Dirty markers are deliberately NOT cleared on success: the page is
+      // dying and .then() may never run — the next open's full push + boot
+      // merge reconcile either way, and re-sending an already-applied day is
+      // idempotent. This closes the last data-loss hole: a workout logged
+      // seconds before closing now reaches the cloud even when localStorage
+      // is silently dead (memDirtyDays lives in memory, like memTracker).
+      var dayKeys = Object.keys(memDirtyDays);
+      if (dayKeys.length) {
+        var wk = null;
+        try { wk = (JSON.parse(raw) || {}).weeks || []; } catch (e2) { wk = []; }
+        var all = dtsGet(), days = {}, dts = {}, sent = 0;
+        for (var di = 0; di < dayKeys.length; di++) {
+          var kp = dayKeys[di].split("_");
+          var dayObj = wk[+kp[0]] && wk[+kp[0]].days ? wk[+kp[0]].days[+kp[1]] : undefined;
+          if (dayObj) { days[dayKeys[di]] = dayObj; dts[dayKeys[di]] = all[dayKeys[di]] || Date.now(); sent++; }
+        }
+        var rbody = JSON.stringify({ p_days: days, p_dts: dts });
+        if (sent && rbody.length <= KEEPALIVE_MAX) {
+          fetch(window.SUPA_URL + "/rest/v1/rpc/push_days", {
+            method: "POST",
+            keepalive: true,
+            headers: {
+              apikey: window.SUPA_ANON_KEY,
+              Authorization: "Bearer " + accessToken,
+              "Content-Type": "application/json"
+            },
+            body: rbody
+          }).then(function (res) {
+            if (res.ok) { try { localStorage.removeItem(KA_KEY); } catch (e) {} return; }
+            // 404 = the RPC is not installed on the DB yet (push_days.sql
+            // pending) — record it distinctly so the gap is visible.
+            console.warn("[sync] keepalive RPC rejected: HTTP " + res.status);
+            try { localStorage.setItem(KA_KEY, res.status === 404 ? "norpc" : (res.status === 401 || res.status === 403 ? "auth" : "rpc" + res.status)); } catch (e) {}
+          }).catch(function (e) {
+            console.warn("[sync] keepalive RPC failed:", (e && e.message) || e);
+            try { localStorage.setItem(KA_KEY, "neterr"); } catch (e2) {}
+          });
+          return;
+        }
+      }
+      // Fallback: the whole blob — only possible while it still fits (it
+      // stopped fitting once the program grew), or when the pending change is
+      // not day-shaped (e.g. an admin plan edit carries no day stamps).
       var body = JSON.stringify({ user_id: pushCtx.uid, tracker: Object.assign(JSON.parse(raw), { _dts: dtsGet() }), updated_at: new Date().toISOString() });
       // Browsers cap a keepalive request body at 64KB TOTAL and reject beyond
       // it. The tracker blob passed that cap once the program grew, so this
@@ -825,7 +882,10 @@
         // Mirror BEFORE attempting to persist: the cloud push must carry this
         // exact value even if the device write below fails (see doPushState).
         memTracker = val; memSeq++; memDirty = true;
-        try { stampChangedDays(prevRaw, val); } catch (e) {}
+        try {
+          var ck = stampChangedDays(prevRaw, val);
+          for (var ci = 0; ck && ci < ck.length; ci++) memDirtyDays[ck[ci]] = 1;
+        } catch (e) {}
         try { orig(DIRTY_KEY, String(Date.now())); } catch (e) {}
       }
       // The app swallows setItem failures (quota full / restricted mode) — the
