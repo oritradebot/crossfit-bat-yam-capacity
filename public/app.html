@@ -1066,7 +1066,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 13;
+  PROGRAM_VERSION = 14;
   programWeek1() {
     return {
       0: {
@@ -1202,6 +1202,19 @@ class Component extends DCLogic {
       }
     };
   }
+  programWeek4() {
+    return {
+      0: {
+        lift: { movement:'Clean & Jerk — Heavy Single Day', planned:'Every 2:00 x 7 sets:\nSets 1-2: Clean pull + Squat clean + Jerk @75%\nSets 3-7: C&J, climbing\n\n+Suggested climb — 80% → 85% → 90%\n\nNo misses — heavy means fast and made. Jerk of choice.' },
+        metcon: { name:'1:30 On / 1:00 Off x 4', scheme:'4 intervals · 1:30 work / 1:00 rest', score:'Total cleans', resultMode:'amount', note:'L1 = 35/25kg\nL2 = 40/30kg\nL3 = 50/35kg\n\nScore — total cleans.\nאלה אינטרוולים זריזים מאוד.\nהמוט מתחיל על הרצפה, ומתחילים בעשרים ניתורים מצד לצד של המוט. ניתור לצד אחד = חזרה אחת.\nהמשקל אמור להיות מאוד קל לסקוואטים אז עשו את זה מהר 😎 בואו נראה איך הקלינים ירגישו אח"כ.', movements:[['Hops over the bar','20'],['Front squats','10'],['Max power cleans','remaining time']] },
+        extras: [['Conditioning — Mono Session','The Pace Turn.\n\nL1-2 — 3 Sets:\n800m Run @test pace\ninto\n400m Run faster\nRest 2:30\n\nL3-4 — 3-4 Sets:\n500m Run @7RPE\ninto\n1000m Run @8RPE\nRest 2:00\n\nRow/Ski — same distances (Ski -20%). Bike — 55/40 then 30/22 Cal.\n\nScore — average time per set.\nGoal — the long piece at the pace you know you held. The short one at the pace you want.'],['','']],
+        alt: {
+          metcon: { name:'3 x 1600m Run (Endurance)', scheme:'3 Rounds · rest 3:00-4:00', score:'Time', resultMode:'time', note:'Score — total run time (sum of the 3 runs).\n* 3-4 min rest between rounds.\nהזינו את הזמן הכולל של שלוש הריצות (בלי המנוחות).', movements:[['Run','1600m'],['Rest','3:00-4:00 between rounds']] },
+          extras: [['',''],['','']]
+        }
+      }
+    };
+  }
   applyProgram(weeks) {
     const fillMetcon = (dst, m) => { if (!m) return; dst.name=m.name||''; dst.scheme=m.scheme||''; dst.score=m.score||''; dst.note=m.note||''; dst.resultMode=m.resultMode||''; for (let i=0;i<4;i++){ const mv=(m.movements||[])[i]; dst.movements[i]={ name:mv?mv[0]:'', detail:mv?mv[1]:'' }; } };
     const fill = (day, src) => {
@@ -1222,6 +1235,7 @@ class Component extends DCLogic {
     overlay(0, this.programWeek1());
     overlay(1, this.programWeek2());
     overlay(2, this.programWeek3());
+    overlay(3, this.programWeek4());
   }
 
   normalizeDay(o) {
