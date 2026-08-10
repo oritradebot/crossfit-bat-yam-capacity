@@ -1066,7 +1066,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 24;
+  PROGRAM_VERSION = 25;
   programWeek1() {
     return {
       0: {
@@ -1267,6 +1267,11 @@ class Component extends DCLogic {
         lift: { movement:'Deadlifts', planned:'Every 2:00 for 5 sets:\n3 reps @70%\n\nReset each rep, lower quietly to the floor.\nירידה בשליטה — לא מעירים את השכנים.' },
         metcon: { name:'Big Tuesday', scheme:'Alternating EMOM 18:00', score:'Total T2B', resultMode:'amount', note:'L1 = 6-8 burpees, 8 cleans @40/30kg\nL2 = 10 burpees @45/32.5kg\nL3 = 12-14 burpees @50/35kg\n\nScore — total T2B.\nהשאטלים הם מנוחה אקטיבית.\nזה אימון ארוך, והרבה עבודה בשתי הדקות הראשונות. הקלינים אמורים להרגיש די קלילים ומבוצעים בסטים גדולים מאוד, כדי להשאיר זמן לעבודת מתח. באיזשהו שלב גם הגריפ ייכנס לתמונה כאן.', movements:[['Lateral burpees over a line','Min 1'],['Power cleans + Max T2B','Min 2 — 8-10 cleans'],['Shuttle runs','Min 3 — 3-5 x 8+8m']] },
         extras: [['Conditioning — Every 2:00 x 6','Every 2:00 for 6 sets:\nBBJO\nMax cal bike in remaining time\n\nL1 = 8 BBJO\nL2 = 10 BBJO\nL3 = 12 BBJO'],['Successory — Capacity Pull Up Builder','Every 60s for 6-7 sets:\nStrict pull-up set\n\nבחרו מספר שתוכלו לשמור עליו לכל הסטים. עשיתם את הבילדר איתנו? הוסיפו כמה חזרות ושמרו על המספר.']]
+      },
+      3: {
+        lift: { movement:'Strength — Strict Press + Reverse Lunges', planned:'Every 1:30 for 10 sets, alternate:\n• 6 Strict presses\n• 12 Barbell reverse lunges (12 total)\n\nעבודת כוח נקייה — לא כבד מקסימלי, אבל איכותי ומאתגר.' },
+        metcon: { name:'Aerobic', scheme:'Every 3:00 for 5 sets', score:'Slowest round', resultMode:'time', note:'L1 = 10 kneeling push-ups, 10 box jumps\nL2 = 10-15 push-ups, 15 box jumps\nL3 = 20 push-ups, 15 box jumps\n\nScore — slowest round.\n*Box jumps with a step down.', movements:[['Goblet squats','15'],['Push-ups',''],['Box jumps','@24/20"']] },
+        extras: [['BY Extra','3 sets for quality:\n10 Bodyweight dips\n30s Hollow hold\n30s Reverse sled drag (or plank)'],['','']]
       }
     };
   }
