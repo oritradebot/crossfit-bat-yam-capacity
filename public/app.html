@@ -1066,7 +1066,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 27;
+  PROGRAM_VERSION = 28;
   programWeek1() {
     return {
       0: {
@@ -1282,6 +1282,12 @@ class Component extends DCLogic {
         lift: { movement:'Front Squat — From the Rig', planned:'Every 2:00 for 6 sets:\n2-3 reps\n3 sets @±75% of your front squat\n3 sets @80%+ of your front squat\n\nבונים לאורך הסטים. עקבים על הרצפה, מרפקים גבוה.\nלא בדקתם פרונט סקוואט? עבדו לפי תחושה — 7-8RPE.' },
         metcon: { name:'5 Sets For Time', scheme:'5 Sets For Time · 30s rest', score:'Total time', resultMode:'time', note:'L1 = 20 DU / 20s DU practice / 40 SU, 40/30kg\nL2 = 30 DU, 60/40kg\nL3 = 50 DU, 80/50kg\n\nזה אמור להיות מאוד מהיר. מנוחה קצרה שלא באמת עוזרת להתאושש, רק לקחת נשימה עמוקה — וחזרה לעבודה.\nהמשקלים הם המלצה: בסוף המטרה היא לקחת משקל שאפשר לבצע איתו 5 חזרות — אבל זה יהיה לא פשוט וידרוש עוד נשימה לפני תחילת העבודה. אמור להרגיש כמו סט יחסית כבד, כמעט עבודת כוח.', movements:[['Double unders',''],['Jerks','5'],['Rest','30s']] },
         extras: [['Conditioning — Mono Session','Ceiling.\n\nL1-2 — 5 Sets:\n500m Run / 500/400m Row/Ski / 30/22 cal Bike\nRest 1:00\n\nL3 — 5-6 Sets:\n800m Run / 800/650m Row/Ski / 45/33 cal Bike\nRest 1:00\n\nScore — average time per set.\nGoal — מהר מקצב הטסט. אם תצליחו לרדת בזמנים בסטים האחרונים — מושלם.'],['','']]
+      },
+      6: {
+        lift: { movement:'Upper Body Strength — DB Bench + Rows', planned:'Every 1:30 for 8 sets, alternate:\n• 10 DB Bench presses\n• 8+8 Single arm DB rows\n\nHeavy but clean on both.\nעבודה משלימה לגוף העליון.' },
+        metcon: { name:'In Pairs — AMRAP 10:00 #1', scheme:'AMRAP 10:00 (pairs, I-go-you-go)', score:'Rounds + reps', resultMode:'rounds', note:'הזינו כמה סבבים (+חזרות) הושלמו.\nI go you go all the way — מחליפים תפקידים מתי שרוצים.\nStraight into Part 2.', movements:[['Knees to elbows','20'],['Hang DB snatches','20 — grab a bit heavy DB'],['Lateral burpees over the DB','20']] },
+        metcon2: { name:'In Pairs — AMRAP 10:00 #2', scheme:'AMRAP 10:00 (pairs, I-go-you-go)', score:'Rounds + reps', resultMode:'rounds', note:'הזינו כמה סבבים (+חזרות) הושלמו.\nממשיכים ישר מהחלק הראשון; מחליפים תפקידים מתי שרוצים.', movements:[['V-Ups','20'],['Hang DB C&J','20'],['Jumping lunges','20 — bodyweight']] },
+        extras: [['Skill — Practice 15:00','Handstand hold / walk work'],['BY Extra','4 sets for quality:\n1-2 Legless rope climbs\n10-15 Banded face pulls\n60s rest']]
       }
     };
   }
