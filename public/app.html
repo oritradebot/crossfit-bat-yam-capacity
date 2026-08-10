@@ -1066,7 +1066,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 22;
+  PROGRAM_VERSION = 23;
   programWeek1() {
     return {
       0: {
@@ -1257,6 +1257,11 @@ class Component extends DCLogic {
           metcon2: { name:'METCON-B — Every 2:00 x 12:00', scheme:'Every 2:00 for 12:00', score:'Total DU', resultMode:'amount', note:'הזינו את סך ה-DU משישת הסבבים.', movements:[['Cal row','8-12'],['KB swings','10'],['Max DU','remaining time']] },
           extras: [['',''],['','']]
         }
+      },
+      1: {
+        lift: { movement:'Clean Pull + Squat Clean + Jerk', planned:'Every 2:00 x 6 sets:\nClean pull + Squat clean + Jerk\n\n3 sets @72%\n3 sets @76-82%\n\nאו לחילופין — שלושה סטים במאמץ של 7 מתוך 10, ועוד שלושה סטים במאמץ של 8 מתוך 10.' },
+        metcon: { name:'Mono Session', scheme:'AMRAP 22:00 (teams of 2)', score:'Rounds + reps', resultMode:'rounds', note:'L1 = 400m Run\nL2 = 600m Run\nL3 = 800m Run\nPartners can be on different levels.\n\nהזינו כמה סבבים (+חזרות) הושלמו.\nאנחנו נבצע סשן אירובי די ארוך היום. הוא לא טכני בכלל — ורובו יהיה עבודה מונוטונית ובסיסית מאוד. המטרה היא לרוץ לא לאט מדי, ועל המכונה להרגיש שמתחילים מקצב יחסית נמוך ומתייצבים לאט לאט לקצב עבודה. מצופה מכם להשיג כ-4 סבבים פחות או יותר.', movements:[['Run','Partner 1 — 400/600/800m'],['Bike/Row/Ski or No push-up burpees','Partner 2']] },
+        extras: [['Alternating EMOM 9:00','Min 1 — 8+8 Single arm DB high pulls\nMin 2 — 10 Bent over plate reverse fly\nMin 3 — 30s Copenhagen plank (each side)'],['','']]
       }
     };
   }
