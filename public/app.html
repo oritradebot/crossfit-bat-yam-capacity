@@ -1066,7 +1066,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 15;
+  PROGRAM_VERSION = 16;
   programWeek1() {
     return {
       0: {
@@ -1217,6 +1217,11 @@ class Component extends DCLogic {
         lift: { movement:'Snatch — Heavy Single Day', planned:'Every 2:00 x 9 sets:\nSets 1-2: Snatch + Below knee hang squat snatch @70-75%\nSets 3-9: 1 Snatch, building\n\n+Suggested climb — 80% → 83% → 86% → 89%\n\nToday\'s heavy single, not a lifetime PR hunt. Fast and made — a miss ends the climb.\nAim to finish with 2 singles ±90%.' },
         metcon: { name:'AMRAP 10:00', scheme:'AMRAP 10:00', score:'Rounds + reps', resultMode:'rounds', note:'L1 = 40/30kg or less\nL2 = 50/35kg\nL3 = 60/40kg\n\nהזינו כמה סבבים (+חזרות) הושלמו (סבב = 30 חזרות).\nFeel — moving constantly, fast singles on the barbell.', movements:[['Wallballs','15'],['Lateral burpees','10'],['Power snatches','5']] },
         extras: [['Alternating EMOM 9:00','Min 1 — 8+8 Single arm DB high pulls\nMin 2 — 10 Bent over plate reverse fly\nMin 3 — 30s Copenhagen plank (each side)'],['3 Rounds — No Rush','8 Barbell good mornings\n10-15 Side hip abductions (each side)']]
+      },
+      2: {
+        lift: { movement:'Push Press + 2 Push Jerks', planned:'Every 2:00 x 5 sets:\n2 sets @75%\n2 sets @78%\n1 set @81%+\n\nConvert the push press into a good push jerk.' },
+        metcon: { name:'3 Rounds For Time', scheme:'3 Rounds For Time · Rest 1:30', score:'Total time', resultMode:'time', note:'L1 = 20 DU / 20s DU practice / 40 SU, 8 C2B, 8 BBJO\nL2 = 30 DU, 10 C2B, 10 BBJO\nL3 = 50 DU, 14 C2B, 14 BBJO\n\nScore — total time.\nBBJO have to face the box.\nRest 1:30 between rounds.\n\nאלה סטים גדולים ומדובר כאן על הרבה חזרות של מתח. זה אמור להיות אנברוקן או על גבול האנברוקן. מרכזים את עבודת המתח של השבועות האחרונים לכדי האימון הזה.', movements:[['Double unders',''],['C2B set',''],['Burpee box jump overs',''],['C2B set','']] },
+        extras: [['Strength — Front Squat (from the rig)','Every 2:00 for 6 sets:\n2 reps, building across.\n\nStart around 70%, finish around 8.5RPE.'],['','']]
       }
     };
   }
