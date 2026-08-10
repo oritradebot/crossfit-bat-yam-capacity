@@ -1066,7 +1066,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 19;
+  PROGRAM_VERSION = 20;
   programWeek1() {
     return {
       0: {
@@ -1238,6 +1238,11 @@ class Component extends DCLogic {
         lift: { movement:'Power Snatch', planned:'Every 1:00 x 10 sets:\n1 Power snatch\n\nSets 1-5 @70%\nSets 6-10 — build by feel to a heavy power single\n\nConfident feet, no misses.\nבסטים הראשונים תשתדלו להתחיל למשוך יחסית לאט מהרצפה, ולהגביר מהירות ככל שמתקדמים.' },
         metcon: { name:'Conditioning', scheme:'Every 6:00 for 3 sets', score:'Total T2B', resultMode:'amount', note:'L1 = 400-600m run, knee raises, 1 wallwalk per break\nL2 & L3 = as written\n\nScore — total T2B.\nGoal — earn a real chunk of T2B time. Don\'t let the run bury you.', movements:[['Run','800m'],['Max T2B','remaining time'],['Wall walks','2 per T2B break']] },
         extras: [['BY Extra','Every 1:15 for 8 sets:\n20m Single arm KB front rack carry\ninto a max set of single arm shoulder presses\n\nSet per arm! If the press limits you hard — move to push presses.'],['','']]
+      },
+      6: {
+        lift: { movement:'Silent Deadlifts + Holds', planned:'Every 1:30 for 8 sets, alternate:\n• 5 Silent deadlifts\n• Max L hang hold + 30s Hollow hold\n\nHeavy but clean. Control the deadlift down.' },
+        metcon: { name:'In Teams of 3 — AMRAP 20:00', scheme:'AMRAP 20:00 (teams of 3)', score:'Rounds + reps', resultMode:'rounds', note:'הזינו כמה סבבים (+חזרות) הושלמו.\nשניים עובדים ואחד נח בכל רגע נתון. אפשר להחליף תפקידים מתי שרוצים. תדאגו לתאם ציפיות לפני תחילת השעון.', movements:[['Synced burpees over the DB','20'],['Synced DB snatches','20'],['Run together','200m (all 3)'],['HRPU','20']] },
+        extras: [['BY Extra','4 sets for quality:\n1-2 Legless rope climbs\n10-15 Banded face pulls\n60s rest'],['','']]
       }
     };
   }
