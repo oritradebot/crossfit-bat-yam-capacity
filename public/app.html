@@ -1066,7 +1066,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 26;
+  PROGRAM_VERSION = 27;
   programWeek1() {
     return {
       0: {
@@ -1277,6 +1277,11 @@ class Component extends DCLogic {
         lift: { movement:'Snatch — Sharp Session', planned:'Every 1:30 x 7 sets:\n3 sets — Snatch with pause at knee + Snatch @70%\n4 sets — 1 Snatch @78-82%\n\nלא טיפוס למקסימום — מחזיקים 78-82% וגורמים לכל חזרה להיראות קלה. הסטים הראשונים מלטשים.' },
         metcon: { name:'Gymnastics Build', scheme:'2:00 on / 1:00 off x 4', score:'Total C2B / Pull-ups', resultMode:'amount', note:'L1 = 10 WB, 10 burpees\nL2 = 12 WB, 12 burpees\nL3 = 15 WB, 15 burpees\n\nScore — total C2B / Pull-ups.\nמגיעים למתח טיפה מותשים, ושם מתחילים למדוד ביצועים.', movements:[['Wallballs',''],['Burpees to target',''],['Max C2B / Pull-ups','remaining time']] },
         extras: [['Floating Snatch Pulls','Every 1:30 for 4 sets:\n2 Floating snatch pulls\n@95-105% of your snatch.'],['Then — 3 Sets','10-15 Banded tricep extension\n30s Reverse sled drag']]
+      },
+      5: {
+        lift: { movement:'Front Squat — From the Rig', planned:'Every 2:00 for 6 sets:\n2-3 reps\n3 sets @±75% of your front squat\n3 sets @80%+ of your front squat\n\nבונים לאורך הסטים. עקבים על הרצפה, מרפקים גבוה.\nלא בדקתם פרונט סקוואט? עבדו לפי תחושה — 7-8RPE.' },
+        metcon: { name:'5 Sets For Time', scheme:'5 Sets For Time · 30s rest', score:'Total time', resultMode:'time', note:'L1 = 20 DU / 20s DU practice / 40 SU, 40/30kg\nL2 = 30 DU, 60/40kg\nL3 = 50 DU, 80/50kg\n\nזה אמור להיות מאוד מהיר. מנוחה קצרה שלא באמת עוזרת להתאושש, רק לקחת נשימה עמוקה — וחזרה לעבודה.\nהמשקלים הם המלצה: בסוף המטרה היא לקחת משקל שאפשר לבצע איתו 5 חזרות — אבל זה יהיה לא פשוט וידרוש עוד נשימה לפני תחילת העבודה. אמור להרגיש כמו סט יחסית כבד, כמעט עבודת כוח.', movements:[['Double unders',''],['Jerks','5'],['Rest','30s']] },
+        extras: [['Conditioning — Mono Session','Ceiling.\n\nL1-2 — 5 Sets:\n500m Run / 500/400m Row/Ski / 30/22 cal Bike\nRest 1:00\n\nL3 — 5-6 Sets:\n800m Run / 800/650m Row/Ski / 45/33 cal Bike\nRest 1:00\n\nScore — average time per set.\nGoal — מהר מקצב הטסט. אם תצליחו לרדת בזמנים בסטים האחרונים — מושלם.'],['','']]
       }
     };
   }
