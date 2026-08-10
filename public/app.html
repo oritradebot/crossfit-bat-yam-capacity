@@ -1066,7 +1066,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 17;
+  PROGRAM_VERSION = 18;
   programWeek1() {
     return {
       0: {
@@ -1227,6 +1227,12 @@ class Component extends DCLogic {
         lift: { movement:'Strength — Carries + Single Arm DB Rows', planned:'Every 1:30 for 8 sets, alternate:\n• 30m Dball carry / Double KB front rack carry\n• 8+8 Single arm DB bent rows' },
         metcon: { name:'Every 3:00 x 5 sets', scheme:'Every 3:00 for 5 sets', score:'Slowest round', resultMode:'time', note:'L1 = 300m run, 10 swings\nL2 = 15 swings\nL3 = 20 swings\n\nScore — slowest round.\nלא תהיה כאן מנוחה ארוכה — אבל אם הלבל מתאים לכם, יישארו לפחות 30 שניות לנשום בסוף כל סבב.', movements:[['Run','400m'],['KB swings (Russian)','']] },
         extras: [['3 Rounds — No Rush','10-15 GHD sit-ups\n10 Hip extensions\n20s L-hang'],['','']]
+      },
+      4: {
+        lift: { movement:'Back Squat', planned:'Every 3:00 for 6 sets:\nSets 1-2: 3 reps @83%\nSets 3-4: 2-3 reps @85-86%\nSets 5-6: 2-3 reps @87-88%\n\nPercentages off your CapaciTest #1 3RM.\nHeaviest squats of the block.\nלא עשיתם סקוואטים בבלוק? לכו 2 סטים @7RPE, 2 @8RPE, 2 @8RPE+.' },
+        metcon: { name:'Big Tuesday — Part 1', scheme:'0:00-12:00 · Alternating EMOM 12:00', score:'Avg reps per minute', resultMode:'amount', note:'L1 = 2x12.5/7.5kg\nL2 = 2x15/10kg\nL3 = 2x17.5/12kg or more\n\nScore 1 — average reps per minute.\nבחרו זוג דאמבלים שיאפשר סטים גדולים מאוד.\n\nRest 2:00, into Part 2.', movements:[['Cal row','Min 1'],['Double DB hang snatches','Min 2'],['Box jumps','Min 3 @24/20" — step down']] },
+        metcon2: { name:'Big Tuesday — Teams of 2', scheme:'14:00-24:00 · AMRAP 10:00 (pairs)', score:'Total cals', resultMode:'amount', note:'Score 2 — total cals for the team.\nהברפיז מתבצעים ביחד, הקלוריות מתחלקות איך שרוצים בין בני הזוג.', movements:[['Synced burpees','10'],['Row','10 cals']] },
+        extras: [['Capacity Pull Up Builder','Every 45s for 8 sets:\nStrict pull-up set\n\nSame set size as last week — now hold it for all 8 sets.\nFirst time? Choose a number you can hold unbroken.'],['','']]
       }
     };
   }
