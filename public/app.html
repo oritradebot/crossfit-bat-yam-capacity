@@ -1066,7 +1066,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 25;
+  PROGRAM_VERSION = 26;
   programWeek1() {
     return {
       0: {
@@ -1272,6 +1272,11 @@ class Component extends DCLogic {
         lift: { movement:'Strength — Strict Press + Reverse Lunges', planned:'Every 1:30 for 10 sets, alternate:\n• 6 Strict presses\n• 12 Barbell reverse lunges (12 total)\n\nעבודת כוח נקייה — לא כבד מקסימלי, אבל איכותי ומאתגר.' },
         metcon: { name:'Aerobic', scheme:'Every 3:00 for 5 sets', score:'Slowest round', resultMode:'time', note:'L1 = 10 kneeling push-ups, 10 box jumps\nL2 = 10-15 push-ups, 15 box jumps\nL3 = 20 push-ups, 15 box jumps\n\nScore — slowest round.\n*Box jumps with a step down.', movements:[['Goblet squats','15'],['Push-ups',''],['Box jumps','@24/20"']] },
         extras: [['BY Extra','3 sets for quality:\n10 Bodyweight dips\n30s Hollow hold\n30s Reverse sled drag (or plank)'],['','']]
+      },
+      4: {
+        lift: { movement:'Snatch — Sharp Session', planned:'Every 1:30 x 7 sets:\n3 sets — Snatch with pause at knee + Snatch @70%\n4 sets — 1 Snatch @78-82%\n\nלא טיפוס למקסימום — מחזיקים 78-82% וגורמים לכל חזרה להיראות קלה. הסטים הראשונים מלטשים.' },
+        metcon: { name:'Gymnastics Build', scheme:'2:00 on / 1:00 off x 4', score:'Total C2B / Pull-ups', resultMode:'amount', note:'L1 = 10 WB, 10 burpees\nL2 = 12 WB, 12 burpees\nL3 = 15 WB, 15 burpees\n\nScore — total C2B / Pull-ups.\nמגיעים למתח טיפה מותשים, ושם מתחילים למדוד ביצועים.', movements:[['Wallballs',''],['Burpees to target',''],['Max C2B / Pull-ups','remaining time']] },
+        extras: [['Floating Snatch Pulls','Every 1:30 for 4 sets:\n2 Floating snatch pulls\n@95-105% of your snatch.'],['Then — 3 Sets','10-15 Banded tricep extension\n30s Reverse sled drag']]
       }
     };
   }
