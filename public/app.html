@@ -1066,7 +1066,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 16;
+  PROGRAM_VERSION = 17;
   programWeek1() {
     return {
       0: {
@@ -1222,6 +1222,11 @@ class Component extends DCLogic {
         lift: { movement:'Push Press + 2 Push Jerks', planned:'Every 2:00 x 5 sets:\n2 sets @75%\n2 sets @78%\n1 set @81%+\n\nConvert the push press into a good push jerk.' },
         metcon: { name:'3 Rounds For Time', scheme:'3 Rounds For Time · Rest 1:30', score:'Total time', resultMode:'time', note:'L1 = 20 DU / 20s DU practice / 40 SU, 8 C2B, 8 BBJO\nL2 = 30 DU, 10 C2B, 10 BBJO\nL3 = 50 DU, 14 C2B, 14 BBJO\n\nScore — total time.\nBBJO have to face the box.\nRest 1:30 between rounds.\n\nאלה סטים גדולים ומדובר כאן על הרבה חזרות של מתח. זה אמור להיות אנברוקן או על גבול האנברוקן. מרכזים את עבודת המתח של השבועות האחרונים לכדי האימון הזה.', movements:[['Double unders',''],['C2B set',''],['Burpee box jump overs',''],['C2B set','']] },
         extras: [['Strength — Front Squat (from the rig)','Every 2:00 for 6 sets:\n2 reps, building across.\n\nStart around 70%, finish around 8.5RPE.'],['','']]
+      },
+      3: {
+        lift: { movement:'Strength — Carries + Single Arm DB Rows', planned:'Every 1:30 for 8 sets, alternate:\n• 30m Dball carry / Double KB front rack carry\n• 8+8 Single arm DB bent rows' },
+        metcon: { name:'Every 3:00 x 5 sets', scheme:'Every 3:00 for 5 sets', score:'Slowest round', resultMode:'time', note:'L1 = 300m run, 10 swings\nL2 = 15 swings\nL3 = 20 swings\n\nScore — slowest round.\nלא תהיה כאן מנוחה ארוכה — אבל אם הלבל מתאים לכם, יישארו לפחות 30 שניות לנשום בסוף כל סבב.', movements:[['Run','400m'],['KB swings (Russian)','']] },
+        extras: [['3 Rounds — No Rush','10-15 GHD sit-ups\n10 Hip extensions\n20s L-hang'],['','']]
       }
     };
   }
