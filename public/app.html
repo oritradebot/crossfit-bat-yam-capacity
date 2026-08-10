@@ -1066,7 +1066,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 18;
+  PROGRAM_VERSION = 19;
   programWeek1() {
     return {
       0: {
@@ -1233,6 +1233,11 @@ class Component extends DCLogic {
         metcon: { name:'Big Tuesday — Part 1', scheme:'0:00-12:00 · Alternating EMOM 12:00', score:'Avg reps per minute', resultMode:'amount', note:'L1 = 2x12.5/7.5kg\nL2 = 2x15/10kg\nL3 = 2x17.5/12kg or more\n\nScore 1 — average reps per minute.\nבחרו זוג דאמבלים שיאפשר סטים גדולים מאוד.\n\nRest 2:00, into Part 2.', movements:[['Cal row','Min 1'],['Double DB hang snatches','Min 2'],['Box jumps','Min 3 @24/20" — step down']] },
         metcon2: { name:'Big Tuesday — Teams of 2', scheme:'14:00-24:00 · AMRAP 10:00 (pairs)', score:'Total cals', resultMode:'amount', note:'Score 2 — total cals for the team.\nהברפיז מתבצעים ביחד, הקלוריות מתחלקות איך שרוצים בין בני הזוג.', movements:[['Synced burpees','10'],['Row','10 cals']] },
         extras: [['Capacity Pull Up Builder','Every 45s for 8 sets:\nStrict pull-up set\n\nSame set size as last week — now hold it for all 8 sets.\nFirst time? Choose a number you can hold unbroken.'],['','']]
+      },
+      5: {
+        lift: { movement:'Power Snatch', planned:'Every 1:00 x 10 sets:\n1 Power snatch\n\nSets 1-5 @70%\nSets 6-10 — build by feel to a heavy power single\n\nConfident feet, no misses.\nבסטים הראשונים תשתדלו להתחיל למשוך יחסית לאט מהרצפה, ולהגביר מהירות ככל שמתקדמים.' },
+        metcon: { name:'Conditioning', scheme:'Every 6:00 for 3 sets', score:'Total T2B', resultMode:'amount', note:'L1 = 400-600m run, knee raises, 1 wallwalk per break\nL2 & L3 = as written\n\nScore — total T2B.\nGoal — earn a real chunk of T2B time. Don\'t let the run bury you.', movements:[['Run','800m'],['Max T2B','remaining time'],['Wall walks','2 per T2B break']] },
+        extras: [['BY Extra','Every 1:15 for 8 sets:\n20m Single arm KB front rack carry\ninto a max set of single arm shoulder presses\n\nSet per arm! If the press limits you hard — move to push presses.'],['','']]
       }
     };
   }
