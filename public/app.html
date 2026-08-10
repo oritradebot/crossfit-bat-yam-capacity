@@ -1066,7 +1066,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 23;
+  PROGRAM_VERSION = 24;
   programWeek1() {
     return {
       0: {
@@ -1262,6 +1262,11 @@ class Component extends DCLogic {
         lift: { movement:'Clean Pull + Squat Clean + Jerk', planned:'Every 2:00 x 6 sets:\nClean pull + Squat clean + Jerk\n\n3 sets @72%\n3 sets @76-82%\n\nאו לחילופין — שלושה סטים במאמץ של 7 מתוך 10, ועוד שלושה סטים במאמץ של 8 מתוך 10.' },
         metcon: { name:'Mono Session', scheme:'AMRAP 22:00 (teams of 2)', score:'Rounds + reps', resultMode:'rounds', note:'L1 = 400m Run\nL2 = 600m Run\nL3 = 800m Run\nPartners can be on different levels.\n\nהזינו כמה סבבים (+חזרות) הושלמו.\nאנחנו נבצע סשן אירובי די ארוך היום. הוא לא טכני בכלל — ורובו יהיה עבודה מונוטונית ובסיסית מאוד. המטרה היא לרוץ לא לאט מדי, ועל המכונה להרגיש שמתחילים מקצב יחסית נמוך ומתייצבים לאט לאט לקצב עבודה. מצופה מכם להשיג כ-4 סבבים פחות או יותר.', movements:[['Run','Partner 1 — 400/600/800m'],['Bike/Row/Ski or No push-up burpees','Partner 2']] },
         extras: [['Alternating EMOM 9:00','Min 1 — 8+8 Single arm DB high pulls\nMin 2 — 10 Bent over plate reverse fly\nMin 3 — 30s Copenhagen plank (each side)'],['','']]
+      },
+      2: {
+        lift: { movement:'Deadlifts', planned:'Every 2:00 for 5 sets:\n3 reps @70%\n\nReset each rep, lower quietly to the floor.\nירידה בשליטה — לא מעירים את השכנים.' },
+        metcon: { name:'Big Tuesday', scheme:'Alternating EMOM 18:00', score:'Total T2B', resultMode:'amount', note:'L1 = 6-8 burpees, 8 cleans @40/30kg\nL2 = 10 burpees @45/32.5kg\nL3 = 12-14 burpees @50/35kg\n\nScore — total T2B.\nהשאטלים הם מנוחה אקטיבית.\nזה אימון ארוך, והרבה עבודה בשתי הדקות הראשונות. הקלינים אמורים להרגיש די קלילים ומבוצעים בסטים גדולים מאוד, כדי להשאיר זמן לעבודת מתח. באיזשהו שלב גם הגריפ ייכנס לתמונה כאן.', movements:[['Lateral burpees over a line','Min 1'],['Power cleans + Max T2B','Min 2 — 8-10 cleans'],['Shuttle runs','Min 3 — 3-5 x 8+8m']] },
+        extras: [['Conditioning — Every 2:00 x 6','Every 2:00 for 6 sets:\nBBJO\nMax cal bike in remaining time\n\nL1 = 8 BBJO\nL2 = 10 BBJO\nL3 = 12 BBJO'],['Successory — Capacity Pull Up Builder','Every 60s for 6-7 sets:\nStrict pull-up set\n\nבחרו מספר שתוכלו לשמור עליו לכל הסטים. עשיתם את הבילדר איתנו? הוסיפו כמה חזרות ושמרו על המספר.']]
       }
     };
   }
