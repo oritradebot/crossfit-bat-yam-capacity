@@ -1067,6 +1067,22 @@ class Component extends DCLogic {
   }
 
   PROGRAM_VERSION = 28;
+  // ---- result-entry pilot (13/08, per Ori) — live on ONE workout for now:
+  // W4 Thursday 06/08, key 'weekIdx_dayIdx' (0-based). Resolved at render
+  // time from these maps — no program re-embed, no PROGRAM_VERSION bump, no
+  // user-facing version change. Full rollout to the whole program ships later
+  // together with one big version bump.
+  // PER_SET_LIFT: the LIFT logs a weight per set (log.s1..sN); the heaviest
+  // set is mirrored into log.weight, which is what the PR table, the board
+  // summaries and the day-completion check keep reading.
+  PER_SET_LIFT = { '3_4': 6 };
+  // PER_MOVE_METCON: these metcon bases log a result per movement
+  // (log.mv1..mvN) and the board-score input stays locked until every
+  // movement has one.
+  PER_MOVE_METCON = { '3_4': ['metcon'] };
+  pilotKey() { return this.state.selWeek + '_' + this.state.selDay; }
+  perSetCount() { return this.state.activeSession==='alt' ? 0 : (this.PER_SET_LIFT[this.pilotKey()] || 0); }
+  perMoveOn(base) { const c = this.PER_MOVE_METCON[this.pilotKey()]; return this.state.activeSession!=='alt' && !!c && c.indexOf(base)>=0; }
   programWeek1() {
     return {
       0: {
@@ -1338,6 +1354,9 @@ class Component extends DCLogic {
       const oldRes = o.lift.result || [o.lift.actual, o.lift.progress].filter(Boolean).join(' · ') || '';
       const L = o.lift.log || {};
       nd.lift.log = { weight: L.weight||'', reps: L.reps||'', note: L.note!==undefined ? L.note : oldRes };
+      // per-set pilot fields (s1..sN) must survive normalization or every
+      // boot would silently drop the logged sets
+      Object.keys(L).forEach(k=>{ if (/^s\d+$/.test(k) && L[k]) nd.lift.log[k] = L[k]; });
     }
     const src = o.metcon || o.wod;
     if (src) {
@@ -1350,6 +1369,8 @@ class Component extends DCLogic {
       nd.metcon.scaled = !!src.scaled;
       const M = src.log || {};
       nd.metcon.log = { mode: M.mode||'time', time: M.time||'', rounds: M.rounds||'', reps: M.reps||'', amount: M.amount||'', note: M.note!==undefined ? M.note : (src.result||''), scaled: M.scaled||'' };
+      // per-movement pilot fields (mv1..mvN) must survive normalization
+      Object.keys(M).forEach(k=>{ if (/^mv\d+$/.test(k) && M[k]) nd.metcon.log[k] = M[k]; });
       if (Array.isArray(src.movements)) src.movements.forEach((m,i)=>{ if(i<4){ nd.metcon.movements[i].name=m.name||''; nd.metcon.movements[i].detail=m.detail||''; }});
     }
     const src2 = o.metcon2;
@@ -1357,6 +1378,7 @@ class Component extends DCLogic {
       nd.metcon2.name = src2.name||''; nd.metcon2.scheme = src2.scheme||''; nd.metcon2.score = src2.score||''; nd.metcon2.note = src2.note||''; nd.metcon2.resultMode = src2.resultMode||''; nd.metcon2.rx = !!src2.rx; nd.metcon2.scaled = !!src2.scaled;
       const M2 = src2.log || {};
       nd.metcon2.log = { mode: M2.mode||'time', time: M2.time||'', rounds: M2.rounds||'', reps: M2.reps||'', amount: M2.amount||'', note: M2.note||'', scaled: M2.scaled||'' };
+      Object.keys(M2).forEach(k=>{ if (/^mv\d+$/.test(k) && M2[k]) nd.metcon2.log[k] = M2[k]; });
       if (Array.isArray(src2.movements)) src2.movements.forEach((m,i)=>{ if(i<4){ nd.metcon2.movements[i].name=m.name||''; nd.metcon2.movements[i].detail=m.detail||''; }});
     }
     if (Array.isArray(o.extras)) o.extras.forEach((e,i)=>{ if(i<2){ const EL=e.log||{}; nd.extras[i]={name:e.name||'',detail:e.detail||'',result:e.result||'',log:{text: EL.text!==undefined ? EL.text : (e.result||'')}}; }});
@@ -1786,27 +1808,81 @@ class Component extends DCLogic {
     );
   }
 
-  liftBar(lift) {
+  liftBar(lift, nSets) {
     const L = lift.log || {};
-    return React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
+    if (!nSets) return React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
       this.unit(this.numEl('lift.log.weight', L.weight, '0'), 'kg / משקל'),
       React.createElement('span', { style:{ fontWeight:700, color:'var(--muted)', paddingBottom:'10px' } }, '×'),
       this.unit(this.numEl('lift.log.reps', L.reps, '0'), 'reps / חזרות'),
       this.unit(this.txtEl('lift.log.note', L.note, 'הערה'), 'note')
     );
+    // Per-set pilot: one weight input per set. The heaviest set is mirrored
+    // into log.weight (see onLiftSetEdit) — PRs, board and the save gate keep
+    // reading the same field they always did.
+    const cells = [];
+    for (let i=1; i<=nSets; i++) cells.push(this.unit(React.createElement('input', {
+      dir:'auto', inputMode:'decimal', value: L['s'+i] || '', placeholder:'0',
+      onChange:(e)=>this.onLiftSetEdit(i, e.target.value),
+      style:{ width:'100%', border:'1px solid rgba(35,64,154,.35)', borderRadius:'10px', padding:'10px 6px', fontSize:'15px', background:'var(--log)', color:'var(--ink)', outline:'none', fontWeight:600, textAlign:'center' }
+    }), 'SET '+i));
+    return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } },
+      React.createElement('div', { dir:'ltr', style:{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(72px,1fr))', gap:'8px' } }, cells),
+      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: L.weight ? 'var(--greenink)' : 'var(--muted)' } },
+        L.weight ? ('🏆 הסט הכבד ביותר — ' + L.weight + 'kg — נרשם לטבלת השיאים') : 'משקל (ק״ג) לכל סט — גם אם עבדתם עם אותו משקל בכל הסטים'),
+      React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
+        this.unit(this.numEl('lift.log.reps', L.reps, '0'), 'חזרות בסט הכבד'),
+        this.unit(this.txtEl('lift.log.note', L.note, 'הערה'), 'note')
+      )
+    );
+  }
+  // One weight per set (per-set pilot). Empty values are DELETED rather than
+  // stored as '' — an all-empty set list must be indistinguishable from "no
+  // log" for boot.js's cleanLog/logSig, or a blank scaffold day could win a
+  // cross-device day-merge against a day someone actually logged.
+  onLiftSetEdit(i, val) {
+    const d = structuredClone(this.state.data);
+    const dc = d[this.state.selWeek].days[this.state.selDay];
+    const t = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
+    const L = t.lift.log || (t.lift.log = { weight:'', reps:'', note:'' });
+    const v = String(val==null ? '' : val).trim();
+    if (v) L['s'+i] = v; else delete L['s'+i];
+    let mx = 0;
+    Object.keys(L).forEach(k=>{ if (/^s\d+$/.test(k)) { const n = parseFloat(L[k]); if (n > mx) mx = n; } });
+    L.weight = mx > 0 ? String(mx) : '';
+    this.save(d); this.setState({ data:d });
   }
   metconBar(metcon, base) {
     base = base || 'metcon';
     const M = metcon.log || {};
     const fixed = metcon.resultMode || '';
     const mode = fixed || M.mode || 'time';
+    // Per-movement pilot: first a result per movement (log.mv1..mvN), and only
+    // when all of them are in does the board-score input open up.
+    const pmMoves = this.perMoveOn(base) ? metcon.movements.map((m,i)=>({ n:i+1, name:m.name })).filter(m=>m.name) : [];
+    const pmAll = pmMoves.length>0 && pmMoves.every(m=>String(M['mv'+m.n]||'').trim());
+    const pmLocked = pmMoves.length>0 && !pmAll;
+    let pmAvg = null;
+    if (pmAll) { const nums = pmMoves.map(m=>parseFloat(M['mv'+m.n])); if (nums.every(n=>isFinite(n) && n>0)) pmAvg = Math.round(nums.reduce((s,x)=>s+x,0)/nums.length*10)/10; }
+    const pmBlock = pmMoves.length ? React.createElement(React.Fragment, null,
+      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:700, color:'var(--navy)' } }, 'שלב 1 · תוצאה לכל תנועה' + (metcon.score ? ' — ' + metcon.score : '')),
+      React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
+        pmMoves.map(m=>this.unit(this.numEl(base+'.log.mv'+m.n, M['mv'+m.n], '0'), m.name))),
+      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: pmLocked ? 'var(--orange)' : 'var(--greenink)' } },
+        pmLocked ? ('🔒 שלב 2 · מלאו תוצאה לכל ' + pmMoves.length + ' התנועות — ואז תיפתח הזנת התוצאה ללוח')
+                 : ('✓ שלב 2 · הזנת התוצאה ללוח פתוחה' + (pmAvg!=null ? ' — ממוצע התנועות: ' + pmAvg : '')))
+    ) : null;
     const seg = (k, lbl) => React.createElement('button', {
       key:k, onClick:()=>this.onEditPath(base+'.log.mode', k),
       style:{ flex:1, border:'none', cursor:'pointer', padding:'6px 10px', borderRadius:'8px', fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'12px', transition:'all .15s',
         background: mode===k ? 'var(--blue)' : 'transparent', color: mode===k ? '#fff' : 'var(--muted)' }
     }, lbl);
     let inputs;
-    if (mode==='amount') inputs = this.unit(this.numEl(base+'.log.amount', M.amount, '0'), 'כמות (מ׳ / קל׳)');
+    if (pmLocked) inputs = this.unit(React.createElement('input', {
+        disabled:true, placeholder:'🔒',
+        value:(mode==='time' ? M.time : mode==='amount' ? M.amount : [M.rounds, M.reps].filter(Boolean).join(' + ')) || '',
+        style:{ width:'100%', border:'1px dashed var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'15px', background:'var(--paper)', color:'var(--faint)', outline:'none', fontWeight:600, textAlign:'center' }
+      }), 'Score / תוצאה ללוח');
+    else if (mode==='amount') inputs = this.unit(this.numEl(base+'.log.amount', M.amount, '0'), pmMoves.length ? 'Score / תוצאה ללוח' : 'כמות (מ׳ / קל׳)');
     else if (mode==='time') inputs = this.unit(this.txtEl(base+'.log.time', M.time, 'mm:ss'), 'time / זמן');
     else inputs = React.createElement(React.Fragment, null,
           this.unit(this.numEl(base+'.log.rounds', M.rounds, '0'), 'rounds / סבבים'),
@@ -1818,6 +1894,7 @@ class Component extends DCLogic {
       style:{ display:'inline-flex', alignItems:'center', gap:'6px', border:'1.5px solid '+(on?activeColor:'var(--line)'), background:on?activeBg:'var(--card)', color:on?activeColor:'var(--muted)', borderRadius:'999px', padding:'7px 14px', fontWeight:700, fontSize:'12.5px', cursor:'pointer', transition:'all .15s' }
     }, (on?'✓':'○') + ' ' + label);
     return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } },
+      pmBlock,
       fixed ? null : React.createElement('div', { style:{ display:'flex', gap:'2px', background:'var(--chip)', borderRadius:'10px', padding:'3px', width:'fit-content' } }, seg('time','Time'), seg('rounds','Rounds + Reps')),
       React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } }, inputs, this.unit(this.txtEl(base+'.log.note', M.note, 'הערה'), 'note')),
       React.createElement('div', { style:{ display:'flex', gap:'8px', flexWrap:'wrap' } },
@@ -2303,7 +2380,7 @@ class Component extends DCLogic {
       effortBarView: this.effortBar(day.rating, false),
       prToggle: (fut || otherDone) ? null : this.prToggle(this.dayHasPR(day), true),
       hasPRBadge: this.dayHasPR(day),
-      liftBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.liftBar(day.lift)),
+      liftBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.liftBar(day.lift, this.perSetCount())),
       saveBar: this.saveBarEl(day, otherDone, asAlt),
       metconBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.metconBar(day.metcon, 'metcon')),
       metcon2Bar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.metconBar(day.metcon2, 'metcon2')),
