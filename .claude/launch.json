@@ -30,6 +30,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8149", "--directory", "public"],
       "port": 8149
+    },
+    {
+      "name": "capacity-static-6",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8151", "--directory", "public"],
+      "port": 8151
     }
   ]
 }

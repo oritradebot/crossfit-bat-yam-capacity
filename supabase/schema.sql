@@ -60,6 +60,11 @@ insert into public.shared_program (id, weeks) values (1, null)
 -- { id, title, body, created_at } — popup shows once per user (see
 -- profiles.announcement_seen). NULL = no active announcement, nothing pops.
 alter table public.shared_program add column if not exists announcement jsonb;
+-- append-only log of every announcement ever published — the admin's audit
+-- trail ("what did I send and when"), shown in the admin panel's 📜 view:
+-- [{ id, title, body, created_at, removed_at? }, ...] oldest-first.
+-- removed_at appears only when an active message was taken down early.
+alter table public.shared_program add column if not exists announcement_log jsonb;
 
 -- ============================================================
 --  ROW LEVEL SECURITY

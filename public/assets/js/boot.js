@@ -1078,6 +1078,20 @@
       ".cfa-prev{background:#1b2b4d;border:1px solid #2e4a7d;color:#9fc2ff;border-radius:8px;padding:10px 14px;font:700 12px 'Heebo',sans-serif;cursor:pointer}" +
       ".cfa-annclr{background:transparent;border:1px solid #e74c3c;color:#e74c3c;border-radius:8px;padding:10px 14px;font:700 12px 'Heebo',sans-serif;cursor:pointer}" +
       ".cfa-annst{font-size:12px;color:#8ea3c9}" +
+      ".cfa-annlog{margin-top:12px;border-top:1px solid #243657;padding-top:10px;display:flex;flex-direction:column;gap:8px}" +
+      ".cfa-annlog-item{background:#16233f;border:1px solid #243657;border-radius:10px;padding:10px 12px}" +
+      ".cfa-annlog-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}" +
+      ".cfa-annlog-head b{color:#eaf0ff}" +
+      ".cfa-annlog-when{color:#8ea3c9;font-size:11.5px;margin-inline-start:auto;direction:ltr}" +
+      ".cfa-annlog-badge{font-size:10px;padding:1px 7px;border-radius:12px;font-weight:700}" +
+      ".cfa-annlog-badge.live{background:#2ecc7133;color:#7ee2a8}" +
+      ".cfa-annlog-badge.rem{background:#e74c3c22;color:#ff8a80}" +
+      ".cfa-annlog-body{color:#c9d6f2;font-size:12.5px;margin-top:6px;white-space:pre-wrap;line-height:1.5;word-break:break-word}" +
+      ".cfa-annlog-foot{margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}" +
+      ".cfa-annlog-edit{background:transparent;border:1px solid #2e4a7d;color:#9fc2ff;border-radius:6px;padding:4px 10px;font:700 11px 'Heebo',sans-serif;cursor:pointer}" +
+      ".cfa-annlog-edit:hover{background:#2e4a7d;color:#fff}" +
+      ".cfa-annlog-note{font-size:11px;color:#ffb74d;margin:0}" +
+      ".cfa-annlog-empty{font-size:12px;color:#8ea3c9;margin:0}" +
       // the panel's own scrollbar was invisible (dark thumb on dark bg) — make
       // it clearly visible so desktop users see THIS is the thing to scroll
       "#cfbyAdminOv::-webkit-scrollbar{width:10px}" +
@@ -1111,8 +1125,10 @@
             '<button class="cfa-pub" id="cfaAnnPub">📣 פרסם לכולם</button>' +
             '<button class="cfa-prev" id="cfaAnnPrev">👁 תצוגה מקדימה</button>' +
             '<button class="cfa-annclr" id="cfaAnnClr">🗑 הסר הודעה</button>' +
+            '<button class="cfa-prev" id="cfaAnnLogBtn">📜 יומן הודעות</button>' +
             '<span class="cfa-annst" id="cfaAnnSt"></span>' +
           '</div>' +
+          '<div class="cfa-annlog" id="cfaAnnLog" style="display:none"></div>' +
         '</div>' +
         '<p class="cfa-msg" id="cfaMsg"></p>' +
         '<p class="cfa-stat" id="cfaStat"></p>' +
@@ -1263,12 +1279,46 @@
       return { title: (document.getElementById("cfaAnnT").value || "").trim(),
                body:  (document.getElementById("cfaAnnB").value || "").trim() };
     }
+
+    // ---- announcement LOG: the admin's "what did I send and when" -------
+    // Every publish appends the full message to shared_program.announcement_log
+    // (append-only; clearing an active message early stamps removed_at on its
+    // entry). The column may not exist until the updated schema.sql runs, so
+    // every write falls back to the announcement-only shape — the log must
+    // never be the reason a publish fails.
+    function annMissingLogCol(err) {
+      var m = (err && err.message) || "";
+      return /announcement_log/.test(m) && /column|schema/i.test(m);
+    }
+    async function annFetch() {
+      var r = await sb.from("shared_program").select("announcement,announcement_log").eq("id", 1).maybeSingle();
+      if (r.error && annMissingLogCol(r.error)) {
+        var r2 = await sb.from("shared_program").select("announcement").eq("id", 1).maybeSingle();
+        var act2 = (r2.data && r2.data.announcement) || null;
+        // no log column yet — the view can still show the one active message
+        // (writes stay announcement-only while noCol is set, so this is safe)
+        return { active: act2, log: act2 ? [act2] : [], noCol: true, err: r2.error };
+      }
+      var log = (r.data && Array.isArray(r.data.announcement_log)) ? r.data.announcement_log.slice() : [];
+      var act = (r.data && r.data.announcement) || null;
+      // an active message published before the log existed joins it here, and
+      // the next publish/clear persists the backfill
+      if (act && act.id && !log.some(function (e) { return e && e.id === act.id; })) log.push(act);
+      return { active: act, log: log, err: r.error };
+    }
     async function annPublish() {
       var d = annDraft();
       if (!d.title && !d.body) { amsg("כתוב כותרת או תוכן להודעה", "err"); return; }
       var ann = { id: "a" + Date.now(), title: d.title || "בלוק חדש התחיל!", body: d.body, created_at: new Date().toISOString() };
       amsg("מפרסם…");
-      var r = await sb.from("shared_program").upsert({ id: 1, announcement: ann });
+      var cur = await annFetch();
+      var payload = { id: 1, announcement: ann };
+      // a failed pre-read must not block publishing — worst case this entry
+      // is missing from the log, never the other way around
+      if (!cur.noCol && !cur.err) payload.announcement_log = cur.log.concat([ann]);
+      var r = await sb.from("shared_program").upsert(payload);
+      if (r.error && payload.announcement_log && annMissingLogCol(r.error))
+        r = await sb.from("shared_program").upsert({ id: 1, announcement: ann });
       if (r.error) {
         var m = r.error.message || String(r.error);
         if (/announcement/.test(m) && /column|schema/i.test(m))
@@ -1279,14 +1329,79 @@
       try { localStorage.setItem("cfby_ann_seen", ann.id); } catch (e) {}
       await sb.from("profiles").upsert({ id: meId, announcement_seen: ann.id });
       amsg("ההודעה פורסמה — כל מתאמן יראה אותה פעם אחת בכניסה הבאה שלו 🎖️", "ok");
-      annStatus();
+      annStatus(); annLogRender();
     }
     async function annClear() {
       if (!confirm("להסיר את ההודעה הפעילה?\nמי שעדיין לא ראה אותה — כבר לא יראה אותה.")) return;
-      var r = await sb.from("shared_program").upsert({ id: 1, announcement: null });
+      var cur = await annFetch();
+      var payload = { id: 1, announcement: null };
+      if (!cur.noCol && !cur.err && cur.active && cur.active.id) {
+        payload.announcement_log = cur.log.map(function (e) {
+          if (!e || e.id !== cur.active.id || e.removed_at) return e;
+          var stamped = {}; for (var k in e) stamped[k] = e[k];
+          stamped.removed_at = new Date().toISOString();
+          return stamped;
+        });
+      }
+      var r = await sb.from("shared_program").upsert(payload);
+      if (r.error && payload.announcement_log && annMissingLogCol(r.error))
+        r = await sb.from("shared_program").upsert({ id: 1, announcement: null });
       if (r.error) { amsg("ההסרה נכשלה: " + (r.error.message || r.error), "err"); return; }
       document.getElementById("cfaAnnT").value = ""; document.getElementById("cfaAnnB").value = "";
-      amsg("ההודעה הוסרה", "ok"); annStatus();
+      amsg("ההודעה הוסרה", "ok"); annStatus(); annLogRender();
+    }
+
+    // ---- announcement log VIEW ------------------------------------------
+    var annLogOpen = false, annLogEntries = [];
+    function annEsc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
+    function annWhen(s) {
+      if (!s) return "";
+      try {
+        var d = new Date(s);
+        return d.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "numeric" }) +
+               " · " + d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
+      } catch (e) { return ""; }
+    }
+    async function annLogRender() {
+      var box = document.getElementById("cfaAnnLog");
+      if (!box || !annLogOpen) return;
+      box.style.display = "";
+      box.innerHTML = '<p class="cfa-annlog-empty">טוען…</p>';
+      var cur = await annFetch();
+      if (cur.err) { box.innerHTML = '<p class="cfa-annlog-empty">טעינת היומן נכשלה: ' + annEsc(cur.err.message || cur.err) + "</p>"; return; }
+      annLogEntries = cur.log.slice().reverse();          // newest first
+      var html = "";
+      if (cur.noCol)
+        html += '<p class="cfa-annlog-note">⚠️ שמירת ההיסטוריה עוד לא הופעלה במסד — יש להריץ את supabase/schema.sql המעודכן ב-SQL Editor. בינתיים מוצגת רק ההודעה הפעילה.</p>';
+      if (!annLogEntries.length) {
+        box.innerHTML = html + '<p class="cfa-annlog-empty">עוד לא פורסמו הודעות בלוק.</p>';
+        return;
+      }
+      html += annLogEntries.map(function (e, i) {
+        var live = cur.active && cur.active.id === e.id && !e.removed_at;
+        var badge = live ? '<span class="cfa-annlog-badge live">🟢 פעילה עכשיו</span>'
+                  : e.removed_at ? '<span class="cfa-annlog-badge rem">הוסרה ידנית</span>' : "";
+        var foot = '<button class="cfa-annlog-edit" data-i="' + i + '">✎ טען לעריכה</button>' +
+                   (e.removed_at ? '<span class="cfa-annlog-empty">הוסרה ב-' + annWhen(e.removed_at) + "</span>" : "");
+        return '<div class="cfa-annlog-item">' +
+                 '<div class="cfa-annlog-head"><b>' + annEsc(e.title || "(ללא כותרת)") + "</b>" + badge +
+                   '<span class="cfa-annlog-when">🗓 ' + annWhen(e.created_at) + "</span></div>" +
+                 (e.body ? '<div class="cfa-annlog-body">' + annEsc(e.body) + "</div>" : "") +
+                 '<div class="cfa-annlog-foot">' + foot + "</div>" +
+               "</div>";
+      }).join("");
+      box.innerHTML = html;
+    }
+    function annLogToggle() {
+      annLogOpen = !annLogOpen;
+      var box = document.getElementById("cfaAnnLog"), btn = document.getElementById("cfaAnnLogBtn");
+      if (btn) btn.textContent = annLogOpen ? "📜 סגור יומן" : "📜 יומן הודעות";
+      if (!annLogOpen) { if (box) box.style.display = "none"; return; }
+      annLogRender();
     }
 
     // Passwords exist only as bcrypt hashes in Supabase — showing a member's
@@ -1376,6 +1491,20 @@
     document.getElementById("cfaAnnPrev").onclick = function () {
       var d = annDraft();
       window.__cfbyAnnPreview({ title: d.title || "בלוק חדש התחיל!", body: d.body }, function () {});
+    };
+    document.getElementById("cfaAnnLogBtn").onclick = annLogToggle;
+    // "load to editor" buttons are re-created on every render — delegate once
+    document.getElementById("cfaAnnLog").onclick = function (ev) {
+      var b = ev.target && ev.target.closest ? ev.target.closest(".cfa-annlog-edit") : null;
+      if (!b) return;
+      var e = annLogEntries[+b.getAttribute("data-i")];
+      if (!e) return;
+      document.getElementById("cfaAnnT").value = e.title || "";
+      document.getElementById("cfaAnnB").value = e.body || "";
+      amsg("ההודעה נטענה לעריכה — לחיצה על 📣 תפרסם אותה מחדש כהודעה חדשה לכולם");
+      document.getElementById("cfaAnnT").focus();
+      var annBox = document.querySelector(".cfa-ann");
+      if (annBox && annBox.scrollIntoView) annBox.scrollIntoView({ behavior: "smooth", block: "start" });
     };
     document.getElementById("cfaX").onclick = closePanel;
     // NO backdrop-click close: the box has no background of its own, so on wide
