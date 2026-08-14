@@ -1067,18 +1067,29 @@ class Component extends DCLogic {
   }
 
   PROGRAM_VERSION = 28;
-  // ---- result-entry pilot (13/08, per Ori) — live on ONE workout for now:
-  // W4 Thursday 06/08, key 'weekIdx_dayIdx' (0-based). Resolved at render
-  // time from these maps — no program re-embed, no PROGRAM_VERSION bump, no
-  // user-facing version change. Full rollout to the whole program ships later
-  // together with one big version bump.
-  // PER_SET_LIFT: the LIFT logs a weight per set (log.s1..sN); the heaviest
-  // set is mirrored into log.weight, which is what the PR table, the board
-  // summaries and the day-completion check keep reading.
-  PER_SET_LIFT = { '3_4': 6 };
+  // ---- richer result entry (13/08, per Ori; piloted on 06/08) ------------
+  // PER_SET_LIFT['weekIdx_dayIdx'] = set count: the LIFT logs a weight per
+  // set (log.s1..sN); the heaviest set is mirrored into log.weight, which is
+  // what the PR table, the board summaries and the day-completion check keep
+  // reading. Resolved at render time — no program re-embed needed; every new
+  // week gets its entries as part of embedding it.
+  // Counts follow the written set scheme. Special cases: '0_0' (build to a
+  // heavy triple, no fixed count) gets 8 open boxes; EMOM-singles days count
+  // minutes ('0_5','2_5' = 10); alternating days count only the barbell
+  // movement's sets ('3_6' = 4 of 8 deadlifts, '4_3' = 5 of 10 strict press).
+  // Days with no barbell weight to log (gymnastics EMOMs, DB play/bench days,
+  // team/carry days) keep the single weight field and are absent here.
+  PER_SET_LIFT = {
+    '0_0': 8, '0_1': 8, '0_3': 4, '0_5': 10,
+    '1_0': 6, '1_1': 6, '1_2': 5, '1_3': 4, '1_5': 10,
+    '2_0': 6, '2_1': 6, '2_2': 4, '2_4': 6, '2_5': 10,
+    '3_0': 7, '3_1': 9, '3_2': 5, '3_4': 6, '3_5': 10, '3_6': 4,
+    '4_0': 5, '4_1': 6, '4_2': 5, '4_3': 5, '4_4': 7, '4_5': 6
+  };
   // PER_MOVE_METCON: these metcon bases log a result per movement
   // (log.mv1..mvN) and the board-score input stays locked until every
-  // movement has one.
+  // movement has one. Still pilot-only (06/08) — the metcon rollout list
+  // awaits Ori's approval.
   PER_MOVE_METCON = { '3_4': ['metcon'] };
   pilotKey() { return this.state.selWeek + '_' + this.state.selDay; }
   perSetCount() { return this.state.activeSession==='alt' ? 0 : (this.PER_SET_LIFT[this.pilotKey()] || 0); }
