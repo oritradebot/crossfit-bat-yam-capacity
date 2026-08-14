@@ -1066,17 +1066,18 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 28;
+  PROGRAM_VERSION = 29;
   // ---- richer result entry (13/08, per Ori; piloted on 06/08) ------------
   // PER_SET_LIFT['weekIdx_dayIdx'] = set count: the LIFT logs a weight per
   // set (log.s1..sN); the heaviest set is mirrored into log.weight, which is
   // what the PR table, the board summaries and the day-completion check keep
   // reading. Resolved at render time — no program re-embed needed; every new
   // week gets its entries as part of embedding it.
-  // Counts follow the written set scheme. Special cases: '0_0' (build to a
-  // heavy triple, no fixed count) gets 8 open boxes; EMOM-singles days count
-  // minutes ('0_5','2_5' = 10); alternating days count only the barbell
-  // movement's sets ('3_6' = 4 of 8 deadlifts, '4_3' = 5 of 10 strict press).
+  // Counts follow the written set scheme. Special cases: build-to-heavy days
+  // with no fixed count ('0_0' triple, '5_5' find-a-heavy-complex) get 8 open
+  // boxes; EMOM-singles days count minutes ('0_5','2_5' = 10); alternating
+  // days count only the barbell movement's sets ('3_6' = 4 of 8 deadlifts,
+  // '4_3' = 5 of 10 strict press, '5_6' = 4 of 8 rows).
   // Days with no barbell weight to log (gymnastics EMOMs, DB play/bench days,
   // team/carry days) keep the single weight field and are absent here.
   PER_SET_LIFT = {
@@ -1084,7 +1085,8 @@ class Component extends DCLogic {
     '1_0': 6, '1_1': 6, '1_2': 5, '1_3': 4, '1_5': 10,
     '2_0': 6, '2_1': 6, '2_2': 4, '2_4': 6, '2_5': 10,
     '3_0': 7, '3_1': 9, '3_2': 5, '3_4': 6, '3_5': 10, '3_6': 4,
-    '4_0': 5, '4_1': 6, '4_2': 5, '4_3': 5, '4_4': 7, '4_5': 6
+    '4_0': 5, '4_1': 6, '4_2': 5, '4_3': 5, '4_4': 7, '4_5': 6,
+    '5_0': 8, '5_1': 6, '5_2': 6, '5_4': 8, '5_5': 8, '5_6': 4
   };
   // PER_MOVE_METCON: these metcon bases log a result per movement
   // (log.mv1..mvN) and the board-score input stays locked until every
@@ -1318,6 +1320,45 @@ class Component extends DCLogic {
       }
     };
   }
+  programWeek6() {
+    return {
+      0: {
+        lift: { movement:'Clean & Jerk — Sharp Singles', planned:'Every 1:30-2:00 x 8 sets:\n3 Sets @75-78%\n5 Sets @80-88%\n\nIf a rep feels slow under the bar — don\'t add weight.\nאו לפי תחושה: שלושה סטים במאמץ 6-7 מתוך 10, וחמישה סטים במאמץ 8 מתוך 10.\nלא מחפשים היום מקסימום — מחפשים מהירות מתחת למוט.' },
+        metcon: { name:'Conditioning — Every 3:00 Until Failure', scheme:'Every 3:00 until failure · Cap 15:00', score:'Total calories', resultMode:'amount', note:'L1 = 40/30kg, start at 8/6 cals\nL2 = 45/32.5kg, start at 10/7 cals\nL3 = 50/35kg, start at 12/10 cals\n*Add 3/2 calories per round.\n\nScore — total calories accumulated.\nהזינו את סך הקלוריות שנצברו.\nמזניקים בשני היטים, בהפרש של 1:30 — כל אחד עם השעון שלו. ככה החתירה תמיד פנויה.\nנפלתם לפני 3 סבבים? זה בסדר גמור — תמשיכו לצבור קלוריות לפי היכולת.', movements:[['Lateral burpees over the bar','8'],['Hang clean & jerks','8'],['Cal row','start by level, +3/2 per round']] },
+        extras: [['Capacity Extra','Every 75-90 seconds for 6 sets, alternate:\n• 20-30s Front rack hold @100-110% of today\'s top C&J\n• 8+8 Single arm DB high pulls\n\nזו עבודת ליבה וכתפיים — תתייחסו לזה בהתאם.'],['','']]
+      },
+      1: {
+        lift: { movement:'Back Squat', planned:'Every 2:30 for 6 sets:\nSets 1-2: 2 reps @90%\nSets 3-4: 2 reps @93-95%\nSets 5-6: 2 reps @96-100%\n\nPercentages off your 3RM.\nברייס טוב לנשימה, זמן מלא בין הסטים, ובלי גריינדים.\nלא בדקתם שלשה כבדה? 2 סטים @7.5RPE, 2 @8, 2 @9.\nRPE = מאמץ מתוך 10.' },
+        metcon: { name:'Conditioning — AMRAP 20:00', scheme:'AMRAP 20:00 (ascending)', score:'Rounds + reps', resultMode:'rounds', note:'L1 = 400m, add 2 reps each round\nL2 = 600m, add 3 reps each round\nL3 = 800m, add 5 reps each round\n\nהזינו כמה סבבים (+חזרות) הושלמו.\nזו לא עבודה עצימה — זו עבודה שמנקה את הרגליים אחרי הסקוואט, וגורמת לריאות (וכוח הרצון) לגדול באיזו חצי מידה.', movements:[['Run','400/600/800m by level'],['Box jump overs','10 — add reps each round'],['Push ups','10 — add reps each round']] },
+        extras: [['Capacity Extra','3 rounds, no rush:\n8 Tempo RDLs (3s down)\n10-12 Reverse hypers or banded good mornings\n30s Hollow hold'],['','']]
+      },
+      2: {
+        lift: { movement:'Bench Press', planned:'Every 2:30 for 6 sets:\nSets 1-2: 6 reps\nSets 3-4: 4 reps\nSets 5-6: 2 reps\n\nAfter each set of bench presses, perform a big set of strict pull ups.\nBench: reps drop, weight climbs. Pause the first rep of every set on the chest.\nPull ups: big set, but not maximal — make it 85-90% effort.\nניתן להוסיף גומייה, במידה והסטים קטנים מ-3-4 חזרות. אנחנו מכוונים לנפח היום.' },
+        metcon: { name:'Big Tuesday — "Big BALAGAN"', scheme:'4 Rounds For Time · Rest 1:30 · Cap 20:00', score:'Total time', resultMode:'time', note:'Double unders before every station:\nL1 = 20 DU or 40 dingles, 2x10/7.5kg\nL2 = 30 DU, 2x12.5/8kg\nL3 = 40 DU, 2x15/10kg\n\nScore — total time. Time cap 20:00.\nהדאמבלים אמורים להיות קלים, והסטים של הדאבלים יחסית קצרים. זוזו מהר, תרוויחו את המנוחה.', movements:[['Double unders','before every station — by level'],['Light DB thrusters','12'],['Burpees over the DBs','9'],['Devil presses','6']] },
+        extras: [['Capacity Extra','4 Sets:\n10-20 GHD situps\n10-15 Barbell bicep curls'],['','']]
+      },
+      3: {
+        lift: { movement:'Strength — Single Arm DB Press + Single Leg Hip Thrusts', planned:'Every 1:30 for 10 sets, alternate:\n• 6-8 Single arm kneeling DB presses\n• 6-8 Single leg hip thrusts (DB/medball on hip)' },
+        metcon: { name:'AMRAP 15:00', scheme:'AMRAP 15:00', score:'Rounds + reps', resultMode:'rounds', note:'1 Shuttle = 8+8m.\n\nהזינו כמה סבבים (+חזרות) הושלמו.\nהקטלבל אמור להרגיש קל מספיק כדי לתפור איתו סטים גדולים, אבל כבד יחסית בכדי ללכת איתו בקלות מעל הראש. מכוונים להשתמש באותו קטלבל לשתי התנועות.\nהסווינגים הם לא עד למעלה — ככה שלא יהיו תלונות שהכתפיים עייפות 😉', movements:[['Shuttle runs','5x'],['Russian KB swings','15'],['KB single arm overhead carry','4x shuttle']] },
+        extras: [['Capacity Extra','3 Sets for quality:\n10 Bodyweight dips\n30s Reverse sled drag (or plank)\n20s L-hang'],['','']]
+      },
+      4: {
+        lift: { movement:'Snatch — Positional', planned:'Every 90 seconds x 4 sets:\nSnatch with pause below knee + Snatch\n@70-74%\n\ninto\n\nEvery 90 seconds x 4 sets:\n1 Snatch @80-86%\n\nהסטים הראשונים מלמדים מנח, הסטים האחרונים בוחנים אותו.\nאו לפי תחושה: ארבעה סטים במאמץ 6, ארבעה סטים במאמץ 8.' },
+        metcon: { name:'AMRAP 8:00 — 2-4-6-8…', scheme:'AMRAP 8:00 (ascending ladder)', score:'Rounds + reps', resultMode:'rounds', note:'L1 = 35/25kg\nL2 = 40/30kg\nL3 = 50/35kg\n\nהזינו כמה מדרגות הושלמו (+חזרות מהמדרגה שבה נעצרתם) — כל מדרגה בסולם (2-4-6-8…) נספרת כסבב.\nלא אמורים לזוז כאן מהר — אלא באופן עקבי.', movements:[['Power snatches','2-4-6-8… etc'],['Wallwalks','2-4-6-8… etc']] },
+        extras: [['Strength — Snatch Pulls','Every 90 seconds for 4 sets:\n2-3 Snatch pulls\n@100-110% of your snatch. Accelerate as the bar passes the knee.'],['Conditioning — BROKEN TEST','At your Monostructural CapaciTest pace — descending:\nRun, resting 3:00 between intervals.\nL1 = 1000-800-600m\nL2 = 1500-1000-500m\nL3 = 1500-1200-900m\nL4 = 2000-1500-1000m\n\nRow/Ski — same distances.\nScore — total time.\nGoal — practice your test pace.\nהקצב היום צריך להיות הקצב של הטסט בעוד שבועיים.']]
+      },
+      5: {
+        lift: { movement:'Power Clean + Push Jerk + Split Jerk', planned:'At 14:00 — Lift:\nIn 10:00, find a heavy complex:\nPower clean\nPush jerk\nSplit jerk\n\nהמוט כבר על הרצפה חם מהקונדישנינג. בונים משם.\nאין איבר בגוף שלא חם כרגע — תתרגמו את זה לפאוור קלין עוצמתי ואחריו עבודת רגליים מדויקת בג׳רקים.' },
+        metcon: { name:'Conditioning — 3 Rounds For Time', scheme:'3 Rounds For Time · Cap 12:00', score:'Time', resultMode:'time', note:'L1 = 15 WB, 10 BFB, 10 PC @40/30kg\nL2 = 15 WB, 12 BFB, 10 PC @50/35kg\nL3 = 20-25 WB, 15-20 BFB, 15 PC @50/35kg\n\nScore — time. Time cap 12:00.\nהרבה עבודה ב-12 דקות. הלבל אמור לשקף חזרות של וולבול שתוכלו להחזיק ברצף או לכל היותר עם שבירה אחת, וחזרות של פאוור קלינים בסטים גדולים מאוד.', movements:[['Wallballs','15-25 by level'],['Bar facing burpees','10-20 by level'],['Power cleans','10-15 by level']] },
+        extras: [['Gymnastics Accumulation','Descending clocks — 3:00 / 2:30 / 2:00 / 1:30\nRest 1:00 between each.\n\nEach window:\nCalories Echo/Assault bike\nC2B / Pull-ups\nReset each AMRAP.\n\nLevel 1 = 7/6 cals, 7 C2B\nLevel 2 = 9/7 cals, 9 C2B\nLevel 3 = 10/7 cals, 10 C2B\nLevel 4 = 12/9 cals, 12 C2B\n\nScore — total reps across.'],['3-4 Sets — No Rush','10-15 Banded tricep extensions\n10-12 Hip extensions']]
+      },
+      6: {
+        lift: { movement:'Strength — Pendlay Rows + D-Ball Bearhug Carry', planned:'Every 1:30 for 8 sets, alternate:\n• 8 Pendlay rows or KB Gorilla rows\n• 30m D-Ball bearhug carry\n\nHeavy but clean on both.\nבמשיכות החתירה תתמקדו במשיכה אגרסיבית ומהירה לכיוון הצלעות. להביא את המשקל מנקודה א׳ לנקודה ב׳ זה דבר אחד, להביא אותו מהר — כבר נותן ערך אחר לחלוטין.' },
+        metcon: { name:'In Pairs — 4 Rounds For Time', scheme:'4 Rounds For Time (pairs) · Cap 25:00', score:'Time', resultMode:'time', note:'Score — time. Cap 25:00.\nנעצרתם בקאפ? הזינו 25:00 והוסיפו בהערה איפה עצר אתכם השעון.\nחלק מהאימון יבוצע חזרה-חזרה מבחינת החלוקה בין בני הזוג, חלקו מסונכרן. כדאי לבחור פרטנר טוב להיום.\nהטיים קאפ לא סלחני — אבל גם מי שהשעון יעצור אותו ב-25 — עשיתם עבודה ארוכה ומעולה.', movements:[['Calories','60 — split any way'],['Box jumps','40 (IGYG)'],['Dball cleans','20 (IGYG)'],['Synced T2B/K2E','20']] },
+        extras: [['Capacity Extra','4 Sets for quality:\n10-15 Hip extensions (on a GHD)\n10-15 Banded face pulls\n60s rest'],['','']]
+      }
+    };
+  }
   applyProgram(weeks) {
     const fillMetcon = (dst, m) => { if (!m) return; dst.name=m.name||''; dst.scheme=m.scheme||''; dst.score=m.score||''; dst.note=m.note||''; dst.resultMode=m.resultMode||''; for (let i=0;i<4;i++){ const mv=(m.movements||[])[i]; dst.movements[i]={ name:mv?mv[0]:'', detail:mv?mv[1]:'' }; } };
     const fill = (day, src) => {
@@ -1340,6 +1381,7 @@ class Component extends DCLogic {
     overlay(2, this.programWeek3());
     overlay(3, this.programWeek4());
     overlay(4, this.programWeek5());
+    overlay(5, this.programWeek6());
   }
 
   normalizeDay(o) {
