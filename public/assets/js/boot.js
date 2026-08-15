@@ -1325,10 +1325,11 @@
           m = "עמודת announcement חסרה ב-Supabase — יש להריץ את supabase/schema.sql ב-SQL Editor ואז לנסות שוב";
         amsg("הפרסום נכשל: " + m, "err"); return;
       }
-      // the author doesn't need their own popup — mark it seen for the admin
-      try { localStorage.setItem("cfby_ann_seen", ann.id); } catch (e) {}
-      await sb.from("profiles").upsert({ id: meId, announcement_seen: ann.id });
-      amsg("ההודעה פורסמה — כל מתאמן יראה אותה פעם אחת בכניסה הבאה שלו 🎖️", "ok");
+      // Deliberately NOT marking the author as seen (was v1.6.0 behavior):
+      // the admin wants his own popup too — it pops once on his next app
+      // open, exactly like every other user (the on-show marking in main()
+      // keeps it once-per-user).
+      amsg("ההודעה פורסמה — כל מתאמן, וגם אתה, יראה אותה פעם אחת בכניסה הבאה 🎖️", "ok");
       annStatus(); annLogRender();
     }
     async function annClear() {
