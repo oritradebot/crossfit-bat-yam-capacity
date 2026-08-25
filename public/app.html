@@ -1066,7 +1066,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 29;
+  PROGRAM_VERSION = 30;
   // ---- richer result entry (13/08, per Ori; piloted on 06/08) ------------
   // PER_SET_LIFT['weekIdx_dayIdx'] = set count: the LIFT logs a weight per
   // set (log.s1..sN); the heaviest set is mirrored into log.weight, which is
@@ -1086,7 +1086,8 @@ class Component extends DCLogic {
     '2_0': 6, '2_1': 6, '2_2': 4, '2_4': 6, '2_5': 10,
     '3_0': 7, '3_1': 9, '3_2': 5, '3_4': 6, '3_5': 10, '3_6': 4,
     '4_0': 5, '4_1': 6, '4_2': 5, '4_3': 5, '4_4': 7, '4_5': 6,
-    '5_0': 8, '5_1': 6, '5_2': 6, '5_4': 8, '5_5': 8, '5_6': 4
+    '5_0': 8, '5_1': 6, '5_2': 6, '5_4': 8, '5_5': 8, '5_6': 4,
+    '6_0': 6, '6_1': 8, '6_2': 6, '6_3': 5, '6_5': 5
   };
   // PER_MOVE_METCON: these metcon bases log a result per movement
   // (log.mv1..mvN) and the board-score input stays locked until every
@@ -1359,6 +1360,49 @@ class Component extends DCLogic {
       }
     };
   }
+  programWeek7() {
+    return {
+      0: {
+        lift: { movement:'Snatch + Hang Snatch', planned:'Every 2:00 x 6 sets:\nSnatch + Hang snatch\n\nBoth reps should be full snatches.\nThis is a back off week — so limit weight to 75-80%.\n\nשבוע אחרון לפני הטסטים — מורידים הילוך במשקלים, אבל לא בעבודה. הפוקוס הוא על מנחים, לא על מספרים.\nאו לפי תחושה: מאמץ של 7 מתוך 10, ולא מעבר לזה.\nאם שתי החזרות נראות אותו דבר במשקל הזה — השבוע הבא יהיה שבוע מעולה.' },
+        metcon: { name:'Aerobic Intervals', scheme:'Every 7:00 for 3 sets', score:'Slowest round', resultMode:'time', note:'L1 = 200-300m run, 20/15 cals\nL2 = 300-400m run, 25/20 cals\nL3 = 400m, 30/25 cals\n\nScore — slowest round.\nGoal — be great at the run, use the calories to reset. Earn 1:00+ of rest.\nאינטרוולים אירוביים מצויינים לסגירת האימון.', movements:[['Run','meters by level'],['Row/Ski/Bike','calories by level'],['Run','meters by level']] },
+        extras: [['Capacity Extra — Snatch Pulls','Every 90 seconds for 4 sets:\n2-3 Snatch pulls\n@95-100% of your snatch.'],['Strength — Overhead Squats','Every 2:00 for 4 sets:\n3 Overhead squats @2s pause in the bottom\n\n7RPE across.']],
+        alt: {
+          metcon: { name:'Aerobic Intervals (Endurance)', scheme:'Every 7:00 for 3 sets', score:'Slowest round', resultMode:'time', note:'L1 = 200-300m run, 20/15 cals\nL2 = 300-400m run, 25/20 cals\nL3 = 400m, 30/25 cals\n\nScore — slowest round.\nGoal — be great at the run, use the calories to reset. Earn 1:00+ of rest.\nהזינו את זמן הסיבוב האיטי ביותר.', movements:[['Run','meters by level'],['Row/Ski/Bike','calories by level'],['Run','meters by level']] },
+          extras: [['E3MOM 12:00 — לפני האינטרוולים','Each 3:00 for 12:00:\n40/30 DU or 50 SU\n10-15 Wall balls\nMax Burpee box jumps in remaining time'],['','']]
+        }
+      },
+      1: {
+        lift: { movement:'Clean & Jerk — Long Complex', planned:'Every 2:00 x 8 sets:\nPower clean\nPush jerk\nHang squat clean\nSplit jerk\n\n2 Sets @60%\n2 Sets @70%\n2 Sets @70%\n2 Sets @75-80%\n\nקומפלקס ארוך — ארבע תנועות בכל סט, ומשקל שלא עולה מעל 80%.\nשבוע קצת רגוע יותר מבחינת משקלים — מגבילים אותם ל-80%.\nזו ההזדמנות האחרונה השבוע לתקן פרט טכני אחד לפני שנתקוף מקסימום.' },
+        metcon: { name:'Intervals — BJO / Row / Wallballs', scheme:'2:00 work / 2:00 rest x 4', score:'Total wallballs', resultMode:'amount', note:'L1 = 10 BJO, 10/7 cals\nL2 = 12 BJO, 12/9 cals\nL3 = 14 BJO, 14/10 cals\n\nScore — total wallballs, together.\nהזינו את סך הוולבולס מארבעת הסטים.\nלא מחפשים לשמור כוח, אלא להרוויח כמה שיותר זמן על הכדור בכל סיבוב.\nאינטרוולים שלא ישאירו את הרגליים רגועות.', movements:[['Box jump overs','@24/20" — by level'],['Cal row','by level'],['Max wallballs','remaining time']] },
+        extras: [['Capacity Extra','Every 90 seconds for 6 sets, alternate:\n• 20-30s Front rack hold\n• 10 Chest supported DB rows or Bent over rows\n\nMake the rack holds heavy. (1RM clean+)'],['','']]
+      },
+      2: {
+        lift: { movement:'Back Squat — Speed Focused', planned:'Every 90 seconds for 6 sets:\n2 reps @70-75%\n\nPercentages off your 3RM.\nControlled down, violent up.\nיום לא כבד — סקווטים חדים, ואחריהם קונדישנינג שצריך לזוז היטב.\nאם אתם לא יודעים מה משקל השלשה שלכם — בחרו משקל שתוכלו להזיז מאוד (מאוד!) מהר. זה אמור להיות יחסית קל.' },
+        metcon: { name:'Big Tuesday', scheme:'Clock 22:00 · 4 RFT + Max shuttles', score:'Total shuttle runs', resultMode:'amount', note:'Levels 1 & 2 = 40 DU (or singles)\nLevel 3 = 70 DU\n\nAfter the 4 rounds — Max shuttle runs (8+8m) until the 22:00 mark.\nScore — total shuttle runs.\nהזינו את סך השאטלים.\nLunges should be weighted with a very light sandbag/dball or a DB on shoulder. Don\'t go over 30/20kg.\nתסיימו את ארבעת הסבבים עם זמן על השעון — השאטלים הם התוצאה.', movements:[['Double unders','40-70 by level'],['Reverse lunges','15 @very light weight'],['T2B / V-ups','10-15'],['Push ups','15']] },
+        extras: [['Capacity Extra — Strength','Every 2:00 for 4 sets:\n4 Bench presses @moderate\nWeight can climb.'],['Into — 3 Sets','10+10 Bicep curls\n10+10 KB side bends']]
+      },
+      3: {
+        lift: { movement:'Strength — Strict Press + Single Leg RDL', planned:'Every 1:30 for 10 sets, alternate:\n• 6 Barbell strict presses\n• 8+8 Single leg RDL (DB or KB)\n\nעבודה נקייה ואיכותית. לא כבד מקסימלי — כבד מספיק שהחזרה האחרונה מרגישה.\nאחרי האימון היום מתחילים להתקרב לסופ״ש.' },
+        metcon: { name:'AMRAP 15:00 — Rope Climb Ladder', scheme:'AMRAP 15:00', score:'Rounds + reps', resultMode:'rounds', note:'Add 1 rope climb each round.\nScore — rounds + reps.\nהזינו כמה סבבים (+חזרות) הושלמו.\nשימו לב שמדובר כאן בארגז נמוך!', movements:[['Box jumps','10 @step down'],['Russian KB swings','10'],['Box step overs','10 @20/16" (with the KB)'],['Rope climb','1 — add 1 each round']] },
+        extras: [['Skill — Practice','Rope climb work'],['Capacity Extra','3 Sets for quality:\n10 Bodyweight dips\n30s Reverse sled drag (or plank)\n20s L-hang']]
+      },
+      4: {
+        lift: { movement:'Gymnastics — Handstand Practice', planned:'Skill — Practice 15:00:\nHandstand practice\n\n*Perform 6+6 Single arm DB bent rows after each practice set.\n\nהרבה סקיל על הפרק היום, בכל הצורות: גם סטטי ובונה, וגם דינמי ומהיר.' },
+        metcon: { name:'Gymnastics Volume', scheme:'Every 90 seconds for 6 sets', score:'Total C2B / Pull-ups', resultMode:'amount', note:'Choose a number of reps you aim to hold unbroken for all sets.\nScore — total C2B / Pull-ups.\nהזינו את סך החזרות משישת הסטים.\nאפשר להזניק במרווחים של 45 שניות אם אין מקום על המתח.', movements:[['Run','200m'],['C2B / Pull-ups','a set — same number every round']] },
+        extras: [['Conditioning — Mono Session: The Sharpener','Faster than test pace, with no full recovery.\n\nRun, resting 1:00 between intervals:\nL1 = 5 x 200m\nL2 = 5 x 300m\nL3 = 5 x 400m\n\nRow/Ski — same distances. Bike — 25/18 cals per interval.\n\nScore — average interval time.\nGoal — every interval faster than test pace. Last one fastest.\nהליטוש האחרון לפני הטסט. קצר, מהיר, ובלי להשאיר שום דבר בסבב האחרון.'],['Into — 3 Sets, No Rush','10-15 GHD situps\n10+10 Banded face pulls']]
+      },
+      5: {
+        lift: { movement:'Clean + 2 Front Squats', planned:'Every 2:00 for 5 sets:\n1 Clean + 2 Front squats\n\nWork around 75% of your front squat.\nהמוט כבר על הרצפה. קלין אחד נקי, ואז שתי חזרות עם מרפקים גבוהים.\n*מבוצע אחרי המטקון.' },
+        metcon: { name:'Every 5:00 x 3-4', scheme:'Every 5:00 for 3-4 sets', score:'Slowest round', resultMode:'time', note:'L1 = 30-40 DU, 15 snatches, 10 FSQ @40/30kg\nL2 = 50 DU, 15 snatches, 10 FSQ @50/35kg\nL3 = 60 DU, 20 snatches, 15 FSQ @50/35kg\n\nScore — slowest round.\nאמורים להשאיר כ-2 דקות של מנוחה.\nבאידיאל: צוברים קלוריות בזמן המנוחה.\nשישי חגיגי ואחרון של אוגוסט, ואנחנו נעשה ממנו קרקס: קונדישנינג בועט מאוד, ואחריו עבודה כבדה. כן כן — היום מרימים כבד כשאנחנו כבר מזיעים לגמרי.', movements:[['Double unders','30-60 by level'],['DB snatches','15-20 by level'],['Front squats','10-15 by level']] },
+        extras: [['Capacity Extra','3 sets, no rush:\n10-12 Hip extensions\n10-15 Banded tricep extensions\n\nBoth can be weighted.'],['','']]
+      },
+      6: {
+        lift: { movement:'Strength — DB Bench + Farmer Carry', planned:'Every 1:30 for 8 sets, alternate:\n• 10 DB Bench presses\n• 30m Farmer carry @heavy\n\nHeavy but clean on both.\nשבת זוגות 😎 — כוח בסיסי וחשוב בהתחלה, ואז עבודה עם פרטנר להמשך האימון.' },
+        metcon: { name:'In Teams of 3 — 4 Rounds For Time', scheme:'4 Rounds For Time (teams of 3)', score:'Time', resultMode:'time', note:'Score — time.\nשימו לב לחלוקה: קלוריות חופשי, סיט-אפים וברפיז מסונכרנים, קלינים בשיטת I go you go.', movements:[['Calories','40 — split any way'],['Synced sit-ups','20'],['Dball / Sandbag cleans','20 (I go you go)'],['Synced burpees','20']] },
+        extras: [['Capacity Extra','4 Sets for quality:\n10-15 Banded face pulls\n30s Copenhagen plank (each side)\n60s rest'],['','']]
+      }
+    };
+  }
   applyProgram(weeks) {
     const fillMetcon = (dst, m) => { if (!m) return; dst.name=m.name||''; dst.scheme=m.scheme||''; dst.score=m.score||''; dst.note=m.note||''; dst.resultMode=m.resultMode||''; for (let i=0;i<4;i++){ const mv=(m.movements||[])[i]; dst.movements[i]={ name:mv?mv[0]:'', detail:mv?mv[1]:'' }; } };
     const fill = (day, src) => {
@@ -1382,6 +1426,7 @@ class Component extends DCLogic {
     overlay(3, this.programWeek4());
     overlay(4, this.programWeek5());
     overlay(5, this.programWeek6());
+    overlay(6, this.programWeek7());
   }
 
   normalizeDay(o) {
