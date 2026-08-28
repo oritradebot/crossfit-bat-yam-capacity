@@ -1094,9 +1094,23 @@ class Component extends DCLogic {
   // movement has one. Still pilot-only (06/08) — the metcon rollout list
   // awaits Ori's approval.
   PER_MOVE_METCON = { '3_4': ['metcon'] };
+  // METCON_AMOUNT_LABEL / METCON_RX_NOTE (28/08, per Ori): amount-mode days
+  // whose board score is a rep count label the input as such (instead of the
+  // generic מ׳/קל׳), and days where RX has a specific meaning spell it out
+  // under the RX/Scaled pills. Keyed 'weekIdx_dayIdx' → { base: text }, base
+  // is 'metcon'/'metcon2' with an 'alt.' prefix for the endurance session.
+  // Resolved at render time like the pilot maps above — no state fields, no
+  // PROGRAM_VERSION bump; logs stay under log.amount so closed-week results
+  // keep scoring.
+  METCON_AMOUNT_LABEL = { '4_0': { 'metcon':'כמות חזרות', 'alt.metcon2':'כמות חזרות' } };
+  METCON_RX_NOTE = { '4_0': {
+    'metcon':'RX = קפיצות כפולות (DU) · הזנה ללא לחיצה על RX = קפיצות יחידות (SU)',
+    'alt.metcon2':'RX = קפיצות כפולות (DU) · הזנה ללא לחיצה על RX = קפיצות יחידות (SU)'
+  } };
   pilotKey() { return this.state.selWeek + '_' + this.state.selDay; }
   perSetCount() { return this.state.activeSession==='alt' ? 0 : (this.PER_SET_LIFT[this.pilotKey()] || 0); }
   perMoveOn(base) { const c = this.PER_MOVE_METCON[this.pilotKey()]; return this.state.activeSession!=='alt' && !!c && c.indexOf(base)>=0; }
+  metconCfg(map, base) { const c = map[this.pilotKey()]; return (c && c[(this.state.activeSession==='alt'?'alt.':'')+base]) || ''; }
   programWeek1() {
     return {
       0: {
@@ -1980,13 +1994,14 @@ class Component extends DCLogic {
         value:(mode==='time' ? M.time : mode==='amount' ? M.amount : [M.rounds, M.reps].filter(Boolean).join(' + ')) || '',
         style:{ width:'100%', border:'1px dashed var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'15px', background:'var(--paper)', color:'var(--faint)', outline:'none', fontWeight:600, textAlign:'center' }
       }), 'Score / תוצאה ללוח');
-    else if (mode==='amount') inputs = this.unit(this.numEl(base+'.log.amount', M.amount, '0'), pmMoves.length ? 'Score / תוצאה ללוח' : 'כמות (מ׳ / קל׳)');
+    else if (mode==='amount') inputs = this.unit(this.numEl(base+'.log.amount', M.amount, '0'), pmMoves.length ? 'Score / תוצאה ללוח' : (this.metconCfg(this.METCON_AMOUNT_LABEL, base) || 'כמות (מ׳ / קל׳)'));
     else if (mode==='time') inputs = this.unit(this.txtEl(base+'.log.time', M.time, 'mm:ss'), 'time / זמן');
     else inputs = React.createElement(React.Fragment, null,
           this.unit(this.numEl(base+'.log.rounds', M.rounds, '0'), 'rounds / סבבים'),
           React.createElement('span', { style:{ fontWeight:700, color:'var(--muted)', paddingBottom:'10px' } }, '+'),
           this.unit(this.numEl(base+'.log.reps', M.reps, '0'), 'reps / חזרות')
         );
+    const rxNote = this.metconCfg(this.METCON_RX_NOTE, base);
     const pill = (on, activeColor, activeBg, onClick, title, label) => React.createElement('button', {
       onClick, title,
       style:{ display:'inline-flex', alignItems:'center', gap:'6px', border:'1.5px solid '+(on?activeColor:'var(--line)'), background:on?activeBg:'var(--card)', color:on?activeColor:'var(--muted)', borderRadius:'999px', padding:'7px 14px', fontWeight:700, fontSize:'12.5px', cursor:'pointer', transition:'all .15s' }
@@ -1996,9 +2011,10 @@ class Component extends DCLogic {
       fixed ? null : React.createElement('div', { style:{ display:'flex', gap:'2px', background:'var(--chip)', borderRadius:'10px', padding:'3px', width:'fit-content' } }, seg('time','Time'), seg('rounds','Rounds + Reps')),
       React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } }, inputs, this.unit(this.txtEl(base+'.log.note', M.note, 'הערה'), 'note')),
       React.createElement('div', { style:{ display:'flex', gap:'8px', flexWrap:'wrap' } },
-        pill(!!metcon.rx, 'var(--orange)', 'rgba(239,91,37,.12)', ()=>this.setRxScaled(base,'rx'), 'רק ביצוע במשקלי ה-RX שכתובים באימון נכנס לדירוג', 'עשיתי RX — נכנס לדירוג'),
+        pill(!!metcon.rx, 'var(--orange)', 'rgba(239,91,37,.12)', ()=>this.setRxScaled(base,'rx'), rxNote || 'רק ביצוע במשקלי ה-RX שכתובים באימון נכנס לדירוג', 'עשיתי RX — נכנס לדירוג'),
         pill(!!metcon.scaled, 'var(--blue)', 'rgba(35,64,154,.1)', ()=>this.setRxScaled(base,'scaled'), 'ביצוע מותאם — רשום את משקלי העבודה שלך', 'עשיתי Scaled')
       ),
+      rxNote ? React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color:'var(--muted)', lineHeight:1.5 } }, rxNote) : null,
       metcon.scaled ? this.unit(this.txtEl(base+'.log.scaled', M.scaled, 'למשל: 40kg במקום 60, מתח עם גומייה…'), 'משקלי עבודה · Scaled') : null
     );
   }
