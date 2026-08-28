@@ -1066,7 +1066,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 30;
+  PROGRAM_VERSION = 31;
   // ---- richer result entry (13/08, per Ori; piloted on 06/08) ------------
   // PER_SET_LIFT['weekIdx_dayIdx'] = set count: the LIFT logs a weight per
   // set (log.s1..sN); the heaviest set is mirrored into log.weight, which is
@@ -1597,7 +1597,15 @@ class Component extends DCLogic {
     let saved = null;
     try { const raw = localStorage.getItem(this.KEY); if (raw) saved = JSON.parse(raw); } catch (e) {}
     if (saved && Array.isArray(saved.weeks)) {
-      if (saved.v >= 2) { let weeks = this.cleanDone(this.normalizeWeeks(saved.weeks)); if ((saved.pv||0) < this.PROGRAM_VERSION) { this.applyProgram(weeks); } let doReset=false; try { doReset = !localStorage.getItem(this.RESET_KEY); } catch(e){} if (doReset) { weeks = this.resetLogs(weeks); try { localStorage.setItem(this.RESET_KEY,'1'); } catch(e){} } this.save(weeks); this.setState({ data: weeks }); }
+      // applyProgram runs on EVERY boot, not only when pv grows (v2.0.0, 28/08).
+      // Plan text rides inside the synced blob but carries no day stamps (logSig
+      // covers logs only), so a merge against a stale device copy can drop the
+      // embedded plan on unlogged days — and a pv-gated overlay never restores
+      // it once pv is already current (the W7 wipe: only logged Sunday survived).
+      // Code is the source of truth for embedded days; in-app program edits to
+      // those days don't stick — same as before, where every weekly pv bump
+      // overwrote them anyway.
+      if (saved.v >= 2) { let weeks = this.cleanDone(this.normalizeWeeks(saved.weeks)); this.applyProgram(weeks); let doReset=false; try { doReset = !localStorage.getItem(this.RESET_KEY); } catch(e){} if (doReset) { weeks = this.resetLogs(weeks); try { localStorage.setItem(this.RESET_KEY,'1'); } catch(e){} } this.save(weeks); this.setState({ data: weeks }); }
       else { const fresh = this.buildProgram(); this.save(fresh); this.setState({ data: fresh }); try { localStorage.setItem(this.RESET_KEY,'1'); } catch(e){} }
     } else {
       const fresh = this.buildProgram(); this.save(fresh); this.setState({ data: fresh }); try { localStorage.setItem(this.RESET_KEY,'1'); } catch(e){}
