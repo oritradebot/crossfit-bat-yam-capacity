@@ -1091,9 +1091,18 @@ class Component extends DCLogic {
   };
   // PER_MOVE_METCON: these metcon bases log a result per movement
   // (log.mv1..mvN) and the board-score input stays locked until every
-  // movement has one. Still pilot-only (06/08) — the metcon rollout list
-  // awaits Ori's approval.
-  PER_MOVE_METCON = { '3_4': ['metcon'] };
+  // movement has one. '3_4' = the 06/08 pilot; '4_2' added 28/08 (per Ori).
+  PER_MOVE_METCON = { '3_4': ['metcon'], '4_2': ['metcon'] };
+  // PER_MOVE_BOXES (28/08, per Ori): custom box lists for per-movement days
+  // whose boxes aren't 1:1 with the movement list (one movement can yield two
+  // numbers). Labels in order → log.mv1..mvN; days absent here keep deriving
+  // one box per movement name.
+  PER_MOVE_BOXES = { '4_2': { 'metcon': ['ברפיז לפי הלבל','משקל פאוור קלין (ק״ג)','סך T2B בשארית','שאטל ראנס'] } };
+  // PER_MOVE_SCORE: on these days the board score (log.amount) MIRRORS box
+  // #box once ALL boxes are filled — the LIFT heaviest-set trick — so there
+  // is no separate score entry. Clearing any box clears the score, which
+  // keeps the save gate enforcing the full breakdown.
+  PER_MOVE_SCORE = { '4_2': { 'metcon': { box:3, label:'סך ה-T2B' } } };
   // METCON_AMOUNT_LABEL / METCON_RX_NOTE (28/08, per Ori): amount-mode days
   // whose board score is a rep count label the input as such (instead of the
   // generic מ׳/קל׳), and days where RX has a specific meaning spell it out
@@ -1792,7 +1801,22 @@ class Component extends DCLogic {
     const dc = d[this.state.selWeek].days[this.state.selDay];
     const target = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
     this.setDeep(target, path, val);
+    this.mirrorPmScore(target, path);
     this.save(d); this.setState({ data: d });
+  }
+  // Mirror days (PER_MOVE_SCORE): any box edit recomputes the board score —
+  // log.amount = the score box while ALL boxes hold a value, '' otherwise, so
+  // the save gate keeps enforcing the full breakdown and clearing a box also
+  // un-scores the day. Every other path is a no-op.
+  mirrorPmScore(target, path) {
+    const pm = path.match(/^(metcon2?)\.log\.mv\d+$/);
+    if (!pm || !this.perMoveOn(pm[1])) return;
+    const sc = this.metconCfg(this.PER_MOVE_SCORE, pm[1]);
+    const boxes = this.metconCfg(this.PER_MOVE_BOXES, pm[1]);
+    if (!sc || !boxes) return;
+    const L = (target[pm[1]] && target[pm[1]].log) || {};
+    const all = boxes.every((_,i)=>String(L['mv'+(i+1)]||'').trim());
+    L.amount = all ? String(L['mv'+sc.box]||'').trim() : '';
   }
 
   // Effort = RPE 1-10, matching how the program itself talks ("מאמץ 7 מ-10").
@@ -1969,19 +1993,29 @@ class Component extends DCLogic {
     const fixed = metcon.resultMode || '';
     const mode = fixed || M.mode || 'time';
     // Per-movement pilot: first a result per movement (log.mv1..mvN), and only
-    // when all of them are in does the board-score input open up.
-    const pmMoves = this.perMoveOn(base) ? metcon.movements.map((m,i)=>({ n:i+1, name:m.name })).filter(m=>m.name) : [];
+    // when all of them are in does the board-score input open up. Custom-box
+    // days (PER_MOVE_BOXES) label the boxes themselves; mirror days
+    // (PER_MOVE_SCORE) have no score input at all — log.amount tracks the
+    // score box (see mirrorPmScore).
+    const pmBoxes = this.metconCfg(this.PER_MOVE_BOXES, base);
+    const pmMoves = this.perMoveOn(base)
+      ? (pmBoxes ? pmBoxes.map((lbl,i)=>({ n:i+1, name:lbl }))
+                 : metcon.movements.map((m,i)=>({ n:i+1, name:m.name })).filter(m=>m.name))
+      : [];
     const pmAll = pmMoves.length>0 && pmMoves.every(m=>String(M['mv'+m.n]||'').trim());
     const pmLocked = pmMoves.length>0 && !pmAll;
+    const pmScore = pmMoves.length ? this.metconCfg(this.PER_MOVE_SCORE, base) : '';
     let pmAvg = null;
-    if (pmAll) { const nums = pmMoves.map(m=>parseFloat(M['mv'+m.n])); if (nums.every(n=>isFinite(n) && n>0)) pmAvg = Math.round(nums.reduce((s,x)=>s+x,0)/nums.length*10)/10; }
+    if (pmAll && !pmScore) { const nums = pmMoves.map(m=>parseFloat(M['mv'+m.n])); if (nums.every(n=>isFinite(n) && n>0)) pmAvg = Math.round(nums.reduce((s,x)=>s+x,0)/nums.length*10)/10; }
     const pmBlock = pmMoves.length ? React.createElement(React.Fragment, null,
-      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:700, color:'var(--navy)' } }, 'שלב 1 · תוצאה לכל תנועה' + (metcon.score ? ' — ' + metcon.score : '')),
+      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:700, color:'var(--navy)' } }, 'שלב 1 · ' + (pmBoxes ? 'פירוט התוצאה' : 'תוצאה לכל תנועה') + (metcon.score ? ' — ' + metcon.score : '')),
       React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
         pmMoves.map(m=>this.unit(this.numEl(base+'.log.mv'+m.n, M['mv'+m.n], '0'), m.name))),
       React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: pmLocked ? 'var(--orange)' : 'var(--greenink)' } },
-        pmLocked ? ('🔒 שלב 2 · מלאו תוצאה לכל ' + pmMoves.length + ' התנועות — ואז תיפתח הזנת התוצאה ללוח')
-                 : ('✓ שלב 2 · הזנת התוצאה ללוח פתוחה' + (pmAvg!=null ? ' — ממוצע התנועות: ' + pmAvg : '')))
+        pmLocked ? (pmScore ? ('🔒 מלאו את כל ' + pmMoves.length + ' הקוביות — התוצאה ללוח (' + pmScore.label + ') תתמלא אוטומטית')
+                            : ('🔒 שלב 2 · מלאו תוצאה לכל ' + pmMoves.length + ' התנועות — ואז תיפתח הזנת התוצאה ללוח'))
+                 : (pmScore ? ('✓ התוצאה ללוח (' + pmScore.label + '): ' + (M.amount || M['mv'+pmScore.box] || '') + ' — נרשמת ללוח אוטומטית')
+                            : ('✓ שלב 2 · הזנת התוצאה ללוח פתוחה' + (pmAvg!=null ? ' — ממוצע התנועות: ' + pmAvg : ''))))
     ) : null;
     const seg = (k, lbl) => React.createElement('button', {
       key:k, onClick:()=>this.onEditPath(base+'.log.mode', k),
@@ -1994,6 +2028,7 @@ class Component extends DCLogic {
         value:(mode==='time' ? M.time : mode==='amount' ? M.amount : [M.rounds, M.reps].filter(Boolean).join(' + ')) || '',
         style:{ width:'100%', border:'1px dashed var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'15px', background:'var(--paper)', color:'var(--faint)', outline:'none', fontWeight:600, textAlign:'center' }
       }), 'Score / תוצאה ללוח');
+    else if (pmScore) inputs = null; // mirror day — the score box IS the score, nothing to type here
     else if (mode==='amount') inputs = this.unit(this.numEl(base+'.log.amount', M.amount, '0'), pmMoves.length ? 'Score / תוצאה ללוח' : (this.metconCfg(this.METCON_AMOUNT_LABEL, base) || 'כמות (מ׳ / קל׳)'));
     else if (mode==='time') inputs = this.unit(this.txtEl(base+'.log.time', M.time, 'mm:ss'), 'time / זמן');
     else inputs = React.createElement(React.Fragment, null,
