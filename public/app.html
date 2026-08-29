@@ -1705,7 +1705,7 @@
   </sc-if>
 
   <sc-if value="{{ shareOpen }}" hint-placeholder-val="{{ false }}">
-    <div onClick="{{ closeShare }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:95; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; animation:fadeUp .2s ease both;">
+    <div onClick="{{ closeShare }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:95; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; scrollbar-gutter:stable; animation:fadeUp .2s ease both;">
       <div onClick="{{ stop }}" style="background:var(--card); border-radius:22px; padding:20px; width:100%; max-width:424px; box-shadow:0 24px 70px rgba(12,18,34,.45); margin:auto;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
           <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.04em; color:var(--navy);">{{ shareTitle }}</div>
@@ -3480,7 +3480,7 @@ class Component extends DCLogic {
       openBuilder: ()=>this.setState({builderOpen:true, builderWi:selWeek, builderDay:-1}),
       openShareWeek: ()=>this.setState({shareOpen:true, shareType:'week', shareWi:selWeek}),
       openShareDay: ()=>this.setState({shareOpen:true, shareType:'day', shareWi:selWeek, shareDi:selDay}),
-      openShareBlock: ()=>this.setState({shareOpen:true, shareType:'block'}),
+      openShareBlock: ()=>{ this._recapWPrev = undefined; this.setState({shareOpen:true, shareType:'block'}); },
       showBlockShare: this.recapGate() !== 'closed',
       closeShare: ()=>this.setState({shareOpen:false}),
       closeBuilder: ()=>this.setState({builderOpen:false}),
@@ -3655,6 +3655,7 @@ class Component extends DCLogic {
     window.html2canvas(el, { backgroundColor:null, scale:2, useCORS:true }).then(canvas=>{
       restore();
       canvas.toBlob(async (blob)=>{
+        if (!blob) { this.toast('שגיאה ביצירת התמונה'); return; }   // OOM -> toBlob(null); same guard as shareBlockImage
         try {
           const file = new File([blob], 'capacity.png', { type:'image/png' });
           if (navigator.canShare && navigator.canShare({ files:[file] })) { await navigator.share({ files:[file], title:'CrossFit Bat Yam' }); return; }
@@ -3702,7 +3703,20 @@ class Component extends DCLogic {
       // ltr on the frame only — the card carries its own dir="rtl" — so the
       // scale origin is predictable inside the RTL modal.
       React.createElement('div', {
-        ref: (el)=>{ if (el && el.clientWidth && Math.abs(el.clientWidth - (this.state.recapPrevW||0)) > 1) this.setState({ recapPrevW: el.clientWidth }); },
+        // Measure the modal width for the scaled preview. Two guards against a
+        // scrollbar-feedback loop (review finding, reproduced on Windows classic
+        // scrollbars at narrow viewports: width A -> taller preview -> scrollbar
+        // -> width B -> shorter -> no scrollbar -> width A ... React #185 and the
+        // error boundary kills the whole app): scrollbar-gutter:stable on the
+        // overlay stops the width from flipping at all, and the width-before-last
+        // check below breaks any A/B cycle deterministically if it still happens.
+        ref: (el)=>{
+          if (!el || !el.clientWidth) return;
+          const w = el.clientWidth, cur = this.state.recapPrevW || 0;
+          if (Math.abs(w - cur) <= 1 || w === this._recapWPrev) return;
+          this._recapWPrev = cur;
+          this.setState({ recapPrevW: w });
+        },
         style:{ direction:'ltr', width:'100%', height: Math.round(S.hgt*sc)+'px', overflow:'hidden', borderRadius:'12px', boxShadow:'0 10px 30px rgba(12,18,34,.35)' } },
         React.createElement('div', { style:{ width:S.w+'px', transform:'scale('+sc+')', transformOrigin:'top left' } },
           BlockRecapCard.el(data, fmt, 'block-recap-preview'))));
@@ -3736,6 +3750,12 @@ class Component extends DCLogic {
       window.html2canvas(el, { backgroundColor:null, scale:S.exp.scale, useCORS:true, windowWidth:1280 }).then(canvas=>{
         canvas.toBlob(async (blob)=>{
           cleanup();
+          // toBlob calls back with NULL when the canvas can't be serialized
+          // (OOM on memory-pressed phones — likeliest right here, on the
+          // 1440x2560 story canvas). Without this guard, mobile shares a
+          // corrupt 4-byte "null" file and desktop throws uncaught inside
+          // the async callback with only the "מכין תמונה…" toast showing.
+          if (!blob) { this.toast('שגיאה ביצירת התמונה'); return; }
           try {
             const file = new File([blob], 'capacity-block-'+fmt+'.png', { type:'image/png' });
             if (navigator.canShare && navigator.canShare({ files:[file] })) { await navigator.share({ files:[file], title:'CrossFit Bat Yam' }); return; }
