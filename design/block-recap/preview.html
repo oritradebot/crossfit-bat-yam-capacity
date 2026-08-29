@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>כרטיס סיכום בלוק — תצוגה מקדימה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; padding:28px 20px 60px; background:#E6E5E0; font-family:'Heebo',sans-serif; color:#1a2848; }
+  .bar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:center; margin-bottom:22px; }
+  .bar b { font:700 13px/1 'Heebo'; color:#5a6580; letter-spacing:.02em; }
+  button { border:none; cursor:pointer; padding:9px 16px; border-radius:999px; font:700 13px/1 'Heebo'; background:#fff; color:#23409A; box-shadow:0 2px 8px rgba(12,18,34,.12); }
+  button.on { background:#23409A; color:#fff; }
+  .sw { width:15px; height:15px; border-radius:50%; display:inline-block; vertical-align:-2px; margin-inline-end:6px; }
+  .stage { display:flex; gap:40px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .slot { }
+  .cap { text-align:center; font:600 12px/1.6 'Heebo'; color:#5a6580; margin-bottom:8px; letter-spacing:.04em; }
+  /* The card renders at its real 1080px width — html2canvas captures the live
+     node, the transform only shrinks what the reviewer looks at. The outer box
+     reserves the scaled footprint so the page scrolls to the full card. */
+  /* ltr on the frame only — the card carries its own dir="rtl" — so the
+     scale origin is predictable regardless of the page direction. */
+  .box { overflow:hidden; direction:ltr; }
+  .zoom { transform-origin: top left; width:1080px; box-shadow:0 24px 70px rgba(12,18,34,.30); }
+  .rail { position:fixed; inset-block-end:0; inset-inline:0; background:rgba(255,255,255,.94); padding:10px; display:flex; gap:10px; justify-content:center; box-shadow:0 -2px 14px rgba(12,18,34,.12); }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <b>נתונים:</b>
+  <button data-set="batyam" class="on">הבלוק האמיתי · 4 מבחנים</button>
+  <button data-set="reference">רפרנס העיצוב · 3 מבחנים</button>
+  <button data-set="edge">מצב שקט · בלי רי-טסט ובלי שיאים</button>
+  <b style="margin-inline-start:14px;">תצוגה:</b>
+  <button data-zoom="0.42" class="on">התאמה למסך</button>
+  <button data-zoom="1">1:1 (1080px)</button>
+</div>
+
+<!-- The accent is the one colour left that is NOT a measurement. The ramp
+     (red -> green) owns every number on the card, so this switcher only
+     repaints the hero chip frame, the "לחיזוק" bullets and the footer. -->
+<div class="bar">
+  <b>צבע מבטא:</b>
+  <button data-accent="teal" class="on"><span class="sw" style="background:#3FB8CF"></span>טורקיז</button>
+  <button data-accent="sky"><span class="sw" style="background:#5B9BF0"></span>תכלת</button>
+  <button data-accent="violet"><span class="sw" style="background:#9B7CF0"></span>סגול</button>
+  <button data-accent="gold"><span class="sw" style="background:#F0C064"></span>זהב</button>
+</div>
+
+<div class="stage">
+  <div class="slot">
+    <div class="cap" id="cap-story">סטורי</div>
+    <div class="box" id="box-story"><div class="zoom" id="zoom-story"><div id="mount-story"></div></div></div>
+  </div>
+  <div class="slot">
+    <div class="cap" id="cap-feed">פיד</div>
+    <div class="box" id="box-feed"><div class="zoom" id="zoom-feed"><div id="mount-feed"></div></div></div>
+  </div>
+</div>
+
+<div class="rail">
+  <button id="png-story">הורד PNG · סטורי</button>
+  <button id="png-feed">הורד PNG · פיד</button>
+</div>
+
+<script src="../../public/assets/js/react.js"></script>
+<script src="../../public/assets/js/react-dom.js"></script>
+<script src="../../public/assets/js/html2canvas.js"></script>
+<script src="recap-card.js"></script>
+<script src="recap-demo.js"></script>
+<script>
+(function () {
+  var setKey = 'batyam', zoom = 0.42;
+  var roots = {
+    story: ReactDOM.createRoot(document.getElementById('mount-story')),
+    feed:  ReactDOM.createRoot(document.getElementById('mount-feed'))
+  };
+
+  var NAME = { story: 'סטורי', feed: 'פיד' };
+
+  function draw() {
+    var d = BlockRecapDemo[setKey];
+    roots.story.render(BlockRecapCard.el(d, 'story'));
+    roots.feed.render(BlockRecapCard.el(d, 'feed'));
+    ['story', 'feed'].forEach(function (f) {
+      var S = BlockRecapCard.sizes[f], box = document.getElementById('box-' + f);
+      document.getElementById('zoom-' + f).style.transform = 'scale(' + zoom + ')';
+      box.style.width  = Math.round(S.w * zoom) + 'px';
+      box.style.height = Math.round(S.hgt * zoom) + 'px';
+      // caption is read off the size table, never typed twice
+      document.getElementById('cap-' + f).textContent =
+        NAME[f] + ' · ' + S.ratio + ' · פריסה ' + S.w + ' × ' + S.hgt +
+        ' · ייצוא ' + S.exp.w + ' × ' + S.exp.h;
+    });
+  }
+
+  document.querySelectorAll('[data-set]').forEach(function (b) {
+    b.onclick = function () {
+      setKey = b.dataset.set;
+      document.querySelectorAll('[data-set]').forEach(function (x) { x.classList.toggle('on', x === b); });
+      draw();
+    };
+  });
+  document.querySelectorAll('[data-zoom]').forEach(function (b) {
+    b.onclick = function () {
+      zoom = parseFloat(b.dataset.zoom);
+      document.querySelectorAll('[data-zoom]').forEach(function (x) { x.classList.toggle('on', x === b); });
+      draw();
+    };
+  });
+  document.querySelectorAll('[data-accent]').forEach(function (b) {
+    b.onclick = function () {
+      BlockRecapCard.setAccent(b.dataset.accent);
+      document.querySelectorAll('[data-accent]').forEach(function (x) { x.classList.toggle('on', x === b); });
+      draw();
+    };
+  });
+
+  // Capture path mirrors what the app will do: render the card at its real
+  // layout width off to the side, shoot it at the format's export scale, drop
+  // the clone. Layout stays 1080 (Instagram's canvas width for every format);
+  // the scale is what lifts the file to 1440 wide for high-density screens.
+  function shoot(format) {
+    var S = BlockRecapCard.sizes[format];
+    var host = document.createElement('div');
+    host.style.cssText = 'position:fixed; top:0; left:-99999px; width:' + S.w + 'px;';
+    document.body.appendChild(host);
+    var r = ReactDOM.createRoot(host);
+    r.render(BlockRecapCard.el(BlockRecapDemo[setKey], format, 'shoot-' + format));
+    setTimeout(function () {
+      html2canvas(document.getElementById('shoot-' + format), { backgroundColor: null, scale: S.exp.scale, useCORS: true })
+        .then(function (canvas) {
+          if (canvas.width !== S.exp.w || canvas.height !== S.exp.h) {
+            console.warn('recap ' + format + ': expected ' + S.exp.w + '×' + S.exp.h +
+                         ', got ' + canvas.width + '×' + canvas.height);
+          }
+          canvas.toBlob(function (blob) {
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'block-recap-' + format + '-' + setKey + '-' + canvas.width + 'x' + canvas.height + '.png';
+            a.click();
+            setTimeout(function () { URL.revokeObjectURL(a.href); r.unmount(); host.remove(); }, 2000);
+          }, 'image/png');
+        });
+    }, 350);   // let webfonts settle before the shot
+  }
+  document.getElementById('png-story').onclick = function () { shoot('story'); };
+  document.getElementById('png-feed').onclick  = function () { shoot('feed'); };
+
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  draw();
+})();
+</script>
+</body>
+</html>

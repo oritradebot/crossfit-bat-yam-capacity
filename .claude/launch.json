@@ -36,6 +36,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8151", "--directory", "public"],
       "port": 8151
+    },
+    {
+      "name": "recap-preview",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8161"],
+      "port": 8161
     }
   ]
 }
