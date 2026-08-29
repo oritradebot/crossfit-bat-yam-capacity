@@ -65,6 +65,12 @@ alter table public.shared_program add column if not exists announcement jsonb;
 -- [{ id, title, body, created_at, removed_at? }, ...] oldest-first.
 -- removed_at appears only when an active message was taken down early.
 alter table public.shared_program add column if not exists announcement_log jsonb;
+-- block-recap gate (v2.1.0): { open: true, opened_at } when the admin opened
+-- the end-of-block share card to the roster. NULL / missing / open !== true
+-- all read as closed — a gate that fails open is not a gate. Admins always
+-- see a labeled preview of their own card regardless of this flag.
+-- (Ran by hand on the live DB 29/08/2026, per the schema-drift workflow.)
+alter table public.shared_program add column if not exists block_recap jsonb;
 
 -- ============================================================
 --  ROW LEVEL SECURITY

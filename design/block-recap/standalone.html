@@ -1,0 +1,976 @@
+<title>&#1499;&#1512;&#1496;&#1497;&#1505; &#1505;&#1497;&#1499;&#1493;&#1501; &#1489;&#1500;&#1493;&#1511;</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Oswald:wght@500;600;700&display=swap">
+
+<style>
+  /* Light is the base palette; the blocks below redefine only tokens, so the
+     un-stamped "system" state resolves correctly in both directions. */
+  :root {
+    --ground:#E7E9EE; --surface:#FFFFFF; --ink:#161B29; --muted:#69738C;
+    --line:#CFD5E0; --accent:#1F6E80; --accent-ink:#FFFFFF; --shadow:12,18,34;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:#0E1118; --surface:#171B25; --ink:#E6E9F0; --muted:#8892A6;
+      --line:#272D3A; --accent:#3FB8CF; --accent-ink:#0E1118; --shadow:0,0,0;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:#0E1118; --surface:#171B25; --ink:#E6E9F0; --muted:#8892A6;
+    --line:#272D3A; --accent:#3FB8CF; --accent-ink:#0E1118; --shadow:0,0,0;
+  }
+
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:'Heebo',system-ui,sans-serif; direction:rtl;
+    overflow-x:hidden; -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:1160px; margin:0 auto; padding:0 20px 72px; }
+
+  header { padding:34px 0 18px; }
+  h1 { margin:0; font-size:clamp(25px,4.4vw,37px); font-weight:800; letter-spacing:-.02em; text-wrap:balance; }
+  .lede { margin:8px 0 0; color:var(--muted); font-size:15.5px; line-height:1.62; max-width:60ch; }
+
+  /* controls -------------------------------------------------------------- */
+  .controls {
+    position:sticky; top:0; z-index:5; background:var(--ground);
+    border-bottom:1px solid var(--line); padding:12px 0 14px; margin-bottom:26px;
+  }
+  .ctl-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  .ctl-row + .ctl-row { margin-top:9px; }
+  .ctl-lbl {
+    font-family:'IBM Plex Mono',ui-monospace,monospace;
+    font-size:10.5px; color:var(--muted); letter-spacing:.09em;
+    text-transform:uppercase; min-width:70px;
+  }
+  button {
+    font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;
+    border:1px solid var(--line); background:var(--surface); color:var(--ink);
+    border-radius:7px; padding:7px 12px; display:inline-flex; align-items:center; gap:7px;
+    transition:border-color .12s, background .12s, color .12s;
+  }
+  button:hover { border-color:var(--accent); }
+  button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .dot { width:12px; height:12px; border-radius:50%; flex:none; border:1px solid rgba(128,128,128,.45); }
+
+  /* contact sheet --------------------------------------------------------- */
+  .sheet { display:flex; flex-wrap:wrap; gap:34px; align-items:flex-start; justify-content:center; }
+  .slot { flex:1 1 400px; min-width:0; max-width:560px; }
+  .spec {
+    display:flex; flex-wrap:wrap; align-items:baseline; gap:5px 12px;
+    padding-bottom:9px; margin-bottom:11px; border-bottom:1px solid var(--line);
+  }
+  .spec b { font-size:14px; font-weight:700; }
+  .spec span {
+    font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:11px;
+    color:var(--muted); font-variant-numeric:tabular-nums;
+  }
+  .spec .ratio { color:var(--accent); }
+  /* ltr on the frame only - the card carries its own dir="rtl" - so the scale
+     origin stays predictable regardless of page direction. */
+  .frame { direction:ltr; overflow:hidden; border-radius:10px; box-shadow:0 14px 44px rgba(var(--shadow),.22); max-width:100%; }
+  .scaler { width:1080px; transform-origin:top left; }
+
+  /* legend ---------------------------------------------------------------- */
+  .legend { margin-top:52px; padding-top:26px; border-top:1px solid var(--line); }
+  .legend h2 { margin:0 0 4px; font-size:19px; font-weight:700; }
+  .legend > p { margin:0 0 18px; color:var(--muted); font-size:14.5px; line-height:1.6; max-width:60ch; }
+  .keys { display:grid; grid-template-columns:repeat(auto-fit,minmax(212px,1fr)); gap:11px; }
+  .key {
+    background:var(--surface); border:1px solid var(--line); border-radius:9px;
+    padding:12px 14px; display:flex; gap:11px; align-items:flex-start;
+  }
+  .chip { width:15px; height:15px; border-radius:4px; flex:none; margin-top:3px; border:1px solid rgba(128,128,128,.45); }
+  .key b { display:block; font-size:14px; font-weight:700; }
+  .key small { display:block; color:var(--muted); font-size:12.5px; line-height:1.5; margin-top:2px; }
+  .key code { display:block; font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:10.5px; color:var(--muted); margin-top:4px; }
+
+  .note { margin-top:24px; color:var(--muted); font-size:13.5px; line-height:1.68; max-width:66ch; }
+  .note strong { color:var(--ink); font-weight:600; }
+
+  @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>&#1499;&#1512;&#1496;&#1497;&#1505; &#1505;&#1497;&#1499;&#1493;&#1501; &#1489;&#1500;&#1493;&#1511; &#8212; &#1492;&#1514;&#1489;&#1504;&#1497;&#1514;</h1>
+    <p class="lede">
+      &#1513;&#1504;&#1497; &#1492;&#1508;&#1493;&#1512;&#1502;&#1496;&#1497;&#1501;, &#1495;&#1497;&#1497;&#1501;. &#1492;&#1495;&#1500;&#1507; &#1506;&#1512;&#1499;&#1514; &#1504;&#1514;&#1493;&#1504;&#1497;&#1501; &#1488;&#1493; &#1510;&#1489;&#1506; &#1502;&#1489;&#1496;&#1488; &#1493;&#1492;&#1499;&#1512;&#1496;&#1497;&#1505;&#1497;&#1501; &#1502;&#1514;&#1506;&#1491;&#1499;&#1504;&#1497;&#1501; &#1502;&#1497;&#1491;.
+      &#1500;&#1488; &#1495;&#1493;&#1489;&#1512; &#1500;&#1488;&#1508;&#1500;&#1497;&#1511;&#1510;&#1497;&#1492; &#1493;&#1500;&#1488; &#1504;&#1491;&#1495;&#1507; &#1500;&#1508;&#1512;&#1493;&#1491;&#1511;&#1513;&#1503;.
+    </p>
+  </header>
+
+  <div class="controls">
+    <div class="ctl-row" id="sets" role="group" aria-label="&#1506;&#1512;&#1499;&#1514; &#1504;&#1514;&#1493;&#1504;&#1497;&#1501;">
+      <span class="ctl-lbl">&#1504;&#1514;&#1493;&#1504;&#1497;&#1501;</span>
+    </div>
+    <div class="ctl-row" id="accents" role="group" aria-label="&#1510;&#1489;&#1506; &#1502;&#1489;&#1496;&#1488;">
+      <span class="ctl-lbl">&#1502;&#1489;&#1496;&#1488;</span>
+    </div>
+  </div>
+
+  <div class="sheet">
+    <div class="slot">
+      <div class="spec"><b>&#1505;&#1496;&#1493;&#1512;&#1497;</b><span class="ratio" id="ratio-story"></span><span id="spec-story"></span></div>
+      <div class="frame" id="frame-story"><div class="scaler" id="scaler-story"></div></div>
+    </div>
+    <div class="slot">
+      <div class="spec"><b>&#1508;&#1497;&#1491;</b><span class="ratio" id="ratio-feed"></span><span id="spec-feed"></span></div>
+      <div class="frame" id="frame-feed"><div class="scaler" id="scaler-feed"></div></div>
+    </div>
+  </div>
+
+  <section class="legend">
+    <h2>&#1502;&#1506;&#1512;&#1499;&#1514; &#1492;&#1510;&#1489;&#1506; &#8212; &#1514;&#1508;&#1511;&#1497;&#1491; &#1488;&#1495;&#1491; &#1500;&#1499;&#1500; &#1510;&#1489;&#1506;</h2>
+    <p>&#1499;&#1500; &#1510;&#1489;&#1506; &#1489;&#1499;&#1512;&#1496;&#1497;&#1505; &#1506;&#1493;&#1513;&#1492; &#1491;&#1489;&#1512; &#1488;&#1495;&#1491; &#1489;&#1500;&#1489;&#1491;. &#1494;&#1493; &#1492;&#1505;&#1497;&#1489;&#1492; &#1513;&#1488;&#1508;&#1513;&#1512; &#1500;&#1511;&#1512;&#1493;&#1488; &#1488;&#1493;&#1514;&#1493; &#1489;&#1500;&#1497; &#1502;&#1511;&#1512;&#1488;.</p>
+    <div class="keys">
+      <div class="key">
+        <span class="chip" style="background:linear-gradient(90deg,#E5564C,#E8A53A 50%,#3FBF6A)"></span>
+        <div><b>&#1512;&#1502;&#1508;&#1492; &#1488;&#1491;&#1493;&#1501;&#8594;&#1497;&#1512;&#1493;&#1511;</b><small>&#1502;&#1491;&#1497;&#1491;&#1493;&#1514;: &#1504;&#1493;&#1499;&#1495;&#1493;&#1514;, &#1502;&#1489;&#1495;&#1504;&#1497;&#1501;, Hero. &#1499;&#1499;&#1500; &#1513;&#1496;&#1493;&#1489; &#1497;&#1493;&#1514;&#1512; &#8212; &#1497;&#1512;&#1493;&#1511; &#1497;&#1493;&#1514;&#1512;.</small><code>#E5564C &#183; #E8A53A &#183; #3FBF6A</code></div>
+      </div>
+      <div class="key">
+        <span class="chip" style="background:#F0C064"></span>
+        <div><b>&#1494;&#1492;&#1489;</b><small>&#1492;&#1497;&#1513;&#1490;&#1497;&#1501; &#1489;&#1500;&#1489;&#1491; &#8212; &#1492;&#1489;&#1488;&#1491;&#1490;&#1523;&#1497;&#1501; &#1493;&#1506;&#1512;&#1499;&#1497; &#1492;&#1513;&#1497;&#1488;&#1497;&#1501;.</small><code>#F0C064</code></div>
+      </div>
+      <div class="key">
+        <span class="chip" id="chip-accent"></span>
+        <div><b id="name-accent"></b><small>&#1514;&#1493;&#1493;&#1497;&#1493;&#1514; &#1505;&#1511;&#1513;&#1503; &#1493;&#1513;&#1493;&#1512;&#1514; &#1492;&#1508;&#1493;&#1496;&#1512;. &#1513;&#1493;&#1501; &#1491;&#1489;&#1512; &#1513;&#1492;&#1493;&#1488; &#1504;&#1493;&#1490;&#1506; &#1489;&#1493; &#1500;&#1488; &#1502;&#1495;&#1494;&#1497;&#1511; &#1506;&#1512;&#1498;.</small><code id="code-accent"></code></div>
+      </div>
+      <div class="key">
+        <span class="chip" style="background:#FFFFFF"></span>
+        <div><b>&#1500;&#1489;&#1503;</b><small>&#1514;&#1493;&#1499;&#1503; &#8212; &#1513;&#1502;&#1493;&#1514; &#1514;&#1512;&#1490;&#1497;&#1500;&#1497;&#1501; &#1493;&#1506;&#1512;&#1499;&#1497;&#1501;. &#1492;&#1490;&#1493;&#1491;&#1500; &#1493;&#1492;&#1502;&#1513;&#1511;&#1500; &#1502;&#1508;&#1512;&#1497;&#1491;&#1497;&#1501; &#1489;&#1497;&#1503; &#1514;&#1493;&#1493;&#1497;&#1514; &#1500;&#1514;&#1493;&#1499;&#1503;.</small><code>#FFFFFF</code></div>
+      </div>
+      <div class="key">
+        <span class="chip" style="background:#8FA4D8"></span>
+        <div><b>&#1506;&#1502;&#1493;&#1501;</b><small>&#1508;&#1497;&#1512;&#1493;&#1496; &#1514;&#1493;&#1502;&#1498; &#1493;&#1499;&#1497;&#1514;&#1493;&#1489;&#1497;&#1501;.</small><code>#8FA4D8</code></div>
+      </div>
+    </div>
+
+    <p class="note">
+      <strong>&#1500;&#1502;&#1492; &#1513;&#1504;&#1497;&#1492;&#1501; &#1489;&#1512;&#1493;&#1495;&#1489; 1080.</strong>
+      &#1494;&#1492; &#1512;&#1493;&#1495;&#1489; &#1492;&#1511;&#1504;&#1489;&#1505; &#1513;&#1500; &#1488;&#1497;&#1504;&#1505;&#1496;&#1490;&#1512;&#1501; &#1500;&#1499;&#1500; &#1508;&#1493;&#1512;&#1502;&#1496;; &#1502;&#1492; &#1513;&#1502;&#1489;&#1491;&#1497;&#1500; &#1492;&#1493;&#1488; &#1492;&#1490;&#1493;&#1489;&#1492; &#1493;&#1492;&#1497;&#1495;&#1505;.
+      &#1492;&#1497;&#1497;&#1510;&#1493;&#1488; &#1506;&#1493;&#1500;&#1492; &#1500;-1440 &#1512;&#1493;&#1495;&#1489; (scale &#1513;&#1500; 4/3) &#1500;&#1508;&#1497; &#1492;&#1502;&#1500;&#1510;&#1514; &#1502;&#1496;&#1488; &#1500;-2026 &#1500;&#1502;&#1505;&#1499;&#1497;&#1501; &#1489;&#1510;&#1508;&#1497;&#1508;&#1493;&#1514; &#1490;&#1489;&#1493;&#1492;&#1492;,
+      &#1489;&#1500;&#1497; &#1513;&#1492;&#1508;&#1512;&#1497;&#1505;&#1492; &#1494;&#1494;&#1492;. <strong>&#1492;&#1493;&#1512;&#1491;&#1514; PNG &#1500;&#1488; &#1506;&#1493;&#1489;&#1491;&#1514; &#1489;&#1506;&#1502;&#1493;&#1491; &#1492;&#1494;&#1492;</strong> &#8212; &#1500;&#1494;&#1492; &#1497;&#1513; &#1488;&#1514; &#1492;&#1514;&#1510;&#1493;&#1490;&#1492; &#1492;&#1502;&#1511;&#1493;&#1502;&#1497;&#1514; &#1489;&#1512;&#1461;&#1508;&#1468;&#1493;.
+    </p>
+  </section>
+</div>
+
+<script>
+
+/* A ~20-line stand-in for React.createElement. The renderer only ever asks for
+   a tag, an inline style object, a few attributes and nested children, so there
+   is no reason to ship a framework inside the artifact. */
+window.React = { createElement: function (tag, props) {
+  var el = document.createElement(tag), i;
+  if (props) Object.keys(props).forEach(function (k) {
+    if (k === 'key' || props[k] == null) return;
+    if (k === 'style') Object.assign(el.style, props[k]);
+    else el.setAttribute(k, props[k]);
+  });
+  function add(c) {
+    if (c == null || c === false) return;
+    if (Array.isArray(c)) { c.forEach(add); return; }
+    el.appendChild(c instanceof Node ? c : document.createTextNode(String(c)));
+  }
+  for (i = 2; i < arguments.length; i++) add(arguments[i]);
+  return el;
+} };
+
+</script>
+
+<script>
+/* ==========================================================================
+   Block Recap Share Card \u2014 renderer
+   CrossFit Bat Yam \u00B7 Capacity Tracker
+
+   One renderer, two formats:
+     story  1080x1920  (9:16)  \u2014 full card, includes the PR podium
+     feed   1080x1350  (4:5)   \u2014 compact, no PRs, attendance on one line
+
+   Both are authored at 1080 CSS px wide because that is Instagram's canvas
+   width for EVERY format \u2014 what actually differs between the two is the
+   height (and so the aspect). The PNG is then shot at scale 4/3 so the file
+   lands at 1440 wide, which is Meta's 2026 advice for high-density screens:
+     story -> 1440x2560      feed -> 1440x1800
+   That sits in SIZES[f].exp. The capture reads it; the layout never moves.
+
+   Colour: no single accent carries the card any more. Every place with a
+   spectrum \u2014 attendance, test gains, the hero \u2014 is painted from ONE
+   red -> amber -> green ramp built from the app's own semantic colours, so
+   "more is greener" is true everywhere without a legend. The accent is
+   reserved for the things that are not a measurement.
+
+   Headings are Hebrew. Only the fixed names stay English: the gym, the
+   program, the movements, RX.
+
+   html2canvas constraints honoured: no backdrop-filter, no filter:blur, no
+   masks, no mix-blend-mode. Linear gradients, radii, shadows and divs only.
+   The graph is divs \u2014 no canvas, no chart library.
+   ========================================================================== */
+(function (global) {
+  'use strict';
+  var h = null;   // bound to React.createElement on first call
+
+  var px = function (n) { return n + 'px'; };
+
+  /* ---- the red -> green ramp ---------------------------------------------
+     Stops are the tracker's own semantic colours (app.html: #E5564C missed,
+     #E8A53A PR/amber, #3FBF6A done) with two blends between them, so the
+     card speaks the same colour language as the app it comes out of.
+     rampRGB(0) is red, rampRGB(1) is green, linear in between.              */
+  var RAMP = [
+    [0.00, [229,  86,  76]],   // #E5564C
+    [0.25, [232, 123,  58]],   // #E87B3A
+    [0.50, [232, 165,  58]],   // #E8A53A
+    [0.75, [156, 201,  63]],   // #9CC93F
+    [1.00, [ 63, 191, 106]]    // #3FBF6A
+  ];
+  function clamp01(t) { return !(t > 0) ? 0 : t > 1 ? 1 : t; }
+  function rampRGB(t) {
+    t = clamp01(t);
+    for (var i = 1; i < RAMP.length; i++) {
+      if (t <= RAMP[i][0]) {
+        var a = RAMP[i - 1], b = RAMP[i], k = (t - a[0]) / (b[0] - a[0]);
+        return [0, 1, 2].map(function (c) { return Math.round(a[1][c] + (b[1][c] - a[1][c]) * k); });
+      }
+    }
+    return RAMP[RAMP.length - 1][1];
+  }
+  var rgb  = function (c) { return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; };
+  var rgba = function (c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; };
+  var ramp = function (t) { return rgb(rampRGB(t)); };
+
+  /* A block gain of GAIN_FULL or better paints full green; flat or backwards
+     paints red. 25% over eight weeks is already an excellent block \u2014 anchor
+     the top of the ramp any higher and every honest result comes out amber. */
+  var GAIN_FULL = 0.25;
+  var gainTone = function (g) { return clamp01((g || 0) / GAIN_FULL); };
+
+  /* ---- accent --------------------------------------------------------------
+     NOT a measurement colour \u2014 it means "this is a section marker". It paints
+     every section heading, plus the hero chip frame, the next-block bullets
+     and the footer line. Nothing it touches carries a value.
+
+     It has to do that job because the headings turned Hebrew: in Latin caps
+     the letter-spacing was what said "I am a label", and dropping it left
+     `\u05E0\u05D5\u05DB\u05D7\u05D5\u05EA` identical to the dim hint line directly beneath it. Something
+     has to separate label from caption now.
+
+     Ori's call (29/08): plain WHITE. It is the strongest thing on a navy card,
+     it still clears the dim caption underneath by a mile, and \u2014 unlike any hue
+     \u2014 it cannot be mistaken for a position on the ramp. The coloured options
+     stay in the table; swap with BlockRecapCard.setAccent(...) if that changes.
+     The old #EF5B25 orange is gone \u2014 it landed mid-ramp and read like one.
+
+     The colour system, one job each:
+       ramp (red->green) = measurements   \u00B7  gold = achievements
+       accent            = section labels \u00B7  white = content  \u00B7  dim = detail  */
+  var ACCENTS = {
+    white:  { label: '\u05DC\u05D1\u05DF',    rgb: [255, 255, 255] },
+    teal:   { label: '\u05D8\u05D5\u05E8\u05E7\u05D9\u05D6', rgb: [ 63, 184, 207] },
+    sky:    { label: '\u05EA\u05DB\u05DC\u05EA',   rgb: [ 91, 155, 240] },
+    violet: { label: '\u05E1\u05D2\u05D5\u05DC',   rgb: [155, 124, 240] },
+    gold:   { label: '\u05D6\u05D4\u05D1',    rgb: [240, 192, 100] }
+  };
+  var ACCENT_DEFAULT = 'white';
+
+  /* ---- design tokens ------------------------------------------------------- */
+  var T = {
+    bg:      'linear-gradient(150deg,#0F1830,#1A2848 55%,#23409A)',
+    /* the top strip IS the legend: red at the start edge (right, RTL) and
+       green at the end, so the ramp is stated once and never explained. */
+    topbar:  'linear-gradient(270deg,#E5564C,#E8A53A 50%,#3FBF6A)',
+    gold:    '#F0C064',
+    green:   '#3FBF6A',
+    ink:     '#FFFFFF',
+    sub:     '#B9C4E6',
+    dim:     '#8FA4D8',
+    row:     'rgba(255,255,255,.08)',
+    track:   'rgba(255,255,255,.10)',
+    before:  'rgba(143,164,216,.65)',
+    badgeBg: 'rgba(240,192,100,.10)',
+    badgeBd: '1.5px solid rgba(240,192,100,.35)',
+    sep:     '1px solid rgba(255,255,255,.15)',
+    /* Heebo is named as Oswald's fallback on purpose: the value strings are
+       mixed ("+15 \u05E7\"\u05D2", "\u05DE\u05D4\u05D9\u05E8 \u05D1\u05BE13%"), and Oswald has no Hebrew glyphs. Without
+       it the Hebrew half falls through to whatever default sans the browser
+       picks \u2014 which is not the face html2canvas would shoot. Latin digits
+       still come from Oswald; only the Hebrew drops to Heebo. */
+    osw:     "'Oswald','Heebo',sans-serif",
+    heb:     "'Heebo',sans-serif",
+    accent: '', accentSoft: '', accentLine: '', accentName: ''
+  };
+  function setAccent(key) {
+    var name = ACCENTS[key] ? key : ACCENT_DEFAULT, a = ACCENTS[name];
+    T.accent     = rgb(a.rgb);
+    T.accentSoft = rgba(a.rgb, .16);
+    T.accentLine = rgba(a.rgb, .55);
+    T.accentName = name;
+    return name;
+  }
+  setAccent(ACCENT_DEFAULT);
+
+  /* ---- Hebrew headings -----------------------------------------------------
+     Oswald carries no Hebrew glyphs, so every heading that turned Hebrew has
+     to leave it \u2014 otherwise the browser silently falls back and html2canvas
+     shoots a different face than the preview showed. Letter-spacing goes with
+     it: it is a Latin-caps device and it pulls Hebrew word shapes apart.
+     Oswald stays exactly where it still belongs \u2014 on numerals, and on the
+     fixed English names (the gym, the program, the movements, RX).           */
+  function hebHead(size, weight, extra) {
+    var s = { fontFamily: T.heb, fontWeight: weight || 700, fontSize: px(size), letterSpacing: 'normal' };
+    if (extra) Object.keys(extra).forEach(function (k) { s[k] = extra[k]; });
+    return s;
+  }
+
+  /* ---- per-format size table -----------------------------------------------
+     Every number below is lifted from the handoff HTML. The two cards share
+     one language; the feed is its compressed voice. Nothing is derived \u2014
+     the reference files are the source of truth, so the table stays explicit
+     and greppable.                                                            */
+  var SIZES = {
+    story: {
+      w: 1080, hgt: 1920, ratio: '9:16', pad: '44px 64px 40px',
+      exp: { w: 1440, h: 2560, scale: 4 / 3 },
+      logo: 96, ring: 5, hGap: 22, brand: 40, prog: 24, aLbl: 22, aName: 36,
+      inlineHero: false,
+      title: 56, tDate: 29,
+      eyebrow: 24, rule: 120, hero: 150, heroGlowR: 90, heroGlowA: .5,
+      heroDesc: 28, heroChip: 23, heroChipPad: '5px 18px', heroArrow: 26, heroChipGap: 12, heroUnit: true,
+      bLbl: 22, bLblMb: 10, bGap: 16, bRad: 20, bPad: '12px 18px', bIcoGap: 14, bIco: 34, bName: 23, bVal: 20,
+      gPad: 18, gHead: 31, gCap: 23, gPill: 21, gPillPad: '4px 16px', gHeadMb: 12, gRowGap: 12,
+      rRad: 22, rPad: '13px 26px', rName: 28, rChip: 23, rChipPad: '4px 16px', rTag: 19, rTagPad: '2px 13px',
+      barLbl: 46, barLblF: 20, barH: 14, barR: 8, barGap: 6, barRowGap: 14, barMt: 10,
+      valW: 120, valBefore: 22, valAfter: 25,
+      aLblF: 22, aBig: 34, aBigTxt: 26, aHint: 22, aColGap: 12, aColW: 52, aBarH: 11, aBarR: 3, aBarGap: 4, aNum: 20,
+      lGap: 44, lHead: 30, lSub: 21, lItemGap: 10, lMark: 32, lMarkF: 18, lTitle: 26, lDetail: 22, lInline: false,
+      prHead: 29, prGap: 16, prRad: 20, prPad: '13px 22px', prName: 24, prVal: 32,
+      fPad: 16, fLbl: 28, fDate: 24, fTracked: 21, fStack: true,
+      showPRs: true,
+      /* 4+ tests overflow the fixed height at the sizes above \u2014 the handoff
+         card is drawn for exactly 3. `dense` buys back the ~124px a fourth
+         CapaciTest costs, taken out of the graph rows and the two lists so
+         the header, hero and PR podium keep their weight. */
+      dense: { rPad: '8px 24px', rName: 25, rChip: 21, rChipPad: '3px 14px', rTag: 18,
+               barMt: 7, barGap: 4, valBefore: 20, valAfter: 22, gRowGap: 9, gHeadMb: 10,
+               lTitle: 25, lDetail: 21 }
+    },
+    feed: {
+      w: 1080, hgt: 1350, ratio: '4:5', pad: '48px 56px 44px',
+      exp: { w: 1440, h: 1800, scale: 4 / 3 },
+      logo: 84, ring: 4, hGap: 20, brand: 36, prog: 23, aLbl: 21, aName: 33,
+      inlineHero: true,
+      title: 46, tDate: 26,
+      eyebrow: 0, rule: 0, hero: 100, heroGlowR: 60, heroGlowA: .45,
+      heroDesc: 23, heroChip: 20, heroChipPad: '3px 14px', heroArrow: 22, heroChipGap: 10, heroUnit: false,
+      bLbl: 19, bLblMb: 8, bGap: 12, bRad: 16, bPad: '10px 14px', bIcoGap: 12, bIco: 28, bName: 21, bVal: 18,
+      gPad: 20, gHead: 27, gCap: 21, gPill: 19, gPillPad: '3px 14px', gHeadMb: 10, gRowGap: 9,
+      rRad: 18, rPad: '11px 22px', rName: 25, rChip: 21, rChipPad: '3px 14px', rTag: 18, rTagPad: '2px 12px',
+      barLbl: 42, barLblF: 19, barH: 13, barR: 6.5, barGap: 5, barRowGap: 12, barMt: 8,
+      valW: 106, valBefore: 20, valAfter: 22,
+      aLblF: 20, aBig: 27, aBigTxt: 23, aHint: 0, aColGap: 8, aColW: 36, aBarH: 6, aBarR: 2, aBarGap: 3, aNum: 0,
+      lGap: 40, lHead: 27, lSub: 19, lItemGap: 10, lMark: 26, lMarkF: 14, lTitle: 22, lDetail: 22, lInline: true,
+      prHead: 0, prGap: 0, prRad: 18, prPad: '11px 22px', prName: 22, prVal: 0,
+      fPad: 18, fLbl: 25, fDate: 22, fTracked: 19, fStack: false,
+      showPRs: false,
+      dense: { rPad: '8px 20px', rName: 23, barMt: 6, barGap: 4,
+               valBefore: 19, valAfter: 20, gRowGap: 8 }
+    }
+  };
+
+  var ltr = function (txt, extra) { return h('span', { dir: 'ltr', style: extra || undefined }, txt); };
+
+  /* ---- where each spectrum reads its position from -------------------------
+     All three derive from data already on the card, so a fixture never has to
+     hand-tune a colour. An explicit `tone` on the data overrides.             */
+  function heroTone(d) {
+    if (typeof d.hero.tone === 'number') return d.hero.tone;
+    var best = (d.tests || []).reduce(function (m, t) { return t.after ? Math.max(m, t.gain || 0) : m; }, 0);
+    if (best > 0) return gainTone(best);
+    var a = d.attendance;                       // thin-log hero counts sessions
+    return (a && a.of) ? a.done / a.of : 0;
+  }
+  function testsTone(d) {
+    if (typeof d.testsTone === 'number') return d.testsTone;
+    var ts = d.tests || [];
+    if (!ts.length) return 0;
+    return ts.filter(function (t) { return t.after && (t.gain || 0) > 0; }).length / ts.length;
+  }
+
+  /* ---- section: header -------------------------------------------------- */
+  function headerEl(d, S) {
+    return h('div', { key: 'head', style: { display: 'flex', alignItems: 'center', gap: px(S.hGap) } },
+      h('img', { src: d.logo || 'logo.png', alt: 'CrossFit Bat Yam',
+        style: { width: px(S.logo), height: px(S.logo), borderRadius: '50%',
+                 boxShadow: '0 0 0 ' + px(S.ring) + ' rgba(255,255,255,.25)', flex: 'none' } }),
+      h('div', { style: { flex: 1, minWidth: 0 } },
+        h('div', { style: { fontFamily: T.osw, fontWeight: 700, fontSize: px(S.brand), lineHeight: 1.2, letterSpacing: '.06em' } }, 'CROSSFIT BAT YAM'),
+        h('div', { style: { fontSize: px(S.prog), lineHeight: 1.3, color: T.sub } }, d.program)
+      ),
+      d.athlete ? h('div', { style: { textAlign: 'end', flex: 'none' } },
+        h('div', { style: hebHead(S.aLbl, 600, { color: T.dim, lineHeight: 1.3 }) }, '\u05DE\u05EA\u05D0\u05DE\u05DF/\u05EA'),
+        h('div', { dir: 'auto', style: { fontWeight: 700, fontSize: px(S.aName) } }, d.athlete)
+      ) : null
+    );
+  }
+
+  /* ---- section: hero -----------------------------------------------------
+     Edge case 2 (handoff): under 5 logged sessions there is no honest
+     "biggest gain" to show, so the hero becomes a training-log count instead
+     of an improvement percentage. Show less, never invent. The data builder
+     decides \u2014 this renderer just draws whatever hero it is handed, and paints
+     it at its place on the ramp.                                            */
+  function heroChipsEl(d, S, align, c) {
+    var hero = d.hero, unit = (S.heroUnit && hero.unit) ? (' ' + hero.unit) : '';
+    return h('div', { style: { display: 'flex', justifyContent: align, alignItems: 'center', gap: px(S.heroChipGap), marginTop: S.inlineHero ? '8px' : '12px' } },
+      h('span', { style: { border: '1.5px solid rgba(255,255,255,.22)', color: T.sub, borderRadius: '999px', padding: S.heroChipPad, fontSize: px(S.heroChip), lineHeight: 1.3 } },
+        '\u05E9\u05D1\u05D5\u05E2 1 \u00B7 ', h('span', { style: { fontFamily: T.osw, fontWeight: 600, color: T.ink } }, hero.before), unit),
+      h('span', { style: { color: T.dim, fontSize: px(S.heroArrow) } }, '\u2190'),
+      h('span', { style: { background: rgba(c, .16), border: '1.5px solid ' + rgba(c, .55), color: T.ink, borderRadius: '999px', padding: S.heroChipPad, fontSize: px(S.heroChip), lineHeight: 1.3 } },
+        '\u05E9\u05D1\u05D5\u05E2 8 \u00B7 ', h('span', { style: { fontFamily: T.osw, fontWeight: 700, color: rgb(c) } }, hero.after), unit)
+    );
+  }
+
+  function heroNumStyle(S, c) {
+    return { fontFamily: T.osw, fontWeight: 700, fontSize: px(S.hero), lineHeight: S.inlineHero ? 1 : 1.05,
+             color: rgb(c), textShadow: '0 0 ' + px(S.heroGlowR) + ' ' + rgba(c, S.heroGlowA) };
+  }
+
+  function heroStoryEl(d, S) {
+    var hero = d.hero, c = rampRGB(heroTone(d));
+    var rule = function (deg, k) {
+      return h('span', { key: k, style: { width: px(S.rule), height: '1.5px', background: 'linear-gradient(' + deg + 'deg,rgba(240,192,100,.55),rgba(240,192,100,0))' } });
+    };
+    return [
+      h('div', { key: 'title', style: { display: 'flex', alignItems: 'baseline', gap: '20px' } },
+        h('span', { style: hebHead(S.title, 800, { lineHeight: 1.1 }) }, '\u05D4\u05D1\u05DC\u05D5\u05E7 \u05D4\u05D5\u05E9\u05DC\u05DD'),
+        ltr(d.dateRange, { fontSize: px(S.tDate), color: T.sub })
+      ),
+      h('div', { key: 'hero', style: { textAlign: 'center' } },
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '18px' } },
+          rule(270, 'a'),
+          h('span', { key: 'e', style: hebHead(S.eyebrow, 700, { lineHeight: 1.3, color: T.gold }) }, hero.eyebrow || '\u05D4\u05E9\u05D9\u05E4\u05D5\u05E8 \u05D4\u05D2\u05D3\u05D5\u05DC \u05D1\u05D9\u05D5\u05EA\u05E8'),
+          rule(90, 'b')
+        ),
+        h('div', { dir: 'ltr', style: heroNumStyle(S, c) }, hero.pct),
+        h('div', { style: { fontSize: px(S.heroDesc), lineHeight: 1.3, color: T.sub } },
+          (hero.lead || '\u05D4\u05E7\u05E4\u05D9\u05E6\u05D4 \u05E9\u05DC \u05D4\u05D1\u05DC\u05D5\u05E7') + ' \u00B7 ',
+          h('span', { style: { color: T.ink, fontWeight: 700 } }, hero.label)),
+        hero.before ? heroChipsEl(d, S, 'center', c) : null
+      )
+    ];
+  }
+
+  function heroFeedEl(d, S) {
+    var hero = d.hero, c = rampRGB(heroTone(d));
+    return h('div', { key: 'hero', style: { display: 'flex', alignItems: 'center', gap: '24px' } },
+      h('div', { style: { flex: 1, minWidth: 0 } },
+        h('div', { style: hebHead(S.title, 800, { lineHeight: 1.1 }) }, '\u05D4\u05D1\u05DC\u05D5\u05E7 \u05D4\u05D5\u05E9\u05DC\u05DD'),
+        h('div', { dir: 'ltr', style: { fontSize: px(S.tDate), color: T.sub, textAlign: 'end' } }, d.dateRange)
+      ),
+      h('div', { style: { flex: 'none', textAlign: 'end' } },
+        h('div', { dir: 'ltr', style: heroNumStyle(S, c) }, hero.pct),
+        h('div', { style: { fontSize: px(S.heroDesc), color: T.sub, marginTop: '2px' } },
+          (hero.leadShort || '\u05D4\u05E7\u05E4\u05D9\u05E6\u05D4 \u05E9\u05DC \u05D4\u05D1\u05DC\u05D5\u05E7') + ' \u00B7 ',
+          h('span', { style: { color: T.ink, fontWeight: 700 } }, hero.label)),
+        hero.before ? heroChipsEl(d, S, 'flex-end', c) : null
+      )
+    );
+  }
+
+  /* ---- section: badges --------------------------------------------------- */
+  function badgesEl(d, S) {
+    if (!d.badges || !d.badges.length) return null;
+    return h('div', { key: 'badges' },
+      h('div', { style: hebHead(S.bLbl, 700, { lineHeight: 1.2, color: T.accent, marginBottom: px(S.bLblMb) }) }, '\uD83C\uDFC5 \u05D4\u05D9\u05E9\u05D2\u05D9\u05DD \u05E9\u05E0\u05E4\u05EA\u05D7\u05D5'),
+      h('div', { style: { display: 'flex', gap: px(S.bGap) } },
+        d.badges.map(function (b, i) {
+          return h('div', { key: i, style: { flex: 1, background: T.badgeBg, border: T.badgeBd, borderRadius: px(S.bRad), padding: S.bPad, display: 'flex', alignItems: 'center', gap: px(S.bIcoGap) } },
+            h('span', { style: { fontSize: px(S.bIco), lineHeight: 1 } }, b.icon),
+            h('div', { style: { flex: 1, minWidth: 0 } },
+              h('div', { style: { fontWeight: 700, fontSize: px(S.bName), lineHeight: 1.25 } }, b.name),
+              h('div', { style: { fontSize: px(S.bVal), fontWeight: 600, color: T.gold, lineHeight: 1.3 } }, b.value))
+          );
+        })
+      )
+    );
+  }
+
+  /* ---- section: \u05E9\u05D1\u05D5\u05E2 1 -> \u05E9\u05D1\u05D5\u05E2 8 graph ------------------------------------
+     Two bars per test, width = value / max(before, after). On a timed test
+     the slower time is the 100% bar, so "shorter is better" reads correctly
+     without inverting the scale. The "after" bar and its delta chip are
+     painted at the test's own place on the ramp, so a 4% nudge and a 40%
+     jump never look alike.
+     Edge case 1: a test with no retest draws a dashed empty "after" bar,
+     prints "\u05DC\u05D0 \u05E0\u05DE\u05D3\u05D3", and swaps the delta chip for a muted note \u2014 no colour
+     at all, because there is no measurement to colour.                       */
+  function bar(S, pct, opts) {
+    var fill = opts.dashed
+      ? h('div', { style: { width: '100%', height: px(S.barH), borderRadius: px(S.barR), border: '1.5px dashed rgba(255,255,255,.28)', boxSizing: 'border-box' } })
+      : h('div', { style: { width: Math.max(0, Math.min(100, pct || 0)) + '%', height: px(S.barH), borderRadius: px(S.barR), background: opts.color } });
+    return h('div', { key: opts.label, style: { display: 'flex', alignItems: 'center', gap: px(S.barRowGap) } },
+      h('span', { style: { flex: 'none', width: px(S.barLbl), fontWeight: 600, fontSize: px(S.barLblF), lineHeight: 1.2, color: T.dim } }, opts.label),
+      h('div', { style: { flex: 1, height: px(S.barH), borderRadius: px(S.barR), background: T.track } }, fill),
+      h('span', { dir: opts.ltr ? 'ltr' : undefined,
+        style: { flex: 'none', minWidth: px(S.valW), fontWeight: opts.strong ? 700 : 600, fontSize: px(opts.strong ? S.valAfter : S.valBefore), lineHeight: 1.2, color: opts.muted ? T.dim : T.ink, textAlign: opts.ltr ? 'start' : undefined } }, opts.value)
+    );
+  }
+
+  function testRowEl(t, S, i) {
+    var missing = !t.after, c = rampRGB(gainTone(t.gain));
+    var chip = missing
+      ? h('div', { key: 'c', style: { flex: 'none', border: '1px solid rgba(255,255,255,.18)', color: T.dim, borderRadius: '999px', padding: S.rTagPad, fontSize: px(S.rTag), lineHeight: 1.3 } }, '\u05E0\u05DE\u05D3\u05D3 \u05D1\u05E9\u05D1\u05D5\u05E2 1 \u05D1\u05DC\u05D1\u05D3')
+      : h('div', { key: 'c', style: { flex: 'none', background: rgba(c, .14), color: rgb(c), borderRadius: '999px', padding: S.rChipPad, fontFamily: T.osw, fontWeight: 600, fontSize: px(S.rChip), lineHeight: 1.25, display: 'flex', alignItems: 'baseline', gap: '7px' } },
+          ltr(t.delta),
+          t.deltaAbs ? h('span', { style: { opacity: .8 } }, '\u00B7 ', ltr(t.deltaAbs)) : null);
+    var lowerTag = t.betterWhen === 'lower'
+      ? h('div', { key: 'lt', style: { flex: 'none', border: '1px solid rgba(255,255,255,.20)', color: T.sub, borderRadius: '999px', padding: S.rTagPad, fontSize: px(S.rTag), lineHeight: 1.3 } }, '\u05E7\u05E6\u05E8 \u05D9\u05D5\u05EA\u05E8 = \u05D8\u05D5\u05D1')
+      : null;
+    return h('div', { key: i, style: { background: T.row, borderRadius: px(S.rRad), padding: S.rPad } },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: px(S.barRowGap) } },
+        h('div', { key: 'n', style: { flex: lowerTag ? '0 1 auto' : 1, minWidth: 0, fontWeight: 700, fontSize: px(S.rName), lineHeight: 1.3 } }, t.name),
+        lowerTag,
+        lowerTag ? h('div', { key: 'sp', style: { flex: 1 } }) : null,
+        chip
+      ),
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: px(S.barGap), marginTop: px(S.barMt) } },
+        bar(S, t.beforePct, { label: '\u05DC\u05E4\u05E0\u05D9', color: T.before, value: t.before, muted: true, ltr: t.ltrValues }),
+        bar(S, t.afterPct, { label: '\u05D0\u05D7\u05E8\u05D9', color: rgb(c), value: missing ? '\u05DC\u05D0 \u05E0\u05DE\u05D3\u05D3' : t.after, strong: !missing, muted: missing, dashed: missing, ltr: t.ltrValues && !missing })
+      )
+    );
+  }
+
+  function graphEl(d, S) {
+    if (!d.tests || !d.tests.length) return null;
+    var n = d.tests.length, words = { 2: '\u05E9\u05E0\u05D9', 3: '\u05E9\u05DC\u05D5\u05E9\u05D4', 4: '\u05D0\u05E8\u05D1\u05E2\u05D4', 5: '\u05D7\u05DE\u05D9\u05E9\u05D4' };
+    var pc = rampRGB(testsTone(d));
+    return h('div', { key: 'graph', style: { borderTop: T.sep, paddingTop: px(S.gPad) } },
+      h('div', { style: { display: 'flex', alignItems: 'baseline', gap: px(S.barRowGap), marginBottom: px(S.gHeadMb) } },
+        h('span', { key: 'hd', style: hebHead(S.gHead, 800, { lineHeight: 1.2, color: T.accent }) }, '\u05E9\u05D1\u05D5\u05E2 1 \u2190 \u05E9\u05D1\u05D5\u05E2 8'),
+        h('span', { key: 'cap', style: { fontSize: px(S.gCap), color: T.dim } }, '\u05DC\u05E4\u05E0\u05D9 \u05DE\u05D5\u05DC \u05D0\u05D7\u05E8\u05D9 \u00B7 ' + (words[n] || n) + ' \u05DE\u05D1\u05D7\u05E0\u05D9\u05DD'),
+        h('span', { key: 'sp', style: { flex: 1 } }),
+        d.testsSummary ? h('span', { key: 'pill', style: { background: rgba(pc, .14), color: rgb(pc), borderRadius: '999px', padding: S.gPillPad, fontWeight: 700, fontSize: px(S.gPill), lineHeight: 1.3 } }, d.testsSummary) : null
+      ),
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: px(S.gRowGap) } },
+        d.tests.map(function (t, i) { return testRowEl(t, S, i); })
+      )
+    );
+  }
+
+  /* ---- section: attendance -----------------------------------------------
+     One column per week, one bar per completed session against the weekly
+     target, each column painted at its own fill ratio: a 2/5 week is red, a
+     5/5 week is green. The grid stays the honest picture \u2014 the gaps are still
+     visible, they are just legible at a glance now.                          */
+  function attColsEl(a, S) {
+    var target = a.target || 5;
+    return h('div', { key: 'cols', style: { flex: 'none', display: 'flex', gap: px(S.aColGap) } },
+      a.weeks.map(function (n, wi) {
+        var col = ramp(target ? n / target : 0), bars = [];
+        for (var i = 0; i < target; i++) {
+          bars.push(h('div', { key: i, style: { height: px(S.aBarH), borderRadius: px(S.aBarR), background: i < (target - n) ? 'rgba(255,255,255,.13)' : col } }));
+        }
+        if (S.aNum) bars.push(h('div', { key: 'n', style: { textAlign: 'center', fontFamily: T.osw, fontSize: px(S.aNum), color: T.dim, marginTop: '4px' } }, String(wi + 1)));
+        return h('div', { key: wi, style: { width: px(S.aColW), display: 'flex', flexDirection: 'column', gap: px(S.aBarGap) } }, bars);
+      })
+    );
+  }
+
+  function attendanceEl(d, S) {
+    var a = d.attendance;
+    if (!a) return null;
+    var big = ramp(a.of ? a.done / a.of : 0);
+    if (S.inlineHero) {   // feed \u2014 one line
+      return h('div', { key: 'att', style: { borderTop: T.sep, paddingTop: '18px', display: 'flex', alignItems: 'center', gap: '24px' } },
+        h('div', { key: 'txt', style: { flex: 1, minWidth: 0, fontSize: px(S.aBigTxt) } },
+          h('span', { style: hebHead(S.aLblF, 700, { color: T.accent }) }, '\u05E0\u05D5\u05DB\u05D7\u05D5\u05EA'),
+          '  ',
+          ltr(a.done + ' / ' + a.of, { fontFamily: T.osw, fontWeight: 700, fontSize: px(S.aBig), color: big }),
+          ' ', h('span', { style: { fontWeight: 600 } }, '\u05D0\u05D9\u05DE\u05D5\u05E0\u05D9\u05DD')),
+        attColsEl(a, S)
+      );
+    }
+    return h('div', { key: 'att', style: { borderTop: T.sep, paddingTop: '18px', display: 'flex', alignItems: 'center', gap: '32px' } },
+      h('div', { key: 'txt', style: { flex: 1, minWidth: 0 } },
+        h('div', { style: hebHead(S.aLblF, 700, { lineHeight: 1.2, color: T.accent }) }, '\u05E0\u05D5\u05DB\u05D7\u05D5\u05EA'),
+        h('div', { style: { fontSize: px(S.aBigTxt), lineHeight: 1.3, marginTop: '4px' } },
+          ltr(a.done + ' / ' + a.of, { fontFamily: T.osw, fontWeight: 700, fontSize: px(S.aBig), color: big }),
+          ' ', h('span', { style: { fontWeight: 600 } }, '\u05D0\u05D9\u05DE\u05D5\u05E0\u05D9\u05DD \u05D4\u05D5\u05E9\u05DC\u05DE\u05D5')),
+        h('div', { style: { fontSize: px(S.aHint), lineHeight: 1.3, color: T.dim, marginTop: '2px' } }, '\u05DB\u05DC \u05E2\u05DE\u05D5\u05D3\u05D4 = \u05E9\u05D1\u05D5\u05E2 \u00B7 \u05DB\u05DC \u05E4\u05E1 = \u05D0\u05D9\u05DE\u05D5\u05DF \u05E9\u05D4\u05D5\u05E9\u05DC\u05DD')
+      ),
+      attColsEl(a, S)
+    );
+  }
+
+  /* ---- section: keep / improve -------------------------------------------
+     "improve" is always phrased as a target for the next block, never as a
+     failure in this one \u2014 which is exactly why its bullet takes the accent
+     and not the ramp's red end. What worked is green; what is next is accent. */
+  function listEl(items, S, opts) {
+    return h('div', { key: opts.key, style: { flex: 1, minWidth: 0 } },
+      h('div', { style: { fontWeight: 800, fontSize: px(S.lHead), lineHeight: 1.25, color: T.accent } }, opts.head),
+      h('div', { style: { fontSize: px(S.lSub), color: T.dim, lineHeight: 1.3, marginTop: S.lInline ? '1px' : '2px' } }, opts.sub),
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: px(S.lItemGap), marginTop: '12px' } },
+        items.map(function (it, i) {
+          var mark = h('span', { key: 'm', style: { flex: 'none', width: px(S.lMark), height: px(S.lMark), borderRadius: '50%', border: '2px solid ' + opts.markBd, color: opts.markCol, fontSize: px(S.lMarkF), lineHeight: px(S.lMark - 4), textAlign: 'center', boxSizing: 'border-box', marginTop: '2px' } }, opts.mark);
+          var body = S.lInline
+            ? h('div', { key: 'b', style: { flex: 1, minWidth: 0 } },
+                h('span', { style: { fontWeight: 700 } }, it.title), ' ',
+                h('span', { style: { color: T.sub } }, '\u2014 ' + it.detail))
+            : h('div', { key: 'b', style: { flex: 1, minWidth: 0 } },
+                h('div', { style: { fontWeight: 700, fontSize: px(S.lTitle), lineHeight: 1.3 } }, it.title),
+                h('div', { style: { fontSize: px(S.lDetail), color: T.sub, lineHeight: 1.35 } }, it.detail));
+          return h('div', { key: i, style: S.lInline
+            ? { display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: px(S.lTitle), lineHeight: 1.35 }
+            : { display: 'flex', gap: '12px', alignItems: 'flex-start' } }, mark, body);
+        })
+      )
+    );
+  }
+
+  function listsEl(d, S) {
+    if (!(d.keep && d.keep.length) && !(d.improve && d.improve.length)) return null;
+    return h('div', { key: 'lists', style: { borderTop: T.sep, paddingTop: '18px', display: 'flex', gap: px(S.lGap) } },
+      listEl(d.keep || [], S, { key: 'keep', head: '\u2705 \u05E0\u05E7\u05D5\u05D3\u05D5\u05EA \u05DC\u05E9\u05D9\u05DE\u05D5\u05E8', sub: '\u05DE\u05D4 \u05E9\u05E2\u05D1\u05D3 \u2014 \u05DE\u05DE\u05E9\u05D9\u05DB\u05D9\u05DD', mark: '\u2713', markBd: 'rgba(63,191,106,.55)', markCol: T.green }),
+      listEl(d.improve || [], S, { key: 'imp', head: '\uD83C\uDFAF \u05E0\u05E7\u05D5\u05D3\u05D5\u05EA \u05DC\u05D7\u05D9\u05D6\u05D5\u05E7', sub: '\u05D4\u05D9\u05E2\u05D3\u05D9\u05DD \u05DC\u05D1\u05DC\u05D5\u05E7 \u05D4\u05D1\u05D0', mark: '\u2191', markBd: T.accentLine, markCol: T.accent })
+    );
+  }
+
+  /* ---- section: personal records (story only) -----------------------------
+     Edge case 3: no PRs -> one quiet dashed line, no trophy, no gold.         */
+  function prsEl(d, S) {
+    if (!S.showPRs) return null;
+    var prs = d.prs || [];
+    if (!prs.length) {
+      return h('div', { key: 'prs', style: { borderTop: T.sep, paddingTop: '18px' } },
+        h('div', { style: { border: '1.5px dashed rgba(255,255,255,.22)', borderRadius: px(S.prRad), padding: S.prPad, textAlign: 'center', color: T.dim, fontSize: px(S.prName), lineHeight: 1.4 } },
+          '\u05DC\u05D0 \u05E0\u05E8\u05E9\u05DE\u05D5 \u05E9\u05D9\u05D0\u05D9\u05DD \u05D7\u05D3\u05E9\u05D9\u05DD \u05D1\u05D1\u05DC\u05D5\u05E7 \u05D4\u05D6\u05D4')
+      );
+    }
+    return h('div', { key: 'prs', style: { borderTop: T.sep, paddingTop: '18px' } },
+      h('div', { style: hebHead(S.prHead, 800, { lineHeight: 1.25, color: T.accent }) }, '\uD83C\uDFC6 \u05E9\u05D9\u05D0\u05D9\u05DD \u05D0\u05D9\u05E9\u05D9\u05D9\u05DD'),
+      h('div', { style: { display: 'flex', gap: px(S.prGap), marginTop: '16px' } },
+        prs.slice(0, 3).map(function (p, i) {
+          return h('div', { key: i, style: { flex: 1, background: T.row, borderRadius: px(S.prRad), padding: S.prPad } },
+            h('div', { style: { fontWeight: 700, fontSize: px(S.prName), lineHeight: 1.25 } }, p.name),
+            h('div', { style: { fontFamily: T.osw, fontWeight: 700, fontSize: px(S.prVal), lineHeight: 1.15, color: T.gold, marginTop: '2px' } }, p.value));
+        })
+      )
+    );
+  }
+
+  /* ---- section: footer ----------------------------------------------------- */
+  function footerEl(d, S) {
+    var right = S.fStack
+      ? h('div', { key: 'r', style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' } },
+          ltr(d.dateRange, { fontSize: px(S.fDate), color: T.sub }),
+          h('span', { key: 't', style: { fontSize: px(S.fTracked), color: T.dim } }, d.trackedPct))
+      : h('div', { key: 'r', style: { display: 'flex', alignItems: 'baseline', gap: '16px' } },
+          h('span', { key: 't', style: { fontSize: px(S.fTracked), color: T.dim } }, d.trackedPct),
+          ltr(d.dateRange, { fontSize: px(S.fDate), color: T.sub }));
+    return h('div', { key: 'foot', style: { borderTop: T.sep, paddingTop: px(S.fPad), display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+      h('span', { key: 'l', style: hebHead(S.fLbl, 700, { color: T.accent }) }, '\u05D7\u05D6\u05E7\u05D9\u05DD \u05D9\u05D5\u05EA\u05E8 \u05D1\u05DB\u05DC \u05E9\u05D1\u05D5\u05E2'),
+      right
+    );
+  }
+
+  /* ---- the card ------------------------------------------------------------ */
+  function recapCardEl(d, format, domId) {
+    h = (global.React || {}).createElement;
+    if (!h) throw new Error('recap-card: React is not loaded');
+    var base = SIZES[format] || SIZES.story, S = base;
+    if (((d.tests || []).length >= 4) && base.dense) {
+      S = {}; Object.keys(base).forEach(function (k) { S[k] = base[k]; });
+      Object.keys(base.dense).forEach(function (k) { S[k] = base.dense[k]; });
+    }
+    var sections = [headerEl(d, S)]
+      .concat(S.inlineHero ? [heroFeedEl(d, S)] : heroStoryEl(d, S))
+      .concat([badgesEl(d, S), graphEl(d, S), attendanceEl(d, S), listsEl(d, S), prsEl(d, S), footerEl(d, S)])
+      .filter(Boolean);
+    return h('div', {
+      id: domId || ('recap-card-' + format), dir: 'rtl',
+      style: {
+        width: px(S.w), height: px(S.hgt), position: 'relative', overflow: 'hidden',
+        background: T.bg, color: T.ink, padding: S.pad, boxSizing: 'border-box',
+        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+        fontFamily: T.heb
+      }
+    }, h('div', { key: 'topbar', style: { position: 'absolute', top: 0, left: 0, right: 0, height: '6px', background: T.topbar } }), sections);
+  }
+
+  global.BlockRecapCard = {
+    el: recapCardEl, tokens: T, sizes: SIZES,
+    accents: ACCENTS, setAccent: setAccent,
+    ramp: ramp, rampRGB: rampRGB, gainTone: gainTone
+  };
+})(typeof window !== 'undefined' ? window : this);
+
+</script>
+
+<script>
+/* ==========================================================================
+   Block Recap Share Card \u2014 demo datasets (preview only, never shipped)
+
+   Three fixtures, each the exact shape recap-build.js returns:
+     reference  the handoff's own numbers \u2014 the pixel-fidelity check
+     batyam     the real Capacity block: 4 CapaciTests, real dates and names
+     edge       the quiet card \u2014 no retests, no PRs, thin log
+   ========================================================================== */
+(function (global) {
+  'use strict';
+
+  var DEMO = {};
+
+  /* ---- A. the handoff reference (3 tests) ------------------------------- */
+  DEMO.reference = {
+    logo: 'logo.png',
+    athlete: '\u05D3\u05E0\u05D4 \u05DC\u05D5\u05D9',
+    program: 'CAPACITY PROGRAM \u00B7 8 WEEKS',
+    dateRange: '12/07/2026 \u2013 05/09/2026',
+    hero: { eyebrow: '\u05D4\u05E9\u05D9\u05E4\u05D5\u05E8 \u05D4\u05D2\u05D3\u05D5\u05DC \u05D1\u05D9\u05D5\u05EA\u05E8', pct: '+60%', lead: '\u05D4\u05E7\u05E4\u05D9\u05E6\u05D4 \u05E9\u05DC \u05D4\u05D1\u05DC\u05D5\u05E7', leadShort: '\u05D4\u05E7\u05E4\u05D9\u05E6\u05D4 \u05E9\u05DC \u05D4\u05D1\u05DC\u05D5\u05E7',
+            label: 'C2B/Pull Ups \u2014 \u05D7\u05D6\u05E8\u05D5\u05EA \u05DC\u05D3\u05E7\u05D4', before: '5', after: '8', unit: '\u05DC\u05D3\u05E7\u05D4' },
+    badges: [
+      { icon: '\uD83D\uDD25', name: '\u05E8\u05E6\u05E3 \u05D1\u05E8\u05D6\u05DC', value: '9 \u05D9\u05DE\u05D9\u05DD \u05E8\u05E6\u05D5\u05E4\u05D9\u05DD' },
+      { icon: '\u26A1', name: 'RX \u05DC\u05DC\u05D0 \u05E4\u05E9\u05E8\u05D5\u05EA', value: '14 \u05DE\u05D8\u05E7\u05D5\u05E0\u05D9\u05DD \u05D1\u05EA\u05E7\u05DF' },
+      { icon: '\uD83D\uDC8E', name: '\u05E9\u05D1\u05D5\u05E2 \u05DE\u05D5\u05E9\u05DC\u05DD', value: '4 \u05E9\u05D1\u05D5\u05E2\u05D5\u05EA \u05E9\u05DC 5/5' }
+    ],
+    tests: [
+      { name: 'Back Squat \u2014 \u05E9\u05DC\u05E9\u05D4 \u05DB\u05D1\u05D3\u05D4', short: '\u05DB\u05D5\u05D7 \u05E8\u05D2\u05DC\u05D9\u05D9\u05DD', before: '85 \u05E7"\u05D2', after: '100 \u05E7"\u05D2',
+        beforePct: 85, afterPct: 100, delta: '+18%', deltaAbs: '+15 \u05E7"\u05D2', betterWhen: 'higher', gain: .18 },
+      { name: '\u05DE\u05D1\u05D7\u05DF \u05D0\u05D9\u05E8\u05D5\u05D1\u05D9 \u2014 3 \u05E1\u05D1\u05D1\u05D9\u05DD', short: '\u05E1\u05D9\u05D1\u05D5\u05DC\u05EA \u05D0\u05D9\u05E8\u05D5\u05D1\u05D9\u05EA', before: '18:42', after: '16:05', ltrValues: true,
+        beforePct: 100, afterPct: 86, delta: '\u05DE\u05D4\u05D9\u05E8 \u05D1\u05BE14%', deltaAbs: '2:37', betterWhen: 'lower', gain: .14 },
+      { name: 'C2B/Pull Ups \u2014 \u05D7\u05D6\u05E8\u05D5\u05EA \u05DC\u05D3\u05E7\u05D4', short: "\u05D2'\u05D9\u05DE\u05E0\u05E1\u05D8\u05D9\u05E7\u05D4", before: '5', after: '8',
+        beforePct: 63, afterPct: 100, delta: '+60%', deltaAbs: '+3 \u05D1\u05D3\u05E7\u05D4', betterWhen: 'higher', gain: .60 }
+    ],
+    testsSummary: '\u2713 \u05DB\u05DC 3 \u05D4\u05DE\u05D1\u05D7\u05E0\u05D9\u05DD \u05D4\u05E9\u05EA\u05E4\u05E8\u05D5',
+    attendance: { weeks: [4,5,3,5,4,2,5,3], done: 31, of: 40, target: 5 },
+    keep: [
+      { title: '\u05E2\u05E7\u05D1\u05D9\u05D5\u05EA',   detail: '4 \u05E9\u05D1\u05D5\u05E2\u05D5\u05EA \u05DE\u05DC\u05D0\u05D9\u05DD \u05DE\u05EA\u05D5\u05DA 8' },
+      { title: '\u05DB\u05D5\u05D7 \u05E8\u05D2\u05DC\u05D9\u05D9\u05DD', detail: '\u05E1\u05E7\u05D5\u05D5\u05D0\u05D8 \u05E2\u05DC\u05D4 \u05D1\u05BE15 \u05E7"\u05D2' },
+      { title: '\u05DE\u05E9\u05DE\u05E2\u05EA RX',  detail: '14 \u05DE\u05D8\u05E7\u05D5\u05E0\u05D9\u05DD \u05D1\u05EA\u05E7\u05DF \u05D4\u05DE\u05DC\u05D0' }
+    ],
+    improve: [
+      { title: '\u05E1\u05D9\u05D1\u05D5\u05DC\u05EA \u05D0\u05D9\u05E8\u05D5\u05D1\u05D9\u05EA', detail: '\u05E9\u05D9\u05E4\u05D5\u05E8 \u05E9\u05DC 2:37 \u2014 \u05D4\u05DB\u05D9 \u05E7\u05D8\u05DF \u05DE\u05D1\u05D9\u05DF \u05D4\u05E9\u05DC\u05D5\u05E9\u05D4' },
+      { title: '\u05E0\u05D5\u05DB\u05D7\u05D5\u05EA \u05D1\u05E9\u05D9\u05E9\u05D9',   detail: '3 \u05DE\u05EA\u05D5\u05DA 8 \u05E9\u05D1\u05D5\u05E2\u05D5\u05EA' },
+      { title: "\u05D2'\u05D9\u05DE\u05E0\u05E1\u05D8\u05D9\u05E7\u05D4",     detail: 'C2B \u05E2\u05D3\u05D9\u05D9\u05DF \u05E0\u05E9\u05D1\u05E8 \u05D0\u05D7\u05E8\u05D9 \u05D4\u05D3\u05E7\u05D4 \u05D4\u05E9\u05D9\u05E9\u05D9\u05EA' }
+    ],
+    prs: [
+      { name: 'Back Squat',   value: '100 \u05E7"\u05D2' },
+      { name: 'Clean & Jerk', value: '72 \u05E7"\u05D2' },
+      { name: 'Deadlift',     value: '130 \u05E7"\u05D2' }
+    ],
+    trackedPct: '78% \u05DE\u05D4\u05D1\u05DC\u05D5\u05E7 \u05EA\u05D5\u05E2\u05D3'
+  };
+
+  /* ---- B. the real block \u2014 CrossFit Bat Yam, 12/07\u201305/09/2026 -----------
+     All four CapaciTests the program actually runs, in program order, with
+     the values a mid-pack athlete plausibly logs. This is the target output:
+     what the card renders once W8 retests are embedded and logged.          */
+  DEMO.batyam = {
+    logo: 'logo.png',
+    athlete: '\u05D0\u05D5\u05E8\u05D9 \u05E2\u05D5\u05D6\u05DC',
+    program: 'CAPACITY PROGRAM \u00B7 8 WEEKS',
+    dateRange: '12/07/2026 \u2013 05/09/2026',
+    hero: { eyebrow: '\u05D4\u05E9\u05D9\u05E4\u05D5\u05E8 \u05D4\u05D2\u05D3\u05D5\u05DC \u05D1\u05D9\u05D5\u05EA\u05E8', pct: '+50%', lead: '\u05D4\u05E7\u05E4\u05D9\u05E6\u05D4 \u05E9\u05DC \u05D4\u05D1\u05DC\u05D5\u05E7', leadShort: '\u05D4\u05E7\u05E4\u05D9\u05E6\u05D4 \u05E9\u05DC \u05D4\u05D1\u05DC\u05D5\u05E7',
+            label: 'C2B/Pull Ups \u2014 \u05D7\u05D6\u05E8\u05D5\u05EA \u05DC\u05D3\u05E7\u05D4', before: '6', after: '9', unit: '\u05DC\u05D3\u05E7\u05D4' },
+    badges: [
+      { icon: '\uD83D\uDD25', name: '\u05E8\u05E6\u05E3 \u05D1\u05E8\u05D6\u05DC',    value: '9 \u05D9\u05DE\u05D9\u05DD \u05E8\u05E6\u05D5\u05E4\u05D9\u05DD' },
+      { icon: '\u26A1', name: 'RX \u05DC\u05DC\u05D0 \u05E4\u05E9\u05E8\u05D5\u05EA', value: '14 \u05DE\u05D8\u05E7\u05D5\u05E0\u05D9\u05DD \u05D1\u05EA\u05E7\u05DF' },
+      { icon: '\uD83D\uDC8E', name: '\u05E9\u05D1\u05D5\u05E2 \u05DE\u05D5\u05E9\u05DC\u05DD',  value: '3 \u05E9\u05D1\u05D5\u05E2\u05D5\u05EA \u05E9\u05DC 5/5' }
+    ],
+    tests: [
+      { name: 'Back Squat \u2014 \u05E9\u05DC\u05E9\u05D4 \u05DB\u05D1\u05D3\u05D4', short: '\u05DB\u05D5\u05D7 \u05E8\u05D2\u05DC\u05D9\u05D9\u05DD', before: '95 \u05E7"\u05D2', after: '110 \u05E7"\u05D2',
+        beforePct: 86, afterPct: 100, delta: '+16%', deltaAbs: '+15 \u05E7"\u05D2', betterWhen: 'higher', gain: .16 },
+      { name: '\u05DE\u05D1\u05D7\u05DF \u05D0\u05D9\u05E8\u05D5\u05D1\u05D9 \u2014 3 \u05E1\u05D1\u05D1\u05D9\u05DD', short: '\u05E1\u05D9\u05D1\u05D5\u05DC\u05EA \u05D0\u05D9\u05E8\u05D5\u05D1\u05D9\u05EA', before: '19:12', after: '16:48', ltrValues: true,
+        beforePct: 100, afterPct: 87, delta: '\u05DE\u05D4\u05D9\u05E8 \u05D1\u05BE13%', deltaAbs: '2:24', betterWhen: 'lower', gain: .13 },
+      { name: 'Strict Pull Up \u2014 10 \u05E1\u05D8\u05D9\u05DD \u05D1\u05BE5:00', short: '\u05DE\u05E9\u05D9\u05DB\u05D4 \u05D1\u05E9\u05DC\u05D9\u05D8\u05D4', before: '30', after: '40',
+        beforePct: 75, afterPct: 100, delta: '+33%', deltaAbs: '+10 \u05D7\u05D6\u05E8\u05D5\u05EA', betterWhen: 'higher', gain: .33 },
+      { name: 'C2B/Pull Ups \u2014 \u05D7\u05D6\u05E8\u05D5\u05EA \u05DC\u05D3\u05E7\u05D4', short: "\u05D2'\u05D9\u05DE\u05E0\u05E1\u05D8\u05D9\u05E7\u05D4", before: '6', after: '9',
+        beforePct: 67, afterPct: 100, delta: '+50%', deltaAbs: '+3 \u05DC\u05D3\u05E7\u05D4', betterWhen: 'higher', gain: .50 }
+    ],
+    testsSummary: '\u2713 \u05DB\u05DC 4 \u05D4\u05DE\u05D1\u05D7\u05E0\u05D9\u05DD \u05D4\u05E9\u05EA\u05E4\u05E8\u05D5',
+    attendance: { weeks: [4,5,3,5,4,2,5,4], done: 32, of: 40, target: 5 },
+    keep: [
+      { title: '\u05E2\u05E7\u05D1\u05D9\u05D5\u05EA',    detail: '3 \u05E9\u05D1\u05D5\u05E2\u05D5\u05EA \u05DE\u05DC\u05D0\u05D9\u05DD \u05DE\u05EA\u05D5\u05DA 8' },
+      { title: "\u05D2'\u05D9\u05DE\u05E0\u05E1\u05D8\u05D9\u05E7\u05D4", detail: 'C2B/Pull Ups \u05E2\u05DC\u05D4 \u05D1\u05BE3 \u05DC\u05D3\u05E7\u05D4' },
+      { title: '\u05DE\u05E9\u05DE\u05E2\u05EA RX',   detail: '14 \u05DE\u05D8\u05E7\u05D5\u05E0\u05D9\u05DD \u05D1\u05EA\u05E7\u05DF \u05D4\u05DE\u05DC\u05D0' }
+    ],
+    improve: [
+      { title: '\u05E1\u05D9\u05D1\u05D5\u05DC\u05EA \u05D0\u05D9\u05E8\u05D5\u05D1\u05D9\u05EA', detail: '\u05E9\u05D9\u05E4\u05D5\u05E8 \u05E9\u05DC 2:24 \u2014 \u05D4\u05E7\u05D8\u05DF \u05DE\u05D1\u05D9\u05DF 4 \u05D4\u05DE\u05D1\u05D7\u05E0\u05D9\u05DD' },
+      { title: '\u05E0\u05D5\u05DB\u05D7\u05D5\u05EA \u05D1\u05E9\u05D9\u05E9\u05D9',   detail: '3 \u05DE\u05EA\u05D5\u05DA 8 \u05E9\u05D1\u05D5\u05E2\u05D5\u05EA' },
+      { title: '\u05D4\u05E9\u05D1\u05D5\u05E2 \u05D4\u05D7\u05DC\u05E9',     detail: '\u05E9\u05D1\u05D5\u05E2 6 \u2014 2 \u05DE\u05EA\u05D5\u05DA 5' }
+    ],
+    prs: [
+      { name: 'Back Squat', value: '110 \u05E7"\u05D2' },
+      { name: 'Deadlift',   value: '140 \u05E7"\u05D2' },
+      { name: 'Clean',      value: '78 \u05E7"\u05D2' }
+    ],
+    trackedPct: '80% \u05DE\u05D4\u05D1\u05DC\u05D5\u05E7 \u05EA\u05D5\u05E2\u05D3'
+  };
+
+  /* ---- C. the quiet card \u2014 edge cases 1 + 3 -----------------------------
+     What today's data actually produces: W1 baselined, W8 not embedded yet,
+     so nothing was re-measured and no LIFT weight was flagged as a PR.      */
+  DEMO.edge = {
+    logo: 'logo.png',
+    athlete: '\u05D0\u05D5\u05E8\u05D9 \u05E2\u05D5\u05D6\u05DC',
+    program: 'CAPACITY PROGRAM \u00B7 8 WEEKS',
+    dateRange: '12/07/2026 \u2013 05/09/2026',
+    hero: { eyebrow: '\u05D9\u05D5\u05DE\u05DF \u05D0\u05D9\u05DE\u05D5\u05E0\u05D9\u05DD', pct: '32', lead: '\u05EA\u05D5\u05E2\u05D3\u05D5 \u05D1\u05D1\u05DC\u05D5\u05E7', leadShort: '\u05EA\u05D5\u05E2\u05D3\u05D5',
+            label: '\u05DE\u05EA\u05D5\u05DA 40 \u05DE\u05EA\u05D5\u05DB\u05E0\u05E0\u05D9\u05DD', before: '', after: '' },
+    badges: [
+      { icon: '\uD83D\uDD25', name: '\u05E8\u05E6\u05E3 \u05D1\u05E8\u05D6\u05DC',   value: '9 \u05D9\u05DE\u05D9\u05DD \u05E8\u05E6\u05D5\u05E4\u05D9\u05DD' },
+      { icon: '\uD83D\uDC8E', name: '\u05E9\u05D1\u05D5\u05E2 \u05DE\u05D5\u05E9\u05DC\u05DD', value: '3 \u05E9\u05D1\u05D5\u05E2\u05D5\u05EA \u05E9\u05DC 5/5' }
+    ],
+    tests: [
+      { name: 'Back Squat \u2014 \u05E9\u05DC\u05E9\u05D4 \u05DB\u05D1\u05D3\u05D4', short: '\u05DB\u05D5\u05D7 \u05E8\u05D2\u05DC\u05D9\u05D9\u05DD', before: '95 \u05E7"\u05D2', after: '',
+        beforePct: 100, afterPct: 0, betterWhen: 'higher' },
+      { name: '\u05DE\u05D1\u05D7\u05DF \u05D0\u05D9\u05E8\u05D5\u05D1\u05D9 \u2014 3 \u05E1\u05D1\u05D1\u05D9\u05DD', short: '\u05E1\u05D9\u05D1\u05D5\u05DC\u05EA \u05D0\u05D9\u05E8\u05D5\u05D1\u05D9\u05EA', before: '19:12', after: '', ltrValues: true,
+        beforePct: 100, afterPct: 0, betterWhen: 'lower' },
+      { name: 'Strict Pull Up \u2014 10 \u05E1\u05D8\u05D9\u05DD \u05D1\u05BE5:00', short: '\u05DE\u05E9\u05D9\u05DB\u05D4 \u05D1\u05E9\u05DC\u05D9\u05D8\u05D4', before: '30', after: '',
+        beforePct: 100, afterPct: 0, betterWhen: 'higher' },
+      { name: 'C2B/Pull Ups \u2014 \u05D7\u05D6\u05E8\u05D5\u05EA \u05DC\u05D3\u05E7\u05D4', short: "\u05D2'\u05D9\u05DE\u05E0\u05E1\u05D8\u05D9\u05E7\u05D4", before: '6', after: '',
+        beforePct: 100, afterPct: 0, betterWhen: 'higher' }
+    ],
+    testsSummary: '\u05E0\u05DE\u05D3\u05D3\u05D5 \u05E9\u05D5\u05D1 \u00B7 0 \u05DE\u05EA\u05D5\u05DA 4',
+    attendance: { weeks: [4,5,3,5,4,2,5,4], done: 32, of: 40, target: 5 },
+    keep: [
+      { title: '\u05E2\u05E7\u05D1\u05D9\u05D5\u05EA',  detail: '3 \u05E9\u05D1\u05D5\u05E2\u05D5\u05EA \u05DE\u05DC\u05D0\u05D9\u05DD \u05DE\u05EA\u05D5\u05DA 8' },
+      { title: '\u05E8\u05E6\u05E3',     detail: '9 \u05D9\u05DE\u05D9 \u05D0\u05D9\u05DE\u05D5\u05DF \u05E8\u05E6\u05D5\u05E4\u05D9\u05DD' }
+    ],
+    improve: [
+      { title: '\u05DC\u05E1\u05D2\u05D5\u05E8 \u05DE\u05D3\u05D9\u05D3\u05D4', detail: '4 \u05DE\u05D1\u05D7\u05E0\u05D9\u05DD \u05DE\u05D7\u05DB\u05D9\u05DD \u05DC\u05E8\u05D9-\u05D8\u05E1\u05D8' },
+      { title: '\u05E0\u05D5\u05DB\u05D7\u05D5\u05EA \u05D1\u05E9\u05D9\u05E9\u05D9', detail: '3 \u05DE\u05EA\u05D5\u05DA 8 \u05E9\u05D1\u05D5\u05E2\u05D5\u05EA' },
+      { title: '\u05D4\u05E9\u05D1\u05D5\u05E2 \u05D4\u05D7\u05DC\u05E9',   detail: '\u05E9\u05D1\u05D5\u05E2 6 \u2014 2 \u05DE\u05EA\u05D5\u05DA 5' }
+    ],
+    prs: [],
+    trackedPct: '80% \u05DE\u05D4\u05D1\u05DC\u05D5\u05E7 \u05EA\u05D5\u05E2\u05D3'
+  };
+
+  global.BlockRecapDemo = DEMO;
+})(typeof window !== 'undefined' ? window : this);
+
+</script>
+
+<script>
+
+(function () {
+  'use strict';
+  var LOGO = 'data:image/webp;base64,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';
+  var SETS = [
+    { k:'batyam',    label:'\u05D4\u05D1\u05DC\u05D5\u05E7 \u05D4\u05D0\u05DE\u05D9\u05EA\u05D9 \u00B7 4 \u05DE\u05D1\u05D7\u05E0\u05D9\u05DD' },
+    { k:'reference', label:'\u05E8\u05E4\u05E8\u05E0\u05E1 \u05D4\u05E2\u05D9\u05E6\u05D5\u05D1 \u00B7 3 \u05DE\u05D1\u05D7\u05E0\u05D9\u05DD' },
+    { k:'edge',      label:'\u05DE\u05E6\u05D1 \u05E9\u05E7\u05D8 \u00B7 \u05D1\u05DC\u05D9 \u05E8\u05D9-\u05D8\u05E1\u05D8 \u05D5\u05D1\u05DC\u05D9 \u05E9\u05D9\u05D0\u05D9\u05DD' }
+  ];
+  var setKey = 'batyam';
+
+  Object.keys(BlockRecapDemo).forEach(function (k) { BlockRecapDemo[k].logo = LOGO; });
+
+  function mkBtn(row, label, pressed, onClick, swatch) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+    if (swatch) {
+      var d = document.createElement('span');
+      d.className = 'dot'; d.style.background = swatch;
+      b.appendChild(d);
+    }
+    b.appendChild(document.createTextNode(label));
+    b.addEventListener('click', onClick);
+    row.appendChild(b);
+    return b;
+  }
+
+  function buildControls() {
+    var setRow = document.getElementById('sets'), accRow = document.getElementById('accents');
+    SETS.forEach(function (s) {
+      mkBtn(setRow, s.label, s.k === setKey, function () { setKey = s.k; refresh(); });
+    });
+    Object.keys(BlockRecapCard.accents).forEach(function (k) {
+      var a = BlockRecapCard.accents[k];
+      mkBtn(accRow, a.label, k === BlockRecapCard.tokens.accentName,
+        function () { BlockRecapCard.setAccent(k); refresh(); },
+        'rgb(' + a.rgb.join(',') + ')');
+    });
+  }
+
+  function syncPressed() {
+    var setBtns = document.querySelectorAll('#sets button');
+    SETS.forEach(function (s, i) { setBtns[i].setAttribute('aria-pressed', s.k === setKey ? 'true' : 'false'); });
+    var accBtns = document.querySelectorAll('#accents button');
+    Object.keys(BlockRecapCard.accents).forEach(function (k, i) {
+      accBtns[i].setAttribute('aria-pressed', k === BlockRecapCard.tokens.accentName ? 'true' : 'false');
+    });
+    var accent = BlockRecapCard.tokens.accent;
+    document.getElementById('chip-accent').style.background = accent;
+    document.getElementById('code-accent').textContent = accent;
+    document.getElementById('name-accent').textContent =
+      '\u05DE\u05D1\u05D8\u05D0 \u00B7 ' + BlockRecapCard.accents[BlockRecapCard.tokens.accentName].label;
+  }
+
+  /* Scale each card to whatever width the column actually got. Guarded two
+     ways: a zero measurement (pane not laid out yet, tab still hidden) keeps
+     the last good size instead of collapsing the frame to nothing, and an
+     unchanged scale is a no-op so the ResizeObserver below cannot feed itself. */
+  var lastScale = {};
+  function fit(f) {
+    var S = BlockRecapCard.sizes[f];
+    var frame = document.getElementById('frame-' + f);
+    var avail = frame.parentElement.clientWidth;
+    if (!avail) return;
+    var scale = Math.min(1, avail / S.w);
+    if (lastScale[f] === scale) return;
+    lastScale[f] = scale;
+    document.getElementById('scaler-' + f).style.transform = 'scale(' + scale + ')';
+    frame.style.width  = Math.round(S.w * scale) + 'px';
+    frame.style.height = Math.round(S.hgt * scale) + 'px';
+  }
+
+  function refresh() {
+    var d = BlockRecapDemo[setKey];
+    ['story', 'feed'].forEach(function (f) {
+      var S = BlockRecapCard.sizes[f];
+      var host = document.getElementById('scaler-' + f);
+      host.textContent = '';
+      host.appendChild(BlockRecapCard.el(d, f));
+      document.getElementById('ratio-' + f).textContent = S.ratio;
+      document.getElementById('spec-' + f).textContent =
+        '\u05E4\u05E8\u05D9\u05E1\u05D4 ' + S.w + '\u00D7' + S.hgt + '  \u2192  \u05D9\u05D9\u05E6\u05D5\u05D0 ' + S.exp.w + '\u00D7' + S.exp.h;
+      fit(f);
+    });
+    syncPressed();
+  }
+
+  function fitAll() { ['story', 'feed'].forEach(fit); }
+  function slotWidth() { return document.getElementById('frame-story').parentElement.clientWidth; }
+
+  buildControls();
+  refresh();
+
+  /* Three ways in, because no single one is reliable everywhere:
+       - window.resize covers the ordinary case;
+       - ResizeObserver covers a column that changes width while the window
+         does not (it is a no-op in hosts that never fire it);
+       - and a bounded poll covers the first paint landing at zero width -
+         a hidden or not-yet-laid-out pane - which would otherwise leave the
+         cards unscaled forever, since nothing later would fire an event. */
+  addEventListener('resize', fitAll);
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(fitAll);
+    ['story', 'feed'].forEach(function (f) {
+      ro.observe(document.getElementById('frame-' + f).parentElement);
+    });
+  }
+  if (!slotWidth()) {
+    var poll = setInterval(function () { if (slotWidth()) { fitAll(); clearInterval(poll); } }, 150);
+    setTimeout(function () { clearInterval(poll); }, 20000);
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(refresh);
+})();
+
+</script>

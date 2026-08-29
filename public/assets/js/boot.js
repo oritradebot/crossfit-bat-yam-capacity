@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "2.0.0";
+  var BUILD = "2.1.0";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -117,14 +117,24 @@
       return { name: "", is_admin: false, welcome_seen: false, gender: null, birth_date: null, announcement_seen: null, _err: true };
     }
   }
-  // The block announcement the admin published (or null). Fetched separately
-  // from the program: it is read on EVERY boot, while the program row's weeks
-  // blob is only pulled for fresh users.
+  // The block announcement the admin published (or null), plus the block-recap
+  // gate flag, in ONE query. Fetched separately from the program: it is read on
+  // EVERY boot, while the program row's weeks blob is only pulled for fresh
+  // users. The block_recap column may not exist yet (schema.sql not run) —
+  // fall back to the announcement-only select, same convention as the
+  // announcement_log tolerance in the admin panel. A missing/failed flag is
+  // simply null, which the gate reads as closed. A gate that fails open is
+  // not a gate.
   async function fetchAnnouncement() {
     try {
-      var r = await sb.from("shared_program").select("announcement").eq("id", 1).maybeSingle();
-      return (r.data && r.data.announcement) || null;
-    } catch (e) { return null; }
+      var r = await sb.from("shared_program").select("announcement,block_recap").eq("id", 1).maybeSingle();
+      if (r.error && /block_recap/.test(r.error.message || "") && /column|schema/i.test(r.error.message || "")) {
+        var r2 = await sb.from("shared_program").select("announcement").eq("id", 1).maybeSingle();
+        return { announcement: (r2.data && r2.data.announcement) || null, block_recap: null };
+      }
+      return { announcement: (r.data && r.data.announcement) || null,
+               block_recap: (r.data && r.data.block_recap) || null };
+    } catch (e) { return { announcement: null, block_recap: null }; }
   }
   // Every registered athlete — the leaderboard is built from this so a user
   // appears the moment their account exists, before they log any workout.
@@ -1130,6 +1140,16 @@
           '</div>' +
           '<div class="cfa-annlog" id="cfaAnnLog" style="display:none"></div>' +
         '</div>' +
+        '<div class="cfa-ann">' +
+          '<h3>🏁 כרטיס סיכום בלוק</h3>' +
+          '<p class="sub">כשהאופציה פתוחה, כל מתאמן יכול להפיק כרטיס שיתוף אישי לסיום הבלוק (סטורי + פיד). ' +
+            'סגור = אף אחד לא רואה את הכפתור. אתה רואה תצוגה מקדימה של הכרטיס שלך גם כשהאופציה סגורה.</p>' +
+          '<div class="row">' +
+            '<button class="cfa-pub" id="cfaRecapOpen">🏁 פתח לכולם</button>' +
+            '<button class="cfa-annclr" id="cfaRecapClose">🔒 סגור</button>' +
+            '<span class="cfa-annst" id="cfaRecapSt"></span>' +
+          '</div>' +
+        '</div>' +
         '<p class="cfa-msg" id="cfaMsg"></p>' +
         '<p class="cfa-stat" id="cfaStat"></p>' +
         '<div id="cfaList">טוען…</div>' +
@@ -1352,6 +1372,61 @@
       amsg("ההודעה הוסרה", "ok"); annStatus(); annLogRender();
     }
 
+    // ---- block recap gate (open / close) --------------------------------
+    // One jsonb column on the same shared_program row the announcement uses.
+    // The card does not open itself — Ori opens it here at the end of the
+    // block (29/08 decision). Same column-tolerance convention as the
+    // announcement log: a missing column degrades the panel, never crashes
+    // it, and for athletes missing/failed always reads as closed.
+    function recapMissingCol(err) {
+      var m = (err && err.message) || "";
+      return /block_recap/.test(m) && /column|schema/i.test(m);
+    }
+    // After a successful write, the running app on THIS device updates live
+    // (same event the boot fetch fires); other devices pick it up next boot.
+    function recapBroadcast(flag) {
+      window.cfbyBlockRecap = flag || null;
+      try { window.dispatchEvent(new CustomEvent("cfby-recap-flag", { detail: window.cfbyBlockRecap })); } catch (e) {}
+    }
+    async function recapStatus() {
+      var el = document.getElementById("cfaRecapSt");
+      if (!el) return;
+      try {
+        var r = await sb.from("shared_program").select("block_recap").eq("id", 1).maybeSingle();
+        if (r.error && recapMissingCol(r.error)) {
+          el.textContent = "עמודת block_recap חסרה — יש להריץ את ה-ALTER TABLE ב-SQL Editor";
+          return;
+        }
+        var f = r.data && r.data.block_recap;
+        if (f && f.open === true) {
+          var when = f.opened_at ? new Date(f.opened_at).toLocaleDateString("he-IL") : "";
+          el.textContent = "פתוח לכולם" + (when ? " · מאז " + when : "");
+        } else el.textContent = "סגור — רק אתה רואה תצוגה מקדימה";
+      } catch (e) { el.textContent = ""; }
+    }
+    async function recapOpenGate() {
+      if (!confirm("לפתוח את כרטיס סיכום הבלוק לכל המתאמנים?\nהכפתור יופיע אצל כל אחד בכניסה הבאה לאפליקציה.")) return;
+      amsg("פותח…");
+      var flag = { open: true, opened_at: new Date().toISOString() };
+      var r = await sb.from("shared_program").upsert({ id: 1, block_recap: flag });
+      if (r.error) {
+        var m = r.error.message || String(r.error);
+        if (recapMissingCol(r.error))
+          m = "עמודת block_recap חסרה ב-Supabase — יש להריץ: alter table public.shared_program add column if not exists block_recap jsonb;";
+        amsg("הפתיחה נכשלה: " + m, "err"); return;
+      }
+      recapBroadcast(flag);
+      amsg("כרטיס הסיכום פתוח לכולם 🏁", "ok"); recapStatus();
+    }
+    async function recapCloseGate() {
+      if (!confirm("לסגור את כרטיס סיכום הבלוק?\nהכפתור ייעלם אצל המתאמנים (אצלך תישאר תצוגה מקדימה).")) return;
+      amsg("סוגר…");
+      var r = await sb.from("shared_program").upsert({ id: 1, block_recap: null });
+      if (r.error) { amsg("הסגירה נכשלה: " + (r.error.message || r.error), "err"); return; }
+      recapBroadcast(null);
+      amsg("כרטיס הסיכום נסגר", "ok"); recapStatus();
+    }
+
     // ---- announcement log VIEW ------------------------------------------
     var annLogOpen = false, annLogEntries = [];
     function annEsc(s) {
@@ -1480,7 +1555,7 @@
     function openPanel() {
       ov.classList.add("open");
       document.documentElement.style.overflow = "hidden";
-      bkInfo(); annStatus(); refresh();
+      bkInfo(); annStatus(); recapStatus(); refresh();
     }
     function closePanel() {
       ov.classList.remove("open");
@@ -1489,6 +1564,8 @@
     }
     document.getElementById("cfaAnnPub").onclick = annPublish;
     document.getElementById("cfaAnnClr").onclick = annClear;
+    document.getElementById("cfaRecapOpen").onclick = recapOpenGate;
+    document.getElementById("cfaRecapClose").onclick = recapCloseGate;
     document.getElementById("cfaAnnPrev").onclick = function () {
       var d = annDraft();
       window.__cfbyAnnPreview({ title: d.title || "בלוק חדש התחיל!", body: d.body }, function () {});
@@ -1738,6 +1815,9 @@
     });
     window.cfbySignOut = function () { location.reload(); };
     window.cfbyIsAdmin = false;
+    // dev preview: the recap gate is open so the share flow is testable
+    // without Supabase. localhost-only — a hosted deployment never runs this.
+    window.cfbyBlockRecap = { open: true, opened_at: "2026-09-05T00:00:00.000Z", _dev: true };
     await loadScript("assets/js/html2canvas.js");
     await loadScript("assets/js/dc-runtime.js");
     await revealApp();
@@ -1920,6 +2000,9 @@
       location.replace("index.html");
     };
     window.cfbyIsAdmin = isAdmin;
+    // Block-recap gate: null = closed. The real flag arrives with the
+    // announcement fetch below (after app boot) and fires cfby-recap-flag.
+    window.cfbyBlockRecap = null;
 
     // 4) NOW boot the app (data is already in localStorage)
     await loadScript("assets/js/html2canvas.js");
@@ -1932,18 +2015,24 @@
     // published one whose id this user hasn't seen. No announcement row (the
     // state today) -> nothing pops for anyone. Skipped when the profile fetch
     // failed: without the seen-marker we'd re-show on every flaky load.
-    if (!prof._err) {
-      fetchAnnouncement().then(function (ann) {
-        if (!ann || !ann.id) return;
-        if (prof.announcement_seen === ann.id) return;
-        if (rawGet("cfby_ann_seen") === ann.id) return;   // device fallback if the upsert below failed
-        showAnnouncement(ann, function () {
-          try { localStorage.setItem("cfby_ann_seen", ann.id); } catch (e) {}
-          sb.from("profiles").upsert({ id: uid, announcement_seen: ann.id })
-            .then(function () {}, function () {});
-        });
-      }).catch(function () {});
-    }
+    fetchAnnouncement().then(function (res) {
+      // Block-recap gate flag: hand it to the app the same way isAdmin travels
+      // (window var), plus an event for the already-rendered app to pick up.
+      // This runs OUTSIDE the prof._err guard — a flaky profile fetch must not
+      // hide an open recap from athletes; only the popup needs the seen-marker.
+      window.cfbyBlockRecap = (res && res.block_recap) || null;
+      try { window.dispatchEvent(new CustomEvent("cfby-recap-flag", { detail: window.cfbyBlockRecap })); } catch (e) {}
+      var ann = res && res.announcement;
+      if (prof._err) return;
+      if (!ann || !ann.id) return;
+      if (prof.announcement_seen === ann.id) return;
+      if (rawGet("cfby_ann_seen") === ann.id) return;   // device fallback if the upsert below failed
+      showAnnouncement(ann, function () {
+        try { localStorage.setItem("cfby_ann_seen", ann.id); } catch (e) {}
+        sb.from("profiles").upsert({ id: uid, announcement_seen: ann.id })
+          .then(function () {}, function () {});
+      });
+    }).catch(function () {});
 
     // 5) admins get the in-app user-management panel (floating button)
     if (isAdmin) { try { injectAdminPanel(uid); } catch (e) { console.error("[admin panel]", e); } }
