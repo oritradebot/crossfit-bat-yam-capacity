@@ -1720,19 +1720,48 @@
   </sc-if>
 
   <sc-if value="{{ shareOpen }}" hint-placeholder-val="{{ false }}">
-    <div onClick="{{ closeShare }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:95; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; scrollbar-gutter:stable; animation:fadeUp .2s ease both;">
-      <div onClick="{{ stop }}" style="background:var(--card); border-radius:22px; padding:20px; width:100%; max-width:424px; box-shadow:0 24px 70px rgba(12,18,34,.45); margin:auto;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
-          <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.04em; color:var(--navy);">{{ shareTitle }}</div>
-          <button onClick="{{ closeShare }}" style="background:var(--paper); border:none; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; color:var(--muted);">✕</button>
+    <div onClick="{{ closeShare }}" style="position:fixed; inset:0; background:rgba(12,18,34,.6); backdrop-filter:blur(3px); z-index:95; display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; scrollbar-gutter:stable; overscroll-behavior:contain; animation:fadeUp .2s ease both;">
+      <sc-if value="{{ shareIsBlock }}" hint-placeholder-val="{{ false }}">
+        <!-- Block recap (03/09): the story card is taller than any phone or
+             laptop viewport, so this box is capped to the viewport and scrolls
+             INSIDE - header pinned, scrollbar on the box itself - while
+             syncShareLock() freezes the page behind. The week/day box below
+             keeps the overlay-scroll pattern, whose scrollbar sits at the
+             viewport edge right next to the page's own: on desktop the page's
+             won the drag, so the dashboard scrolled invisibly behind the blur
+             and the card's bottom was never reachable (same bug the admin
+             panel had). 100dvh (not vh) so mobile toolbars don't eat the
+             buttons; browsers without dvh drop the cap and fall back to the
+             overlay scroll. -->
+        <div onClick="{{ stop }}" style="background:var(--card); border-radius:22px; width:100%; max-width:424px; box-shadow:0 24px 70px rgba(12,18,34,.45); margin:auto; display:flex; flex-direction:column; max-height:calc(100dvh - 40px); overflow:hidden;">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 20px 14px; flex:none;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.04em; color:var(--navy);">{{ shareTitle }}</div>
+            <button onClick="{{ closeShare }}" style="background:var(--paper); border:none; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; color:var(--muted);">✕</button>
+          </div>
+          <div id="share-scroll" tabIndex="-1" style="padding:0 20px 20px; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; flex:1 1 auto; min-height:0; outline:none;">
+            <div style="display:flex; justify-content:center; margin-bottom:16px;">{{ shareCard }}</div>
+            <div style="display:flex; gap:10px;">
+              <button onClick="{{ shareDownload }}" style="flex:1; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📸 הורד תמונה</button>
+              <button onClick="{{ shareCopy }}" style="flex:1; background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📋 העתק טקסט</button>
+            </div>
+            <div style="text-align:center; font-size:11px; color:var(--muted); margin-top:12px;">שתף בוואטסאפ, שמור למכשיר או שלח למאמן</div>
+          </div>
         </div>
-        <div style="display:flex; justify-content:center; margin-bottom:16px;">{{ shareCard }}</div>
-        <div style="display:flex; gap:10px;">
-          <button onClick="{{ shareDownload }}" style="flex:1; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📸 הורד תמונה</button>
-          <button onClick="{{ shareCopy }}" style="flex:1; background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📋 העתק טקסט</button>
+      </sc-if>
+      <sc-if value="{{ shareIsCard }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ stop }}" style="background:var(--card); border-radius:22px; padding:20px; width:100%; max-width:424px; box-shadow:0 24px 70px rgba(12,18,34,.45); margin:auto;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.04em; color:var(--navy);">{{ shareTitle }}</div>
+            <button onClick="{{ closeShare }}" style="background:var(--paper); border:none; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; color:var(--muted);">✕</button>
+          </div>
+          <div style="display:flex; justify-content:center; margin-bottom:16px;">{{ shareCard }}</div>
+          <div style="display:flex; gap:10px;">
+            <button onClick="{{ shareDownload }}" style="flex:1; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📸 הורד תמונה</button>
+            <button onClick="{{ shareCopy }}" style="flex:1; background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">📋 העתק טקסט</button>
+          </div>
+          <div style="text-align:center; font-size:11px; color:var(--muted); margin-top:12px;">שתף בוואטסאפ, שמור למכשיר או שלח למאמן</div>
         </div>
-        <div style="text-align:center; font-size:11px; color:var(--muted); margin-top:12px;">שתף בוואטסאפ, שמור למכשיר או שלח למאמן</div>
-      </div>
+      </sc-if>
     </div>
   </sc-if>
 
@@ -2588,6 +2617,37 @@ class Component extends DCLogic {
       window.addEventListener('cfby-recap-flag', (e)=>this.setState({ recapFlag: (e && e.detail) || null }));
       if (window.cfbyBlockRecap !== undefined) this.setState({ recapFlag: window.cfbyBlockRecap || null });
     } catch (e) {}
+  }
+  componentDidUpdate(prevProps) {
+    super.componentDidUpdate(prevProps);
+    this.syncShareLock();
+  }
+  componentWillUnmount() {
+    this.syncShareLock(true);
+    super.componentWillUnmount();
+  }
+  /* Page-scroll lock while the share modal is open (03/09) - the fix the
+     admin panel already got in boot.js. The page's own scrollbar sits at the
+     viewport edge right next to the modal's, and on desktop it won the drag:
+     the dashboard scrolled invisibly behind the blur while the modal stood
+     still, so the bottom of the block recap was never reachable. With
+     overflow hidden on <html> the only scrollbar at that edge is the modal's,
+     and wheel / keyboard / touch can't reach the page behind. The previous
+     inline value is restored on close so it nests with the admin panel's own
+     lock. The block recap also focuses its scroll box, so PageDown / arrows
+     scroll the card rather than the (locked) page. Pure DOM styling - nothing
+     here touches state, the tracker, or the sync blob. */
+  syncShareLock(unmounting) {
+    const want = !unmounting && !!this.state.shareOpen;
+    if (want === !!this._shareLock) return;
+    try {
+      const html = document.documentElement;
+      if (want) { this._shareLock = { prev: html.style.overflow }; html.style.overflow = 'hidden'; }
+      else { html.style.overflow = this._shareLock.prev || ''; this._shareLock = null; }
+    } catch (e) {}
+    if (want && this.state.shareType === 'block') {
+      try { const sc = document.getElementById('share-scroll'); if (sc) sc.focus({ preventScroll: true }); } catch (e) {}
+    }
   }
   reloadOthers() {
     try { const raw = localStorage.getItem(this.BOARD_KEY); if (raw) { const b = JSON.parse(raw);
@@ -3551,6 +3611,8 @@ class Component extends DCLogic {
       closeShare: ()=>this.setState({shareOpen:false}),
       closeBuilder: ()=>this.setState({builderOpen:false}),
       shareOpen: this.state.shareOpen,
+      shareIsBlock: this.state.shareType==='block',
+      shareIsCard: this.state.shareType!=='block',
       builderOpen: this.state.builderOpen,
       shareTitle: this.state.shareType==='week' ? ('שיתוף · שבוע '+(this.state.shareWi+1))
         : this.state.shareType==='day' ? 'שיתוף אימון'
