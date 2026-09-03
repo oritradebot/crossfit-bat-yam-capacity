@@ -21,11 +21,11 @@
   /* ======================================================================
      CAPACITESTS — where each block test lives in the program.
 
-     Baselines are all in W1 and are already embedded. The W8 retests are
-     NOT embedded yet (applyProgram overlays weeks 1..7 as of PROGRAM_VERSION
-     31), so every `retest` below is null and every test renders through the
+     Baselines are all in W1. W8 (PROGRAM_VERSION 32) embeds the re-measures
+     for tests #1/#2/#3, so those three rows fill in on their own the moment
+     a member logs the day. CapaciTest #4 has NO re-measure in the W8 program
+     -> its `retest` stays null and that row keeps rendering through the
      "no re-measure" edge case: dashed after-bar, "לא נמדד", muted note.
-     -> When W8 ships, fill the retest slot and the card lights up on its own.
 
      slot: { wi, di, src }
        src 'lift.weight' | 'lift.reps' | 'metcon' | 'metcon2' | 'extra0' | 'extra1'
@@ -37,7 +37,7 @@
       unit: 'ק"ג',
       betterWhen: 'higher',
       base:   { wi: 0, di: 0, src: 'lift.weight' },   // CapaciTest #1 (Baseline)
-      retest: null                                    // TODO W8
+      retest: { wi: 7, di: 0, src: 'lift.weight' }    // W8 — Back Squat 3RM RETEST
     },
     { key: 'aerobic',
       name: 'מבחן אירובי — 3 סבבים',
@@ -45,7 +45,7 @@
       unit: '',
       betterWhen: 'lower',
       base:   { wi: 0, di: 1, src: 'metcon' },        // CapaciTest #2 — Monostructural
-      retest: null                                    // TODO W8
+      retest: { wi: 7, di: 1, src: 'metcon' }         // W8 — Monostructural RETEST
     },
     { key: 'strictpull',
       name: 'Strict Pull Up — 10 סטים ב־5:00',
@@ -53,7 +53,7 @@
       unit: 'חזרות',
       betterWhen: 'higher',
       base:   { wi: 0, di: 1, src: 'extra0' },        // CapaciTest #3 — Pull Up
-      retest: null                                    // TODO W8
+      retest: { wi: 7, di: 1, src: 'extra0' }         // W8 — Strict Pull Up RETEST
     },
     { key: 'c2b',
       name: 'C2B/Pull Ups — חזרות לדקה',
@@ -61,7 +61,7 @@
       unit: 'לדקה',
       betterWhen: 'higher',
       base:   { wi: 0, di: 4, src: 'lift.reps' },     // CapaciTest #4 (Baseline)
-      retest: null                                    // TODO W8
+      retest: null                                    // no re-measure in W8
     }
   ];
 

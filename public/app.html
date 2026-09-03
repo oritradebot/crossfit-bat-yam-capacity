@@ -570,11 +570,11 @@
   /* ======================================================================
      CAPACITESTS — where each block test lives in the program.
 
-     Baselines are all in W1 and are already embedded. The W8 retests are
-     NOT embedded yet (applyProgram overlays weeks 1..7 as of PROGRAM_VERSION
-     31), so every `retest` below is null and every test renders through the
+     Baselines are all in W1. W8 (PROGRAM_VERSION 32) embeds the re-measures
+     for tests #1/#2/#3, so those three rows fill in on their own the moment
+     a member logs the day. CapaciTest #4 has NO re-measure in the W8 program
+     -> its `retest` stays null and that row keeps rendering through the
      "no re-measure" edge case: dashed after-bar, "לא נמדד", muted note.
-     -> When W8 ships, fill the retest slot and the card lights up on its own.
 
      slot: { wi, di, src }
        src 'lift.weight' | 'lift.reps' | 'metcon' | 'metcon2' | 'extra0' | 'extra1'
@@ -586,7 +586,7 @@
       unit: 'ק"ג',
       betterWhen: 'higher',
       base:   { wi: 0, di: 0, src: 'lift.weight' },   // CapaciTest #1 (Baseline)
-      retest: null                                    // TODO W8
+      retest: { wi: 7, di: 0, src: 'lift.weight' }    // W8 — Back Squat 3RM RETEST
     },
     { key: 'aerobic',
       name: 'מבחן אירובי — 3 סבבים',
@@ -594,7 +594,7 @@
       unit: '',
       betterWhen: 'lower',
       base:   { wi: 0, di: 1, src: 'metcon' },        // CapaciTest #2 — Monostructural
-      retest: null                                    // TODO W8
+      retest: { wi: 7, di: 1, src: 'metcon' }         // W8 — Monostructural RETEST
     },
     { key: 'strictpull',
       name: 'Strict Pull Up — 10 סטים ב־5:00',
@@ -602,7 +602,7 @@
       unit: 'חזרות',
       betterWhen: 'higher',
       base:   { wi: 0, di: 1, src: 'extra0' },        // CapaciTest #3 — Pull Up
-      retest: null                                    // TODO W8
+      retest: { wi: 7, di: 1, src: 'extra0' }         // W8 — Strict Pull Up RETEST
     },
     { key: 'c2b',
       name: 'C2B/Pull Ups — חזרות לדקה',
@@ -610,7 +610,7 @@
       unit: 'לדקה',
       betterWhen: 'higher',
       base:   { wi: 0, di: 4, src: 'lift.reps' },     // CapaciTest #4 (Baseline)
-      retest: null                                    // TODO W8
+      retest: null                                    // no re-measure in W8
     }
   ];
 
@@ -1090,7 +1090,22 @@
               </button>
             </sc-for>
           </div>
-          <button onClick="{{ gotoToday }}" style="margin-top:16px; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:11px 20px; font-weight:700; font-size:14px; cursor:pointer; letter-spacing:.01em;">← פתח את האימון של היום</button>
+          <!-- Same row, two pills: the orange CTA, and (only once the gate is
+               open) a white twin that opens the very same block-recap modal.
+               space-between (not margin-inline-start:auto) because flex
+               justifies each wrapped line on its own: side by side they sit at
+               opposite ends, and on a phone -- where they cannot both fit --
+               the pill drops to line 2 flush left instead of stranded right.
+               Gate: the same showBlockShare flag as the log-screen button. -->
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:16px;">
+            <button onClick="{{ gotoToday }}" style="background:var(--orange); color:#fff; border:none; border-radius:999px; padding:11px 20px; font-weight:700; font-size:14px; cursor:pointer; letter-spacing:.01em;">← פתח את האימון של היום</button>
+            <sc-if value="{{ showBlockShare }}" hint-placeholder-val="{{ false }}">
+              <!-- #fff / #141F38 are literal, not themed: this card is the dark
+                   navy gradient in BOTH palettes, and var(--card)/var(--navy)
+                   invert in dark mode — the pill would vanish. -->
+              <button onClick="{{ openShareBlock }}" style="background:#fff; color:#141F38; border:none; border-radius:999px; padding:11px 20px; font-weight:700; font-size:14px; cursor:pointer; letter-spacing:.01em;">🔚 סיכום בלוק</button>
+            </sc-if>
+          </div>
         </div>
 
         <sc-if value="{{ showProgramMap }}" hint-placeholder-val="{{ true }}">
@@ -1314,7 +1329,7 @@
             </sc-if>
             <button onClick="{{ openShareWeek }}" style="background:var(--card); color:var(--blue); border:1px solid var(--blue); border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">📤 שתף שבוע</button>
             <sc-if value="{{ showBlockShare }}" hint-placeholder-val="{{ false }}">
-              <button onClick="{{ openShareBlock }}" style="background:var(--card); color:var(--navy); border:1px solid var(--line); border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">🏁 סיכום בלוק</button>
+              <button onClick="{{ openShareBlock }}" style="background:var(--card); color:var(--navy); border:1px solid var(--line); border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">🔚 סיכום בלוק</button>
             </sc-if>
           </div>
         </div>
@@ -1950,7 +1965,7 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 31;
+  PROGRAM_VERSION = 32;
   // ---- richer result entry (13/08, per Ori; piloted on 06/08) ------------
   // PER_SET_LIFT['weekIdx_dayIdx'] = set count: the LIFT logs a weight per
   // set (log.s1..sN); the heaviest set is mirrored into log.weight, which is
@@ -1971,7 +1986,8 @@ class Component extends DCLogic {
     '3_0': 7, '3_1': 9, '3_2': 5, '3_4': 6, '3_5': 10, '3_6': 4,
     '4_0': 5, '4_1': 6, '4_2': 5, '4_3': 5, '4_4': 7, '4_5': 6,
     '5_0': 8, '5_1': 6, '5_2': 6, '5_4': 8, '5_5': 8, '5_6': 4,
-    '6_0': 6, '6_1': 8, '6_2': 6, '6_3': 5, '6_5': 5
+    '6_0': 6, '6_1': 8, '6_2': 6, '6_3': 5, '6_5': 5,
+    '7_0': 8, '7_1': 6, '7_4': 8, '7_5': 8
   };
   // PER_MOVE_METCON: these metcon bases log a result per movement
   // (log.mv1..mvN) and the board-score input stays locked until every
@@ -1995,7 +2011,11 @@ class Component extends DCLogic {
   // Resolved at render time like the pilot maps above — no state fields, no
   // PROGRAM_VERSION bump; logs stay under log.amount so closed-week results
   // keep scoring.
-  METCON_AMOUNT_LABEL = { '4_0': { 'metcon':'כמות חזרות', 'alt.metcon2':'כמות חזרות' } };
+  METCON_AMOUNT_LABEL = {
+    '4_0': { 'metcon':'כמות חזרות', 'alt.metcon2':'כמות חזרות' },
+    '7_2': { 'metcon':'סך הדאבלים (DU)', 'metcon2':'ממוצע חזרות לדקה' },
+    '7_3': { 'metcon':'כמות חזרות' }
+  };
   METCON_RX_NOTE = { '4_0': {
     'metcon':'RX = קפיצות כפולות (DU) · הזנה ללא לחיצה על RX = קפיצות יחידות (SU)',
     'alt.metcon2':'RX = קפיצות כפולות (DU) · הזנה ללא לחיצה על RX = קפיצות יחידות (SU)'
@@ -2310,6 +2330,51 @@ class Component extends DCLogic {
       }
     };
   }
+  programWeek8() {
+    return {
+      0: {
+        lift: { movement:'Back Squat — CapaciTest #1 (RETEST)', planned:'Build to a heavy set of 3, by feel.\nEvery 2:30-3:00 — add weight each set.\nSuggested jumps: 60-70-80-85-90% of your 3RM, then smaller jumps.\n\nשבוע מבדקים לפנינו — עם כמה חלקים חשובים מאוד שבהם נרצה למדוד איפה אנחנו עומדים.\nשימו לב לתוצאות מהשבוע של ה-12 ביולי: זה בדיוק אותו טסט.' },
+        metcon: { name:'AMRAP 12:00', scheme:'AMRAP 12:00', score:'Rounds + reps', resultMode:'rounds', note:'Score — total reps.\nהזינו כמה סבבים (+חזרות) הושלמו · סבב מלא = 21 חזרות.\nהציבו ארגז גבוה או שורה של ארגזים, וכל מעבר מעל הארגז מתבצע בעזרת ידיים.\nמפתיע כמה הידיים הולכות לשרוף במעברים האלה.', movements:[['Wallballs','12'],['Burpee get overs','6 @30/24"'],['Wall walks','3']] },
+        extras: [['Capacity Extra — Alternating EMOM 9:00','Min 1 — 8+8 DB Hammer curls\nMin 2 — 10 Banded face pulls\nMin 3 — 20s Copenhagen plank each side\n\nRecovery work after the Test.'],['','']],
+        alt: {
+          metcon: { name:'AMRAP 12:00 (Endurance)', scheme:'AMRAP 12:00', score:'Rounds + reps', resultMode:'rounds', note:'Score — total reps.\nהזינו כמה סבבים (+חזרות) הושלמו · סבב מלא = 21 חזרות.\nהציבו ארגז גבוה או שורה של ארגזים, וכל מעבר מעל הארגז מתבצע בעזרת ידיים.', movements:[['Wallballs','12'],['Burpee get overs','6 @30/24"'],['Wall walks','3']] },
+          metcon2: { name:'METCON-B — Run Ladder', scheme:'1200 → 1000 → 800 · rest 2.5 min', score:'Time', resultMode:'time', note:'Run:\n1200m\nRest 2.5 min\n1000m\nRest 2.5 min\n800m\n\nScore — סך הזמן של שלוש הריצות (בלי המנוחות).', movements:[['Run','1200m'],['Rest','2.5 min'],['Run','1000m'],['Rest','2.5 min → then 800m']] },
+          extras: [['',''],['','']]
+        }
+      },
+      1: {
+        lift: { movement:'Squat Clean + Pause Jerk', planned:'Every 1:30 x 6 sets:\nSquat clean + Pause jerk\n*Pause at the receiving position for 2s.\n\nמוסיפים משקל כל 2 סטים, ולא עוברים 75%. זו לא עבודת מקסימום היום.\nיום טכני — את הכבד נשמור לשישי — עם עבודה חשובה סביב הקלין וג׳רק, ואחריה הטסט האירובי שלנו.' },
+        metcon: { name:'CapaciTest #2 — Monostructural (RETEST)', scheme:'3 Rounds For Time', score:'Time', resultMode:'time', note:'Score — time.\nזה אותו טסט בדיוק מ-13 ביולי.\nמתאמנים חדשים — חותכים את הריצה ל-400-600m, ואת החזרות ל-15 בכל תנועה.\nאפשר להגיע מהריצה ישירות לחתירה אם חסרות מכונות.\nמזניקים בשני היטים בהפרש של 2:00.', movements:[['800m Run','each round'],['Box jump','20 @24/20" — step down'],['Burpees to plate','20'],['Cal Row','20/15']] },
+        extras: [['CapaciTest #3 — Pull Up (RETEST)','Every 30s for 10 sets (5:00) · Strict pull-up set\nreps per set. Pick a number, stick to it. Band 1-6 if needed.\nStrict. Full hang. Chin over bar.\nRecord your total reps over the 5:00.'],['','']]
+      },
+      2: {
+        lift: { movement:'', planned:'' },
+        metcon: { name:'Different Strength — Heavy DB Snatch + Max DU', scheme:'1:15 On, 0:45 Off x 5', score:'Total DU', resultMode:'amount', note:'10 Heavy DB snatches\nMax Double unders in remaining time\n\nScore — total DU.\nהזינו את סך הדאבלים מחמשת הסטים.\nGrab a DB which will make it challenging to move.\nמעדיפים להניח את הדאמבל בין החזרות ולא T&G.\nעבודת כוח עצימה מאוד, ואחריה אימון לא קצר שיגדיל ריאות וישפר קצת סקיל.', movements:[['Heavy DB snatches','10'],['Max Double unders','remaining time']] },
+        metcon2: { name:'Big Tuesday — EMOMania', scheme:'Alternating EMOM 15:00 · one running clock', score:'Average reps per minute', resultMode:'amount', note:'Minute 1 — Line facing burpees\nMinute 2 — T2B\nMinute 3 — Calories (bike preferred)\n\nScore — average reps per minute.\nהזינו את ממוצע החזרות לדקה — בחרו מספר ותשמרו עליו.', movements:[['Line facing burpees','minute 1'],['T2B','minute 2'],['Calories','minute 3 — bike preferred']] },
+        extras: [['Capacity Extra — Snatch Practice','אם תוכלו — עשו את החלק הזה לפני האימון.\n\nEvery 1:30 for 6 sets:\nPower snatch\nHang squat snatch\n\nStay up to 70%, this is just a practice session. Drop & reset.'],['','']]
+      },
+      3: {
+        lift: { movement:'Strength — Single Arm DB Press + Single Leg Hip Thrusts', planned:'Every 1:30 for 10 sets, alternate:\n• 6-8 Single arm kneeling DB presses\n• 6-8 Single leg hip thrusts (DB/medball on hip)\n\nכפיפה ולחיצה בחלק הראשון שלנו — עבודת הכוח.' },
+        metcon: { name:'In Pairs — AMRAP 20:00', scheme:'AMRAP 20:00 (pairs) · split work anyway', score:'Total reps', resultMode:'amount', note:'Score — total reps for the pair.\nהזינו את סך החזרות של הזוג.\nאחד עובד והשני נח. קחו דאמבל כבד שיקשה מאוד על הת׳ראסטרים — זה לגמרי יכול להיות משקל שונה לשני בני הזוג.\nפרטנר טוב זה דבר אחד, אבל חשוב מכך — התקשורת היא הדבר שיוביל אתכם הכי הרבה באימון הזה.', movements:[['Calories Row','30/24'],['Single arm DB thruster','25 @heavy DB'],['HSPU','20']] },
+        extras: [['Capacity Extra','3 Sets for quality:\n10 Bodyweight dips\n30s Reverse sled drag (or plank)\n20s L-hang'],['','']]
+      },
+      4: {
+        lift: { movement:'Snatch — Heavy Single', planned:'Snatch — Heavy single. From the floor.\nEvery 1:30, singles, climbing.\nSuggested climb — 70% → 80% → 85% → 88% → 90%+, then smaller jumps.\n\nשתי החמצות באותו משקל מסיימות את היום.\nיום של סנאץ׳ כבד, וקונדישנינג צבעוני מאוד. אף אחד מהם לא יכול להיות רע.' },
+        metcon: { name:'Conditioning — Every 3:00 x 4', scheme:'Every 3:00 for 4 sets', score:'Slowest round', resultMode:'time', note:'Level 1 = 5 pull ups or 1-2 banded MU\nLevel 2 = 2-4 MU\nLevel 3 = 5 MU\n\nScore — slowest round.\nהזינו את זמן הסיבוב האיטי ביותר.\nבחרו משקל שבו הסנאצ׳ים זזים אבל לא בקלות. זה אמור להשאיר לכם כדקה של מנוחה בכל סיבוב, אבל לא הרבה יותר מזה.', movements:[['Run','200m'],['Power snatches','5'],['Bar muscle ups','by level']] },
+        extras: [['Capacity Extra — Floating Snatch Pulls','Every 90 seconds for 4 sets:\n2-3 Floating snatch pulls\n@95-100% of your snatch.'],['Into — 3 Sets, No Rush','10-15 GHD situps\n10+10 Banded face pulls']]
+      },
+      5: {
+        lift: { movement:'Power Clean + Jerk — Build Until Failure', planned:'Every 30s for 8 sets, alternate:\n• Power clean + Push jerk\n• Power clean + Split jerk\n\nWork at ±70%.\n\nThen,\nEvery 90s until failure:\nPower clean\nJerk (of choice)\n\nמוסיפים משקל בכל סבב. תרשמו איפה נעצרתם.\nזה לא טסט — זה משחק. אבל המספר בסוף שווה משהו.' },
+        metcon: { name:'Conditioning — Chipper', scheme:'For Time', score:'Time', resultMode:'time', note:'Order:\nBurpee box jump overs → Wallballs → Double unders → Wallballs → Double unders → Wallballs → Burpee box jump overs\n\nLevel 1 = 15 BBJO, 15 WB, 40 DU / 100 SU\nLevel 2 = 20 BBJO, 20 WB, 60 DU\nLevel 3 = 25 BBJO, 25 WB, 75 DU\n\nScore — time.\nשישי מגיע ואיתו עבודת כוח סופר-כיפית ואקפטיבית לקלין וג׳רק, ואחריה צ׳יפר עצבני.', movements:[['Burpee box jump overs','15-25 by level — first & last station'],['Wallballs','15-25 by level — x3 stations'],['Double unders','40-75 by level — x2 stations']] },
+        extras: [['Capacity Extra','3-4 sets, no rush:\n8-10 Ring or bar dips\n10-12 Hip extensions\n20s L-hang'],['','']]
+      },
+      6: {
+        lift: { movement:'Strength — DB Bench + Single Arm DB Rows', planned:'Every 1:30 for 8 sets, alternate:\n• 10 DB Bench presses\n• 8+8 Single arm DB rows\n\nHeavy but clean on both.\nעבודת כוח בסיסית מאוד, ואחריה אימון שלשות. יום שבת מסיבה.' },
+        metcon: { name:'In Teams of 3 — 4-5 Rounds For Time', scheme:'4-5 Rounds For Time (teams of 3) · Cap 25:00', score:'Time', resultMode:'time', note:'Score — time. Cap 25:00.\nנעצרתם בקאפ? הזינו 25:00 והוסיפו בהערה איפה עצר אתכם השעון.\nהריצה מבוצעת יחד, והחזרות מסונכרנות.', movements:[['Run','400m together'],['Synced V-ups','15-20'],['Synced single arm DB devil press','10']] },
+        extras: [['Capacity Extra','4 Sets for quality:\n1-2 Rope climb practice\n10-15 Banded face pulls\n60s rest'],['','']]
+      }
+    };
+  }
   applyProgram(weeks) {
     const fillMetcon = (dst, m) => { if (!m) return; dst.name=m.name||''; dst.scheme=m.scheme||''; dst.score=m.score||''; dst.note=m.note||''; dst.resultMode=m.resultMode||''; for (let i=0;i<4;i++){ const mv=(m.movements||[])[i]; dst.movements[i]={ name:mv?mv[0]:'', detail:mv?mv[1]:'' }; } };
     const fill = (day, src) => {
@@ -2334,6 +2399,7 @@ class Component extends DCLogic {
     overlay(4, this.programWeek5());
     overlay(5, this.programWeek6());
     overlay(6, this.programWeek7());
+    overlay(7, this.programWeek8());
   }
 
   normalizeDay(o) {
@@ -3619,7 +3685,7 @@ class Component extends DCLogic {
     const t = this.state.shareType, data = this.state.data;
     if (t==='block' && window.BlockRecap) {
       const d = this.recapData();
-      const lines = ['🏁 סיכום בלוק · CrossFit Bat Yam', d.dateRange, ''];
+      const lines = ['🔚 סיכום בלוק · CrossFit Bat Yam', d.dateRange, ''];
       lines.push('💪 ' + d.attendance.done + '/' + d.attendance.of + ' אימונים הושלמו');
       (d.tests || []).forEach(x => {
         lines.push((x.after ? '✅ ' : '⬜ ') + x.name + (x.after ? (' · ' + x.before + ' ← ' + x.after) : ' · נמדד בשבוע 1 בלבד'));
