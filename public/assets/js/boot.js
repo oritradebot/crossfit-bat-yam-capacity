@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "2.2.1";
+  var BUILD = "2.2.2";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -1401,7 +1401,7 @@
         if (f && f.open === true) {
           var when = f.opened_at ? new Date(f.opened_at).toLocaleDateString("he-IL") : "";
           el.textContent = "פתוח לכולם" + (when ? " · מאז " + when : "");
-        } else el.textContent = "סגור — רק אתה רואה תצוגה מקדימה";
+        } else el.textContent = "סגור — תצוגה מקדימה רק לך, ורק במצב מנהל באפליקציה";
       } catch (e) { el.textContent = ""; }
     }
     async function recapOpenGate() {

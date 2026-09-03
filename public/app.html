@@ -3803,10 +3803,13 @@ class Component extends DCLogic {
      the tracker, the sync blob, or localStorage. */
   recapGate() {
     if (!window.BlockRecap) return 'closed';
-    // Preview rides profiles.is_admin (window.cfbyIsAdmin, set by boot) ONLY —
-    // NOT the in-app logo+code mode, which any athlete who knows the code can
-    // enable. The card stays invisible to the roster until Ori opens the gate.
-    return BlockRecap.gateState(this.state.recapFlag, !!window.cfbyIsAdmin);
+    // Preview needs BOTH profiles.is_admin (window.cfbyIsAdmin, set by boot)
+    // AND the in-app logo+code mode (state.isAdmin). The DB flag is the real
+    // guard — any athlete who knows the code can enable the in-app mode, so it
+    // must never be enough on its own; the in-app mode was added on top (03/09,
+    // Ori's request) so his own regular view matches what athletes see. The
+    // card stays invisible to the roster until Ori opens the gate.
+    return BlockRecap.gateState(this.state.recapFlag, !!window.cfbyIsAdmin && !!this.state.isAdmin);
   }
   recapData() { return BlockRecap.build(this, { logo: 'assets/logo.png' }); }
   blockShareCardEl() {
