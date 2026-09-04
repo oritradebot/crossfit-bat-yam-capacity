@@ -251,6 +251,13 @@
     if (changed) { memDts = dts; try { lsSetRaw(DTS_KEY, dts); } catch (e) {} }
     return keys;
   }
+  // A day whose user-log signature equals that of its stripped copy holds no
+  // log at all (plan text only, or an app-initialized empty shell).
+  function isBlankDay(day) {
+    if (!day) return true;
+    try { return logSig(day) === logSig(stripDayLogs(JSON.parse(JSON.stringify(day)))); }
+    catch (e) { return false; }
+  }
   // Merge two tracker copies day by day. preferLocal breaks ties for days with
   // equal (usually missing/legacy) stamps — callers pass the old whole-blob
   // rule (device dirty-stamp newer than the server row), so pre-1.7.0 data
@@ -272,7 +279,17 @@
         if (ld[d] === undefined) pick = "s";
         else if (sd[d] === undefined) pick = "l";
         else if (lts !== sts) pick = lts > sts ? "l" : "s";
-        else pick = preferLocal ? "l" : "s";
+        else {
+          // Equal (usually absent) stamps: a day carrying a real log beats a
+          // blank one. A device whose writes bypassed the interceptor (the
+          // WebKit case in installInterceptor) holds unstamped logged days
+          // that the blank server scaffold used to win on the whole-blob
+          // tiebreak — that was the "phone resets" loss. Only when both sides
+          // are logged, or both blank, does the legacy rule decide.
+          var lBlank = isBlankDay(ld[d]), sBlank = isBlankDay(sd[d]);
+          if (lBlank !== sBlank) pick = lBlank ? "s" : "l";
+          else pick = preferLocal ? "l" : "s";
+        }
         days.push(pick === "l" ? ld[d] : sd[d]);
         if (pick === "l" && (sd[d] === undefined || logSig(ld[d]) !== logSig(sd[d]))) localWon = true;
         var mx = Math.max(lts, sts);
@@ -420,6 +437,7 @@
     else if (kind === "localfail") { el.textContent = "⚠️ השמירה במכשיר נכשלה — האחסון מלא?"; el.style.background = "#a33b2e"; }
     else if (kind === "reauth")  { el.textContent = "🔑 ההתחברות פגה — הקישו כדי להתחבר מחדש"; el.style.background = "#7a3ea8"; }
     else if (kind === "pubfail") { el.textContent = "⚠️ האימון נשמר, אך פרסום התוכנית נכשל"; el.style.background = "#a3702e"; }
+    else if (kind === "nointercept") { el.textContent = "⚠️ הסנכרון לא פעיל בדפדפן הזה — פנו לאורי"; el.style.background = "#a33b2e"; }
     // The pill is normally inert so it can never swallow a tap meant for the
     // app. The reauth state is the ONE exception: it is the user's only way
     // out of a dead session, so it must be tappable.
@@ -452,6 +470,7 @@
     else if (k === "reauth")   { txt = "🔑 ההתחברות פגה — הקישו כאן"; color = "#7a3ea8"; tap = true; }
     else if (k === "localfail"){ txt = "⚠️ בעיית אחסון במכשיר — הענן הוא הגיבוי"; color = "#a33b2e"; }
     else if (k === "pubfail")  { txt = "⚠️ נשמר; פרסום התוכנית נכשל"; color = "#a3702e"; }
+    else if (k === "nointercept") { txt = "⚠️ הסנכרון לא פעיל בדפדפן הזה — פנו לאורי"; color = "#a33b2e"; }
     else                       { txt = pushCtx.uid ? "☁️ מסונכרן לענן" : ""; }
     el.textContent = txt;
     el.style.color = color;
@@ -960,12 +979,32 @@
   // athletes), suppress the interceptor so it does not push our own row back
   // and cause an echo loop.
   var suppressPush = false;
+  // Flipped by the wrapper on every localStorage write it sees. The probe
+  // right after install proves the wrapper is live in THIS browser — a silent
+  // bypass (see installInterceptor) is exactly the failure that lost workouts.
+  var interceptorSeen = false;
 
   // Intercept the app's own localStorage writes
   function installInterceptor(uid, isAdmin) {
     pushCtx.uid = uid; pushCtx.isAdmin = isAdmin;
-    var orig = localStorage.setItem.bind(localStorage);
-    localStorage.setItem = function (key, val) {
+    // Patch the PROTOTYPE, never the instance. `localStorage.setItem = fn` is a
+    // WebIDL named-setter write on a Storage object: Chrome/Android create a
+    // shadowing own property (the override works), but WebKit routes the
+    // assignment to the storage named setter — the "override" becomes a stored
+    // item called "setItem" and the real method keeps running untouched. That
+    // is what iPhone Safari did on 04/09/2026: the app's writes never reached
+    // this wrapper — no day stamps, no dirty mark, no push — so a workout
+    // lived only on the phone and the next boot merge let the blank server
+    // copy win ("saves from the computer, resets on the phone"). Every
+    // browser resolves localStorage.setItem through Storage.prototype, so the
+    // prototype is the one place a wrapper is guaranteed to be seen.
+    var SP = Object.getPrototypeOf(localStorage);
+    var nativeSet = SP.setItem;
+    var orig = function (k, v) { return nativeSet.call(localStorage, k, v); };
+    SP.setItem = function (key, val) {
+      // sessionStorage shares the prototype — anything but localStorage passes straight through.
+      if (this !== localStorage) return nativeSet.call(this, key, val);
+      interceptorSeen = true;
       var isTracker = key === K.TRACKER_KEY && !suppressPush;
       // Board mirror: only USER writes — realtime refreshes (suppressPush)
       // carry other athletes' rows read from possibly-stale storage, and must
@@ -1638,10 +1677,12 @@
     // Deterministic reaction to admin-mode enter/exit, with NO refresh needed:
     // the app writes cfby_admin='1' on entry and removes it on exit. Hook both
     // so the tab appears/disappears the instant admin mode toggles.
-    var _lsSet = localStorage.setItem.bind(localStorage);
-    var _lsRem = localStorage.removeItem.bind(localStorage);
-    localStorage.setItem = function (k, v) { _lsSet(k, v); if (k === "cfby_admin") ensureTab(); };
-    localStorage.removeItem = function (k) { _lsRem(k); if (k === "cfby_admin") ensureTab(); };
+    // Prototype-level, chained on top of the sync wrapper (installed earlier)
+    // — an instance assignment is a no-op on WebKit (see installInterceptor).
+    var SP2 = Object.getPrototypeOf(localStorage);
+    var _prevSet = SP2.setItem, _prevRem = SP2.removeItem;
+    SP2.setItem = function (k, v) { var r = _prevSet.call(this, k, v); if (this === localStorage && k === "cfby_admin") ensureTab(); return r; };
+    SP2.removeItem = function (k) { var r = _prevRem.call(this, k); if (this === localStorage && k === "cfby_admin") ensureTab(); return r; };
   }
 
   // ---- first-login mini-onboarding: gender + birth date ----------------
@@ -1980,6 +2021,14 @@
 
     // 3) intercept future writes
     installInterceptor(uid, isAdmin);
+    // Prove the wrapper actually sees the app's writes here. If it doesn't,
+    // say so loudly instead of letting the athlete log into a void.
+    interceptorSeen = false;
+    try { localStorage.setItem("cfby_probe_v1", "1"); localStorage.removeItem("cfby_probe_v1"); } catch (e) {}
+    if (!interceptorSeen) {
+      console.error("[sync] localStorage interceptor is NOT active in this browser — writes would not sync");
+      syncShow("nointercept");
+    }
 
     // Local tracker was newer than the server (a push was lost) — sync it up now.
     if (keepLocal) pushState();
