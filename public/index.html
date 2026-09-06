@@ -75,8 +75,26 @@
   function toEmail(u){ return u.toLowerCase()+DOMAIN; }
   var UNAME_RE = /^[a-z0-9._-]{3,30}$/;
 
-  // already signed in? go straight to the app
-  sb.auth.getSession().then(function(r){ if(r.data && r.data.session) location.replace("app.html"); });
+  // Maintenance mode (v2.3.0): the flag lives in version.json. While it is on,
+  // everyone but a staff device (see maintenance.html) sees the closed door
+  // instead of the form. Fail-OPEN: an unreadable flag must never lock people
+  // out of the login on a bad connection.
+  function maintGate(){
+    return fetch("version.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){
+        var staff = false;
+        try { staff = localStorage.getItem("cfby_staff") === "1"; } catch(e){}
+        if (j && j.maintenance === true && !staff) { location.replace("maintenance.html"); return true; }
+        return false;
+      })
+      .catch(function(){ return false; });
+  }
+  // already signed in? go straight to the app (after the maintenance check)
+  maintGate().then(function(gated){
+    if (gated) return;
+    sb.auth.getSession().then(function(r){ if(r.data && r.data.session) location.replace("app.html"); });
+  });
 
   function toggleMode(){
     mode = mode==="login" ? "signup" : "login";

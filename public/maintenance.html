@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>תכף נחזור — BAT YAM Capacity</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0f1830">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bat Yam Capacity">
+<link rel="apple-touch-icon" href="/assets/icons/icon-180.png">
+<style>
+  /* Same card + gradient as the login page, so the closed door looks like ours. */
+  :root{--card:#16233f;--line:#243657;--orange:#ef5b25;--txt:#eaf0ff;--mut:#8ea3c9;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:linear-gradient(160deg,#0f1830,#1a2848 60%,#23409a);min-height:100vh;
+    display:flex;align-items:center;justify-content:center;font-family:'Heebo',-apple-system,sans-serif;color:var(--txt);padding:20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:38px 28px 30px;width:100%;max-width:400px;
+    text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.45)}
+  /* The real gym logo, round with the white ring — exactly as in the app header. */
+  .logo{width:96px;height:96px;border-radius:50%;box-shadow:0 0 0 3px rgba(255,255,255,.25);margin:0 auto 22px;display:block;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:default}
+  h1{font-size:24px;font-weight:800;line-height:1.35;margin-bottom:10px}
+  p{color:var(--mut);font-size:15px;line-height:1.7}
+  .brand{margin-top:24px;font-size:12px;color:var(--mut);letter-spacing:.6px;font-weight:700}
+  /* Staff entry — hidden until the logo is tapped (same gesture as the app's admin entry). */
+  .staff{display:none;margin-top:22px;border-top:1px solid var(--line);padding-top:18px;text-align:right}
+  .staff.open{display:block}
+  .staff label{display:block;font-size:12px;color:var(--mut);margin-bottom:6px}
+  .staff input{width:100%;background:#0f1830;border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+    color:var(--txt);font-size:16px;font-family:inherit;direction:ltr;text-align:left} /* 16px+ so iOS doesn't zoom */
+  .staff input:focus{outline:none;border-color:var(--orange)}
+  .staff button{width:100%;margin-top:12px;background:var(--orange);color:#fff;border:none;border-radius:10px;
+    padding:13px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer}
+  .msg{margin-top:12px;font-size:13px;min-height:18px;text-align:center}
+  .msg.err{color:#ff8a80}.msg.ok{color:#7ee2a8}
+</style>
+</head>
+<body>
+  <div class="card">
+    <img class="logo" id="logo" src="assets/logo.png" alt="CrossFit Bat Yam" draggable="false">
+    <h1>תכף נחזור לבלוק חדש</h1>
+    <p>המשתמש שלכם נשמר - הנתונים מתאפסים לגמרי</p>
+    <div class="brand">BAT YAM CAPACITY</div>
+    <form class="staff" id="staff" autocomplete="off">
+      <label for="code">קוד צוות</label>
+      <input id="code" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="go">
+      <button id="go" type="submit">כניסה</button>
+      <div class="msg" id="msg"></div>
+    </form>
+  </div>
+
+<script>
+(function () {
+  // Maintenance page (v2.3.0). The flag lives in version.json next to the
+  // build: boot.js sends everyone but admins / staff devices here while it is
+  // on. This page's only jobs: look like ours, go back to the app on its own
+  // the moment the flag goes off, and let a staff device through.
+  var STAFF_KEY = "cfby_staff";
+  var CODE = "batyam";           // the app's own admin code (Ori: "אותו קוד")
+  var $ = function (id) { return document.getElementById(id); };
+  function goApp() { location.replace("app.html"); }
+
+  // Poll the flag: on load, every 60s, and on every return to the foreground.
+  // A failed fetch says nothing about the flag — stay put, try again later.
+  var lastCheck = 0;
+  function check() {
+    if (Date.now() - lastCheck < 5000) return;
+    lastCheck = Date.now();
+    fetch("version.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { if (j && j.build && j.maintenance !== true) goApp(); })
+      .catch(function () {});
+  }
+  check();
+  setInterval(check, 60000);
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") check();
+  });
+
+  // Staff mode: tap the logo, type the code. Sets a device-level flag, so a
+  // plain (non-admin) test account passes on this device too.
+  $("logo").addEventListener("click", function () {
+    var s = $("staff");
+    s.classList.toggle("open");
+    if (s.classList.contains("open")) { try { $("code").focus(); } catch (e) {} }
+  });
+  function submit() {
+    var v = ($("code").value || "").trim().toLowerCase();
+    var m = $("msg");
+    if (v !== CODE) { m.textContent = "קוד שגוי"; m.className = "msg err"; return; }
+    try { localStorage.setItem(STAFF_KEY, "1"); }
+    catch (e) { m.textContent = "המכשיר לא מאפשר שמירה מקומית"; m.className = "msg err"; return; }
+    m.textContent = "מצב צוות הופעל, נכנסים…"; m.className = "msg ok";
+    goApp();
+  }
+  // A real <form>, so Enter / the keyboard's "Go" key submit on every platform.
+  $("staff").addEventListener("submit", function (e) { e.preventDefault(); submit(); });
+})();
+</script>
+</body>
+</html>

@@ -48,6 +48,7 @@
 | 🎨 UI/UX | `docs/domains/ui-ux.md` | העדפות עיצוב של אורי |
 | ♿ נגישות | `docs/domains/a11y.md` | |
 | 🚀 שחרור | `docs/domains/release.md` | BUILD, פריסה, אימות |
+| 🔄 מעבר בלוק | [`docs/domains/block-transition.md`](docs/domains/block-transition.md) | מצב תחזוקה, כפתור איפוס + ארכיון, שאריות במכשירים |
 | 💾 גיבוי וייצוא | [`docs/domains/backup.md`](docs/domains/backup.md) | גיבוי מהפאנל, סיכומים לכל משתתף, כרטיסי PNG מגיבוי |
 
 > מסמכי תחום שעדיין לא קיימים — נכתבים בפעם הראשונה שעובדים בתחום, לא מראש.

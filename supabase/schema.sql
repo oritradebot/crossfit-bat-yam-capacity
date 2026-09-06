@@ -281,6 +281,88 @@ create policy prog_read  on public.shared_program for select to authenticated us
 create policy prog_write on public.shared_program for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
+-- ============================================================
+--  BLOCK RESET (v2.3.0) — archive, then wipe. One transaction, admin only.
+-- ============================================================
+-- block_archive keeps every states/board row (plus the shared_program row) as
+-- it was the moment a block was reset, under the label the admin typed
+-- ("block-1", "block-2-tests", ...). No FK to auth.users on purpose: the
+-- archive must survive a member being deleted later. Admin-only through RLS.
+-- (Not yet run on the live DB — see the journal's SQL section.)
+create table if not exists public.block_archive (
+  id          bigserial primary key,
+  label       text not null,
+  kind        text not null check (kind in ('states','board','program')),
+  user_id     uuid,                              -- null for the program row
+  name        text not null default '',          -- member's name at archive time
+  data        jsonb not null,
+  archived_at timestamptz not null default now()
+);
+create index if not exists block_archive_label_idx on public.block_archive (label, kind);
+alter table public.block_archive enable row level security;
+drop policy if exists archive_admin on public.block_archive;
+create policy archive_admin on public.block_archive for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
+
+-- The admin panel's "🧨 איפוס בלוק" button calls this. Copies states + board
+-- (+ the shared_program row) into block_archive, deletes states + board, and
+-- resets shared_program (weeks, block_recap, announcement — announcement_log
+-- is KEPT: it is the admin's audit trail). Everything in ONE transaction: a
+-- failure anywhere leaves the data exactly as it was. Accounts, profiles and
+-- every table survive — "reset the data, not the infrastructure" (Ori, 06/09).
+drop function if exists public.admin_reset_block(text);
+create or replace function public.admin_reset_block(p_label text)
+  returns jsonb
+  language plpgsql
+  security definer
+  set search_path = public
+as $$
+declare
+  v_as int := 0;
+  v_ab int := 0;
+  v_ds int := 0;
+  v_db int := 0;
+begin
+  if not public.is_admin() then raise exception 'not authorized'; end if;
+  if p_label is null or length(trim(p_label)) = 0 then raise exception 'label required'; end if;
+
+  insert into public.block_archive (label, kind, user_id, name, data)
+    select p_label, 'states', s.user_id, coalesce(p.name, ''),
+           jsonb_build_object('tracker', s.tracker, 'updated_at', s.updated_at)
+      from public.states s
+      left join public.profiles p on p.id = s.user_id;
+  get diagnostics v_as = row_count;
+
+  insert into public.block_archive (label, kind, user_id, name, data)
+    select p_label, 'board', b.user_id, coalesce(p.name, b.name, ''), to_jsonb(b)
+      from public.board b
+      left join public.profiles p on p.id = b.user_id;
+  get diagnostics v_ab = row_count;
+
+  insert into public.block_archive (label, kind, user_id, name, data)
+    select p_label, 'program', null, '', to_jsonb(sp)
+      from public.shared_program sp
+     where sp.id = 1;
+
+  delete from public.states;
+  get diagnostics v_ds = row_count;
+  delete from public.board;
+  get diagnostics v_db = row_count;
+
+  update public.shared_program
+     set weeks = null, block_recap = null, announcement = null, updated_at = now()
+   where id = 1;
+
+  return jsonb_build_object('archived_states', v_as, 'archived_board', v_ab,
+                            'deleted_states', v_ds, 'deleted_board', v_db,
+                            'label', p_label);
+end;
+$$;
+
+revoke all on function public.admin_reset_block(text) from public;
+revoke all on function public.admin_reset_block(text) from anon;
+grant execute on function public.admin_reset_block(text) to authenticated;
+
 -- PostgREST caches the schema; without this, a just-created function keeps
 -- returning "Could not find the function ... in the schema cache" for a while.
 notify pgrst, 'reload schema';

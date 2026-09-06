@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "2.2.3";
+  var BUILD = "2.3.0";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -112,7 +112,9 @@
       if (r.error && /announcement_seen/.test(r.error.message || ""))
         r = await sb.from("profiles").select("name,is_admin,welcome_seen,gender,birth_date").eq("id", uid).maybeSingle();
       if (r.error) throw r.error;
-      return r.data || { name: "", is_admin: false, welcome_seen: false, gender: null, birth_date: null, announcement_seen: null };
+      // _missing: the read came back EMPTY (no row — or an anonymous read under
+      // RLS). Boot's "row gone" branch needs a confirmed profile row as proof.
+      return r.data || { name: "", is_admin: false, welcome_seen: false, gender: null, birth_date: null, announcement_seen: null, _missing: true };
     } catch (e) {
       return { name: "", is_admin: false, welcome_seen: false, gender: null, birth_date: null, announcement_seen: null, _err: true };
     }
@@ -342,6 +344,45 @@
   // under it with margin for headers.
   var KEEPALIVE_MAX = 60000;
   function rawGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  // ---- maintenance mode + block reset (v2.3.0) --------------------------
+  // The maintenance flag lives in version.json next to the build:
+  //   { "build": "2.3.0", "maintenance": true }
+  // While it is on, main() sends everyone but admins / staff devices to
+  // maintenance.html BEFORE touching any data. Read fresh every time (the SW
+  // is network-first, no-store skips the HTTP cache). Fail-OPEN: an
+  // unreadable flag proves nothing, and a gym with bad reception must never
+  // read as "closed for a new block".
+  var STAFF_KEY = "cfby_staff";     // set by maintenance.html (logo tap + the app's admin code)
+  function staffDevice() { return rawGet(STAFF_KEY) === "1"; }
+  async function maintenanceFlag() {
+    try {
+      var r = await fetch("version.json?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) return false;
+      var j = await r.json();
+      return !!(j && j.maintenance === true);
+    } catch (e) { return false; }
+  }
+  // "1" once this device has booted against (or created) its own cloud row.
+  // Boot uses it to tell a row that was DELETED (block reset: drop the local
+  // copy) from a row that was never created (new user whose first pushes
+  // died: keep the local copy, as always). Cleared whenever the local copy is
+  // dropped, so a fresh start after a reset is protected like a new user.
+  var SRVROW_KEY = "cfby_srvrow_v1";
+  // Drop this device's copy of the tracker + board: memory mirrors first (they
+  // are the source of truth for pushes), pending push timers, then storage.
+  // Used by boot's "row gone" branch and after an admin reset on the admin's
+  // own device, so no close-time push can carry last block's data back.
+  function dropLocalCopy() {
+    memTracker = null; memDts = null; memDirty = false; memDirtyDays = {}; memBoard = null;
+    if (t1) { clearTimeout(t1); t1 = null; }
+    if (t2) { clearTimeout(t2); t2 = null; }
+    try { localStorage.removeItem(K.TRACKER_KEY); } catch (e) {}
+    try { localStorage.removeItem(DTS_KEY); } catch (e) {}
+    try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
+    try { localStorage.removeItem(SRVROW_KEY); } catch (e) {}
+    try { localStorage.removeItem(K.BOARD_KEY); } catch (e) {}
+  }
 
   // In-memory mirrors of the tracker, day stamps, and dirty flag (v1.7.1).
   // localStorage on iOS can start failing silently mid-session (quota /
@@ -657,6 +698,7 @@
     }
     sessionDead = false;   // a clean push proves the session is alive
     lastServerStamp = nowIso;   // the server row now carries exactly this stamp
+    try { localStorage.setItem(SRVROW_KEY, "1"); } catch (e) {}   // the cloud row now exists for this device
     // Admin also publishes the program scaffold for everyone — STRIPPED of the
     // admin's own logs (see stripLogs above). This used to run AFTER the badge
     // already said "saved", with its result never inspected: the admin saw
@@ -1127,6 +1169,11 @@
       ".cfa-prev{background:#1b2b4d;border:1px solid #2e4a7d;color:#9fc2ff;border-radius:8px;padding:10px 14px;font:700 12px 'Heebo',sans-serif;cursor:pointer}" +
       ".cfa-annclr{background:transparent;border:1px solid #e74c3c;color:#e74c3c;border-radius:8px;padding:10px 14px;font:700 12px 'Heebo',sans-serif;cursor:pointer}" +
       ".cfa-annst{font-size:12px;color:#8ea3c9}" +
+      ".cfa-locks{font-size:12px;color:#8ea3c9;margin:0 0 10px;line-height:1.7}" +
+      ".cfa-locks b{color:#eaf0ff}" +
+      ".cfa-ann input.cfa-short{width:auto;max-width:170px;margin-bottom:0}" +
+      ".cfa-wipe{background:#e74c3c;color:#fff;border:1px solid #e74c3c;border-radius:8px;padding:10px 14px;font:800 13px 'Heebo',sans-serif;cursor:pointer}" +
+      ".cfa-wipe:disabled{background:transparent;color:#e74c3c;opacity:.5;cursor:not-allowed}" +
       ".cfa-annlog{margin-top:12px;border-top:1px solid #243657;padding-top:10px;display:flex;flex-direction:column;gap:8px}" +
       ".cfa-annlog-item{background:#16233f;border:1px solid #243657;border-radius:10px;padding:10px 12px}" +
       ".cfa-annlog-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}" +
@@ -1187,6 +1234,17 @@
             '<button class="cfa-pub" id="cfaRecapOpen">🏁 פתח לכולם</button>' +
             '<button class="cfa-annclr" id="cfaRecapClose">🔒 סגור</button>' +
             '<span class="cfa-annst" id="cfaRecapSt"></span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="cfa-ann">' +
+          '<h3>🧨 איפוס בלוק</h3>' +
+          '<p class="sub">מעתיק את כל התוצאות והלוח לארכיון במסד ורק אז מוחק אותם, סוגר את כרטיס הסיכום, מאפס את התוכנית המשותפת ומסיר את הודעת הבלוק. ' +
+            'חשבונות, פרופילים ויומן ההודעות נשארים. פעיל רק כשמצב תחזוקה דולק ורק אחרי גיבוי טרי (עד שעה) מהמכשיר הזה. לאישור מקלידים את מספר המתאמנים שמוצג.</p>' +
+          '<div class="cfa-locks" id="cfaWipeLocks">בודק…</div>' +
+          '<div class="row">' +
+            '<input id="cfaWipeLabel" class="ltr cfa-short" value="block-1" placeholder="block-1" title="תווית לארכיון (למשל block-1, block-2-tests)">' +
+            '<input id="cfaWipeCount" class="ltr cfa-short" inputmode="numeric" placeholder="מספר המתאמנים" autocomplete="off">' +
+            '<button class="cfa-wipe" id="cfaWipeGo" disabled>🧨 אפס בלוק</button>' +
           '</div>' +
         '</div>' +
         '<p class="cfa-msg" id="cfaMsg"></p>' +
@@ -1273,7 +1331,7 @@
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
         try { localStorage.setItem(BK_KEY, String(Date.now())); } catch (e) {}
-        bkInfo();
+        bkInfo(); wipeStatus();
         amsg("הגיבוי ירד למכשיר: " + payload.profiles.length + " משתמשים, " +
              payload.states.length + " טבלאות תוצאות. שמור את הקובץ במקום בטוח (דרייב/מחשב).", "ok");
       } catch (e) {
@@ -1466,6 +1524,78 @@
       amsg("כרטיס הסיכום נסגר", "ok"); recapStatus();
     }
 
+    // ---- block reset (v2.3.0) -------------------------------------------
+    // Archive-then-wipe through ONE server function (admin_reset_block):
+    // states + board rows are copied into block_archive and deleted, and
+    // shared_program is reset, all in one transaction. Two locks and a typed
+    // count stand in front of it (Ori, 06/09): maintenance mode must be ON
+    // (nobody is inside the app), a backup must have been taken from THIS
+    // device within the hour, and the admin types the number of members
+    // about to lose their rows. Accounts, profiles and the announcement log
+    // survive — the data is reset, the infrastructure is not.
+    var wipe = { maint: false, backupFresh: false, n: 0, sRows: 0, bRows: 0 };
+    function backupFresh() { var t = parseInt(rawGet(BK_KEY), 10) || 0; return t > 0 && (Date.now() - t) < 3600000; }
+    async function wipeStatus() {
+      var el = document.getElementById("cfaWipeLocks");
+      if (!el) return;
+      wipe.backupFresh = backupFresh();
+      wipe.maint = await maintenanceFlag();
+      // ids only — never the blobs (a states select of tracker is 70KB a row)
+      var st = await sb.from("states").select("user_id");
+      var bd = await sb.from("board").select("user_id");
+      var ids = {};
+      (st.data || []).forEach(function (r) { ids[r.user_id] = 1; });
+      (bd.data || []).forEach(function (r) { ids[r.user_id] = 1; });
+      wipe.sRows = (st.data || []).length; wipe.bRows = (bd.data || []).length;
+      wipe.n = (st.error || bd.error) ? 0 : Object.keys(ids).length;
+      el.innerHTML = "";
+      function line(txt, strong) {
+        var d = document.createElement("div");
+        if (strong) { var b = document.createElement("b"); b.textContent = txt; d.appendChild(b); } else d.textContent = txt;
+        el.appendChild(d);
+      }
+      line(wipe.maint ? "✅ מצב תחזוקה דולק" : "🔒 מצב תחזוקה כבוי — הכפתור נעול (הדגל יושב ב-version.json)");
+      line(wipe.backupFresh ? "✅ גיבוי טרי מהמכשיר הזה" : "🔒 אין גיבוי מהשעה האחרונה מהמכשיר הזה — הכפתור נעול (💾 גיבוי לקובץ)");
+      if (st.error || bd.error) line("⚠️ לא הצלחתי לספור את הרשומות — סגור ופתח את הפאנל");
+      else line("יימחקו נתונים של " + wipe.n + " מתאמנים (" + wipe.sRows + " רשומות תוצאות, " + wipe.bRows + " שורות לוח)", true);
+      wipeArm();
+    }
+    function wipeArm() {
+      var btn = document.getElementById("cfaWipeGo"), inp = document.getElementById("cfaWipeCount");
+      if (!btn || !inp) return;
+      var typed = (inp.value || "").trim();
+      btn.disabled = !(wipe.maint && wipe.backupFresh && wipe.n > 0 && typed === String(wipe.n));
+    }
+    async function wipeRun() {
+      // Re-check both locks at click time, not just at render time.
+      if (!backupFresh()) { amsg("האיפוס נעול: אין גיבוי מהשעה האחרונה מהמכשיר הזה", "err"); wipeStatus(); return; }
+      if (!(await maintenanceFlag())) { amsg("האיפוס נעול: מצב תחזוקה כבוי", "err"); wipeStatus(); return; }
+      var typed = (document.getElementById("cfaWipeCount").value || "").trim();
+      if (!wipe.n || typed !== String(wipe.n)) { amsg("המספר שהוקלד לא תואם את מספר המתאמנים", "err"); return; }
+      // A push in flight (or pending) could land AFTER the delete and recreate
+      // this account's row with last block's data — wait for a quiet moment.
+      if (pushBusy || unsynced()) { amsg("יש שמירה בתהליך — חכה לחיווי ☁️ מסונכרן בתחתית המסך ונסה שוב", "err"); return; }
+      var label = (document.getElementById("cfaWipeLabel").value || "").trim() || "block-1";
+      var btn = document.getElementById("cfaWipeGo");
+      btn.disabled = true;
+      amsg("מאפס… מעתיק לארכיון ומוחק (" + label + ")");
+      var r = await sb.rpc("admin_reset_block", { p_label: label });
+      if (r.error) {
+        var m = r.error.message || String(r.error);
+        if (/admin_reset_block|block_archive/.test(m) && /schema cache|find the function|does not exist/i.test(m))
+          m = "הפונקציה admin_reset_block חסרה ב-Supabase — יש להריץ את supabase/schema.sql ב-SQL Editor ואז לנסות שוב";
+        amsg("האיפוס נכשל ושום דבר לא נמחק: " + m, "err");
+        wipeArm(); return;
+      }
+      var d = r.data || {};
+      amsg("האיפוס הסתיים: " + (d.archived_states || 0) + " רשומות תוצאות + " + (d.archived_board || 0) + " שורות לוח בארכיון \"" + label + "\", " +
+           (d.deleted_states || 0) + " + " + (d.deleted_board || 0) + " נמחקו. האפליקציה נטענת מחדש…", "ok");
+      // This device's own copy is last block's data too. Drop it BEFORE the
+      // reload so no close-time push can carry it back into the fresh cloud.
+      dropLocalCopy();
+      setTimeout(function () { location.reload(); }, 1500);
+    }
+
     // ---- announcement log VIEW ------------------------------------------
     var annLogOpen = false, annLogEntries = [];
     function annEsc(s) {
@@ -1594,7 +1724,7 @@
     function openPanel() {
       ov.classList.add("open");
       document.documentElement.style.overflow = "hidden";
-      bkInfo(); annStatus(); recapStatus(); refresh();
+      bkInfo(); annStatus(); recapStatus(); wipeStatus(); refresh();
     }
     function closePanel() {
       ov.classList.remove("open");
@@ -1633,6 +1763,8 @@
     });
     document.getElementById("cfaAdd").onclick = addUser;
     document.getElementById("cfaBk").onclick = backup;
+    document.getElementById("cfaWipeGo").onclick = wipeRun;
+    document.getElementById("cfaWipeCount").oninput = wipeArm;
     var rsFile = document.getElementById("cfaRsFile");
     document.getElementById("cfaRs").onclick = function () { rsFile.value = ""; rsFile.click(); };
     rsFile.onchange = function () { if (rsFile.files && rsFile.files[0]) restore(rsFile.files[0]); };
@@ -1771,7 +1903,8 @@
   }
   // Festive one-time popup. Built with textContent (never innerHTML on the
   // admin-authored text) so the message can't inject markup.
-  function showAnnouncement(ann, onClose) {
+  function showAnnouncement(ann, onClose, opts) {
+    opts = opts || {};   // { icon, button, confetti:false } for plain notices
     var ov = document.createElement("div");
     ov.id = "cfbyAnn";
     ov.style.cssText =
@@ -1783,7 +1916,7 @@
     head.style.cssText = "background:linear-gradient(120deg,#141f38,#23409a);color:#fff;padding:26px 24px 22px;text-align:center";
     var medal = document.createElement("div");
     medal.style.cssText = "font-size:44px;line-height:1;margin-bottom:10px";
-    medal.textContent = "🎖️";
+    medal.textContent = opts.icon || "🎖️";
     var h = document.createElement("div");
     h.style.cssText = "font-weight:800;font-size:20px;line-height:1.35";
     h.textContent = (ann && ann.title) || "בלוק חדש התחיל!";
@@ -1795,13 +1928,13 @@
     foot.style.cssText = "padding:0 24px 22px";
     var go = document.createElement("button");
     go.style.cssText = "width:100%;background:#ef5b25;color:#fff;border:none;border-radius:12px;padding:14px;font:800 15px 'Heebo',sans-serif;cursor:pointer";
-    go.textContent = "קדימה לבלוק! 💪";
+    go.textContent = opts.button || "קדימה לבלוק! 💪";
     go.onclick = function () { ov.remove(); if (onClose) onClose(); };
     foot.appendChild(go);
     box.appendChild(head); box.appendChild(body); box.appendChild(foot);
     ov.appendChild(box);
     document.body.appendChild(ov);
-    confettiBurst();
+    if (opts.confetti !== false) confettiBurst();
   }
   window.__cfbyAnnPreview = showAnnouncement;   // admin panel preview hook
 
@@ -1885,8 +2018,22 @@
       try { localStorage.removeItem(KA_KEY); } catch (e) {}
     }
 
+    var maintP = maintenanceFlag();            // in flight alongside the profile fetch
     var prof = await fetchProfile(uid);
     var isAdmin = !!prof.is_admin;
+
+    // Maintenance mode (v2.3.0): between blocks the app is closed to athletes.
+    // Checked here — after the session and profile, BEFORE the tracker fetch,
+    // the merge and the interceptor — so a gated device neither reads nor
+    // writes anything: its local copy stays exactly as it was and nothing
+    // reaches the cloud (the block reset runs while the gate is up). Admins
+    // pass on their account; a staff device passes on the flag that
+    // maintenance.html sets (logo tap + the app's admin code), which is what
+    // lets a plain test user through on Ori's phone. location.replace is safe
+    // here: no memTracker exists yet and storage is untouched — iron rule 3
+    // is about redirects mid-session. A slow flag fetch fails open after 4s.
+    var maint = await Promise.race([maintP, new Promise(function (res) { setTimeout(function () { res(false); }, 4000); })]);
+    if (maint && !isAdmin && !staffDevice()) { location.replace("maintenance.html"); return; }
 
     // First login: collect gender + birth date (needed for the competition
     // category). Blocks the app until answered, then refetches the profile.
@@ -1927,6 +2074,19 @@
     if (mine && mine.updated_at) lastServerStamp = mine.updated_at;
     var dirtyTs = parseInt(rawGet(DIRTY_KEY), 10) || 0;
     var keepLocal = false;
+    // v2.3.0 — "the row is GONE" vs "the row was never created". SRVROW_KEY
+    // is set the first time this device boots against (or pushes) its cloud
+    // row. So: no row + mark = an admin deleted the row (block reset) — the
+    // local copy is last block's data and must not resurrect, synced or not
+    // (Ori, 06/09: discard + one-time notice). No row + no mark = a brand-new
+    // user whose first pushes died: keep local and push, exactly as before.
+    // A CONFIRMED profile row is required as proof that the empty read was a
+    // real answer and not an anonymous one (RLS shows nothing to a dead
+    // session). st.error never gets here — an error proves nothing.
+    var rowGone = !st.error && !(mine && mine.tracker && mine.tracker.weeks) &&
+                  !!(localTracker && localTracker.weeks) &&
+                  rawGet(SRVROW_KEY) === "1" && !prof._err && !prof._missing;
+    var staleNotice = rowGone && dirtyTs > 0;   // unsynced days are being dropped — say so, once
     if (st.error) {
       // Server unreachable but the device has a copy: boot from it, touch
       // NOTHING. Only data that was already marked unsynced gets pushed once
@@ -1936,6 +2096,7 @@
       keepLocal = dirtyTs > 0;
       syncShow(navigator.onLine === false ? "offline" : "error");
     } else if (mine && mine.tracker && mine.tracker.weeks) {
+      try { localStorage.setItem(SRVROW_KEY, "1"); } catch (e) {}   // this device has met its cloud row
       var serverDts = mine.tracker._dts || {};
       delete mine.tracker._dts;                 // internal — the app must never see it
       var serverTs = mine.updated_at ? Date.parse(mine.updated_at) || 0 : 0;
@@ -1962,7 +2123,7 @@
         try { lsSetRaw(DTS_KEY, serverDts); } catch (e) {}
         try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
       }
-    } else if (localTracker && localTracker.weeks && dirtyTs > 0) {
+    } else if (localTracker && localTracker.weeks && dirtyTs > 0 && !rowGone) {
       // The server answered "no row" BUT this device holds unsynced data: the
       // cloud simply never received it (a brand-new user whose first-session
       // pushes all died with the mobile lifecycle / gym reception). The old
@@ -1975,8 +2136,8 @@
       // Clear any stale local copy so deleted data can never resurrect, then
       // seed the published program (scaffold only, stripped of any logs an
       // older buggy publish may have left in shared_program).
-      memTracker = null; memDts = null;         // deleted data must not resurrect from mirrors either
-      try { localStorage.removeItem(K.TRACKER_KEY); localStorage.removeItem(DIRTY_KEY); localStorage.removeItem(DTS_KEY); } catch (e) {}
+      if (rowGone) console.warn("[sync] cloud row gone (block reset) — dropping this device's copy of last block" + (dirtyTs > 0 ? " (it had unsynced days)" : ""));
+      dropLocalCopy();                          // deleted data must not resurrect from mirrors either
       var prog = await fetchSharedProgram();    // fresh user -> admin's published program
       if (prog) {
         var seedT = { v: 2, weeks: stripLogs(prog) };
@@ -2059,6 +2220,14 @@
     await revealApp();
     versionTag();
     checkFreshBundle();   // fire-and-forget: reloads only if a newer build is live
+    // The block reset dropped unsynced days of the previous block from this
+    // device (see rowGone). One plain notice — no confetti, nothing to celebrate.
+    if (staleNotice) {
+      try {
+        showAnnouncement({ title: "בלוק חדש", body: "נמצאו רישומים מהבלוק הקודם שלא סונכרנו, הם לא נכללים בבלוק החדש" },
+                         null, { icon: "🔄", button: "הבנתי", confetti: false });
+      } catch (e) {}
+    }
 
     // Block announcement: pops ONCE per user, and only when the admin has
     // published one whose id this user hasn't seen. No announcement row (the
