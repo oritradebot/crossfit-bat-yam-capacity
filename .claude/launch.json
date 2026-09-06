@@ -42,6 +42,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8161"],
       "port": 8161
+    },
+    {
+      "name": "recap-cards",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["tools/recap_cards_server.py"],
+      "port": 8171
     }
   ]
 }

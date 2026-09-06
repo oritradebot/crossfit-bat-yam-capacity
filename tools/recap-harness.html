@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>כרטיסי סיכום בלוק — הפקה מגיבוי</title>
+<!-- Same webfonts the app and design/block-recap/preview.html use. Oswald has
+     no Hebrew glyphs, Heebo carries the Hebrew — both must be loaded before the
+     shot or html2canvas paints a fallback font. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; padding:20px; background:#E6E5E0; font-family:'Heebo',sans-serif; color:#1a2848; }
+  h2 { margin:0 0 10px; }
+  button { border:none; cursor:pointer; padding:10px 18px; border-radius:999px; font:700 14px/1 'Heebo'; background:#23409A; color:#fff; box-shadow:0 2px 8px rgba(12,18,34,.2); }
+  button[disabled] { opacity:.5; cursor:default; }
+  #log { white-space:pre-wrap; font:13px/1.5 monospace; background:#fff; padding:12px; border-radius:10px; direction:ltr; text-align:left; margin-top:14px; }
+  .stage { margin-top:16px; }
+  .zoom { transform:scale(.3); transform-origin:top right; width:1080px; }
+  .box { width:324px; height:576px; overflow:hidden; }
+  .hint { color:#5a6580; font-size:13px; }
+</style>
+</head>
+<body>
+<h2>הפקת כרטיסי סיכום מקובץ הגיבוי</h2>
+<p class="hint">מרנדר את כרטיס הסיכום של כל משתתף/ת מהגיבוי (אותו מצייר של האפליקציה) ושומר PNG לתיקיית הסיכומים. הסיכומים עצמם: <a href="/out/index.html">/out/index.html</a></p>
+<button id="go">הפק את כל הכרטיסים</button>
+<div id="log">ready</div>
+<div class="stage"><div class="box"><div class="zoom" id="preview"></div></div></div>
+
+<script src="/lib/react.js"></script>
+<script src="/lib/react-dom.js"></script>
+<script src="/lib/html2canvas.js"></script>
+<script src="/lib/recap-build.js"></script>
+<script src="/lib/recap-card.js"></script>
+<script>
+// ---- stub of the app component: exactly the helpers BlockRecap.build uses
+//      (ported 1:1 from app.html — metconScore / dayComplete / dayHasPR / dateAt).
+function metconScore(m) {
+  if (!m) return null;
+  var M = m.log || {};
+  var mode = m.resultMode || M.mode || 'time';
+  if (mode === 'time') {
+    if (!M.time) return null;
+    var p = String(M.time).trim().split(':').map(Number);
+    if (!p.length || p.some(isNaN)) return null;
+    var s = p.length === 3 ? p[0]*3600 + p[1]*60 + p[2] : (p.length === 2 ? p[0]*60 + p[1] : p[0]);
+    return s > 0 ? { v: s, dir: 'low' } : null;
+  }
+  if (mode === 'amount') { var a = parseFloat(M.amount); return a > 0 ? { v: a, dir: 'high' } : null; }
+  var r = (parseInt(M.rounds,10)||0)*100000 + (parseInt(M.reps,10)||0);
+  return r > 0 ? { v: r, dir: 'high' } : null;
+}
+function emptyDay() {
+  var mc = function () { return { name:'', scheme:'', score:'', note:'', result:'', resultMode:'', rx:false, scaled:false, log:{ mode:'time', time:'', rounds:'', reps:'', amount:'', note:'', scaled:'' }, movements:[] }; };
+  return { done:false, rest:false, rating:'', pr:false, lift:{ movement:'', planned:'', result:'', log:{ weight:'', reps:'', note:'' } },
+           metcon: mc(), metcon2: mc(), extras:[{name:'',detail:'',result:'',log:{text:''}},{name:'',detail:'',result:'',log:{text:''}}], summary:'' };
+}
+function makeApp(weeks, name) {
+  var data = [];
+  for (var w = 0; w < 8; w++) {
+    var wk = weeks && weeks[w], days = [];
+    for (var d = 0; d < 7; d++) days.push((wk && wk.days && wk.days[d]) || emptyDay());
+    data.push({ days: days });
+  }
+  return {
+    state: { data: data, myName: name || '' },
+    startDate: new Date(2026, 6, 12),                 // app.html startDate (block 1)
+    myTargetVal: function () { return 5; },           // myTarget never syncs → the cloud copy always means 5
+    dayComplete: function (day) { return !!(day.done || (day.alt && day.alt.done)); },
+    dayHasPR: function (d) { return !!(d && (d.pr || d.rating === 'pr')); },
+    metconScore: metconScore,
+    dateAt: function (i) { var d = new Date(this.startDate); d.setDate(d.getDate() + i); return d; },
+    pad: function (n) { return String(n).padStart(2, '0'); }
+  };
+}
+
+var LOG = document.getElementById('log');
+function log(s) { LOG.textContent += '\n' + s; console.log(s); }
+
+// Capture path = the app's own (app.html shareType:'block'): offscreen host at
+// the 1080 layout width, scale 4/3 → 1440 wide, windowWidth 1280.
+function shoot(data, format) {
+  return new Promise(function (resolve, reject) {
+    var S = BlockRecapCard.sizes[format];
+    var host = document.createElement('div');
+    host.style.cssText = 'position:fixed; top:0; left:-99999px; width:' + S.w + 'px;';
+    document.body.appendChild(host);
+    var r = ReactDOM.createRoot(host);
+    var id = 'shoot-' + format + '-' + Date.now();
+    r.render(BlockRecapCard.el(data, format, id));
+    setTimeout(function () {
+      html2canvas(document.getElementById(id), { backgroundColor: null, scale: S.exp.scale, useCORS: true, windowWidth: 1280 })
+        .then(function (canvas) {
+          if (canvas.width !== S.exp.w || canvas.height !== S.exp.h)
+            log('  ! ' + format + ' expected ' + S.exp.w + 'x' + S.exp.h + ' got ' + canvas.width + 'x' + canvas.height);
+          canvas.toBlob(function (blob) { r.unmount(); host.remove(); resolve(blob); }, 'image/png');
+        })
+        .catch(function (e) { r.unmount(); host.remove(); reject(e); });
+    }, 400);
+  });
+}
+
+async function save(blob, user, fmt) {
+  var res = await fetch('/save?user=' + encodeURIComponent(user) + '&fmt=' + fmt, { method: 'POST', body: blob });
+  return res.json();
+}
+
+window.RESULTS = null;
+window.run = async function (onlyNames) {
+  document.getElementById('go').disabled = true;
+  LOG.textContent = 'starting…';
+  await document.fonts.ready;
+  await Promise.all([document.fonts.load("700 40px 'Oswald'"), document.fonts.load("700 40px 'Heebo'"), document.fonts.load("800 40px 'Heebo'")]).catch(function () {});
+  log('fonts: Oswald=' + document.fonts.check("700 40px 'Oswald'") + ' Heebo=' + document.fonts.check("700 40px 'Heebo'"));
+  var bk = await (await fetch('/backup.json')).json();
+  log('backup: ' + bk.created_at + ' · ' + bk.profiles.length + ' profiles · ' + bk.states.length + ' states');
+  var states = {}, boards = {};
+  bk.states.forEach(function (s) { states[s.user_id] = s; });
+  bk.board.forEach(function (b) { boards[b.user_id] = b; });
+  var out = [];
+  for (var i = 0; i < bk.profiles.length; i++) {
+    var p = bk.profiles[i];
+    // the card's athlete line = what the athlete typed on the board, else the profile
+    var name = (boards[p.id] && boards[p.id].name) || p.name || p.email || p.id;
+    if (onlyNames && onlyNames.indexOf(name) < 0) continue;
+    var tr = states[p.id] && states[p.id].tracker;
+    var data = BlockRecap.build(makeApp(tr && tr.weeks, name), { logo: '/assets/logo.png' });
+    if (!window.__pvRoot) window.__pvRoot = ReactDOM.createRoot(document.getElementById('preview'));
+    window.__pvRoot.render(BlockRecapCard.el(data, 'story', 'pv-card'));
+    var rec = { name: name, hero: data.hero.pct + ' ' + data.hero.eyebrow, tests: data.tests.length, done: data.attendance.done };
+    for (var f of ['story', 'feed']) {
+      try {
+        var j = await save(await shoot(data, f), name, f);
+        rec[f] = j.bytes;
+        log(name + ' · ' + f + ' → ' + j.bytes + ' bytes');
+      } catch (e) { rec[f] = 'ERR ' + (e && e.message || e); log(name + ' · ' + f + ' FAILED ' + e); }
+    }
+    out.push(rec);
+  }
+  window.RESULTS = out;
+  log('DONE ' + out.length + ' members');
+  document.getElementById('go').disabled = false;
+  return out;
+};
+document.getElementById('go').onclick = function () { run(); };
+if (new URLSearchParams(location.search).has('auto')) run();
+</script>
+</body>
+</html>
