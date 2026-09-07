@@ -1249,6 +1249,8 @@
       ".cfa-t.coach td.tests{font-size:11.5px;color:#c9d6f2}" +
       ".cfa-tog{background:transparent;border:1px solid #2e4a7d;color:#9fc2ff;border-radius:8px;padding:8px 12px;font:700 12px 'Heebo',sans-serif;cursor:pointer}" +
       ".cfa-tog.on{background:#2e4a7d;color:#fff}" +
+      ".cfa-name{background:none;border:none;color:#eaf0ff;font:700 13px 'Heebo',sans-serif;cursor:pointer;padding:0;text-decoration:underline dotted #4a90d9;text-underline-offset:3px}" +
+      ".cfa-name:hover{color:#7ab8f5}" +
       ".cfa-views{display:flex;gap:6px;margin-bottom:12px}" +
       ".cfa-view{flex:1;background:transparent;border:1px solid #2e4a7d;color:#9fc2ff;border-radius:10px;padding:9px 10px;font:800 13px 'Heebo',sans-serif;cursor:pointer}" +
       ".cfa-view.on{background:#2e4a7d;color:#fff}" +
@@ -1318,7 +1320,9 @@
           '<p class="sub">תמונת מצב של כל הרוסטר — נוכחות, שיאים, מטקוני RX ומבחנים. בלי מקומות ובלי ניקוד; מיון לפי שם. מתעדכן בכל פתיחת אפליקציה של המתאמן.</p>' +
           '<div class="cfa-wrap" id="cfaCoach">טוען…</div>' +
         '</div>' +
+        '<div id="cfaAthlete" style="display:none"></div>' +
         '<h3 class="cfa-h3">📋 כל המתאמנים הרשומים</h3>' +
+        '<div class="row" style="margin-bottom:8px"><button class="cfa-tog" id="cfaNeedOnly">📋 רק מי שצריך הודעה</button><span class="cfa-annst">ממוינים לפי מצב: לא-פעילים, חלקיים, מבחנים, פעילים</span></div>' +
         '<p class="cfa-stat" id="cfaStat"></p>' +
         '<div id="cfaList">טוען…</div>' +
         '</div>' +
@@ -1412,11 +1416,12 @@
     function statusOf(u, s, b) {
       var pub = (b && b.pub) || null;
       var last = s && s.updated_at ? Date.parse(s.updated_at) : 0;
-      if (!last) return { cls: "gry", txt: "⚪ עוד לא התחיל", kind: "" };
-      if (Date.now() - last > INACTIVE_DAYS * 86400000) return { cls: "red", txt: "🔴 לא תיעד " + Math.floor((Date.now() - last) / 86400000) + " ימים", kind: "inactive" };
-      if (pub && pub.partial > 0) return { cls: "org", txt: "🟠 הזנה חלקית · " + pub.partial + (pub.partial === 1 ? " יום" : " ימים"), kind: "partial" };
-      return { cls: "grn", txt: "🟢 פעיל", kind: "" };
+      if (!last) return { cls: "gry", txt: "⚪ עוד לא התחיל", kind: "", rank: 4 };
+      if (Date.now() - last > INACTIVE_DAYS * 86400000) return { cls: "red", txt: "🔴 לא תיעד " + Math.floor((Date.now() - last) / 86400000) + " ימים", kind: "inactive", rank: 0 };
+      if (pub && pub.partial > 0) return { cls: "org", txt: "🟠 הזנה חלקית · " + pub.partial + (pub.partial === 1 ? " יום" : " ימים"), kind: "partial", rank: 1 };
+      return { cls: "grn", txt: "🟢 פעיל", kind: "", rank: 3 };
     }
+    var needOnly = false;   // v3 (Ori): "only who needs a message" filter
     async function refresh() {
       var profs = await sb.from("profiles").select("id,name,email,is_admin,created_at");
       if (profs.error) { document.getElementById("cfaList").textContent = "שגיאה: " + profs.error.message; return; }
@@ -1429,15 +1434,20 @@
       var active = users.filter(function (u) { return sMap[u.id]; }).length;
       document.getElementById("cfaStat").textContent = users.length + " משתמשים · " + active + " התחילו למלא";
       var tw = testWeekInfo();
-      var rows = users.map(function (u) {
+      // v3 (Ori): sorted by status — inactive, partial, test week, active, not started — then by name
+      var ranked = users.map(function (u) {
         var s = sMap[u.id], b = bMap[u.id], pub = (b && b.pub) || null;
-        var isMe = u.id === meId;
         var stt = statusOf(u, s, b);
-        // test week: athletes with a baseline and no re-measure yet get the 🧪 text instead
         var testKind = "";
         if (tw && pub && Array.isArray(pub.tests) && pub.tests.some(function (t) { return t.base && !t.after; })) testKind = "test";
-        var kind = stt.kind || testKind;
-        return '<tr><td>' + esc(u.name || "—") + (u.is_admin ? ' <span class="cfa-badge">Admin</span>' : '') + (isMe ? ' (אתה)' : '') + '</td>' +
+        var rank = stt.kind ? stt.rank : (testKind ? 2 : stt.rank);
+        return { u: u, s: s, b: b, pub: pub, stt: stt, testKind: testKind, kind: stt.kind || testKind, rank: rank };
+      }).sort(function (a, c) { return (a.rank - c.rank) || (a.u.name || "").localeCompare(c.u.name || ""); });
+      var shown = needOnly ? ranked.filter(function (r) { return !!r.kind; }) : ranked;
+      var rows = shown.map(function (r) {
+        var u = r.u, s = r.s, b = r.b, pub = r.pub, stt = r.stt, testKind = r.testKind, kind = r.kind;
+        var isMe = u.id === meId;
+        return '<tr><td><button class="cfa-name" data-id="' + u.id + '" data-name="' + esc(u.name || "") + '" title="הצג את היומן של המתאמן">' + esc(u.name || "—") + '</button>' + (u.is_admin ? ' <span class="cfa-badge">Admin</span>' : '') + (isMe ? ' (אתה)' : '') + '</td>' +
           '<td style="direction:ltr;text-align:right;color:#8ea3c9">' + esc(u.email || "—") + '</td>' +
           '<td><span class="cfa-st ' + stt.cls + '">' + stt.txt + (testKind ? ' · 🧪' : '') + '</span></td>' +
           '<td>' + fmtWhen(s ? s.updated_at : null) + '</td>' +
@@ -1446,7 +1456,12 @@
             (isMe ? '' : '<button class="cfa-del" data-id="' + u.id + '" data-name="' + esc(u.name || "") + '">מחק</button>') + '</td></tr>';
       }).join("");
       document.getElementById("cfaList").innerHTML =
-        '<table class="cfa-t"><thead><tr><th>שם</th><th>שם משתמש</th><th>מצב</th><th>סנכרון אחרון</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+        '<table class="cfa-t"><thead><tr><th>שם</th><th>שם משתמש</th><th>מצב</th><th>סנכרון אחרון</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>' +
+        (needOnly && !shown.length ? '<p class="cfa-stat">אין כרגע מי שצריך הודעה 👍</p>' : '');
+      var nb = document.getElementById("cfaNeedOnly"); if (nb) { nb.className = "cfa-tog" + (needOnly ? " on" : ""); nb.onclick = function () { needOnly = !needOnly; refresh(); }; }
+      Array.prototype.forEach.call(document.querySelectorAll(".cfa-name"), function (btn) {
+        btn.onclick = function () { viewAthlete(btn.getAttribute("data-id"), btn.getAttribute("data-name")); };
+      });
       var byId = {}; users.forEach(function (u) { byId[u.id] = u; });
       Array.prototype.forEach.call(document.querySelectorAll(".cfa-copy"), function (btn) {
         btn.onclick = function () { var u = byId[btn.getAttribute("data-id")]; var b = bMap[u.id]; copyText(waText(btn.getAttribute("data-kind"), u, b && b.pub), btn); };
@@ -1467,6 +1482,43 @@
         } else tb.style.display = "none";
       }
       renderCoach(users, bMap, sMap);
+    }
+    // ---- athlete log viewer (v3, Ori 07/09) ---------------------------------
+    // Read-only, loaded ONLY on a tap (one 70KB blob per view — never for the
+    // whole roster). Admin RLS reads any states row.
+    var HE_DOW2 = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+    function effortWord(r) { var v = String(r || ""); if (v === "hard" || v === "max" || parseInt(v, 10) >= 8) return "קשה"; if (v === "ok" || v === "good" || v === "average" || (parseInt(v, 10) >= 5)) return "בסדר"; if (v === "easy" || parseInt(v, 10) >= 1) return "קל"; return ""; }
+    function resTxt(m) { if (!m || !m.log) return ""; var M = m.log, mode = m.resultMode || M.mode || "time"; if (mode === "time") return M.time || ""; if (mode === "amount") return M.amount || ""; return [M.rounds && (M.rounds + " סבבים"), M.reps && (M.reps + " חזרות")].filter(Boolean).join(" + "); }
+    async function viewAthlete(uid, name) {
+      var box = document.getElementById("cfaAthlete"); if (!box) return;
+      box.style.display = ""; box.innerHTML = '<div class="cfa-ann"><h3>📓 היומן של ' + esc(name) + '</h3><p class="sub">טוען…</p></div>';
+      box.scrollIntoView({ block: "start", behavior: "smooth" });
+      var r = await sb.from("states").select("tracker,updated_at").eq("user_id", uid).maybeSingle();
+      if (r.error || !r.data || !r.data.tracker) { box.innerHTML = '<div class="cfa-ann"><h3>📓 היומן של ' + esc(name) + '</h3><p class="sub">' + (r.error ? ("שגיאה: " + esc(r.error.message)) : "אין עדיין נתונים בענן") + '</p><div class="row"><button class="cfa-prev" id="cfaAthX">✕ סגור</button></div></div>'; document.getElementById("cfaAthX").onclick = function () { box.style.display = "none"; }; return; }
+      var wk = r.data.tracker.weeks || [], lines = [], n = 0;
+      for (var w = 0; w < wk.length; w++) {
+        var days = (wk[w] && wk[w].days) || [];
+        for (var dd = 0; dd < days.length; dd++) {
+          var day = days[dd]; if (!day) continue;
+          [[day, "WOD"], [day.alt, "אינדורנס"]].forEach(function (pair) {
+            var x = pair[0]; if (!x) return;
+            var L = (x.lift && x.lift.log) || {};
+            var e1 = metconEntry(x.metcon), e2 = metconEntry(x.metcon2);
+            if (!x.done && !L.weight && !e1 && !e2) return;
+            n++;
+            var parts = [];
+            if (x.lift && x.lift.movement && L.weight) parts.push('🏋️ ' + esc(x.lift.movement.split("—")[0].trim()) + ' — <b>' + esc(L.weight) + ' ק"ג</b>' + (L.reps ? (' × ' + esc(L.reps)) : ''));
+            [x.metcon, x.metcon2].forEach(function (m) { var t = resTxt(m); if (m && t) parts.push('⏱️ ' + esc(m.name || "מטקון") + ' — <b>' + esc(t) + '</b>' + (m.rx ? ' · RX' : (m.scaled ? ' · Scaled' : ''))); });
+            var meta = [x.level ? ('L' + esc(x.level)) : '', effortWord(x.rating) ? ('מאמץ: ' + effortWord(x.rating)) : '', (x.pr || x.rating === "pr") ? '🏆 שיא' : ''].filter(Boolean).join(' · ');
+            lines.push('<div class="cfa-annlog-item"><div class="cfa-annlog-head">' + (x.done ? '✅' : '⬜') + ' <b>שבוע ' + (w + 1) + ' · יום ' + HE_DOW2[dd] + '</b>' + (pair[1] === "אינדורנס" ? ' <span class="cfa-badge">אינדורנס</span>' : '') + (meta ? '<span class="cfa-annlog-when" style="direction:rtl">' + meta + '</span>' : '') + '</div>' +
+              '<div class="cfa-annlog-body">' + (parts.join('<br>') || '<span style="color:#8ea3c9">בלי תוצאות</span>') + (x.summary ? ('<br><i style="color:#8ea3c9">' + esc(x.summary) + '</i>') : '') + '</div></div>');
+          });
+        }
+      }
+      box.innerHTML = '<div class="cfa-ann"><h3>📓 היומן של ' + esc(name) + '</h3><p class="sub">' + n + ' רישומים · סנכרון אחרון ' + fmtWhen(r.data.updated_at) + ' · קריאה בלבד</p>' +
+        '<div class="cfa-annlog" style="border-top:none;padding-top:0;max-height:60vh;overflow:auto">' + (lines.join("") || '<p class="cfa-annlog-empty">עדיין אין רישומים</p>') + '</div>' +
+        '<div class="row" style="margin-top:10px"><button class="cfa-prev" id="cfaAthX">✕ סגור</button></div></div>';
+      document.getElementById("cfaAthX").onclick = function () { box.style.display = "none"; };
     }
     // ---- coach progress table (v3, Ori 07/09: "כן, בפאנל") -----------------
     function renderCoach(users, bMap, sMap) {

@@ -202,23 +202,38 @@
       .map(function (e) { return { name: e.name, value: trimNum(e.wt) + ' ק"ג' }; });
   }
 
+  /* ---- effort (v3): sessions the athlete rated "hard" ---------------------
+     app.effortKey maps the v3 scale and the older numeric RPE alike.        */
+  function hardCount(app) {
+    var n = 0;
+    for (var w = 0; w < 8; w++) for (var d = 0; d < 7; d++) {
+      var dd = app.state.data[w].days[d];
+      [dd, dd.alt].forEach(function (x) { if (x && x.done && app.effortKey && app.effortKey(x.rating) === 'hard') n++; });
+    }
+    return n;
+  }
+
   /* ---- badges ------------------------------------------------------------
      Earned or absent. Nothing is handed out for showing up to the card.      */
-  function badges(app, att, rx, tests) {
+  function badges(app, att, rx, tests, hard) {
     var out = [];
     if (att.best >= 5) out.push({ icon: '🔥', name: 'רצף ברזל', value: att.best + ' ימים רצופים' });
     if (rx >= 8) out.push({ icon: '⚡', name: 'RX ללא פשרות', value: rx + ' מטקונים בתקן' });
     if (att.fullWeeks >= 2) out.push({ icon: '💎', name: 'שבוע מושלם', value: att.fullWeeks + ' שבועות של ' + att.target + '/' + att.target });
     var improved = tests.filter(function (t) { return t.gain > 0; });
     if (improved.length && improved.length === tests.length) out.push({ icon: '📈', name: 'קו עולה', value: 'כל המבחנים השתפרו' });
+    // v3 (Ori, 07/09): effort earns a badge too — the same threshold as the app's own "5 אימונים קשים" tag, and then some
+    if (hard >= 8) out.push({ icon: '🥵', name: 'עבודה קשה', value: hard + ' אימונים במאמץ גבוה' });
     return out.slice(0, 3);
   }
 
   /* ---- keep / improve ----------------------------------------------------
      Every line is sourced from a number on the card. "improve" is written as
      a target for the next block — never as a verdict on this one.            */
-  function keepList(app, att, rx, tests) {
+  function keepList(app, att, rx, tests, goal) {
     var out = [];
+    // v3 (Ori, 07/09): a goal the athlete marked reached leads the "keep" list
+    if (goal && goal.text && goal.done) out.push({ title: 'המטרה הושגה 🎯', detail: goal.text });
     if (att.fullWeeks >= 2) out.push({ title: 'עקביות', detail: att.fullWeeks + ' שבועות מלאים מתוך 8' });
     var top = tests.filter(function (t) { return t.gain > 0; }).sort(function (a, b) { return b.gain - a.gain; })[0];
     if (top) {
@@ -237,8 +252,10 @@
   // app.weekdays is English (it labels the builder UI) — the card is Hebrew.
   var HE_DOW = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
-  function improveList(app, att, tests) {
+  function improveList(app, att, tests, goal) {
     var out = [];
+    // v3 (Ori, 07/09): a goal still open becomes the first target of the next block — never a verdict
+    if (goal && goal.text && !goal.done) out.push({ title: 'המטרה ממשיכה 🎯', detail: goal.text });
     var measured = tests.filter(function (t) { return t.after; });
     var weakest = measured.slice().sort(function (a, b) { return a.gain - b.gain; })[0];
     if (weakest && measured.length > 1) out.push({ title: weakest.short, detail: 'שיפור של ' + weakest.deltaAbs + ' — הקטן מבין ' + measured.length + ' המבחנים' });
@@ -291,6 +308,8 @@
     opts = opts || {};
     var att = attendance(app);
     var rx = rxCount(app);
+    var hard = hardCount(app);
+    var goal = { text: String(app.state.myGoal || '').trim(), done: !!app.state.myGoalDone };
     var tests = CAPACITESTS.map(function (t) { return buildTest(app, t); }).filter(Boolean);
     var measured = tests.filter(function (t) { return t.after; });
     var improved = measured.filter(function (t) { return t.gain > 0; });
@@ -329,12 +348,13 @@
       program: 'CAPACITY PROGRAM · 8 WEEKS',
       dateRange: fullDate(d0) + ' – ' + fullDate(d55),
       hero: hero,
-      badges: thin ? [] : badges(app, att, rx, tests),
+      badges: thin ? [] : badges(app, att, rx, tests, hard),
+      goal: goal, hard: hard,
       tests: tests,
       testsSummary: summary,
       attendance: { weeks: att.weeks, done: att.done, of: att.of, target: att.target },
-      keep: keepList(app, att, rx, tests),
-      improve: improveList(app, att, tests),
+      keep: keepList(app, att, rx, tests, goal),
+      improve: improveList(app, att, tests, goal),
       prs: personalRecords(app),
       trackedPct: Math.round(att.done / att.of * 100) + '% מהבלוק תועד'
     };

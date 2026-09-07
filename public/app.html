@@ -751,23 +751,38 @@
       .map(function (e) { return { name: e.name, value: trimNum(e.wt) + ' ק"ג' }; });
   }
 
+  /* ---- effort (v3): sessions the athlete rated "hard" ---------------------
+     app.effortKey maps the v3 scale and the older numeric RPE alike.        */
+  function hardCount(app) {
+    var n = 0;
+    for (var w = 0; w < 8; w++) for (var d = 0; d < 7; d++) {
+      var dd = app.state.data[w].days[d];
+      [dd, dd.alt].forEach(function (x) { if (x && x.done && app.effortKey && app.effortKey(x.rating) === 'hard') n++; });
+    }
+    return n;
+  }
+
   /* ---- badges ------------------------------------------------------------
      Earned or absent. Nothing is handed out for showing up to the card.      */
-  function badges(app, att, rx, tests) {
+  function badges(app, att, rx, tests, hard) {
     var out = [];
     if (att.best >= 5) out.push({ icon: '🔥', name: 'רצף ברזל', value: att.best + ' ימים רצופים' });
     if (rx >= 8) out.push({ icon: '⚡', name: 'RX ללא פשרות', value: rx + ' מטקונים בתקן' });
     if (att.fullWeeks >= 2) out.push({ icon: '💎', name: 'שבוע מושלם', value: att.fullWeeks + ' שבועות של ' + att.target + '/' + att.target });
     var improved = tests.filter(function (t) { return t.gain > 0; });
     if (improved.length && improved.length === tests.length) out.push({ icon: '📈', name: 'קו עולה', value: 'כל המבחנים השתפרו' });
+    // v3 (Ori, 07/09): effort earns a badge too — the same threshold as the app's own "5 אימונים קשים" tag, and then some
+    if (hard >= 8) out.push({ icon: '🥵', name: 'עבודה קשה', value: hard + ' אימונים במאמץ גבוה' });
     return out.slice(0, 3);
   }
 
   /* ---- keep / improve ----------------------------------------------------
      Every line is sourced from a number on the card. "improve" is written as
      a target for the next block — never as a verdict on this one.            */
-  function keepList(app, att, rx, tests) {
+  function keepList(app, att, rx, tests, goal) {
     var out = [];
+    // v3 (Ori, 07/09): a goal the athlete marked reached leads the "keep" list
+    if (goal && goal.text && goal.done) out.push({ title: 'המטרה הושגה 🎯', detail: goal.text });
     if (att.fullWeeks >= 2) out.push({ title: 'עקביות', detail: att.fullWeeks + ' שבועות מלאים מתוך 8' });
     var top = tests.filter(function (t) { return t.gain > 0; }).sort(function (a, b) { return b.gain - a.gain; })[0];
     if (top) {
@@ -786,8 +801,10 @@
   // app.weekdays is English (it labels the builder UI) — the card is Hebrew.
   var HE_DOW = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
-  function improveList(app, att, tests) {
+  function improveList(app, att, tests, goal) {
     var out = [];
+    // v3 (Ori, 07/09): a goal still open becomes the first target of the next block — never a verdict
+    if (goal && goal.text && !goal.done) out.push({ title: 'המטרה ממשיכה 🎯', detail: goal.text });
     var measured = tests.filter(function (t) { return t.after; });
     var weakest = measured.slice().sort(function (a, b) { return a.gain - b.gain; })[0];
     if (weakest && measured.length > 1) out.push({ title: weakest.short, detail: 'שיפור של ' + weakest.deltaAbs + ' — הקטן מבין ' + measured.length + ' המבחנים' });
@@ -840,6 +857,8 @@
     opts = opts || {};
     var att = attendance(app);
     var rx = rxCount(app);
+    var hard = hardCount(app);
+    var goal = { text: String(app.state.myGoal || '').trim(), done: !!app.state.myGoalDone };
     var tests = CAPACITESTS.map(function (t) { return buildTest(app, t); }).filter(Boolean);
     var measured = tests.filter(function (t) { return t.after; });
     var improved = measured.filter(function (t) { return t.gain > 0; });
@@ -878,12 +897,13 @@
       program: 'CAPACITY PROGRAM · 8 WEEKS',
       dateRange: fullDate(d0) + ' – ' + fullDate(d55),
       hero: hero,
-      badges: thin ? [] : badges(app, att, rx, tests),
+      badges: thin ? [] : badges(app, att, rx, tests, hard),
+      goal: goal, hard: hard,
       tests: tests,
       testsSummary: summary,
       attendance: { weeks: att.weeks, done: att.done, of: att.of, target: att.target },
-      keep: keepList(app, att, rx, tests),
-      improve: improveList(app, att, tests),
+      keep: keepList(app, att, rx, tests, goal),
+      improve: improveList(app, att, tests, goal),
       prs: personalRecords(app),
       trackedPct: Math.round(att.done / att.of * 100) + '% מהבלוק תועד'
     };
@@ -1847,6 +1867,11 @@
             <div style="text-align:center; color:var(--muted); font-size:13px; padding:14px;">עדיין אין שיאים — סמן 🏆 "שברתי שיא" ביומן.</div>
           </sc-if>
           <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line);">
+            <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">⬇️ הנתונים שלי</div>
+            <button onClick="{{ exportMyData }}" style="width:100%; background:var(--card); color:var(--blue); border:1.5px solid var(--blue); border-radius:12px; padding:11px; font-weight:700; font-size:13.5px; cursor:pointer;">⬇️ הורד את כל האימונים שלי (קובץ אקסל)</button>
+            <div style="font-size:11px; color:var(--muted); margin-top:6px;">כל יום עם תוצאה, כשורה בקובץ CSV. הנתונים שלך שלך — גם אחרי איפוס בלוק.</div>
+          </div>
+          <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line);">
             <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:10px;">🌓 מצב תצוגה</div>
             <div style="display:flex; gap:2px; background:var(--chip); border-radius:999px; padding:3px; width:fit-content;">
               <sc-for list="{{ themePills }}" as="tp" hint-placeholder-count="3">
@@ -2248,6 +2273,39 @@ class Component extends DCLogic {
     }
     const lvl = pv.level ? (' · L' + pv.level + ((day.level && day.level !== pv.level) ? ' (רמה שונה)' : '')) : '';
     return this.lastLine('בפעם הקודמת · ' + this.whenLabel(pv.i) + ': ' + pv.text + (pv.rx ? ' · RX' : '') + lvl, delta, good);
+  }
+  // ---- "הורד את הנתונים שלי" (v3, Ori 07/09): every logged session as a CSV row ----
+  // UTF-8 with BOM so Excel opens the Hebrew correctly. Shares as a file where
+  // the browser can (phones), otherwise downloads.
+  exportMyData() {
+    const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""').replace(/\r?\n/g, ' ') + '"';
+    const eff = (r) => { const m = this.effortMeta(r); return m ? m.label : (r || ''); };
+    const rows = [['תאריך','שבוע','יום','סשן','הושלם','תרגיל כוח','משקל (ק"ג)','חזרות','סטים','מטקון','תוצאה','RX/Scaled','רמה','מאמץ','שיא','תוספות','סיכום']];
+    this.state.data.forEach((wk, wi) => wk.days.forEach((day, di) => {
+      const gi = wi*7 + di;
+      [[day, 'WOD'], [day.alt, 'אינדורנס']].forEach(([x, sess]) => {
+        if (!x) return;
+        const L = (x.lift && x.lift.log) || {};
+        const hasL = !!L.weight, m1 = this.metconScore(x.metcon), m2 = this.metconScore(x.metcon2);
+        if (!x.done && !hasL && !m1 && !m2) return;
+        const sets = Object.keys(L).filter(k=>/^s\d+$/.test(k)).sort((a,b)=>+a.slice(1)-+b.slice(1)).map(k=>L[k]).join(' / ');
+        const met = [x.metcon, x.metcon2].filter(m => m && (m.name || this.metconScore(m)));
+        const metName = met.map(m => m.name).join(' + ');
+        const metRes = met.map(m => this.resultText(m)).filter(Boolean).join(' + ');
+        const rxs = met.map(m => m.rx ? 'RX' : (m.scaled ? ('Scaled' + (m.log && m.log.scaled ? ' (' + m.log.scaled + ')' : '')) : '')).filter(Boolean).join(' + ');
+        const extras = (x.extras || []).filter(e => e && e.name && e.log && e.log.text).map(e => e.name + ': ' + e.log.text).join(' | ');
+        rows.push([this.dateStr(this.dateAt(gi)), wi+1, this.hebDow[di], sess, x.done ? 'כן' : 'לא', (x.lift && x.lift.movement) || '', L.weight || '', L.reps || '', sets, metName, metRes, rxs, x.level ? ('L' + x.level) : '', eff(x.rating), this.dayHasPR(x) ? 'כן' : '', extras, x.summary || '']);
+      });
+    }));
+    const csv = '\ufeff' + rows.map(r => r.map(q).join(',')).join('\r\n');
+    const name = 'capacity-' + (this.state.myName || 'me').replace(/[^\p{L}\p{N}]+/gu, '-') + '-' + new Date().toISOString().slice(0,10) + '.csv';
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const file = (typeof File === 'function') ? new File([blob], name, { type: 'text/csv' }) : null;
+    if (file && navigator.canShare && navigator.canShare({ files:[file] })) { navigator.share({ files:[file], title: 'הנתונים שלי · Capacity' }).catch(()=>{}); return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    this.toast('הקובץ מוכן ⬇️ ' + (rows.length - 1) + ' שורות');
   }
   // Per-set lift: one tap copies the first weight typed into every set — then
   // only the sets that differ get corrected (v3, per Ori).
@@ -3589,6 +3647,7 @@ class Component extends DCLogic {
       profileAge: (this.state.myAge!=null ? String(this.state.myAge) : '—'),
       profileTotalWorkouts: totalDone,
       profileBestStreak: best,
+      exportMyData: ()=>this.exportMyData(),
       profilePRs: prList.slice(0,3),
       profileHasPRs: prList.length>0,
       profileNoPRs: prList.length===0,
