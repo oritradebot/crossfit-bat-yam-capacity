@@ -1230,7 +1230,7 @@
       ".cfa-x{background:#1b2b4d;border:1px solid #243657;border-radius:8px;color:#eaf0ff;font:700 13px 'Heebo',sans-serif;padding:8px 14px;cursor:pointer}" +
       ".cfa-add{background:#0f1830;border:1px solid #243657;border-radius:12px;padding:14px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end}" +
       ".cfa-add label{font-size:11px;color:#8ea3c9;display:block;margin-bottom:4px}" +
-      ".cfa-add input{width:100%;background:#16233f;border:1px solid #243657;border-radius:8px;padding:9px 10px;color:#eaf0ff;font:14px 'Heebo',sans-serif}" +
+      ".cfa-add input{width:100%;box-sizing:border-box;background:#16233f;border:1px solid #243657;border-radius:8px;padding:9px 10px;color:#eaf0ff;font:14px 'Heebo',sans-serif}" +
       ".cfa-add input.ltr{direction:ltr;text-align:left}" +
       ".cfa-add button{background:#2ecc71;color:#062;border:none;border-radius:8px;padding:10px 14px;font:800 13px 'Heebo',sans-serif;cursor:pointer;white-space:nowrap}" +
       ".cfa-msg{font-size:13px;margin:0 0 12px;min-height:16px}.cfa-msg.err{color:#ff8a80}.cfa-msg.ok{color:#7ee2a8}" +
@@ -1249,7 +1249,14 @@
       ".cfa-t.coach td.tests{font-size:11.5px;color:#c9d6f2}" +
       ".cfa-tog{background:transparent;border:1px solid #2e4a7d;color:#9fc2ff;border-radius:8px;padding:8px 12px;font:700 12px 'Heebo',sans-serif;cursor:pointer}" +
       ".cfa-tog.on{background:#2e4a7d;color:#fff}" +
-      ".cfa-name{background:none;border:none;color:#eaf0ff;font:700 13px 'Heebo',sans-serif;cursor:pointer;padding:0;text-decoration:underline dotted #4a90d9;text-underline-offset:3px}" +
+      ".cfa-name{background:none;border:none;color:#eaf0ff;font:700 13.5px 'Heebo',sans-serif;cursor:pointer;padding:0;text-decoration:underline dotted #4a90d9;text-underline-offset:3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}" +
+      ".cfa-row{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid #243657}" +
+      ".cfa-row .nm{flex:1;min-width:0}" +
+      ".cfa-row .nm small{display:block;color:#8ea3c9;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}" +
+      ".cfa-row .cfa-st{flex:none;max-width:46%;white-space:normal;line-height:1.2;text-align:right}" +
+      ".cfa-row .acts{flex:none;display:flex;gap:4px}" +
+      ".cfa-row .acts button{width:32px;height:30px;padding:0;margin:0;font-size:14px;border-radius:7px}" +
+      ".cfa-me{color:#8ea3c9;font-size:11px}" +
       ".cfa-name:hover{color:#7ab8f5}" +
       ".cfa-views{display:flex;gap:6px;margin-bottom:12px}" +
       ".cfa-view{flex:1;background:transparent;border:1px solid #2e4a7d;color:#9fc2ff;border-radius:10px;padding:9px 10px;font:800 13px 'Heebo',sans-serif;cursor:pointer}" +
@@ -1297,7 +1304,9 @@
       // it clearly visible so desktop users see THIS is the thing to scroll
       "#cfbyAdminOv::-webkit-scrollbar{width:10px}" +
       "#cfbyAdminOv::-webkit-scrollbar-thumb{background:rgba(255,255,255,.28);border-radius:8px}" +
-      "#cfbyAdminOv::-webkit-scrollbar-track{background:rgba(255,255,255,.06)}";
+      "#cfbyAdminOv::-webkit-scrollbar-track{background:rgba(255,255,255,.06)}" +
+      // phones (v3, Ori 07/09): the add-form stacks, everything else is already one dense row each
+      "@media (max-width:600px){.cfa-add{grid-template-columns:1fr 1fr}.cfa-add button{grid-column:1 / -1}.cfa-head h2{font-size:17px}.cfa-views{position:sticky;top:0;background:#0b1326;padding:6px 0;z-index:2}}";
     document.head.appendChild(css);
 
     var ov = document.createElement("div");
@@ -1444,19 +1453,24 @@
         return { u: u, s: s, b: b, pub: pub, stt: stt, testKind: testKind, kind: stt.kind || testKind, rank: rank };
       }).sort(function (a, c) { return (a.rank - c.rank) || (a.u.name || "").localeCompare(c.u.name || ""); });
       var shown = needOnly ? ranked.filter(function (r) { return !!r.kind; }) : ranked;
+      // v3 (Ori, 07/09: "שאראה את הכל במכה אחת בנייד"): one dense row per
+      // athlete — name + status on the line, username · last sync underneath,
+      // icon-only actions. Seven athletes fit on one phone screen.
       var rows = shown.map(function (r) {
-        var u = r.u, s = r.s, b = r.b, pub = r.pub, stt = r.stt, testKind = r.testKind, kind = r.kind;
+        var u = r.u, s = r.s, stt = r.stt, testKind = r.testKind, kind = r.kind;
         var isMe = u.id === meId;
-        return '<tr><td><button class="cfa-name" data-id="' + u.id + '" data-name="' + esc(u.name || "") + '" title="הצג את היומן של המתאמן">' + esc(u.name || "—") + '</button>' + (u.is_admin ? ' <span class="cfa-badge">Admin</span>' : '') + (isMe ? ' (אתה)' : '') + '</td>' +
-          '<td style="direction:ltr;text-align:right;color:#8ea3c9">' + esc(u.email || "—") + '</td>' +
-          '<td><span class="cfa-st ' + stt.cls + '">' + stt.txt + (testKind ? ' · 🧪' : '') + '</span></td>' +
-          '<td>' + fmtWhen(s ? s.updated_at : null) + '</td>' +
-          '<td>' + (kind ? '<button class="cfa-copy" data-kind="' + kind + '" data-id="' + u.id + '" title="העתקת הודעת וואטסאפ אישית">📋 הודעה</button>' : '') +
-            '<button class="cfa-key" data-id="' + u.id + '" data-name="' + esc(u.name || "") + '">🔑 סיסמה</button>' +
-            (isMe ? '' : '<button class="cfa-del" data-id="' + u.id + '" data-name="' + esc(u.name || "") + '">מחק</button>') + '</td></tr>';
+        return '<div class="cfa-row">' +
+          '<div class="nm"><button class="cfa-name" data-id="' + u.id + '" data-name="' + esc(u.name || "") + '" title="הצג את היומן של המתאמן">' + esc(u.name || "—") + '</button>' +
+            (u.is_admin ? ' <span class="cfa-badge">Admin</span>' : '') + (isMe ? ' <span class="cfa-me">(אתה)</span>' : '') +
+            '<small><span dir="ltr">' + esc(u.email || "—") + '</span> · סנכרון: ' + fmtWhen(s ? s.updated_at : null) + '</small></div>' +
+          '<span class="cfa-st ' + stt.cls + '">' + stt.txt + (testKind ? ' · 🧪' : '') + '</span>' +
+          '<div class="acts">' +
+            (kind ? '<button class="cfa-copy" data-kind="' + kind + '" data-id="' + u.id + '" title="העתקת הודעת וואטסאפ אישית">📋</button>' : '') +
+            '<button class="cfa-key" data-id="' + u.id + '" data-name="' + esc(u.name || "") + '" title="איפוס סיסמה">🔑</button>' +
+            (isMe ? '' : '<button class="cfa-del" data-id="' + u.id + '" data-name="' + esc(u.name || "") + '" title="מחיקת המשתמש">🗑</button>') +
+          '</div></div>';
       }).join("");
-      document.getElementById("cfaList").innerHTML =
-        '<table class="cfa-t"><thead><tr><th>שם</th><th>שם משתמש</th><th>מצב</th><th>סנכרון אחרון</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      document.getElementById("cfaList").innerHTML = rows +
         (needOnly && !shown.length ? '<p class="cfa-stat">אין כרגע מי שצריך הודעה 👍</p>' : '');
       var nb = document.getElementById("cfaNeedOnly"); if (nb) { nb.className = "cfa-tog" + (needOnly ? " on" : ""); nb.onclick = function () { needOnly = !needOnly; refresh(); }; }
       Array.prototype.forEach.call(document.querySelectorAll(".cfa-name"), function (btn) {
