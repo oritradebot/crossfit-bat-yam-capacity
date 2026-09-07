@@ -1090,25 +1090,6 @@
           </div>
         </div>
 
-        <div dir="rtl" style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 18px; margin-bottom:22px;">
-          <sc-if value="{{ goalMissing }}" hint-placeholder-val="{{ true }}">
-            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-              <span style="font-size:20px; flex:none;">🎯</span>
-              <div style="flex:1; min-width:0; font-size:13px; color:var(--muted); line-height:1.5;">עוד לא הגדרת מטרה לבלוק. מגדירים אותה בפרטים האישיים.</div>
-              <button onClick="{{ openProfile }}" style="flex:none; background:var(--card); color:var(--blue); border:1.5px solid var(--blue); border-radius:999px; padding:8px 14px; font-weight:700; font-size:12.5px; cursor:pointer;">👤 לפרטים האישיים</button>
-            </div>
-          </sc-if>
-          <sc-if value="{{ goalShowing }}" hint-placeholder-val="{{ false }}">
-            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-              <span style="font-size:22px; flex:none;">{{ goalIcon }}</span>
-              <div style="flex:1; min-width:0;">
-                <div style="font-size:11px; color:var(--muted); font-weight:600; letter-spacing:.04em;">{{ goalLabel }}</div>
-                <div dir="auto" style="font-weight:700; font-size:15px; {{ goalTextStyle }}">{{ goalText }}</div>
-              </div>
-              <button onClick="{{ toggleGoalDone }}" style="{{ goalDoneStyle }}">{{ goalDoneLabel }}</button>
-            </div>
-          </sc-if>
-        </div>
 
         <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; border-radius:18px; padding:20px 22px; margin-bottom:22px; box-shadow:0 8px 28px var(--shcol2);">
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
@@ -1191,6 +1172,25 @@
           </div>
         </div>
 
+        <div dir="rtl" style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 18px; margin-bottom:20px;">
+          <sc-if value="{{ goalMissing }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <span style="font-size:20px; flex:none;">🎯</span>
+              <div style="flex:1; min-width:0; font-size:13px; color:var(--muted); line-height:1.5;">עוד לא הגדרת מטרה לבלוק. מגדירים אותה בפרטים האישיים.</div>
+              <button onClick="{{ openProfile }}" style="flex:none; background:var(--card); color:var(--blue); border:1.5px solid var(--blue); border-radius:999px; padding:8px 14px; font-weight:700; font-size:12.5px; cursor:pointer;">👤 לפרטים האישיים</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ goalShowing }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <span style="font-size:22px; flex:none;">{{ goalIcon }}</span>
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:11px; color:var(--muted); font-weight:600; letter-spacing:.04em;">{{ goalLabel }}</div>
+                <div dir="auto" style="font-weight:700; font-size:15px; {{ goalTextStyle }}">{{ goalText }}</div>
+              </div>
+              <button onClick="{{ toggleGoalDone }}" style="{{ goalDoneStyle }}">{{ goalDoneLabel }}</button>
+            </div>
+          </sc-if>
+        </div>
         <sc-if value="{{ hasTests }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
             <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; letter-spacing:.04em; color:var(--navy);">🧪 מבחני Capacity</span>
@@ -3487,7 +3487,10 @@ class Component extends DCLogic {
     // collapsible blocks (v3): auto-fold a block that already holds a result
     // (or everything once the day is saved); explicit taps win.
     const bkey = (b) => selWeek+'_'+selDay+'_'+(asAlt?'alt':'main')+'_'+b;
-    const isOpen = (b, has) => { const ex = this.state.blockOpen[bkey(b)]; return ex != null ? ex : !(has || day.done); };
+    // Auto-fold only once the day is SAVED — folding a block the moment its
+    // first value lands pulled the inputs out from under the athlete's fingers
+    // (caught in the 07/09 feedback round). Summaries still show when folded.
+    const isOpen = (b, has) => { const ex = this.state.blockOpen[bkey(b)]; return ex != null ? ex : !day.done; };
     const liftHas = this.liftLogged(day), metHas = this.metconLogged(met), met2Has = this.metconLogged(met2);
     const exPresent = day.extras.filter(e=>e.name||e.detail);
     const exLogged = exPresent.filter(e=>e.log && String(e.log.text||'').trim()).length;
@@ -3678,7 +3681,7 @@ class Component extends DCLogic {
       toggleMetcon: ()=>this.toggleBlock(bkey('metcon'), metconOpen),
       toggleMetcon2: ()=>this.toggleBlock(bkey('metcon2'), metcon2Open),
       toggleExtra: ()=>this.toggleBlock(bkey('extra'), extraOpen),
-      dayHasEntry: !!(day.done || this.liftLogged(day) || this.metconLogged(met) || this.metconLogged(met2)),   // share-as-image only after something was entered (Ori, 07/09)
+      dayHasEntry: !!day.done,   // share-as-image only once the day was saved (Ori, 07/09: not during entry)
       liftMissing: !fut && !otherDone && !day.done && this.liftPresent(day) && !this.liftLogged(day),
       metconMissing: !fut && !otherDone && !day.done && this.metconPresent(met) && !this.metconLogged(met),
       metcon2Missing: !fut && !otherDone && !day.done && this.metconPresent(met2) && !this.metconLogged(met2),
