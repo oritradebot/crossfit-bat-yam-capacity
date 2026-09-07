@@ -18,7 +18,7 @@
 4. **אסור להשמה על המופע**: `localStorage.setItem = fn`. עוטפים `Storage.prototype.setItem`. (Safari 26 עוקף.)
 5. **אסור לתת לשרת לנצח באמצע סשן.** מיזוג קורה רק ב-boot, ב-`mergeTrackers`.
 6. **אסור להוסיף תוכן תוכנית שאורי לא שלח.** ציטוט: *"אם אין בתוכנית ששלחתי לך אל תוסיף"*.
-7. **אסור לשנות `resultMode` בשבוע סגור** — מערבב ערכים לא-השוואתיים בדירוג.
+7. **אסור לשנות `resultMode` בשבוע סגור** — שובר את ההשוואה מול עצמך (מבחנים, "בפעם הקודמת"); בעבר: מערבב ערכים בדירוג.
 
 עצה סטנדרטית של Supabase/React היא **רגרסיה** כאן. פירוט מלא: [`docs/domains/sync.md`](docs/domains/sync.md).
 
@@ -43,7 +43,8 @@
 | תחום | קובץ | מתי |
 |---|---|---|
 | 🏋️ הטמעת תוכנית | [`docs/domains/program.md`](docs/domains/program.md) | הטמעת שבוע, `resultMode`, מפות קונפיג |
-| 🏆 ניקוד | `docs/domains/scoring.md` | אחוזונים, 70/30, קטגוריות |
+| 🎯 v3 אישי | [`docs/domains/personal-v3.md`](docs/domains/personal-v3.md) | **הסרת הדירוג** (07/09, טרם נבנה), מבחנים באפליקציה, "בפעם הקודמת", מטרה אישית, טבלת מאמן |
+| 🏆 ניקוד | ~~`scoring.md`~~ | **הוסר ב-v3** — אחוזונים/70-30/קטגוריות יורדים. ראה personal-v3.md |
 | ☁️ סנכרון | `docs/domains/sync.md` | Supabase, boot.js, מיזוגים |
 | 🎨 UI/UX | `docs/domains/ui-ux.md` | העדפות עיצוב של אורי |
 | ♿ נגישות | `docs/domains/a11y.md` | |

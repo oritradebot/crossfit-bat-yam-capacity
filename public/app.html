@@ -999,8 +999,6 @@
     .hd-btn { padding: 6px 9px !important; font-size: 11px !important; flex: none; }
     .hd-btn-ico { font-size: 14px !important; }
     main { padding: 14px 12px 56px !important; }
-    /* leaderboard rows: shrink the fixed columns so the name keeps real width */
-    div[style*="1fr 74px 74px"] { grid-template-columns: 30px minmax(0,1fr) 54px 58px !important; }
     /* iOS Safari auto-zooms into any focused input whose font is under 16px,
        which throws the whole layout around — keep form fields at 16px */
     input, textarea, select { font-size: 16px !important; }
@@ -1036,7 +1034,6 @@
           <button class="hd-tab" onClick="{{ setOverview }}" style="{{ tabOverviewStyle }}">סקירה</button>
           <button class="hd-tab" onClick="{{ setLog }}" style="{{ tabLogStyle }}">יומן</button>
           <button class="hd-tab" onClick="{{ setPRs }}" style="{{ tabPRStyle }}">🏆 שיאים</button>
-          <button class="hd-tab" onClick="{{ setBoard }}" style="{{ tabBoardStyle }}">🏅 דירוג</button>
         </div>
       </div>
     </div>
@@ -1064,10 +1061,10 @@
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; line-height:1;">{{ statWeekly }}</div>
             <div style="font-size:12px; color:#ffe0d3; font-weight:600; letter-spacing:.04em; margin-top:6px;">יעד השבוע</div>
           </div>
-          <button onClick="{{ setBoard }}" style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px; text-align:start; cursor:pointer; font-family:inherit;">
-            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--orange); line-height:1;">{{ statRank }}<span style="font-size:16px; color:var(--muted);">{{ statRankField }}</span></div>
-            <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">המקום שלי בקטגוריה</div>
-            <div dir="rtl" style="{{ rankDeltaStyle }}">{{ rankDeltaLabel }}</div>
+          <button onClick="{{ setLog }}" title="ליומן" style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px; text-align:start; cursor:pointer; font-family:inherit;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--orange); line-height:1;">{{ statRx }}</div>
+            <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">מטקוני RX בבלוק</div>
+            <div dir="rtl" style="font-size:11px; font-weight:700; margin-top:6px; color:var(--muted);">{{ statRxSub }}</div>
           </button>
           <div style="background:var(--navy-bg); color:#fff; border-radius:16px; padding:16px 18px;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; line-height:1;">{{ curWeekNum }}<span style="font-size:16px; color:#9fb0dd;">/8</span></div>
@@ -1208,113 +1205,6 @@
             <button onClick="{{ gotoToday }}" style="margin-top:22px; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:12px 26px; font-weight:700; font-size:14px; cursor:pointer;">← לך לאימון של היום</button>
           </div>
         </sc-if>
-      </div>
-    </sc-if>
-
-    <sc-if value="{{ isBoard }}" hint-placeholder-val="{{ false }}">
-      <div style="animation:fadeUp .35s ease both;">
-        <div style="background:linear-gradient(120deg,#123a24,#1d6a3f); color:#fff; border-radius:18px; padding:22px 24px; margin-bottom:16px; box-shadow:0 8px 28px rgba(18,58,36,.22);">
-          <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-            <div style="font-size:38px; line-height:1;">🏅</div>
-            <div style="flex:1; min-width:0;">
-              <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:24px; letter-spacing:.05em;">דירוג הבוקס</div>
-              <div style="font-size:13px; color:#a9e0c0; margin-top:2px;">טבלת תחרות · פחות נקודות = מקום גבוה יותר · מצטבר לכל העונה</div>
-            </div>
-            <div style="text-align:center; background:rgba(255,255,255,.1); border:1px solid rgba(169,224,192,.4); border-radius:14px; padding:10px 18px;">
-              <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:30px; line-height:1;">{{ boardCount }}</div>
-              <div style="font-size:11px; color:#a9e0c0; margin-top:3px;">מתחרים</div>
-            </div>
-          </div>
-          <div dir="rtl" style="font-size:11.5px; color:#c7ecd6; margin-top:14px; line-height:1.6; background:rgba(0,0,0,.15); border-radius:10px; padding:9px 12px;">איך מחשבים? כמו ב-Open — <b>פחות נקודות = טוב יותר</b>. כל מטקון שסימנת <b>RX</b> מדורג מול כל מי שעשה אותו RX ← אחוזון (ראשון = 0). <b>70% תוצאה</b>: ממוצע האחוזונים שלך. <b>30% נוכחות</b>: הגעת ליעד = 0, כל החמצה מוסיפה. LIFT ו-EXTRA לא נספרים, ואין הזנה ידנית.</div>
-        </div>
-
-        <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
-          <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; letter-spacing:.04em; color:var(--navy);">📅 הניקוד השבועי שלך</span>
-          <span style="font-size:11.5px; color:var(--muted);">בחר שבוע לצפייה בניקוד שלך</span>
-        </div>
-        <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px;">
-          <sc-for list="{{ boardWeekPills }}" as="p" hint-placeholder-count="8">
-            <button onClick="{{ onBoardWeek }}" data-wi="{{ p.wi }}" style="{{ p.style }}">
-              <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:14px;">W{{ p.n }}</span>
-            </button>
-          </sc-for>
-        </div>
-
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-bottom:24px;">
-          <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; border-radius:16px; padding:20px 22px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
-              <div style="font-size:12px; color:#9fb0dd; font-weight:600; letter-spacing:.04em;">הניקוד שלך · שבוע {{ selBoardWeekNum }}</div>
-              <div style="background:rgba(239,91,37,.2); border:1px solid rgba(239,91,37,.5); border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700;">סה"כ עונה: {{ myTotal }}</div>
-            </div>
-            <div style="display:flex; align-items:baseline; gap:8px; margin-top:6px;">
-              <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:46px; line-height:1;">{{ myPoints }}</span>
-              <span style="font-size:12px; color:#9fb0dd;">נק' · פחות = טוב יותר</span>
-            </div>
-            <div style="display:flex; gap:18px; margin-top:14px;">
-              <div><div style="font-size:11px; color:#9fb0dd;">תוצאה (אחוזון)</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px;">{{ myResultPts }}</div><div style="font-size:10.5px; color:#9fb0dd; margin-top:1px;">{{ myPlaceText }}</div></div>
-              <div><div style="font-size:11px; color:#9fb0dd;">החמצות</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px;">+{{ myMissed }}</div><div style="font-size:10.5px; color:#9fb0dd; margin-top:1px;">אימונים שהוחמצו מהיעד</div></div>
-            </div>
-            <div style="margin-top:14px; font-size:11.5px; color:#9fb0dd; line-height:1.6; background:rgba(255,255,255,.07); border-radius:10px; padding:9px 12px;">הניקוד מחושב אוטומטית מתוצאות המטקון שסימנת <b style="color:#ffb08f;">RX</b> ביומן — אין הזנה ידנית.</div>
-          </div>
-          <div style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px 20px;">
-            <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">הניקוד שלך לאורך 8 השבועות</div>
-            <div style="display:flex; align-items:flex-end; gap:6px; height:92px;">
-              <sc-for list="{{ trend }}" as="t" hint-placeholder-count="8">
-                <button onClick="{{ onBoardWeek }}" data-wi="{{ t.wi }}" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:4px; height:100%; background:none; border:none; cursor:pointer; padding:0;">
-                  <span style="{{ t.numStyle }}">{{ t.score }}</span>
-                  <div style="{{ t.barStyle }}"></div>
-                </button>
-              </sc-for>
-            </div>
-          </div>
-        </div>
-
-        <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
-          <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; letter-spacing:.04em; color:var(--navy);">🏆 דירוג העונה</span>
-          <span style="font-size:11.5px; color:var(--muted);">הניקוד המצטבר של כל המתחרים · פחות = מקום גבוה יותר</span>
-        </div>
-        <div dir="rtl" style="display:flex; gap:7px; overflow-x:auto; padding-bottom:8px; margin-bottom:12px;">
-          <sc-for list="{{ catPills }}" as="c" hint-placeholder-count="7">
-            <button onClick="{{ onCategory }}" data-v="{{ c.v }}" style="{{ c.style }}">{{ c.label }}</button>
-          </sc-for>
-        </div>
-        <div style="background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px 20px; box-shadow:0 6px 24px var(--shcol);">
-          <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">
-            <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">השם שלך בטבלה</span>
-            <sc-if value="{{ nameEditing }}" hint-placeholder-val="{{ true }}">
-              <div style="display:flex; gap:8px; max-width:380px;">
-                <input dir="auto" value="{{ nameDraft }}" onChange="{{ onNameDraft }}" placeholder="איך יקראו לך בדירוג?" style="flex:1; min-width:0; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:15px; background:var(--field); color:var(--ink); outline:none;">
-                <button onClick="{{ confirmName }}" style="flex:none; background:var(--blue); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-weight:700; font-size:14px; cursor:pointer;">אשר</button>
-              </div>
-            </sc-if>
-            <sc-if value="{{ notNameEditing }}" hint-placeholder-val="{{ false }}">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <span dir="auto" style="font-weight:700; font-size:16px; color:var(--ink);">{{ myNameDisplay }}</span>
-                <button onClick="{{ editName }}" style="background:var(--paper); color:var(--muted); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">✎ ערוך</button>
-              </div>
-            </sc-if>
-          </div>
-          <div style="display:grid; grid-template-columns:44px 1fr 74px 74px; gap:8px; padding:0 14px 8px; font:600 10px/1 'Oswald'; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);">
-            <span style="text-align:center;">#</span><span>שם</span><span style="text-align:center;">ניקוד</span><span style="text-align:center;">{{ boardSubLabel }}</span>
-          </div>
-          <div style="display:flex; flex-direction:column; gap:7px;">
-            <sc-for list="{{ boardRows }}" as="r" hint-placeholder-count="3">
-              <div onClick="{{ onBoardRow }}" data-id="{{ r.rid }}" title="לפרופיל המתאמן" style="{{ r.rowStyle }}">
-                <span style="{{ r.rankStyle }}">{{ r.medal }}</span>
-                <div style="display:flex; align-items:center; gap:7px; min-width:0;">
-                  <span dir="auto" style="font-weight:700; font-size:14px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ r.name }}</span>
-                  <sc-if value="{{ r.you }}" hint-placeholder-val="{{ false }}">
-                    <span style="flex:none; background:var(--orange); color:#fff; font-family:'Oswald',sans-serif; font-weight:700; font-size:10px; letter-spacing:.05em; padding:2px 7px; border-radius:999px;">אתה</span>
-                  </sc-if>
-                </div>
-                <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:19px; color:var(--blue); text-align:center;">{{ r.score }}</span>
-                <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; color:var(--muted); text-align:center;">{{ r.cons }}</span>
-              </div>
-            </sc-for>
-          </div>
-        </div>
-
-        <div dir="rtl" style="text-align:center; margin-top:16px; font-size:11.5px; color:var(--muted); line-height:1.6;">הנקודות מחושבות אוטומטית מהנתונים שכל מתאמן ממלא. הדירוג מסתנכרן בין כולם — רעננו את הדף כדי לראות עדכונים אחרונים.</div>
       </div>
     </sc-if>
 
@@ -1634,11 +1524,10 @@
           <div dir="rtl" style="font-size:12px; color:#b9c4e6; margin-top:2px; line-height:1.4;">לוח המעקב של <bdi>Capacity</bdi> — 8 שבועות</div>
         </div>
         <div dir="rtl" style="padding:13px 18px; display:flex; flex-direction:column; gap:8px;">
-          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📊</span><div style="line-height:1.45;"><b style="font-size:13px;">סקירה</b> <span style="font-size:12px; color:var(--muted);">— התקדמות, יעד שבועי, המקום שלך בקטגוריה ומפת התוכנית.</span></div></div>
+          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📊</span><div style="line-height:1.45;"><b style="font-size:13px;">סקירה</b> <span style="font-size:12px; color:var(--muted);">— ההתקדמות שלך, היעד השבועי ומפת התוכנית.</span></div></div>
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📅</span><div style="line-height:1.45;"><b style="font-size:13px;">יומן</b> <span style="font-size:12px; color:var(--muted);">— האימון היומי. תעד תוצאות, דרג מאמץ וסמן "הושלם".</span></div></div>
-          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏅</span><div style="line-height:1.45;"><b style="font-size:13px;">דירוג</b> <span style="font-size:12px; color:var(--muted);">— מתחרים בקטגוריה שלך על סמך תוצאות המטקון.</span></div></div>
           <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏆</span><div style="line-height:1.45;"><b style="font-size:13px;">שיאים</b> <span style="font-size:12px; color:var(--muted);">— שיאי המשקל שלך לפי תרגיל + אימונים שסימנת 🏆.</span></div></div>
-          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">👤</span><div style="line-height:1.45;"><b style="font-size:13px;">פרופיל</b> <span style="font-size:12px; color:var(--muted);">— הכפתור העגול למעלה: הקטגוריה, ההישגים והנתונים האישיים שלך, וגם מצב תצוגה: בהיר / כהה / אוטומטי 🌙.</span></div></div>
+          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">👤</span><div style="line-height:1.45;"><b style="font-size:13px;">פרופיל</b> <span style="font-size:12px; color:var(--muted);">— הכפתור העגול למעלה: השם שלך, ההישגים והנתונים האישיים, וגם מצב תצוגה: בהיר / כהה / אוטומטי 🌙.</span></div></div>
           <div style="display:flex; flex-direction:column; gap:4px; background:rgba(239,91,37,.08); border:1px solid rgba(239,91,37,.3); border-radius:11px; padding:9px 12px;">
             <div style="display:flex; gap:7px; align-items:center;"><span style="font-size:16px;">📲</span><b style="font-size:13px;">התקינו כאפליקציה על הטלפון</b></div>
             <div style="font-size:11.5px; color:var(--ink); line-height:1.5;"><b>🍏 אייפון</b> (Safari): שיתוף ⬆️ ← «הוסף למסך הבית».</div>
@@ -1665,12 +1554,12 @@
         <div dir="rtl" style="padding:22px; display:flex; flex-direction:column; gap:20px;">
           <label style="display:flex; flex-direction:column; gap:7px;">
             <span style="font-weight:700; font-size:14px; color:var(--ink);">איך קוראים לך?</span>
-            <span style="font-size:12px; color:var(--muted); margin-top:-4px;">השם שיופיע בטבלת הדירוג של הבוקס.</span>
+            <span style="font-size:12px; color:var(--muted); margin-top:-4px;">השם שיופיע בפרופיל ובכרטיס הסיכום שלך.</span>
             <input dir="auto" value="{{ onbName }}" onChange="{{ onOnbName }}" placeholder="השם שלך" style="border:1px solid var(--line); border-radius:11px; padding:12px 14px; font-size:16px; background:var(--field); color:var(--ink); outline:none;">
           </label>
           <div style="display:flex; flex-direction:column; gap:7px;">
             <span style="font-weight:700; font-size:14px; color:var(--ink);">כמה אימונים בשבוע? 🎯</span>
-            <span style="font-size:12px; color:var(--muted); margin-top:-4px;">היעד האישי שלך — לפיו נחשב את ההתקדמות והנקודות.</span>
+            <span style="font-size:12px; color:var(--muted); margin-top:-4px;">היעד האישי שלך — לפיו נחשב את ההתקדמות.</span>
             <div style="display:flex; gap:8px;">
               <sc-for list="{{ onbTargetOpts }}" as="o" hint-placeholder-count="4">
                 <button onClick="{{ onOnbTarget }}" data-t="{{ o.v }}" style="{{ o.style }}">{{ o.v }}</button>
@@ -1779,8 +1668,19 @@
         <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; padding:22px 24px; display:flex; align-items:center; gap:14px;">
           <div style="width:56px; height:56px; border-radius:50%; background:var(--orange); display:flex; align-items:center; justify-content:center; font-size:26px; flex:none;">👤</div>
           <div style="flex:1; min-width:0;">
-            <div dir="auto" style="font-family:'Oswald',sans-serif; font-weight:700; font-size:20px; letter-spacing:.03em;">{{ profileName }}</div>
-            <div style="display:inline-block; margin-top:5px; background:rgba(239,91,37,.25); border:1px solid rgba(239,91,37,.5); border-radius:999px; padding:3px 12px; font-size:12px; font-weight:700;">{{ profileCategory }}</div>
+            <sc-if value="{{ notNameEditing }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+                <div dir="auto" style="font-family:'Oswald',sans-serif; font-weight:700; font-size:20px; letter-spacing:.03em; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ profileName }}</div>
+                <button onClick="{{ editName }}" title="שינוי השם המוצג" style="flex:none; background:rgba(255,255,255,.14); border:none; color:#fff; width:28px; height:28px; border-radius:8px; font-size:13px; cursor:pointer;">✎</button>
+              </div>
+              <div style="font-size:11.5px; color:#b9c4e6; margin-top:4px;">השם שמופיע בכרטיס הסיכום ואצל המאמן</div>
+            </sc-if>
+            <sc-if value="{{ nameEditing }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; gap:6px; align-items:center;">
+                <input dir="auto" value="{{ nameDraft }}" onChange="{{ onNameDraft }}" placeholder="השם שלך" style="flex:1; min-width:0; border:1px solid rgba(255,255,255,.35); border-radius:10px; padding:8px 10px; font-size:15px; background:rgba(255,255,255,.12); color:#fff; outline:none;">
+                <button onClick="{{ confirmName }}" style="flex:none; background:var(--orange); color:#fff; border:none; border-radius:10px; padding:8px 12px; font-weight:700; font-size:13px; cursor:pointer;">שמור</button>
+              </div>
+            </sc-if>
           </div>
           <button onClick="{{ closeProfile }}" style="flex:none; background:rgba(255,255,255,.14); border:none; color:#fff; width:32px; height:32px; border-radius:9px; font-size:16px; cursor:pointer;">✕</button>
         </div>
@@ -1789,7 +1689,7 @@
             <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">מין</div><div style="font-weight:700; font-size:16px; color:var(--ink);">{{ profileGender }}</div></div>
             <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">גיל</div><div style="font-weight:700; font-size:16px; color:var(--ink);">{{ profileAge }}</div></div>
             <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">סה"כ אימונים</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--blue);">{{ profileTotalWorkouts }}</div></div>
-            <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">מיקום בקטגוריה</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--orange);">{{ profileCatRank }}</div></div>
+            <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">רצף הכי ארוך · ימים</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--orange);">{{ profileBestStreak }}</div></div>
           </div>
           <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px;">
             <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">🎖️ תגים</span>
@@ -1830,62 +1730,6 @@
             </div>
             <div style="font-size:11px; color:var(--muted); margin-top:8px;">באוטומטי האפליקציה עוקבת אחרי מצב התצוגה של הטלפון. הבחירה נשמרת במכשיר הזה.</div>
           </div>
-        </div>
-      </div>
-    </div>
-  </sc-if>
-
-  <sc-if value="{{ peerOpen }}" hint-placeholder-val="{{ false }}">
-    <div onClick="{{ closePeer }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:130; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
-      <div dir="rtl" onClick="{{ stop }}" style="background:var(--card); border-radius:20px; width:100%; max-width:400px; max-height:86vh; overflow:auto; box-shadow:0 20px 60px rgba(12,18,34,.4);">
-        <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; padding:22px 24px; display:flex; align-items:center; gap:14px;">
-          <div style="width:56px; height:56px; border-radius:50%; background:var(--blue); display:flex; align-items:center; justify-content:center; font-size:26px; flex:none;">👤</div>
-          <div style="flex:1; min-width:0;">
-            <div dir="auto" style="font-family:'Oswald',sans-serif; font-weight:700; font-size:20px; letter-spacing:.03em;">{{ peerName }}</div>
-            <div style="display:inline-block; margin-top:5px; background:rgba(239,91,37,.25); border:1px solid rgba(239,91,37,.5); border-radius:999px; padding:3px 12px; font-size:12px; font-weight:700;">{{ peerCategory }}</div>
-          </div>
-          <button onClick="{{ closePeer }}" style="flex:none; background:rgba(255,255,255,.14); border:none; color:#fff; width:32px; height:32px; border-radius:9px; font-size:16px; cursor:pointer;">✕</button>
-        </div>
-        <div style="padding:20px 24px;">
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
-            <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">מין</div><div style="font-weight:700; font-size:16px; color:var(--ink);">{{ peerGender }}</div></div>
-            <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">גיל</div><div style="font-weight:700; font-size:16px; color:var(--ink);">{{ peerAge }}</div></div>
-            <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">סה"כ אימונים</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--blue);">{{ peerTotal }}</div></div>
-            <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">מיקום בקטגוריה</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--orange);">{{ peerCatRank }}</div></div>
-          </div>
-          <sc-if value="{{ peerStale }}" hint-placeholder-val="{{ false }}">
-            <div style="background:rgba(232,165,58,.12); border:1px solid rgba(232,165,58,.4); border-radius:10px; padding:10px 12px; font-size:12px; color:var(--muted); margin-bottom:14px;">התגים והשיאים יופיעו אחרי שהמתאמן יפתח את האפליקציה בפעם הבאה.</div>
-          </sc-if>
-          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px;">
-            <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">🎖️ תגים</span>
-            <span style="font-size:11px; color:var(--muted); font-weight:700;">{{ peerBadgeCount }}</span>
-          </div>
-          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:18px;">
-            <sc-for list="{{ peerBadges }}" as="b" hint-placeholder-count="6">
-              <div style="{{ b.cardStyle }}">
-                <span style="{{ b.iconStyle }}">{{ b.icon }}</span>
-                <span style="{{ b.labelStyle }}">{{ b.label }}</span>
-              </div>
-            </sc-for>
-          </div>
-          <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:10px;">🏆 שיאים אחרונים</div>
-          <sc-if value="{{ peerHasPRs }}" hint-placeholder-val="{{ false }}">
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <sc-for list="{{ peerPRs }}" as="pr" hint-placeholder-count="3">
-                <div style="display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--line); border-inline-start:3px solid var(--orange); border-radius:10px; padding:10px 12px;">
-                  <span style="font-size:16px; flex:none;">🏆</span>
-                  <div style="flex:1; min-width:0;">
-                    <div dir="auto" style="font-weight:700; font-size:14px; color:var(--ink);">{{ pr.move }}</div>
-                    <div dir="auto" style="font-family:'Oswald',sans-serif; font-weight:700; font-size:13px; color:var(--blue);">{{ pr.res }}</div>
-                  </div>
-                  <span style="font-size:11px; color:var(--muted); flex:none;">{{ pr.week }}</span>
-                </div>
-              </sc-for>
-            </div>
-          </sc-if>
-          <sc-if value="{{ peerNoPRs }}" hint-placeholder-val="{{ true }}">
-            <div style="text-align:center; color:var(--muted); font-size:13px; padding:14px;">עדיין אין שיאים משותפים.</div>
-          </sc-if>
         </div>
       </div>
     </div>
@@ -2552,19 +2396,12 @@ class Component extends DCLogic {
     movesOpen: false,
     moves: this.MOVEMENTS.slice(),
     moveDraft: '',
-    board: [],
-    myCategory: null,
     myGender: null,
     myAge: null,
     profileOpen: false,
-    peerId: null,
-    selCategory: 'all',
     myName: '',
     editingName: false,
     nameDraft: '',
-    selBoardWeek: 0,
-    boardMode: 'week',
-    myResults: {},
     activeSession: 'main'
   };
   WELCOME_KEY = 'cfby_welcome_v1';
@@ -2594,22 +2431,18 @@ class Component extends DCLogic {
     }
     const ti = this.todayIdx();
     if (ti >= 0) this.setState({ selWeek: Math.floor(ti/7), selDay: ti%7 });
-    this.setState({ selBoardWeek: this.cwi() });
     try { if (localStorage.getItem('cfby_admin') === '1') this.setState({ isAdmin: true }); } catch (e) {}
     try { if (!localStorage.getItem(this.ONB_KEY)) this.setState({ onbOpen: true }); } catch (e) {}
     try { const raw = localStorage.getItem(this.MOVES_KEY); if (raw) { const m = JSON.parse(raw); if (Array.isArray(m) && m.length) this.setState({ moves: m }); } } catch (e) {}
-    // Load the leaderboard that boot.js seeded from Supabase (other athletes,
-    // my display name, my results). saveBoard() writes this key; without a read
-    // the board would be dropped on every load.
+    // Load my own fields that boot.js seeded from Supabase (display name,
+    // gender, age). saveBoard() writes this key; without a read the name would
+    // be dropped on every load. v3: no shared board — nothing about other
+    // athletes ever reaches this device.
     try { const raw = localStorage.getItem(this.BOARD_KEY); if (raw) { const b = JSON.parse(raw); this.setState({
-      board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {}, category: a.category || null, metcons: a.metcons || {}, age: (a.age!=null?a.age:null), pub: a.pub || null })),
-      myName: b.myName || '', nameDraft: b.myName || '', myResults: b.myResults || {},
-      myTarget: b.myTarget || this.WEEKLY_TARGET, myGoal: b.myGoal || '', myCategory: b.myCategory || null,
+      myName: b.myName || '', nameDraft: b.myName || '',
+      myTarget: b.myTarget || this.WEEKLY_TARGET, myGoal: b.myGoal || '',
       myGender: b.myGender || null, myAge: (b.myAge != null ? b.myAge : null)
     }); } } catch (e) {}
-    // boot.js calls this when the board changes on the server (realtime) — refresh
-    // only the OTHER athletes, never my own fields, to avoid clobbering local edits.
-    try { window.cfbyReloadBoard = ()=>this.reloadOthers(); } catch (e) {}
     // Block-recap gate flag: boot.js fetches it with the announcement (after
     // the app is already rendered) and fires this event; the admin panel fires
     // it again on open/close so the button updates without a reload.
@@ -2649,96 +2482,15 @@ class Component extends DCLogic {
       try { const sc = document.getElementById('share-scroll'); if (sc) sc.focus({ preventScroll: true }); } catch (e) {}
     }
   }
-  reloadOthers() {
-    try { const raw = localStorage.getItem(this.BOARD_KEY); if (raw) { const b = JSON.parse(raw);
-      this.setState({ board: (Array.isArray(b.board) ? b.board : []).map(a => ({ id: a.id || (Date.now()+Math.random()), name: a.name || '', weeks: a.weeks || {}, category: a.category || null, metcons: a.metcons || {}, age: (a.age!=null?a.age:null), pub: a.pub || null })) });
-    } } catch (e) {}
-  }
   weekStats(wi) {
     const AV = this.myTargetVal();
     let c = 0, rest = 0;
     this.state.data[wi].days.forEach(d=>{ if (d.done) c++; if (d.alt && d.alt.done) c++; if (d.rest && !d.done) rest++; });
     return { completed: Math.min(AV, c), rest };
   }
-  // My metcon results for week wi, keyed like boot.js keys the board data:
-  // "w_d" (main), "w_d_2" (metcon2), "w_d_a"/"w_d_a2" (alt session).
-  weekMetconsFromData(wi) {
-    const out = {};
-    const wk = this.state.data[wi]; if (!wk) return out;
-    wk.days.forEach((day, d) => {
-      if (!day) return;
-      const add = (m, suf) => { const s = this.metconScore(m); if (s) out[wi+'_'+d+suf] = { v:s.v, dir:s.dir, rx: !!(m && m.rx) }; };
-      add(day.metcon, '');
-      add(day.metcon2, '_2');
-      if (day.alt) { add(day.alt.metcon, '_a'); add(day.alt.metcon2, '_a2'); }
-    });
-    return out;
-  }
-  // Open-style engine: every metcon done at RX is ranked among everyone who did
-  // it RX -> percentile (0 = 1st, 100 = last). Weekly quality = the average of
-  // your percentiles; attendance = missed/target. Score = 70% quality + 30%
-  // attendance, fewer = better. LIFT and EXTRA never count; no manual entry.
-  computeWeek(wi, catFilter) {
-    const AV = this.WEEKLY_TARGET;
-    const entrants = [];
-    const myWk = this.weekStats(wi);
-    const meCat = this.state.myCategory || null;
-    // catFilter limits the ranking to one category (separate rankings). "me"
-    // only appears when the filter is off or matches my own category.
-    if (!catFilter || catFilter === meCat) {
-      entrants.push({ id:'me', you:true, name:(this.state.myName||'אני')+' (אתה)', completed:myWk.completed, rest:myWk.rest, category:meCat, mets:this.weekMetconsFromData(wi) });
-    }
-    this.state.board.forEach(a=>{
-      if (catFilter && a.category !== catFilter) return;
-      const wk=(a.weeks&&a.weeks[wi])||{};
-      const mets={}; const src=a.metcons||{}; const pre=wi+'_';
-      Object.keys(src).forEach(k=>{ if(k.indexOf(pre)===0) mets[k]=src[k]; });
-      entrants.push({ id:a.id, you:false, name:a.name||'ללא שם', completed:Math.min(AV,+wk.completed||0), rest:0, category:a.category||null, mets });
-    });
-    // rank each metcon among its RX performers
-    const pct = {};   // pct[key][entrantIdx] = percentile
-    const keySet = {};
-    entrants.forEach(e=>Object.keys(e.mets).forEach(k=>{ const m=e.mets[k]; if(m && m.rx && m.v>0) keySet[k]=true; }));
-    Object.keys(keySet).forEach(k=>{
-      const field=[];
-      entrants.forEach((e,i)=>{ const m=e.mets[k]; if(m && m.rx && m.v>0) field.push({ i, v:+m.v, dir:m.dir||'high' }); });
-      if(!field.length) return;
-      const dir = field[0].dir;
-      field.forEach(f=>{
-        const better = field.filter(x=> dir==='low' ? x.v<f.v : x.v>f.v).length;
-        const eq = field.filter(x=>x.v===f.v).length;
-        const rank = 1 + better + (eq-1)/2;
-        const p = field.length>1 ? (rank-1)/(field.length-1)*100 : 0;
-        (pct[k]=pct[k]||{})[f.i]=p;
-      });
-    });
-    const anyRanked = Object.keys(pct).length>0;
-    // A week nobody has logged anything in (no completed days, no metcon
-    // results) hasn't happened yet — it must contribute 0 points, not a 30pt
-    // attendance penalty for every athlete. Exposed on the array as .active so
-    // season aggregations can average over started weeks only.
-    const anyActivity = entrants.some(e => e.completed > 0 || Object.keys(e.mets).length > 0);
-    entrants.forEach((e,i)=>{
-      const base = e.you ? this.myTargetVal() : AV;
-      const target = Math.max(0, base - (e.rest||0));
-      e.missed = Math.max(0, target - Math.min(target, e.completed));
-      const mine=[]; Object.keys(pct).forEach(k=>{ if(pct[k][i]!=null) mine.push(pct[k][i]); });
-      e.rxCount = mine.length;
-      const quality = mine.length ? mine.reduce((s,x)=>s+x,0)/mine.length : (anyRanked ? 100 : 0);
-      const attendance = (anyActivity && target>0) ? (e.missed/target)*100 : 0;
-      e.placement = null;
-      e.resultPts = Math.round(quality*10)/10;
-      e.points = anyActivity ? Math.round((0.7*quality + 0.3*attendance)*10)/10 : 0;
-    });
-    entrants.active = anyActivity;
-    return entrants;
-  }
-  myTotalScore(catFilter) { let s=0; for (let w=0; w<8; w++) { const me=this.computeWeek(w, catFilter).find(e=>e.you); s += me?me.points:0; } return Math.round(s*10)/10; }
-  CAT_LABELS = { 'teen men':'TEEN · גברים', 'teen women':'TEEN · נשים', 'elite men':'ELITE · גברים', 'elite women':'ELITE · נשים', 'masters men':'MASTERS · גברים', 'masters women':'MASTERS · נשים' };
-  catLabel(c) { return this.CAT_LABELS[c] || c || '—'; }
   // Achievement badges, tiered. Computed from a small counter object so the
-  // SAME definitions serve both my own profile (counters from my tracker) and
-  // any peer's public card (counters from their published board.pub summary):
+  // SAME definitions serve my profile (counters from my tracker) and the
+  // summary row boot.js publishes for the coach table (board.pub):
   // t=total workouts, s=best streak, p=PRs, rx=RX metcons, r9=RPE9+ sessions,
   // fw=full weeks. Thresholds must match boot.js publicSummary() semantics.
   badgeList(c) {
@@ -2768,41 +2520,12 @@ class Component extends DCLogic {
       iconStyle:'font-size:24px; line-height:1; ' + (b.earned ? '' : 'filter:grayscale(1); opacity:.4;'),
       labelStyle:'font-size:10.5px; font-weight:700; color:' + (b.earned ? 'var(--ink)' : 'var(--muted)') + ';' }));
   }
-  catPillStyle(active) { return 'border:none; cursor:pointer; padding:7px 14px; border-radius:999px; font-weight:700; font-size:12.5px; white-space:nowrap; transition:all .15s; ' + (active ? 'background:var(--orange); color:#fff;' : 'background:var(--chip); color:var(--muted);'); }
   segLight(active) { return 'border:none; cursor:pointer; padding:8px 18px; border-radius:999px; font-weight:700; font-size:13px; transition:all .15s; ' + (active ? 'background:var(--navy-bg); color:#fff;' : 'background:var(--chip); color:var(--muted);'); }
-  saveBoard() { try { localStorage.setItem(this.BOARD_KEY, JSON.stringify({ board:this.state.board, myName:this.state.myName, myResults:this.state.myResults, myTarget:this.state.myTarget, myGoal:this.state.myGoal })); } catch (e) {} }
+  // BOARD_KEY holds only my own fields now (v3): boot.js pushes the name to
+  // my summary row + profile. Nothing about other athletes lives here.
+  saveBoard() { try { localStorage.setItem(this.BOARD_KEY, JSON.stringify({ myName:this.state.myName, myTarget:this.state.myTarget, myGoal:this.state.myGoal, myGender:this.state.myGender, myAge:this.state.myAge })); } catch (e) {} }
   myTargetVal() { return this.state.myTarget || this.WEEKLY_TARGET; }
   saveMoves() { try { localStorage.setItem(this.MOVES_KEY, JSON.stringify(this.state.moves)); } catch (e) {} }
-  editAthleteName(id, val) { const board = this.state.board.map(a=> a.id===id ? { ...a, name:val } : a); this.setState({ board }, ()=>this.saveBoard()); }
-  editAthleteWeek(id, wi, field, val) {
-    const board = this.state.board.map(a=>{ if (a.id!==id) return a; const weeks={ ...(a.weeks||{}) }; const cur={ ...(weeks[wi]||{}) }; cur[field] = parseInt(val,10)||0; weeks[wi]=cur; return { ...a, weeks }; });
-    this.setState({ board }, ()=>this.saveBoard());
-  }
-  addAthlete() { const board = [...this.state.board, { id:Date.now(), name:'', weeks:{} }]; this.setState({ board }, ()=>this.saveBoard()); }
-  removeAthlete(id) { const board = this.state.board.filter(a=>a.id!==id); this.setState({ board }, ()=>this.saveBoard()); }
-  boardEditorEl() {
-    const bw = this.state.selBoardWeek;
-    const numStyle = { border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 4px', fontSize:'14px', background:'var(--card)', color:'var(--ink)', outline:'none', textAlign:'center', fontWeight:600, boxSizing:'border-box', width:'100%' };
-    const selStyle = { border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 6px', fontSize:'12.5px', background:'var(--card)', color:'var(--ink)', outline:'none', boxSizing:'border-box', width:'100%', fontFamily:'inherit', cursor:'pointer' };
-    const rows = this.state.board.map((a)=>{
-      const wk = (a.weeks && a.weeks[bw]) || {};
-      return React.createElement('div', { key:a.id, style:{ display:'grid', gridTemplateColumns:'1fr 58px 72px 36px', gap:'8px', alignItems:'center' } },
-        React.createElement('input', { dir:'auto', value:a.name||'', placeholder:'שם המתחרה', onChange:(e)=>this.editAthleteName(a.id,e.target.value), style:{ border:'1px solid var(--line)', borderRadius:'9px', padding:'8px 10px', fontSize:'14px', background:'var(--card)', color:'var(--ink)', outline:'none', boxSizing:'border-box', width:'100%' } }),
-        React.createElement('input', { inputMode:'numeric', value:wk.completed||0, onChange:(e)=>this.editAthleteWeek(a.id,bw,'completed',e.target.value), style:numStyle }),
-        React.createElement('input', { inputMode:'numeric', value:wk.result||0, onChange:(e)=>this.editAthleteWeek(a.id,bw,'result',e.target.value), style:numStyle }),
-        React.createElement('button', { onClick:()=>this.removeAthlete(a.id), title:'הסר', style:{ background:'var(--redbg)', color:'var(--red)', border:'none', borderRadius:'9px', padding:'8px 0', fontWeight:700, fontSize:'14px', cursor:'pointer' } }, '✕')
-      );
-    });
-    return React.createElement('div', { style:{ background:'var(--card)', border:'1px solid var(--line)', borderRadius:'16px', padding:'18px 20px', marginTop:'14px' } },
-      React.createElement('div', { style:{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'4px', flexWrap:'wrap', gap:'8px' } },
-        React.createElement('div', { style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'15px', letterSpacing:'.04em', color:'var(--navy)' } }, '🔧 ניהול מתחרים · שבוע '+(bw+1)),
-        React.createElement('div', { style:{ fontSize:'11px', color:'var(--muted)' } }, 'שם · הושלמו · תוצאה')
-      ),
-      React.createElement('div', { style:{ fontSize:'11.5px', color:'var(--muted)', marginBottom:'12px', lineHeight:1.5 } }, 'לכל מתחרה: כמה אימונים השלים (מתוך 5) ומספר "תוצאה" משותף לפי מדד שאתה קובע — הניקוד היחסי מחושב מול החציון של כל המתחרים.'),
-      React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } }, rows.length ? rows : React.createElement('div', { style:{ fontSize:'13px', color:'var(--muted)' } }, 'אין מתחרים עדיין — הוסף למטה.')),
-      React.createElement('button', { onClick:()=>this.addAthlete(), style:{ marginTop:'12px', background:'var(--blue)', color:'#fff', border:'none', borderRadius:'10px', padding:'10px 18px', fontWeight:700, fontSize:'13px', cursor:'pointer' } }, '+ הוסף מתחרה')
-    );
-  }
 
   gIndex() { const t = new Date(); t.setHours(0,0,0,0); return Math.floor((t - this.startDate) / 86400000); }
   isMissed(gi, day) { return gi < this.gIndex() && !this.dayComplete(day) && !day.rest && this.dayHasPlan(day); }
@@ -3040,10 +2763,10 @@ class Component extends DCLogic {
       React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
         pmMoves.map(m=>this.unit(this.numEl(base+'.log.mv'+m.n, M['mv'+m.n], '0'), m.name))),
       React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: pmLocked ? 'var(--orange)' : 'var(--greenink)' } },
-        pmLocked ? (pmScore ? ('🔒 מלאו את כל ' + pmMoves.length + ' הקוביות — התוצאה ללוח (' + pmScore.label + ') תתמלא אוטומטית')
-                            : ('🔒 שלב 2 · מלאו תוצאה לכל ' + pmMoves.length + ' התנועות — ואז תיפתח הזנת התוצאה ללוח'))
-                 : (pmScore ? ('✓ התוצאה ללוח (' + pmScore.label + '): ' + (M.amount || M['mv'+pmScore.box] || '') + ' — נרשמת ללוח אוטומטית')
-                            : ('✓ שלב 2 · הזנת התוצאה ללוח פתוחה' + (pmAvg!=null ? ' — ממוצע התנועות: ' + pmAvg : ''))))
+        pmLocked ? (pmScore ? ('🔒 מלאו את כל ' + pmMoves.length + ' הקוביות — התוצאה (' + pmScore.label + ') תתמלא אוטומטית')
+                            : ('🔒 שלב 2 · מלאו תוצאה לכל ' + pmMoves.length + ' התנועות — ואז תיפתח הזנת התוצאה'))
+                 : (pmScore ? ('✓ התוצאה (' + pmScore.label + '): ' + (M.amount || M['mv'+pmScore.box] || '') + ' — נרשמת אוטומטית')
+                            : ('✓ שלב 2 · הזנת התוצאה פתוחה' + (pmAvg!=null ? ' — ממוצע התנועות: ' + pmAvg : ''))))
     ) : null;
     const seg = (k, lbl) => React.createElement('button', {
       key:k, onClick:()=>this.onEditPath(base+'.log.mode', k),
@@ -3055,9 +2778,9 @@ class Component extends DCLogic {
         disabled:true, placeholder:'🔒',
         value:(mode==='time' ? M.time : mode==='amount' ? M.amount : [M.rounds, M.reps].filter(Boolean).join(' + ')) || '',
         style:{ width:'100%', border:'1px dashed var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'15px', background:'var(--paper)', color:'var(--faint)', outline:'none', fontWeight:600, textAlign:'center' }
-      }), 'Score / תוצאה ללוח');
+      }), 'Score / תוצאה');
     else if (pmScore) inputs = null; // mirror day — the score box IS the score, nothing to type here
-    else if (mode==='amount') inputs = this.unit(this.numEl(base+'.log.amount', M.amount, '0'), pmMoves.length ? 'Score / תוצאה ללוח' : (this.metconCfg(this.METCON_AMOUNT_LABEL, base) || 'כמות (מ׳ / קל׳)'));
+    else if (mode==='amount') inputs = this.unit(this.numEl(base+'.log.amount', M.amount, '0'), pmMoves.length ? 'Score / תוצאה' : (this.metconCfg(this.METCON_AMOUNT_LABEL, base) || 'כמות (מ׳ / קל׳)'));
     else if (mode==='time') inputs = this.unit(this.txtEl(base+'.log.time', M.time, 'mm:ss'), 'time / זמן');
     else inputs = React.createElement(React.Fragment, null,
           this.unit(this.numEl(base+'.log.rounds', M.rounds, '0'), 'rounds / סבבים'),
@@ -3074,7 +2797,7 @@ class Component extends DCLogic {
       fixed ? null : React.createElement('div', { style:{ display:'flex', gap:'2px', background:'var(--chip)', borderRadius:'10px', padding:'3px', width:'fit-content' } }, seg('time','Time'), seg('rounds','Rounds + Reps')),
       React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } }, inputs, this.unit(this.txtEl(base+'.log.note', M.note, 'הערה'), 'note')),
       React.createElement('div', { style:{ display:'flex', gap:'8px', flexWrap:'wrap' } },
-        pill(!!metcon.rx, 'var(--orange)', 'rgba(239,91,37,.12)', ()=>this.setRxScaled(base,'rx'), rxNote || 'רק ביצוע במשקלי ה-RX שכתובים באימון נכנס לדירוג', 'עשיתי RX — נכנס לדירוג'),
+        pill(!!metcon.rx, 'var(--orange)', 'rgba(239,91,37,.12)', ()=>this.setRxScaled(base,'rx'), rxNote || 'ביצוע במשקלים ובתנועות שכתובים באימון', 'עשיתי כמו שכתוב (RX)'),
         pill(!!metcon.scaled, 'var(--blue)', 'rgba(35,64,154,.1)', ()=>this.setRxScaled(base,'scaled'), 'ביצוע מותאם — רשום את משקלי העבודה שלך', 'עשיתי Scaled')
       ),
       rxNote ? React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color:'var(--muted)', lineHeight:1.5 } }, rxNote) : null,
@@ -3362,129 +3085,38 @@ class Component extends DCLogic {
       countLabel: e.count===1 ? 'אימון אחד' : (e.count+' אימונים') }));
     const chartE = this.state.liftChartKey ? liftBest[this.state.liftChartKey] : null;
 
-    const bw = this.state.selBoardWeek;
-    const mode = 'total';
-    const AV = this.WEEKLY_TARGET;
-    const catFilter = (this.state.selCategory && this.state.selCategory !== 'all') ? this.state.selCategory : null;
-    const wkEntrants = this.computeWeek(bw, catFilter);
-    const myE = wkEntrants.find(e=>e.you) || { points:0, resultPts:0, missed:0, placement:null, completed:0, rxCount:0 };
-    const myTotal = this.myTotalScore(catFilter);
-    let ranked;
-    if (mode==='total') {
-      const tot = {};
-      let activeWeeks = 0;
-      for (let w=0; w<8; w++) { const es = this.computeWeek(w, catFilter); if (es.active) activeWeeks++; es.forEach(e=>{ const t = tot[e.id] || (tot[e.id] = { name:e.name, you:e.you, sum:0 }); t.sum += e.points; }); }
-      // inactive (not-yet-started) weeks contribute 0 points, so the average
-      // divides by the weeks actually played — not a flat 8
-      ranked = Object.keys(tot).map(k=>({ id:k, name:tot[k].name, you:tot[k].you, score:Math.round(tot[k].sum*10)/10, sub:'ממוצע '+(activeWeeks ? Math.round(tot[k].sum/activeWeeks*10)/10 : 0) })).sort((a,b)=>a.score-b.score);
-    } else {
-      ranked = wkEntrants.map(e=>({ id:e.id, name:e.name, you:e.you, score:e.points, sub:e.placement?('#'+Math.round(e.placement)):'—' })).sort((a,b)=>a.score-b.score);
-    }
-    const boardRows = ranked.map((a,i)=>({
-      // the "you" entrant's name carries a text suffix from computeWeek(); the row
-      // already renders a separate "אתה" pill, so showing both wastes phone width
-      name:(a.you ? String(a.name).replace(' (אתה)','') : a.name), score:a.score, cons:a.sub, you:a.you,
-      rid: String(a.id),
-      medal: i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1),
-      rowStyle: (a.you ? 'background:rgba(239,91,37,.1); border:1px solid rgba(239,91,37,.45);' : 'background:var(--card); border:1px solid var(--line);') + ' display:grid; grid-template-columns:44px 1fr 74px 74px; align-items:center; gap:8px; padding:12px 14px; border-radius:12px; cursor:pointer;',
-      rankStyle: "font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; text-align:center;" + (i<3 ? '' : ' color:var(--muted);')
-    }));
-    const boardWeekPills = data.map((wk,wi)=>({ wi, n:wi+1, style:this.pillStyle(wi===bw) }));
-    const MAXW = 100;   // weekly scores are 0-100 now (percentile-based)
-    const trend = data.map((wk,wi)=>{ const me=this.computeWeek(wi, catFilter).find(e=>e.you); const s=me?me.points:0; return { wi, score:s, barStyle:'width:100%; border-radius:5px 5px 0 0; min-height:3px; height:'+Math.max(3,Math.min(100,s/MAXW*100))+'%; background:'+(wi===bw?'var(--orange)':'rgba(35,64,154,.45)')+'; transition:height .2s;', numStyle:'font-family:\'Oswald\',sans-serif; font-weight:700; font-size:11px; color:'+(wi===bw?'var(--orange)':'var(--muted)')+';' }; });
-
     // ---- profile card ----
     let totalDone = 0;
     data.forEach(wk=>wk.days.forEach(d=>{ if(d.done) totalDone++; if(d.alt&&d.alt.done) totalDone++; }));
-    const myCat = this.state.myCategory || null;
-    let myCatRank = '—';
-    let statRank = '—', statRankField = '', rankDelta = null;
-    if (myCat) {
-      // Season standings within my category, counting weeks 0..lastW only —
-      // rankThrough(7) is "now", rankThrough(cwi-1) is "as of last week".
-      const rankThrough = (lastW) => {
-        const tot = {};
-        for (let w=0; w<=lastW; w++) this.computeWeek(w, myCat).forEach(e=>{ const t=tot[e.id]||(tot[e.id]={you:e.you,sum:0}); t.sum+=e.points; });
-        const r = Object.keys(tot).map(k=>({ you:tot[k].you, score:tot[k].sum })).sort((a,b)=>a.score-b.score);
-        const idx = r.findIndex(x=>x.you);
-        return idx>=0 ? { rank:idx+1, field:r.length } : null;
-      };
-      const curR = rankThrough(7);
-      if (curR) {
-        myCatRank = curR.rank+' / '+curR.field;
-        statRank = String(curR.rank); statRankField = '/'+curR.field;
-        if (cwi > 0) { const prevR = rankThrough(cwi-1); if (prevR) rankDelta = prevR.rank - curR.rank; }
-      }
-    }
-    const rankDeltaLabel = rankDelta==null ? '' :
-      rankDelta>0 ? ('▲ עלית '+(rankDelta===1?'מקום אחד':rankDelta+' מקומות')+' משבוע שעבר') :
-      rankDelta<0 ? ('▼ ירדת '+(rankDelta===-1?'מקום אחד':(-rankDelta)+' מקומות')+' משבוע שעבר') :
-      '= ללא שינוי משבוע שעבר';
-    const rankDeltaStyle = rankDelta==null ? 'display:none;' :
-      'font-size:11px; font-weight:700; margin-top:6px; color:' +
-      (rankDelta>0 ? 'var(--greenink)' : rankDelta<0 ? 'var(--red)' : 'var(--muted)') + ';';
     const genderLabel = this.state.myGender==='female' ? 'אישה' : (this.state.myGender==='male' ? 'גבר' : '—');
     // My badge counters — same shape as the pub summary boot.js publishes, so
     // my card and what others see of me can never disagree.
     let fullWeeks = 0;
     for (let w=0; w<8; w++) { if (this.weekStats(w).completed >= this.myTargetVal()) fullWeeks++; }
-    let rxCount = 0, r9Count = 0;
+    let rxCount = 0, rxOf = 0, r9Count = 0;
     data.forEach(wk=>wk.days.forEach(d0=>[d0, d0.alt].forEach(dd=>{
       if (!dd) return;
       if (dd.done && this.rpeVal(dd.rating)>=9) r9Count++;
-      [dd.metcon, dd.metcon2].forEach(m=>{ if (m && m.rx && this.metconScore(m)) rxCount++; });
+      [dd.metcon, dd.metcon2].forEach(m=>{ if (m && this.metconScore(m)) { rxOf++; if (m.rx) rxCount++; } });
     })));
+    // overview card: RX metcons out of every metcon with a result (same
+    // counter as the RX badges, so the two numbers can never disagree)
+    const statRxSub = rxOf ? ('מתוך ' + rxOf + ' מטקונים שתועדו') : 'עוד לא תועד מטקון';
     const badges = this.badgeList({ t: totalDone, s: best, p: prList.length, rx: rxCount, r9: r9Count, fw: fullWeeks });
     const badgeCount = badges.filter(b=>b.earned).length + ' / ' + badges.length;
     const badgeCards = this.badgeCards(badges);
 
-    // ---- peer profile (opened by tapping a row on the leaderboard) ----
-    const peer = this.state.peerId!=null ? this.state.board.find(a=>String(a.id)===String(this.state.peerId)) : null;
-    const peerPub = (peer && peer.pub) || {};
-    const peerBadgeList = this.badgeList(peerPub);
-    let peerCatRank = '—';
-    if (peer && peer.category) {
-      const tot = {};
-      for (let w=0; w<8; w++) this.computeWeek(w, peer.category).forEach(e=>{ const t=tot[e.id]||(tot[e.id]={id:e.id,sum:0}); t.sum+=e.points; });
-      const r = Object.values(tot).sort((a,b)=>a.sum-b.sum);
-      const idx = r.findIndex(x=>String(x.id)===String(peer.id));
-      if (idx>=0) peerCatRank = (idx+1)+' / '+r.length;
-    }
-    const peerPRs = (Array.isArray(peerPub.prs) ? peerPub.prs : []).map(x=>({ move:String(x.move||''), res:String(x.res||''), week:String(x.week||'') }));
-
     return {
       logo: 'assets/logo.png',
-      isOverview: view==='overview', isLog: view==='log', isPRs: view==='prs', isBoard: view==='board',
-      setBoard: ()=>this.setState({view:'board'}),
-      tabBoardStyle: this.tabStyle(view==='board'),
-      boardRows, boardCount: ranked.length,
-      catPills: [{ v:'all', label:'הכל' }].concat(Object.keys(this.CAT_LABELS).map(c=>({ v:c, label:this.CAT_LABELS[c] })))
-        .map(o=>({ v:o.v, label:o.label, style:this.catPillStyle((this.state.selCategory||'all')===o.v) })),
-      onCategory: (e)=>this.setState({ selCategory:e.currentTarget.dataset.v }),
+      isOverview: view==='overview', isLog: view==='log', isPRs: view==='prs',
       openProfile: ()=>this.setState({ profileOpen:true }),
       closeProfile: ()=>this.setState({ profileOpen:false }),
       profileOpen: this.state.profileOpen,
-      onBoardRow: (e)=>{ const id=e.currentTarget.dataset.id; if (id==='me') this.setState({ profileOpen:true }); else this.setState({ peerId:id }); },
-      closePeer: ()=>this.setState({ peerId:null }),
-      peerOpen: !!peer,
-      peerName: peer ? (peer.name||'ללא שם') : '',
-      peerCategory: peer ? this.catLabel(peer.category) : '—',
-      peerGender: peer ? (String(peer.category||'').indexOf('women')>=0 ? 'אישה' : (peer.category ? 'גבר' : '—')) : '—',
-      peerAge: (peer && peer.age!=null) ? String(peer.age) : '—',
-      peerTotal: peerPub.t||0,
-      peerCatRank,
-      peerBadges: this.badgeCards(peerBadgeList),
-      peerBadgeCount: peerBadgeList.filter(b=>b.earned).length + ' / ' + peerBadgeList.length,
-      peerPRs,
-      peerHasPRs: peerPRs.length>0,
-      peerNoPRs: peerPRs.length===0,
-      peerStale: !!(peer && !peer.pub),
       profileName: this.state.myName || 'מתאמן',
       profileGender: genderLabel,
       profileAge: (this.state.myAge!=null ? String(this.state.myAge) : '—'),
-      profileCategory: this.catLabel(myCat),
       profileTotalWorkouts: totalDone,
-      profileCatRank: myCatRank,
+      profileBestStreak: best,
       profilePRs: prList.slice(0,3),
       profileHasPRs: prList.length>0,
       profileNoPRs: prList.length===0,
@@ -3493,24 +3125,12 @@ class Component extends DCLogic {
         return [{m:'auto',label:'🌗 אוטומטי'},{m:'light',label:'☀️ בהיר'},{m:'dark',label:'🌙 כהה'}]
           .map(o=>({ m:o.m, label:o.label, style:this.segLight(cur===o.m) })); })(),
       onThemeMode: (e)=>{ const m=e.currentTarget.dataset.m; if (window.cfbySetTheme) window.cfbySetTheme(m==='auto' ? null : m); this.setState({ themeMode:m }); },
-      selBoardWeekNum: bw+1,
-      boardWeekPills, trend,
-      onBoardWeek: (e)=>this.setState({ selBoardWeek:+e.currentTarget.dataset.wi }),
-      isTotalMode: mode==='total', showWeekPills: mode!=='total',
-      setWeekMode: ()=>this.setState({ boardMode:'week' }),
-      setTotalMode: ()=>this.setState({ boardMode:'total' }),
-      modeWeekStyle: this.segLight(mode!=='total'), modeTotalStyle: this.segLight(mode==='total'),
-      boardSubLabel: mode==='total' ? 'ממוצע' : 'מקום',
-      myPoints: myE.points, myResultPts: myE.resultPts, myMissed: myE.missed, myTotal,
-      myPlaceText: (myE.rxCount ? (myE.rxCount + ' מטקוני RX בדירוג') : 'לא דורגת השבוע — סמן RX במטקון'),
-      myNameDisplay: this.state.myName,
       nameEditing: this.state.editingName || !this.state.myName,
       notNameEditing: !(this.state.editingName || !this.state.myName),
       nameDraft: this.state.nameDraft,
       onNameDraft: (e)=>this.setState({ nameDraft:e.target.value }),
       confirmName: ()=>{ const v=(this.state.nameDraft||'').trim(); if(!v) return; this.setState({ myName:v, editingName:false }, ()=>this.saveBoard()); },
       editName: ()=>this.setState({ editingName:true, nameDraft:this.state.myName }),
-      boardEditor: this.boardEditorEl(),
       showProgramMap: props.showProgramMap !== false,
       setOverview: ()=>this.setState({view:'overview'}),
       setLog: ()=>this.setState({view:'log'}),
@@ -3534,7 +3154,7 @@ class Component extends DCLogic {
       editTabStyle: this.segStyle(editMode),
 
       statSessions: done, statTarget: target, statPct: pct,
-      statRank, statRankField, rankDeltaLabel, rankDeltaStyle,
+      statRx: rxCount, statRxSub,
       statWeekly: curWeekDone + '/' + this.myTargetVal(),
       curWeekNum: cwi+1, curWeekRange: this.rangeStr(cwi), curWeekDone,
       dowHeaders: this.dowShort,

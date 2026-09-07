@@ -6,7 +6,7 @@
      1. Require a logged-in session (else bounce to index.html).
      2. Load the shared program (admin-authored) + this user's saved
         results from Supabase, MERGE them, seed localStorage.
-     3. Load the shared leaderboard into localStorage.
+     3. Load my own summary fields (display name, age) into localStorage.
      4. Intercept localStorage.setItem so every change the app makes
         is pushed back to Supabase (debounced).
      5. ONLY THEN load dc-runtime.js so the app boots with data ready.
@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "2.3.0";
+  var BUILD = "3.0.0";
   var K = window.CFBY;
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
@@ -93,16 +93,14 @@
       return { row: r.data || null, error: r.error || null };
     } catch (e) { return { row: null, error: e }; }
   }
-  async function fetchBoard() {
+  // My own summary row — the display name lives there. v3: the board table is
+  // a per-user summary read by its owner and the admin panel (coach table),
+  // not a shared leaderboard; other athletes' rows are never fetched here.
+  async function fetchMyBoardRow(uid) {
     try {
-      var r = await sb.from("board").select("user_id,name,results,weeks,metcons,pub").order("name");
-      // Transitional: until the v1.6.0 ALTERs run in the SQL editor, the pub
-      // column doesn't exist and the select 42703s — retry without it so the
-      // leaderboard never breaks on a schema lag.
-      if (r.error && /\bpub\b/.test(r.error.message || ""))
-        r = await sb.from("board").select("user_id,name,results,weeks,metcons").order("name");
-      return { rows: r.data || [], error: r.error || null };
-    } catch (e) { return { rows: [], error: e }; }
+      var r = await sb.from("board").select("user_id,name").eq("user_id", uid).maybeSingle();
+      return { row: r.data || null, error: r.error || null };
+    } catch (e) { return { row: null, error: e }; }
   }
   async function fetchProfile(uid) {
     try {
@@ -138,15 +136,6 @@
                block_recap: (r.data && r.data.block_recap) || null };
     } catch (e) { return { announcement: null, block_recap: null }; }
   }
-  // Every registered athlete — the leaderboard is built from this so a user
-  // appears the moment their account exists, before they log any workout.
-  async function fetchAllProfiles() {
-    try {
-      var r = await sb.from("profiles").select("id,name,is_admin,gender,birth_date");
-      return r.data || [];
-    } catch (e) { return []; }
-  }
-
   // ---- program scaffold hygiene ----------------------------------------
   // The shared program must be a SCAFFOLD: plan text only, no personal data.
   // It used to be published straight from the admin's tracker, logs included —
@@ -307,7 +296,7 @@
     };
   }
 
-  // ---- competition categories (gender x age bracket) -------------------
+  // ---- age (shown in the profile card) ---------------------------------
   function ageFrom(birthDate) {
     if (!birthDate) return null;
     var b = new Date(birthDate), n = new Date();
@@ -316,15 +305,6 @@
     if (m < 0 || (m === 0 && n.getDate() < b.getDate())) a--;
     return a;
   }
-  // -> "teen men" | "teen women" | "elite men" | "elite women" | "masters men" | "masters women"
-  function categoryOf(gender, birthDate) {
-    if (!gender || !birthDate) return null;
-    var a = ageFrom(birthDate);
-    if (a == null) return null;
-    var bracket = a < 18 ? "teen" : (a < 35 ? "elite" : "masters");
-    return bracket + " " + (gender === "female" ? "women" : "men");
-  }
-  window.cfbyCategoryOf = categoryOf;   // the app uses this for filtering/rankings
 
   // ---- Supabase writes (debounced) ------------------------------------
   // DIRTY_KEY holds the timestamp of the last tracker write that has not been
@@ -392,7 +372,8 @@
   // pushes carried the stale persisted copy, and the next reload reverted the
   // day. Pushes now read these mirrors first; storage is just the cache.
   var memTracker = null;   // last tracker JSON string (boot seed / app write)
-  var memBoard = null;     // last board JSON string the USER wrote (not realtime refreshes)
+  var memBoard = null;     // last board JSON string the USER wrote
+  var lastPushedName = null;   // profiles.name as last confirmed in the cloud (v3 name sync)
   var memDts = null;       // per-day stamp map (see DTS_KEY)
   var memDirty = false;    // true while a write is not yet confirmed pushed
   var memSeq = 0;          // bumps on every tracker write (push-race token)
@@ -732,10 +713,10 @@
     clearTimeout(t1);
     t1 = setTimeout(function () { t1 = null; doPushState(); }, 800);
   }
-  // Per-week summary the leaderboard needs: completed days + shared result.
+  // Per-week summary for the coach table (v3): completed days per week.
   // A day counts twice when its alternate session is also done — this must match
-  // the app's own weekStats(), or a user's rank would disagree with their screen.
-  function summarizeWeeks(tracker, myResults) {
+  // the app's own weekStats(), or the panel would disagree with the athlete's screen.
+  function summarizeWeeks(tracker) {
     var out = [], wk = (tracker && tracker.weeks) || [];
     for (var i = 0; i < wk.length; i++) {
       var days = (wk[i] && wk[i].days) || [], done = 0;
@@ -744,12 +725,12 @@
         if (days[j].done) done++;
         if (days[j].alt && days[j].alt.done) done++;
       }
-      out.push({ completed: done, result: (myResults && myResults[i]) || 0 });
+      out.push({ completed: done });
     }
     return out;
   }
-  // Per-metcon comparable results for the ranking engine. Keys MUST match the
-  // app's weekMetconsFromData(): "w_d" (main), "w_d_2", "w_d_a", "w_d_a2".
+  // One comparable number per metcon (the app's metconScore twin). v3 uses it
+  // only for the RX count in the summary below.
   // time -> seconds (lower = better); rounds*100000+reps / amount (higher = better).
   function metconEntry(m) {
     if (!m) return null;
@@ -766,27 +747,9 @@
     var r = (parseInt(M.rounds, 10) || 0) * 100000 + (parseInt(M.reps, 10) || 0);
     return r > 0 ? { v: r, dir: "high", rx: !!m.rx } : null;
   }
-  function extractMetcons(tracker) {
-    var out = {}, wk = (tracker && tracker.weeks) || [];
-    for (var w = 0; w < wk.length; w++) {
-      var days = (wk[w] && wk[w].days) || [];
-      for (var d = 0; d < days.length; d++) {
-        var day = days[d]; if (!day) continue;
-        var e1 = metconEntry(day.metcon);  if (e1) out[w + "_" + d] = e1;
-        var e2 = metconEntry(day.metcon2); if (e2) out[w + "_" + d + "_2"] = e2;
-        if (day.alt) {
-          var a1 = metconEntry(day.alt.metcon);  if (a1) out[w + "_" + d + "_a"] = a1;
-          var a2 = metconEntry(day.alt.metcon2); if (a2) out[w + "_" + d + "_a2"] = a2;
-        }
-      }
-    }
-    return out;
-  }
-
-  // Public profile summary — the small card anyone can open from the board.
-  // Only aggregate counters + the last 3 PRs leave the device; the full private
-  // tracker stays in `states`. Counter thresholds must match the app's
-  // badgeList() or a viewer would see different badges than the owner does.
+  // Summary row (v3): aggregate counters + the last 3 PRs, read only by the
+  // owner and the admin panel's coach table (RLS). The full private tracker
+  // stays in `states`. Counter thresholds must match the app's badgeList().
   function publicSummary(tracker, myTarget) {
     var wk = (tracker && tracker.weeks) || [];
     var target = parseInt(myTarget, 10) || 5;
@@ -827,9 +790,9 @@
 
   async function doPushBoard() {
     if (!pushCtx.uid) return;
-    // Memory mirrors first — same dead-storage rule as doPushState: the board
-    // row (completed counts, metcon results, weekly results) must be derived
-    // from what the user actually did this session, not the last persisted copy.
+    // Memory mirrors first — same dead-storage rule as doPushState: the summary
+    // row (completed counts, badge counters) must be derived from what the user
+    // actually did this session, not the last persisted copy.
     var b = null;
     if (memBoard !== null) { try { b = JSON.parse(memBoard); } catch (e) {} }
     if (!b) b = lsGet(K.BOARD_KEY) || {};
@@ -839,9 +802,7 @@
     var row = {
       user_id: pushCtx.uid,
       name: b.myName || "",
-      results: b.myResults || {},
-      weeks: summarizeWeeks(tracker, b.myResults),
-      metcons: extractMetcons(tracker),
+      weeks: summarizeWeeks(tracker),
       pub: publicSummary(tracker, b.myTarget),
       updated_at: new Date().toISOString()
     };
@@ -852,13 +813,23 @@
       delete row.pub;
       r = await upsertWithRetry("board", row);
     }
-    // No retry loop needed: the board row is derived from the tracker and is
-    // rebuilt+pushed on every boot, so a lost board push self-heals.
+    // No retry loop needed: the summary row is derived from the tracker and is
+    // rebuilt+pushed on every boot, so a lost push self-heals.
     if (r.error) console.error("[sync] board push failed:", r.error.message || r.error);
+    // v3: the display name is edited in the profile card; profiles.name is what
+    // the admin panel and the coach table show, so keep it in step. Own row
+    // only (RLS), and only when the name actually changed since the last push.
+    if (!r.error && row.name && row.name !== lastPushedName) {
+      try {
+        var pr = await sb.from("profiles").update({ name: row.name }).eq("id", pushCtx.uid);
+        if (pr.error) console.warn("[sync] profile name update failed:", pr.error.message || pr.error);
+        else lastPushedName = row.name;
+      } catch (e) { console.warn("[sync] profile name update threw:", (e && e.message) || e); }
+    }
   }
   function pushBoard() {
-    // Admins compete on the leaderboard like everyone else (their extra powers
-    // are the panel + program editing, not board visibility).
+    // Admins publish a summary row like everyone else (the coach table lists
+    // them too).
     clearTimeout(t2);
     t2 = setTimeout(function () { t2 = null; doPushBoard(); }, 800);
   }
@@ -1050,7 +1021,7 @@
       var isTracker = key === K.TRACKER_KEY && !suppressPush;
       // Board mirror: only USER writes — realtime refreshes (suppressPush)
       // carry other athletes' rows read from possibly-stale storage, and must
-      // not overwrite the user's own latest myResults/myName in the mirror.
+      // not overwrite the user's own latest myName in the mirror.
       if (key === K.BOARD_KEY && !suppressPush) memBoard = val;
       // Diff against the previous write's mirror, not storage — if storage is
       // dead, rawGet keeps answering with the last persisted copy and every
@@ -1081,9 +1052,9 @@
         // appear only after the 800ms debounce, i.e. after a fast app close.
         if (!failed) syncShow("saving");
         pushState();
-        // A completed workout only writes the tracker, but the leaderboard's
+        // A completed workout only writes the tracker, but the summary row's
         // "completed" counts are derived from it — so sync the board too, or a
-        // user who just marks workouts done never appears on anyone's board.
+        // user who just marks workouts done never shows up in the coach table.
         pushBoard();
       } else if (key === K.BOARD_KEY) {
         pushBoard();
@@ -1091,43 +1062,6 @@
     };
   }
 
-  // ---- realtime leaderboard -------------------------------------------
-  // Refresh ONLY the other athletes' rows (never our own fields) so anyone
-  // else's change appears live, without a page refresh.
-  var rtTimer = null, rtLast = 0;
-  // Each refresh refetches the FULL board + roster on every device. At ~100
-  // athletes an evening burst (everyone saving the WOD at once) would make
-  // every phone refetch dozens of times — so refreshes are rate-limited to one
-  // per RT_MIN_GAP. Reads only; the user's own saves are never delayed by this.
-  var RT_MIN_GAP = 15000;
-  async function refreshOthers(uid) {
-    var fb = await fetchBoard();
-    if (fb.error) return;   // keep showing the last good board, never a blank one
-    var byId = {}; fb.rows.forEach(function (r) { byId[r.user_id] = r; });
-    var profs = await fetchAllProfiles();
-    var board = profs
-      .filter(function (p) { return p.id !== uid; })
-      .map(function (p) { var r = byId[p.id]; return { id: p.id, name: (r && r.name) || p.name || "", weeks: (r && r.weeks) || [], metcons: (r && r.metcons) || {}, category: categoryOf(p.gender, p.birth_date), age: ageFrom(p.birth_date), pub: (r && r.pub) || null }; });
-    var cur = lsGet(K.BOARD_KEY) || {};
-    cur.board = board;
-    suppressPush = true;
-    try { lsSetRaw(K.BOARD_KEY, cur); } finally { suppressPush = false; }
-    if (window.cfbyReloadBoard) { try { window.cfbyReloadBoard(); } catch (e) {} }
-  }
-  function subscribeBoard(uid) {
-    try {
-      sb.channel("cfby-board")
-        .on("postgres_changes", { event: "*", schema: "public", table: "board" }, function () {
-          if (rtTimer) return;   // a refresh is already on its way — this event rides along
-          var wait = Math.max(500, rtLast + RT_MIN_GAP - Date.now());
-          rtTimer = setTimeout(function () {
-            rtTimer = null; rtLast = Date.now();
-            refreshOthers(uid).catch(function () {});
-          }, wait);
-        })
-        .subscribe();
-    } catch (e) { console.error("[realtime]", e); }
-  }
 
   // ---- in-app ADMIN panel (only injected for admins) ------------------
   function injectAdminPanel(meId) {
@@ -1974,19 +1908,7 @@
     try { localStorage.setItem("cfby_onb_v1", "1"); } catch (e) {}
     try { localStorage.setItem("cfby_reset_v1", "1"); } catch (e) {}
     localStorage.removeItem(K.TRACKER_KEY); // empty -> the app builds its built-in program
-    lsSetRaw(K.BOARD_KEY, {
-      board: [
-        { id: "d1", name: "דנה כהן", weeks: [{ completed: 5, result: 0 }, { completed: 2, result: 0 }], metcons: {}, category: "elite women", age: 28,
-          pub: { t: 12, s: 6, p: 4, rx: 3, r9: 2, fw: 1, prs: [
-            { move: "Back Squat", res: "95kg × 1", week: "W2" },
-            { move: "Fran", res: "4:12", week: "W2" },
-            { move: "Deadlift", res: "120kg × 1", week: "W1" } ] } },
-        { id: "d2", name: "יוסי לוי", weeks: [{ completed: 3, result: 0 }], metcons: {}, category: "elite men", age: 31,
-          pub: { t: 3, s: 2, p: 0, rx: 1, r9: 0, fw: 0, prs: [] } },
-        { id: "d3", name: "רון מזרחי", weeks: [{ completed: 4, result: 0 }], metcons: {}, category: "masters men", age: 42, pub: null }
-      ],
-      myName: "אורי (dev)", myResults: {}, myCategory: "elite men", myGender: "male", myAge: 30
-    });
+    lsSetRaw(K.BOARD_KEY, { myName: "אורי (dev)", myGender: "male", myAge: 30 });
     window.cfbySignOut = function () { location.reload(); };
     window.cfbyIsAdmin = false;
     // dev preview: the recap gate is open so the share flow is testable
@@ -2147,36 +2069,21 @@
       // else: leave empty -> the app builds its built-in program
     }
 
-    // 2) board (shared leaderboard). Built from the full roster of registered
-    //    athletes (profiles), so a new user shows up immediately — not only once
-    //    they log a workout. Their board row (completed counts + result) is
-    //    merged in when it exists. Everyone competes, admins included; "you" is
-    //    rendered by the app separately, so exclude only self here.
-    var fb = await fetchBoard();
-    var byId = {};
-    fb.rows.forEach(function (r) { byId[r.user_id] = r; });
-    var profiles = await fetchAllProfiles();
-    var board = profiles
-      .filter(function (p) { return p.id !== uid; })
-      .map(function (p) {
-        var r = byId[p.id];
-        return { id: p.id, name: (r && r.name) || p.name || "", weeks: (r && r.weeks) || [],
-                 metcons: (r && r.metcons) || {}, category: categoryOf(p.gender, p.birth_date),
-                 age: ageFrom(p.birth_date), pub: (r && r.pub) || null };
-      });
-    var myRow = byId[uid];
-    // If the board fetch failed, my own fields fall back to the previous local
-    // copy — otherwise a flaky load would blank myResults and the next push
-    // would erase the weekly results on the server too.
+    // 2) my summary row: only the display name comes from it. v3 — there is no
+    //    shared leaderboard; other athletes' rows are never fetched, and the
+    //    board table is read only by its owner + the admin panel.
+    var mb = await fetchMyBoardRow(uid);
+    var myRow = mb.row;
+    // If the fetch failed, the name falls back to the previous local copy —
+    // otherwise a flaky load would blank the name and the next push would
+    // erase it on the server too.
     var prevB = lsGet(K.BOARD_KEY) || {};
     var seedB = {
-      board: (fb.error && Array.isArray(prevB.board) && prevB.board.length) ? prevB.board : board,
-      myName: (myRow && myRow.name) || (fb.error && prevB.myName) || prof.name || (session.user.email || "").split("@")[0],
-      myResults: (myRow && myRow.results) || (fb.error && prevB.myResults) || {},
-      myCategory: categoryOf(prof.gender, prof.birth_date),
+      myName: (myRow && myRow.name) || (mb.error && prevB.myName) || prof.name || (session.user.email || "").split("@")[0],
       myGender: prof.gender || null,
       myAge: ageFrom(prof.birth_date)
     };
+    lastPushedName = prof.name || null;
     memBoard = JSON.stringify(seedB);
     try { lsSetRaw(K.BOARD_KEY, seedB); } catch (e) {}
 
@@ -2255,8 +2162,6 @@
     // 5) admins get the in-app user-management panel (floating button)
     if (isAdmin) { try { injectAdminPanel(uid); } catch (e) { console.error("[admin panel]", e); } }
 
-    // 6) live leaderboard: refresh others' rows whenever the board changes
-    subscribeBoard(uid);
   }
 
   // app.html hides <x-dc> because the browser paints that raw markup — modals and
