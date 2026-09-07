@@ -35,6 +35,7 @@
 | סכימת DB | `supabase/schema.sql` | מתעדכן ידנית — ה-DB החי מקבל ALTER בנפרד |
 | יומן | `יומן-פרויקט.md` | מה קרה, כרונולוגי, בעברית לאורי |
 | כלי גיבוי/סיכום | `tools/` | `block_summary.py` + `recap_cards_server.py` — רצים על קובץ גיבוי, לא על הענן |
+| דמו למשתתפים | `/demo` → `app.html?demo=1` | `demoMain` ב-boot.js + `DEMO_LOG` ב-app.html. אחסון מבודד, בלי ענן, בלי מנהל — [`personal-v3.md` §ד](docs/domains/personal-v3.md) |
 
 ---
 

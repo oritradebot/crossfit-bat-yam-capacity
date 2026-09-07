@@ -19,6 +19,28 @@
   // Semantic versioning per Ori: 1.0.1 and counting.
   var BUILD = "3.0.0";
   var K = window.CFBY;
+  // ---- demo mode (07/09, participant feedback rounds) ---------------------
+  // app.html?demo=1 boots the app as a fictional athlete (see demoMain) in a
+  // storage namespace of its own: every cfby_* / sb-* key the page touches is
+  // prefixed "demo:", so a device that also holds the real app (a logged-in
+  // PWA with unsynced days, the staff flag, the theme) is never read or
+  // written by the demo, and the demo is never synced. Installed here, before
+  // the theme read and the Supabase client, on the prototype (iron rule 4).
+  var DEMO = false;
+  try { DEMO = new URLSearchParams(location.search).has("demo"); } catch (e) {}
+  var demoClear = null;   // wipes the namespace (the strip's "start over" button)
+  if (DEMO) (function () {
+    var P = Storage.prototype, g = P.getItem, s = P.setItem, r = P.removeItem;
+    var map = function (k) { k = String(k); return (k.indexOf("cfby_") === 0 || k.indexOf("sb-") === 0) ? ("demo:" + k) : k; };
+    P.getItem = function (k) { return g.call(this, map(k)); };
+    P.setItem = function (k, v) { return s.call(this, map(k), v); };
+    P.removeItem = function (k) { return r.call(this, map(k)); };
+    demoClear = function () {
+      var ks = [];
+      try { for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); } catch (e) {}
+      ks.forEach(function (k) { if (k && k.indexOf("demo:") === 0) { try { r.call(localStorage, k); } catch (e) {} } });
+    };
+  })();
   var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   window.__sb = sb;
 
@@ -113,18 +135,26 @@
   }
   async function fetchProfile(uid) {
     try {
-      // v3: goal + goal_done_at ride the profile (the goal belongs to the
-      // athlete, not the block). Until Ori runs the ALTER they don't exist —
-      // retry without them, same convention as announcement_seen below.
-      var r = await sb.from("profiles").select("name,is_admin,welcome_seen,gender,birth_date,announcement_seen,goal,goal_done_at").eq("id", uid).maybeSingle();
-      if (r.error && /goal/.test(r.error.message || "")) {
-        goalColsMissing = true;
-        r = await sb.from("profiles").select("name,is_admin,welcome_seen,gender,birth_date,announcement_seen").eq("id", uid).maybeSingle();
+      // Columns that may not exist yet where the matching ALTER hasn't run
+      // (schema-drift workflow): goal + goal_done_at (v3 goal card), prs (the
+      // PR ledger carried across blocks), announcement_seen. Postgres names
+      // the FIRST missing column — drop it and retry, so a pending migration
+      // never fails the whole fetch (that would wrongly skip onboarding + the
+      // popup, and break the row-gone proof in main()).
+      var cols = ["name", "is_admin", "welcome_seen", "gender", "birth_date", "announcement_seen", "goal", "goal_done_at", "prs"];
+      var optional = ["announcement_seen", "goal", "goal_done_at", "prs"];
+      var r;
+      for (var attempt = 0; attempt < 5; attempt++) {
+        r = await sb.from("profiles").select(cols.join(",")).eq("id", uid).maybeSingle();
+        if (!r.error) break;
+        var msg = r.error.message || "";
+        var mm = /column\s+(?:[\w"]+\.)?"?(\w+)"?\s+does not exist/i.exec(msg);
+        var missing = mm ? mm[1] : null;
+        if (!missing) missing = optional.filter(function (c) { return cols.indexOf(c) >= 0 && new RegExp("\\b" + c + "\\b").test(msg); })[0] || null;
+        if (!missing || optional.indexOf(missing) < 0 || cols.indexOf(missing) < 0) throw r.error;
+        if (missing === "goal" || missing === "goal_done_at") { goalColsMissing = true; cols = cols.filter(function (c) { return c !== "goal" && c !== "goal_done_at"; }); }
+        else cols = cols.filter(function (c) { return c !== missing; });
       }
-      // Transitional: schema not migrated yet — retry without the new column
-      // (a profile-fetch failure here would wrongly skip onboarding + popup).
-      if (r.error && /announcement_seen/.test(r.error.message || ""))
-        r = await sb.from("profiles").select("name,is_admin,welcome_seen,gender,birth_date").eq("id", uid).maybeSingle();
       if (r.error) throw r.error;
       // _missing: the read came back EMPTY (no row — or an anonymous read under
       // RLS). Boot's "row gone" branch needs a confirmed profile row as proof.
@@ -512,6 +542,7 @@
     else if (k === "localfail"){ txt = "⚠️ בעיית אחסון במכשיר — הענן הוא הגיבוי"; color = "#a33b2e"; }
     else if (k === "pubfail")  { txt = "⚠️ נשמר; פרסום התוכנית נכשל"; color = "#a3702e"; }
     else if (k === "nointercept") { txt = "⚠️ הסנכרון לא פעיל בדפדפן הזה — פנו לאורי"; color = "#a33b2e"; }
+    else if (k === "demo")     { txt = "🧪 גרסת דמו — נתונים לדוגמה, לא נשמר בענן"; color = "#a3702e"; }
     else                       { txt = pushCtx.uid ? "☁️ מסונכרן לענן" : ""; }
     el.textContent = txt;
     el.style.color = color;
@@ -1283,6 +1314,9 @@
       ".cfa-annst{font-size:12px;color:#8ea3c9}" +
       ".cfa-locks{font-size:12px;color:#8ea3c9;margin:0 0 10px;line-height:1.7}" +
       ".cfa-locks b{color:#eaf0ff}" +
+      ".cfa-carry{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:#c9d4ee;margin:0 0 10px;line-height:1.6;cursor:pointer}" +
+      ".cfa-carry input{margin:3px 0 0;flex:none;width:auto}" +
+      ".cfa-carry b{color:#f0c064}" +
       ".cfa-ann input.cfa-short{width:auto;max-width:170px;margin-bottom:0}" +
       ".cfa-wipe{background:#e74c3c;color:#fff;border:1px solid #e74c3c;border-radius:8px;padding:10px 14px;font:800 13px 'Heebo',sans-serif;cursor:pointer}" +
       ".cfa-wipe:disabled{background:transparent;color:#e74c3c;opacity:.5;cursor:not-allowed}" +
@@ -1371,6 +1405,9 @@
           '<h3>🧨 איפוס בלוק</h3>' +
           '<p class="sub">מעתיק את כל התוצאות והלוח לארכיון במסד ורק אז מוחק אותם, סוגר את כרטיס הסיכום, מאפס את התוכנית המשותפת ומסיר את הודעת הבלוק. ' +
             'חשבונות, פרופילים ויומן ההודעות נשארים. פעיל רק כשמצב תחזוקה דולק ורק אחרי גיבוי טרי (עד שעה) מהמכשיר הזה. לאישור מקלידים את מספר המתאמנים שמוצג.</p>' +
+          '<label class="cfa-carry"><input type="checkbox" id="cfaWipeCarry" checked> ' +
+            '<span>📌 לפני המחיקה, לשמור לכל מתאמן את השיאים (המשקל הכבד לכל תרגיל + ימי 🏆) בפרופיל — בבלוק הבא הם מוצגים כ-<b id="cfaWipeCarryBlk">BLOCK I</b> עד שיישברו. ' +
+            'המבחנים לא נשמרים. דורש את עמודת profiles.prs (schema.sql); בלי העמודה האיפוס נעצר לפני המחיקה.</span></label>' +
           '<div class="cfa-locks" id="cfaWipeLocks">בודק…</div>' +
           '<div class="row">' +
             '<input id="cfaWipeLabel" class="ltr cfa-short" value="block-1" placeholder="block-1" title="תווית לארכיון (למשל block-1, block-2-tests)">' +
@@ -1808,9 +1845,64 @@
     // survive — the data is reset, the infrastructure is not.
     var wipe = { maint: false, backupFresh: false, n: 0, sRows: 0, bRows: 0 };
     function backupFresh() { var t = parseInt(rawGet(BK_KEY), 10) || 0; return t > 0 && (Date.now() - t) < 3600000; }
+    // Records outlive the block (Ori, 07/09): the block number of the data
+    // being wiped comes from the archive label ("block-1" -> 1) and stamps the
+    // ledger, so a carried record shows "BLOCK I" in the next block.
+    function wipeBlockNum(label) { var m = /(\d+)/.exec(label || ""); return m ? parseInt(m[1], 10) : 1; }
+    function roman(n) {
+      n = parseInt(n, 10); if (!(n > 0)) return "";
+      var T = [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]], s = "";
+      for (var i = 0; i < T.length; i++) while (n >= T[i][0]) { s += T[i][1]; n -= T[i][0]; }
+      return s;
+    }
+    var carryTouched = false;   // once the admin toggles the box, the label no longer resets it
+    function wipeCarryHint() {
+      var lab = document.getElementById("cfaWipeLabel"), chk = document.getElementById("cfaWipeCarry"), blk = document.getElementById("cfaWipeCarryBlk");
+      if (!lab || !chk || !blk) return;
+      var label = (lab.value || "").trim() || "block-1";
+      blk.textContent = "BLOCK " + roman(wipeBlockNum(label));
+      if (!carryTouched) chk.checked = !/test/i.test(label);   // test data never becomes a record
+    }
+    // Right before the rows are deleted, fold each athlete's best lift per
+    // movement + 🏆 days into profiles.prs — computed by the APP's own PR code
+    // (window.cfbyCollectPRs / cfbyMergePRs: one source of truth) and merged
+    // with whatever earlier blocks already left there. profiles survive the
+    // reset; the app shows a carried record as "BLOCK I" until it is beaten.
+    // Any failure here aborts BEFORE the delete. Only ids that already have a
+    // profile row are written (never creates one), one upsert for everyone.
+    async function carryPRs(blk) {
+      if (typeof window.cfbyCollectPRs !== "function" || typeof window.cfbyMergePRs !== "function") return { error: "האפליקציה לא חשפה את מחשבון השיאים — רענן את הדף ונסה שוב" };
+      var pr = await sb.from("profiles").select("id,prs");
+      if (pr.error) {
+        var pm = pr.error.message || String(pr.error);
+        if (/\bprs\b/.test(pm) && /does not exist/i.test(pm)) pm = "עמודת profiles.prs חסרה ב-Supabase — יש להריץ את supabase/schema.sql ב-SQL Editor ואז לנסות שוב (או לבטל את הסימון של שמירת השיאים)";
+        return { error: pm };
+      }
+      var st = await sb.from("states").select("user_id,tracker");
+      if (st.error) return { error: st.error.message || String(st.error) };
+      var prevById = {};
+      (pr.data || []).forEach(function (p) { prevById[p.id] = p.prs || null; });
+      var rows = [];
+      for (var i = 0; i < (st.data || []).length; i++) {
+        var srow = st.data[i];
+        if (!Object.prototype.hasOwnProperty.call(prevById, srow.user_id)) continue;   // no profile row -> nothing to attach the ledger to
+        var merged;
+        try {
+          var cur = window.cfbyCollectPRs(srow.tracker && srow.tracker.weeks, blk);
+          merged = window.cfbyMergePRs(prevById[srow.user_id], cur);
+        } catch (e) { return { error: "חישוב השיאים נכשל (" + ((e && e.message) || e) + ")" }; }
+        if (merged) rows.push({ id: srow.user_id, prs: merged });
+      }
+      if (rows.length) {
+        var up = await sb.from("profiles").upsert(rows, { onConflict: "id" });
+        if (up.error) return { error: up.error.message || String(up.error) };
+      }
+      return { n: rows.length };
+    }
     async function wipeStatus() {
       var el = document.getElementById("cfaWipeLocks");
       if (!el) return;
+      wipeCarryHint();
       wipe.backupFresh = backupFresh();
       wipe.maint = await maintenanceFlag();
       // ids only — never the blobs (a states select of tracker is 70KB a row)
@@ -1849,8 +1941,17 @@
       // this account's row with last block's data — wait for a quiet moment.
       if (pushBusy || unsynced()) { amsg("יש שמירה בתהליך — חכה לחיווי ☁️ מסונכרן בתחתית המסך ונסה שוב", "err"); return; }
       var label = (document.getElementById("cfaWipeLabel").value || "").trim() || "block-1";
+      var carry = !!(document.getElementById("cfaWipeCarry") || {}).checked;
+      var blk = wipeBlockNum(label);
       var btn = document.getElementById("cfaWipeGo");
       btn.disabled = true;
+      var carried = 0;
+      if (carry) {
+        amsg("שומר את שיאי הבלוק בפרופילים (BLOCK " + roman(blk) + ")…");
+        var cr = await carryPRs(blk);
+        if (cr.error) { amsg("השיאים לא נשמרו ושום דבר לא נמחק: " + cr.error, "err"); wipeArm(); return; }
+        carried = cr.n;
+      }
       amsg("מאפס… מעתיק לארכיון ומוחק (" + label + ")");
       var r = await sb.rpc("admin_reset_block", { p_label: label });
       if (r.error) {
@@ -1862,7 +1963,8 @@
       }
       var d = r.data || {};
       amsg("האיפוס הסתיים: " + (d.archived_states || 0) + " רשומות תוצאות + " + (d.archived_board || 0) + " שורות לוח בארכיון \"" + label + "\", " +
-           (d.deleted_states || 0) + " + " + (d.deleted_board || 0) + " נמחקו. האפליקציה נטענת מחדש…", "ok");
+           (d.deleted_states || 0) + " + " + (d.deleted_board || 0) + " נמחקו" +
+           (carry ? (" · השיאים של " + carried + " מתאמנים נשמרו בפרופילים (BLOCK " + roman(blk) + ")") : " · השיאים לא הועברו") + ". האפליקציה נטענת מחדש…", "ok");
       // This device's own copy is last block's data too. Drop it BEFORE the
       // reload so no close-time push can carry it back into the fresh cloud.
       dropLocalCopy();
@@ -2068,6 +2170,8 @@
     document.getElementById("cfaBk").onclick = backup;
     document.getElementById("cfaWipeGo").onclick = wipeRun;
     document.getElementById("cfaWipeCount").oninput = wipeArm;
+    document.getElementById("cfaWipeLabel").oninput = wipeCarryHint;
+    document.getElementById("cfaWipeCarry").onchange = function () { carryTouched = true; };
     var rsFile = document.getElementById("cfaRsFile");
     document.getElementById("cfaRs").onclick = function () { rsFile.value = ""; rsFile.click(); };
     rsFile.onchange = function () { if (rsFile.files && rsFile.files[0]) restore(rsFile.files[0]); };
@@ -2286,7 +2390,7 @@
     try { localStorage.setItem("cfby_onb_v1", "1"); } catch (e) {}
     try { localStorage.setItem("cfby_reset_v1", "1"); } catch (e) {}
     localStorage.removeItem(K.TRACKER_KEY); // empty -> the app builds its built-in program
-    lsSetRaw(K.BOARD_KEY, { myName: "אורי (dev)", myGender: "male", myAge: 30, myGoal: "", myGoalDone: null });
+    lsSetRaw(K.BOARD_KEY, { myName: "אורי (dev)", myGender: "male", myAge: 30, myGoal: "", myGoalDone: null, prevPRs: lsGet("cfby_dev_prs") || null });
     window.cfbySignOut = function () { location.reload(); };
     window.cfbyIsAdmin = false;
     // dev preview: the recap gate is open so the share flow is testable
@@ -2297,8 +2401,62 @@
     versionTag();
   }
 
+  // ---- demo (hosted, no Supabase) -----------------------------------------
+  // app.html?demo=1 (public/demo.html redirects there): a fictional athlete's
+  // BLOCK II for feedback rounds with participants (Ori, 07/09 — Osher first).
+  // Participant mode only — no admin entry, no edit tools, nothing reaches
+  // the cloud; storage is the "demo:" namespace installed at the top of this
+  // file, so the real app on the same device is untouched. The block calendar
+  // is anchored on the first open so "today" lands in week 8 (the test week):
+  // startDate = this week's Sunday minus 49 days. app.html seeds every earlier
+  // training day of the sample athlete (seedDemo, once per device) and leaves
+  // today for the participant to log; the PR ledger below plays block 1.
+  var DEMO_PRS = { v: 1,
+    lifts: {
+      "deadlifts":   { move: "Deadlifts",    best: 145, reps: "3", week: 6, block: 1 },
+      "bench press": { move: "Bench Press",  best: 80,  reps: "2", week: 7, block: 1 },
+      "clean jerk":  { move: "Clean & Jerk", best: 85,  reps: "1", week: 5, block: 1 },
+      "back squat":  { move: "Back Squat",   best: 100, reps: "3", week: 8, block: 1 }
+    },
+    flags: [ { key: "bench press", move: "Bench Press", res: "80kg × 2", week: 7, block: 1 } ]
+  };
+  async function demoMain() {
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var anchor = rawGet("cfby_demo_start");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(anchor || "")) {
+      var sun = new Date(today); sun.setDate(today.getDate() - today.getDay() - 49);
+      anchor = sun.getFullYear() + "-" + ("0" + (sun.getMonth() + 1)).slice(-2) + "-" + ("0" + sun.getDate()).slice(-2);
+      try { localStorage.setItem("cfby_demo_start", anchor); } catch (e) {}
+    }
+    var ap = anchor.split("-").map(Number);
+    var startDate = new Date(ap[0], ap[1] - 1, ap[2]);
+    window.cfbyDemo = {
+      startDate: startDate,
+      todayGi: Math.round((today - startDate) / 86400000),
+      reset: function () { if (demoClear) demoClear(); location.reload(); }
+    };
+    // Same pre-boot flags as a real login: onboarding form off, first-run log
+    // wipe off. WELCOME_KEY stays unset so the 3-step guide opens by itself.
+    try { localStorage.setItem("cfby_onb_v1", "1"); } catch (e) {}
+    try { localStorage.setItem("cfby_reset_v1", "1"); } catch (e) {}
+    if (!rawGet("cfby_demo_seeded")) {   // app.html sets it once the tracker is seeded
+      try { localStorage.removeItem(K.TRACKER_KEY); } catch (e) {}
+      lsSetRaw(K.BOARD_KEY, { myName: "אושר", myTarget: 5, myGoal: "להגיע ל-110 ק\"ג בסקוואט", myGoalDone: null,
+                              myGender: null, myAge: null, prevPRs: DEMO_PRS });
+    }
+    window.cfbySignOut = function () { window.cfbyDemo.reset(); };
+    window.cfbyIsAdmin = false;
+    window.cfbyBlockRecap = null;
+    window.cfbyWelcomeDone = function () {};
+    lastCloud = { kind: "demo", at: 0 };
+    await loadScript("assets/js/dc-runtime.js");
+    await revealApp();
+    versionTag();
+  }
+
   // ---- main ------------------------------------------------------------
   async function main() {
+    if (DEMO) { return demoMain(); }
     if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) &&
         new URLSearchParams(location.search).has("dev")) { return devMain(); }
     var ses = await sb.auth.getSession();
@@ -2483,6 +2641,10 @@
       // this device already holds (the cloud never had it).
       myGoal: (prof.goal != null) ? prof.goal : (prevB.myGoal || ""),
       myGoalDone: (prof.goal_done_at !== undefined) ? (prof.goal_done_at || null) : (prevB.myGoalDone || null),
+      // PR ledger of earlier blocks (profiles.prs, written by the panel's block
+      // reset). Read-only for the app: it is never pushed from here. Column
+      // missing (ALTER pending) -> whatever this device already holds.
+      prevPRs: (prof.prs !== undefined) ? (prof.prs || null) : (prevB.prevPRs || null),
       myGender: prof.gender || null,
       myAge: ageFrom(prof.birth_date)
     };

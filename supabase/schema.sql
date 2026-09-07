@@ -27,6 +27,15 @@ alter table public.profiles add column if not exists announcement_seen text;
 -- boot.js keeps the goal on the device and retries once the columns exist.)
 alter table public.profiles add column if not exists goal         text;
 alter table public.profiles add column if not exists goal_done_at timestamptz;
+-- v3 (07/09/2026) PR ledger: the athlete's best lift per movement (+ the
+-- days they flagged 🏆) from EARLIER blocks. Written by the admin panel's
+-- "🧨 איפוס בלוק" right before it deletes states (profiles survive a reset);
+-- the app shows a carried record as "BLOCK I" until the current block beats
+-- it. Tests are not records and are not kept. Shape: { v, lifts:{key:{move,
+-- best, reps, week, block}}, flags:[{key, move, res, week, block}] }.
+-- (Run by hand on the live DB BEFORE the block-1 reset; with the column
+-- missing the panel stops before deleting anything.)
+alter table public.profiles add column if not exists prs          jsonb;
 
 -- 2) STATES : each user's full tracker blob (program + their own results)
 create table if not exists public.states (
