@@ -1606,24 +1606,44 @@
       <div onClick="{{ stop }}" style="background:var(--card); border-radius:24px; width:100%; max-width:440px; max-height:calc(100vh - 40px); box-shadow:0 24px 70px rgba(12,18,34,.45); overflow:auto; margin:auto;">
         <div style="background:linear-gradient(150deg,#0f1830,#1a2848 55%,#23409a); color:#fff; padding:15px 22px 13px; text-align:center;">
           <img src="assets/logo.png" alt="" style="width:38px; height:38px; border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.25); margin-bottom:5px;">
-          <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; letter-spacing:.05em;">ברוכים הבאים 👋</div>
-          <div dir="rtl" style="font-size:12px; color:#b9c4e6; margin-top:2px; line-height:1.4;">לוח המעקב של <bdi>Capacity</bdi> — 8 שבועות</div>
+          <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; letter-spacing:.05em;">{{ welcomeTitle }}</div>
+          <div dir="rtl" style="font-size:12px; color:#b9c4e6; margin-top:2px; line-height:1.4;">{{ welcomeSub }}</div>
+          <div style="display:flex; gap:6px; justify-content:center; margin-top:8px;">
+            <sc-for list="{{ welcomeDots }}" as="wd" hint-placeholder-count="3"><span style="{{ wd.style }}"></span></sc-for>
+          </div>
         </div>
-        <div dir="rtl" style="padding:13px 18px; display:flex; flex-direction:column; gap:8px;">
-          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📊</span><div style="line-height:1.45;"><b style="font-size:13px;">סקירה</b> <span style="font-size:12px; color:var(--muted);">— ההתקדמות שלך, היעד השבועי ומפת התוכנית.</span></div></div>
-          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📅</span><div style="line-height:1.45;"><b style="font-size:13px;">יומן</b> <span style="font-size:12px; color:var(--muted);">— האימון היומי. תעד תוצאות, דרג מאמץ וסמן "הושלם".</span></div></div>
-          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏆</span><div style="line-height:1.45;"><b style="font-size:13px;">שיאים ומבחנים</b> <span style="font-size:12px; color:var(--muted);">— המבחנים שלך לפני ואחרי, שיאי המשקל לפי תרגיל, ואימונים שסימנת 🏆.</span></div></div>
-          <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">👤</span><div style="line-height:1.45;"><b style="font-size:13px;">פרופיל</b> <span style="font-size:12px; color:var(--muted);">— הכפתור העגול למעלה: השם שלך, ההישגים והנתונים האישיים, וגם מצב תצוגה: בהיר / כהה / אוטומטי 🌙.</span></div></div>
-          <div style="display:flex; flex-direction:column; gap:4px; background:rgba(239,91,37,.08); border:1px solid rgba(239,91,37,.3); border-radius:11px; padding:9px 12px;">
-            <div style="display:flex; gap:7px; align-items:center;"><span style="font-size:16px;">📲</span><b style="font-size:13px;">התקינו כאפליקציה על הטלפון</b></div>
-            <div style="font-size:11.5px; color:var(--ink); line-height:1.5;"><b>🍏 אייפון</b> (Safari): שיתוף ⬆️ ← «הוסף למסך הבית».</div>
-            <div style="font-size:11.5px; color:var(--ink); line-height:1.5;"><b>🤖 אנדרואיד</b> (Chrome): תפריט ⋮ ← «הוספה למסך הבית».</div>
+        <div dir="rtl" style="padding:14px 18px; display:flex; flex-direction:column; gap:9px;">
+          <sc-if value="{{ welcomeStep0 }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📊</span><div style="line-height:1.45;"><b style="font-size:13px;">סקירה</b> <span style="font-size:12px; color:var(--muted);">— ההתקדמות שלך בבלוק, המטרה שלך, השבוע הנוכחי ומפת התוכנית.</span></div></div>
+            <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📅</span><div style="line-height:1.45;"><b style="font-size:13px;">יומן</b> <span style="font-size:12px; color:var(--muted);">— האימון היומי: התוכנית, ההזנה, ומה עשית בפעם הקודמת.</span></div></div>
+            <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏆</span><div style="line-height:1.45;"><b style="font-size:13px;">שיאים ומבחנים</b> <span style="font-size:12px; color:var(--muted);">— המבחנים שלך לפני ואחרי, שיאי המשקל לפי תרגיל, ואימונים שסימנת 🏆.</span></div></div>
+            <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">👤</span><div style="line-height:1.45;"><b style="font-size:13px;">פרופיל</b> <span style="font-size:12px; color:var(--muted);">— הכפתור העגול למעלה: השם שלך, ההישגים והנתונים האישיים, ומצב תצוגה בהיר / כהה 🌙.</span></div></div>
+            <div style="background:rgba(35,64,154,.08); border:1px solid rgba(35,64,154,.25); border-radius:11px; padding:9px 12px; font-size:12.5px; line-height:1.5; color:var(--ink);"><b>אין כאן דירוג.</b> כל מה שתראה הוא שלך: מה עשית, מה השתפר, ואיפה אתה מול עצמך.</div>
+          </sc-if>
+          <sc-if value="{{ welcomeStep1 }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; gap:10px; align-items:flex-start;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; color:var(--orange); flex:none;">1</span><div style="line-height:1.5; font-size:13px;"><b>בוחרים יום ביומן.</b> <span style="color:var(--muted);">ימים שעברו אפשר להשלים אחורה; ימים עתידיים לצפייה בלבד.</span></div></div>
+            <div style="display:flex; gap:10px; align-items:flex-start;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; color:var(--orange); flex:none;">2</span><div style="line-height:1.5; font-size:13px;"><b>רושמים מה עשית.</b> <span style="color:var(--muted);">משקל לכל סט (יש כפתור "אותו משקל לכולם"), תוצאה לכל תנועה במטקון ואז התוצאה הכוללת, "עשיתי כמו שכתוב (RX)" או Scaled, באיזו רמה עבדת, ואיך הרגיש.</span></div></div>
+            <div style="display:flex; gap:10px; align-items:flex-start;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; color:var(--orange); flex:none;">3</span><div style="line-height:1.5; font-size:13px;"><b>לוחצים "שמור אימון והשלם".</b> <span style="color:var(--muted);">רק אז היום נספר. אם חסר משהו — האפליקציה אומרת בדיוק מה.</span></div></div>
+            <div style="background:rgba(239,91,37,.08); border:1px solid rgba(239,91,37,.3); border-radius:11px; padding:9px 12px; font-size:12.5px; line-height:1.5; color:var(--ink);">🕘 כשתרגיל או מטקון חוזרים, תראה ליד ההזנה <b>מה עשית בפעם הקודמת</b> — וההפרש.</div>
+          </sc-if>
+          <sc-if value="{{ welcomeStep2 }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:4px; background:rgba(239,91,37,.08); border:1px solid rgba(239,91,37,.3); border-radius:11px; padding:9px 12px;">
+              <div style="display:flex; gap:7px; align-items:center;"><span style="font-size:16px;">📲</span><b style="font-size:13px;">התקינו כאפליקציה על הטלפון</b></div>
+              <div style="font-size:11.5px; color:var(--ink); line-height:1.5;"><b>🍏 אייפון</b> (Safari): שיתוף ⬆️ ← «הוסף למסך הבית».</div>
+              <div style="font-size:11.5px; color:var(--ink); line-height:1.5;"><b>🤖 אנדרואיד</b> (Chrome): תפריט ⋮ ← «הוספה למסך הבית».</div>
+              <div style="font-size:11.5px; color:var(--muted); line-height:1.5;">מהרגע הזה נכנסים תמיד מהאייקון שעל מסך הבית.</div>
+            </div>
+            <div style="background:var(--paper); border-radius:11px; padding:9px 12px; font-size:12px; color:var(--muted); line-height:1.5;">☁️ כל מה שאתה רושם נשמר בענן לבד. בתחתית המסך יש שורת מצב: "מסונכרן לענן" = הכול בפנים.</div>
+            <div style="display:flex; gap:8px; align-items:center; background:var(--paper); border-radius:11px; padding:9px 12px;">
+              <span style="font-size:16px; flex:none;">💬</span>
+              <div style="font-size:12px; color:var(--muted); line-height:1.4;">נתקעת? <a href="https://wa.me/972523330954" target="_blank" style="font-weight:700; white-space:nowrap;">אורי · 052-333-0954</a></div>
+            </div>
+          </sc-if>
+          <div style="display:flex; gap:8px; margin-top:2px;">
+            <sc-if value="{{ welcomeHasPrev }}" hint-placeholder-val="{{ false }}"><button onClick="{{ welcomePrev }}" style="flex:none; background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:11px; padding:11px 14px; font-weight:700; font-size:13px; cursor:pointer;">→ הקודם</button></sc-if>
+            <sc-if value="{{ welcomeHasNext }}" hint-placeholder-val="{{ true }}"><button onClick="{{ welcomeNext }}" style="flex:1; background:var(--blue); color:#fff; border:none; border-radius:11px; padding:11px; font-weight:700; font-size:14px; cursor:pointer;">הבא ←</button></sc-if>
+            <sc-if value="{{ welcomeIsLast }}" hint-placeholder-val="{{ false }}"><button onClick="{{ closeWelcome }}" style="flex:1; background:var(--orange); color:#fff; border:none; border-radius:11px; padding:11px; font-weight:700; font-size:14px; cursor:pointer;">יאללה, בואו נתחיל 💪</button></sc-if>
           </div>
-          <div style="display:flex; gap:8px; align-items:center; background:var(--paper); border-radius:11px; padding:9px 12px;">
-            <span style="font-size:16px; flex:none;">💬</span>
-            <div style="font-size:12px; color:var(--muted); line-height:1.4;">נתקעת? <a href="https://wa.me/972523330954" target="_blank" style="font-weight:700; white-space:nowrap;">אורי · 052-333-0954</a></div>
-          </div>
-          <button onClick="{{ closeWelcome }}" style="background:var(--blue); color:#fff; border:none; border-radius:11px; padding:11px; font-weight:700; font-size:14px; cursor:pointer; margin-top:2px;">יאללה, בואו נתחיל 💪</button>
         </div>
       </div>
     </div>
@@ -2730,6 +2750,7 @@ class Component extends DCLogic {
     reminderDismissed: false,
     toast: '',
     welcomeOpen: false,
+    welcomeStep: 0,                       // v3 first-run guide: 3 steps
     onbOpen: false,
     onbName: '',
     onbTarget: 5,
@@ -2784,6 +2805,9 @@ class Component extends DCLogic {
     try { window.addEventListener('cfby-edittools', (e)=>this.setState({ editToolsOn: !!(e && e.detail), editMode: false })); } catch (e) {}
     try { window.cfbyStartDate = this.startDate; } catch (e) {}   // the admin panel's test-week banner needs the block calendar
     try { if (!localStorage.getItem(this.ONB_KEY)) this.setState({ onbOpen: true }); } catch (e) {}
+    // v3: the 3-step guide opens by itself once per profile — boot.js leaves
+    // WELCOME_KEY unset only for a profile whose welcome_seen is false.
+    try { if (!localStorage.getItem(this.WELCOME_KEY)) this.setState({ welcomeOpen: true, welcomeStep: 0 }); } catch (e) {}
     try { const raw = localStorage.getItem(this.MOVES_KEY); if (raw) { const m = JSON.parse(raw); if (Array.isArray(m) && m.length) this.setState({ moves: m }); } } catch (e) {}
     // Load my own fields that boot.js seeded from Supabase (display name,
     // gender, age). saveBoard() writes this key; without a read the name would
@@ -3721,8 +3745,15 @@ class Component extends DCLogic {
       celebrateClose: ()=>this.setState({ celebrate:null }),
       celebrateShare: ()=>this.setState({ celebrate:null, shareOpen:true, shareType:'day', shareWi:selWeek, shareDi:selDay }),
       welcomeOpen: this.state.welcomeOpen,
-      openWelcome: ()=>this.setState({ welcomeOpen:true }),
-      closeWelcome: ()=>{ try { localStorage.setItem(this.WELCOME_KEY, '1'); } catch (e) {} this.setState({ welcomeOpen:false }); },
+      openWelcome: ()=>this.setState({ welcomeOpen:true, welcomeStep:0 }),
+      closeWelcome: ()=>{ try { localStorage.setItem(this.WELCOME_KEY, '1'); } catch (e) {} this.setState({ welcomeOpen:false }); try { if (window.cfbyWelcomeDone) window.cfbyWelcomeDone(); } catch (e) {} },
+      welcomeStep0: this.state.welcomeStep === 0, welcomeStep1: this.state.welcomeStep === 1, welcomeStep2: this.state.welcomeStep === 2,
+      welcomeTitle: ['ברוכים הבאים 👋', 'איך מתעדים אימון ✍️', 'שיהיה נוח 📲'][this.state.welcomeStep] || '',
+      welcomeSub: ['לוח המעקב של Capacity — מה יש כאן', 'שלושה צעדים, ורק אז היום נספר', 'התקנה, סנכרון ועזרה'][this.state.welcomeStep] || '',
+      welcomeDots: [0,1,2].map(i => ({ style: 'width:' + (i === this.state.welcomeStep ? '18px' : '7px') + '; height:7px; border-radius:999px; background:' + (i === this.state.welcomeStep ? 'var(--orange)' : 'rgba(255,255,255,.35)') + '; transition:all .2s;' })),
+      welcomeHasPrev: this.state.welcomeStep > 0, welcomeHasNext: this.state.welcomeStep < 2, welcomeIsLast: this.state.welcomeStep === 2,
+      welcomeNext: ()=>this.setState({ welcomeStep: Math.min(2, this.state.welcomeStep + 1) }),
+      welcomePrev: ()=>this.setState({ welcomeStep: Math.max(0, this.state.welcomeStep - 1) }),
 
       onbOpen: this.state.onbOpen,
       moveLib: this.state.moves,

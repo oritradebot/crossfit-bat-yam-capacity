@@ -2247,14 +2247,27 @@
       } catch (e) { console.error("[onboarding]", e); }
     }
 
-    // Nothing may pop up on its own. These flags are set BEFORE the app boots:
-    //  - WELCOME_KEY : the guide opens only via the "❓ מדריך" button.
+    // Nothing may pop up on its own — except, since v3, the 3-step guide on a
+    // profile's very first open (welcome_seen false). Everything else is set
+    // BEFORE the app boots:
+    //  - WELCOME_KEY : set when the profile already saw the guide (or the
+    //                  profile could not be read — silence beats a wrong popup);
+    //                  left unset once, so the app opens the guide itself.
     //  - cfby_onb_v1 : the first-run onboarding is disabled outright (the display
     //                  name comes from the account/profile, so it has nothing to ask).
     //  - cfby_reset_v1: the app wipes all logs on its first run unless this is set.
     //                  Our logs come from Supabase, so that would destroy synced
     //                  progress. Never let it run.
-    try { localStorage.setItem(K.WELCOME_KEY, "1"); } catch (e) {}
+    var firstOpen = !prof._err && !prof._missing && prof.welcome_seen === false;
+    if (firstOpen) { try { localStorage.removeItem(K.WELCOME_KEY); } catch (e) {} }
+    else { try { localStorage.setItem(K.WELCOME_KEY, "1"); } catch (e) {} }
+    // The app calls this when the guide is closed — remember it on the
+    // profile so no other device (or reinstall) shows it again.
+    window.cfbyWelcomeDone = function () {
+      sb.from("profiles").upsert({ id: uid, welcome_seen: true }).then(function (r) {
+        if (r.error) console.warn("[onboarding] welcome_seen update failed:", r.error.message || r.error);
+      }).catch(function () {});
+    };
     try { localStorage.setItem("cfby_onb_v1", "1"); } catch (e) {}
     try { localStorage.setItem("cfby_reset_v1", "1"); } catch (e) {}
 
