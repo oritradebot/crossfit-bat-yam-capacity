@@ -1074,8 +1074,8 @@
 
         <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; border-radius:18px; padding:20px 22px; margin-bottom:22px; box-shadow:0 8px 28px var(--shcol2);">
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <span style="font-family:'Oswald',sans-serif; font-weight:600; font-size:13px; letter-spacing:.14em; color:#8fa4d8;">THIS WEEK</span>
-            <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:20px;">WEEK {{ curWeekNum }}</span>
+            <span style="font-family:'Oswald',sans-serif; font-weight:600; font-size:13px; letter-spacing:.04em; color:#8fa4d8;">השבוע</span>
+            <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:20px;">שבוע {{ curWeekNum }}</span>
             <span style="font-size:13px; color:#b9c4e6;">{{ curWeekRange }}</span>
             <span style="margin-inline-start:auto; font-size:13px; color:#b9c4e6;">{{ curWeekDone }} / 5 אימונים</span>
           </div>
@@ -1108,7 +1108,7 @@
         <sc-if value="{{ showProgramMap }}" hint-placeholder-val="{{ true }}">
         <div style="background:var(--card); border:1px solid var(--line); border-radius:18px; padding:20px 22px;">
           <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:6px;">
-            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; letter-spacing:.03em;">PROGRAM MAP</div>
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; letter-spacing:.03em;">מפת התוכנית</div>
             <div style="font-size:12px; color:var(--muted);">8 שבועות · 12/07 → 05/09</div>
           </div>
           <div style="display:grid; grid-template-columns:34px repeat(7,1fr); gap:6px; align-items:center;">
@@ -1144,7 +1144,7 @@
         <div style="background:linear-gradient(120deg,#3a2a10,#5c4415); color:#fff; border-radius:18px; padding:24px 24px; margin-bottom:20px; box-shadow:0 8px 28px rgba(58,42,16,.22); display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
           <div style="font-size:40px; line-height:1;">🏆</div>
           <div style="flex:1; min-width:0;">
-            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:24px; letter-spacing:.05em;">PERSONAL RECORDS</div>
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:24px; letter-spacing:.05em;">השיאים שלי</div>
             <div style="font-size:13px; color:#e8c98a; margin-top:2px;">לוח השיאים שלך — המשקל הכבד לכל תרגיל מהיומן + כל אימון שסימנת 🏆</div>
           </div>
           <div style="text-align:center; background:rgba(255,255,255,.1); border:1px solid rgba(232,165,58,.4); border-radius:14px; padding:10px 18px;">
@@ -1255,7 +1255,7 @@
                   <span style="display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; font-family:'Oswald',sans-serif; font-weight:700; font-size:12px; letter-spacing:.04em; color:#fff; background:#e8a53a;">🏆 PR</span>
                 </sc-if>
               </div>
-              <div style="font-size:13px; color:#b9c4e6;">{{ dayDate }} · WEEK {{ selWeekNum }}</div>
+              <div style="font-size:13px; color:#b9c4e6;">{{ dayDate }} · שבוע {{ selWeekNum }}</div>
             </div>
             <button onClick="{{ nextDay }}" style="background:rgba(255,255,255,.12); border:none; color:#fff; width:34px; height:34px; border-radius:10px; cursor:pointer; font-size:18px; flex:none;">›</button>
             <div style="margin-inline-start:auto; display:flex; align-items:center; gap:8px;">
@@ -1295,27 +1295,37 @@
               <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; align-items:start;">
                 <sc-if value="{{ vShowLift }}" hint-placeholder-val="{{ true }}">
                   <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card);">
-                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:var(--paper); border-bottom:1px solid var(--line);">
+                    <div onClick="{{ toggleLift }}" title="פתיחה / קיפול" style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:var(--paper); border-bottom:1px solid var(--line); cursor:pointer; user-select:none;">
                       <span style="font-size:15px;">🏋️</span>
                       <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">LIFT</span>
+                      <span dir="auto" style="font-size:12px; font-weight:700; color:var(--greenink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;">{{ liftSum }}</span>
+                      <sc-if value="{{ liftMissing }}" hint-placeholder-val="{{ false }}"><span style="margin-inline-start:auto; background:rgba(239,91,37,.12); color:var(--orange); border:1px solid rgba(239,91,37,.4); border-radius:999px; padding:3px 9px; font-size:11px; font-weight:700;">חסר משקל</span></sc-if>
+                      <span style="margin-inline-start:auto; color:var(--muted); font-size:14px; flex:none;">{{ liftChev }}</span>
                     </div>
+                    <sc-if value="{{ liftOpen }}" hint-placeholder-val="{{ true }}">
                     <div style="padding:14px 16px; display:flex; flex-direction:column; gap:8px;">
                       <div dir="auto" style="font-weight:700; font-size:15px;">{{ day.lift.movement }}</div>
-                      <div dir="auto" style="white-space:pre-line; font-size:13px; color:var(--muted); line-height:1.6;">{{ day.lift.planned }}</div>
+                      {{ day.lift.plannedEl }}
                       <div style="display:flex; flex-direction:column; gap:5px; margin-top:4px;">
                         <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--blue);">✎ התוצאה שלי</span>
+                        {{ lastLift }}
                         {{ liftBar }}
                       </div>
                     </div>
+                    </sc-if>
                   </div>
                 </sc-if>
 
                 <sc-if value="{{ vShowMetcon }}" hint-placeholder-val="{{ true }}">
                   <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card);">
-                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:var(--paper); border-bottom:1px solid var(--line);">
+                    <div onClick="{{ toggleMetcon }}" title="פתיחה / קיפול" style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:var(--paper); border-bottom:1px solid var(--line); cursor:pointer; user-select:none;">
                       <span style="font-size:15px;">⏱️</span>
                       <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">METCON</span>
+                      <span dir="auto" style="font-size:12px; font-weight:700; color:var(--greenink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;">{{ metconSum }}</span>
+                      <sc-if value="{{ metconMissing }}" hint-placeholder-val="{{ false }}"><span style="margin-inline-start:auto; background:rgba(239,91,37,.12); color:var(--orange); border:1px solid rgba(239,91,37,.4); border-radius:999px; padding:3px 9px; font-size:11px; font-weight:700;">חסרה תוצאה</span></sc-if>
+                      <span style="margin-inline-start:auto; color:var(--muted); font-size:14px; flex:none;">{{ metconChev }}</span>
                     </div>
+                    <sc-if value="{{ metconOpen }}" hint-placeholder-val="{{ true }}">
                     <div style="padding:14px 16px; display:flex; flex-direction:column; gap:8px;">
                       <div dir="auto" style="font-weight:700; font-size:15px;">{{ day.metcon.name }}</div>
                       <sc-if value="{{ day.metcon.hasScheme }}" hint-placeholder-val="{{ true }}">
@@ -1334,22 +1344,28 @@
                         <div style="font-size:12px; font-weight:700; color:var(--navy); letter-spacing:.03em; text-transform:uppercase; font-family:'Oswald',sans-serif;">Score — {{ day.metcon.score }}</div>
                       </sc-if>
                       <sc-if value="{{ day.metcon.hasNote }}" hint-placeholder-val="{{ false }}">
-                        <div dir="auto" style="white-space:pre-line; font-size:12.5px; color:var(--muted); line-height:1.6; border-top:1px solid var(--line); padding-top:8px; margin-top:2px;">{{ day.metcon.note }}</div>
+                        <div style="border-top:1px solid var(--line); padding-top:8px; margin-top:2px;">{{ day.metcon.noteEl }}</div>
                       </sc-if>
                       <div style="display:flex; flex-direction:column; gap:5px; margin-top:4px;">
                         <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--blue);">✎ התוצאה שלי</span>
+                        {{ lastMetcon }}
                         {{ metconBar }}
                       </div>
                     </div>
+                    </sc-if>
                   </div>
                 </sc-if>
 
                 <sc-if value="{{ vShowMetcon2 }}" hint-placeholder-val="{{ false }}">
                   <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card);">
-                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:var(--paper); border-bottom:1px solid var(--line);">
+                    <div onClick="{{ toggleMetcon2 }}" title="פתיחה / קיפול" style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:var(--paper); border-bottom:1px solid var(--line); cursor:pointer; user-select:none;">
                       <span style="font-size:15px;">⏱️</span>
                       <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">METCON B</span>
+                      <span dir="auto" style="font-size:12px; font-weight:700; color:var(--greenink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;">{{ metcon2Sum }}</span>
+                      <sc-if value="{{ metcon2Missing }}" hint-placeholder-val="{{ false }}"><span style="margin-inline-start:auto; background:rgba(239,91,37,.12); color:var(--orange); border:1px solid rgba(239,91,37,.4); border-radius:999px; padding:3px 9px; font-size:11px; font-weight:700;">חסרה תוצאה</span></sc-if>
+                      <span style="margin-inline-start:auto; color:var(--muted); font-size:14px; flex:none;">{{ metcon2Chev }}</span>
                     </div>
+                    <sc-if value="{{ metcon2Open }}" hint-placeholder-val="{{ true }}">
                     <div style="padding:14px 16px; display:flex; flex-direction:column; gap:8px;">
                       <div dir="auto" style="font-weight:700; font-size:15px;">{{ day.metcon2.name }}</div>
                       <sc-if value="{{ day.metcon2.hasScheme }}" hint-placeholder-val="{{ true }}">
@@ -1365,42 +1381,48 @@
                         </sc-for>
                       </div>
                       <sc-if value="{{ day.metcon2.hasNote }}" hint-placeholder-val="{{ false }}">
-                        <div dir="auto" style="white-space:pre-line; font-size:12.5px; color:var(--muted); line-height:1.6; border-top:1px solid var(--line); padding-top:8px; margin-top:2px;">{{ day.metcon2.note }}</div>
+                        <div style="border-top:1px solid var(--line); padding-top:8px; margin-top:2px;">{{ day.metcon2.noteEl }}</div>
                       </sc-if>
                       <div style="display:flex; flex-direction:column; gap:5px; margin-top:4px;">
                         <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--blue);">✎ התוצאה שלי</span>
+                        {{ lastMetcon2 }}
                         {{ metcon2Bar }}
                       </div>
                     </div>
+                    </sc-if>
                   </div>
                 </sc-if>
 
                 <sc-if value="{{ vShowExtra }}" hint-placeholder-val="{{ false }}">
                   <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card);">
-                    <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:var(--paper); border-bottom:1px solid var(--line);">
+                    <div onClick="{{ toggleExtra }}" title="פתיחה / קיפול" style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:var(--paper); border-bottom:1px solid var(--line); cursor:pointer; user-select:none;">
                       <span style="font-size:15px;">➕</span>
                       <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">EXTRA</span>
+                      <span dir="auto" style="font-size:12px; font-weight:700; color:var(--greenink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;">{{ extraSum }}</span>
+                      <span style="margin-inline-start:auto; color:var(--muted); font-size:14px; flex:none;">{{ extraChev }}</span>
                     </div>
+                    <sc-if value="{{ extraOpen }}" hint-placeholder-val="{{ true }}">
                     <div style="padding:14px 16px; display:flex; flex-direction:column; gap:14px;">
                       <sc-for list="{{ day.viewExtras }}" as="ex" hint-placeholder-count="2">
                         <div style="display:flex; flex-direction:column; gap:6px;">
                           <div dir="auto" style="font-weight:700; font-size:13.5px;">Extra #{{ ex.num }} — {{ ex.name }}</div>
-                          <div dir="auto" style="white-space:pre-line; font-size:12.5px; color:var(--muted); line-height:1.6;">{{ ex.detail }}</div>
+                          {{ ex.detailEl }}
                           {{ ex.resultBar }}
                         </div>
                       </sc-for>
                     </div>
+                    </sc-if>
                   </div>
                 </sc-if>
 
                 <div style="border:1px solid rgba(35,64,154,.3); border-radius:16px; overflow:hidden; background:var(--log); grid-column:1 / -1;">
                   <div style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:rgba(35,64,154,.1); border-bottom:1px solid rgba(35,64,154,.2);">
                     <span style="font-size:15px;">📝</span>
-                    <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">SESSION SUMMARY</span>
+                    <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">סיכום האימון</span>
                   </div>
                   <div style="padding:14px 16px; display:flex; flex-direction:column; gap:12px;">
                     <div>
-                      <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">סרגל מאמץ (RPE) · איך הרגיש האימון</div>
+                      <div style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">איך הרגיש האימון?</div>
                       {{ effortBar }}
                     </div>
                     {{ prToggle }}
@@ -1494,7 +1516,7 @@
 
               <div style="margin-top:26px;">
                 <label style="display:flex; flex-direction:column; gap:6px;">
-                  <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">🏋️ סרגל מאמץ / RPE</span>
+                  <span style="font:600 11px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">איך הרגיש האימון</span>
                   {{ effortBar }}
                 </label>
                 <div style="margin-top:10px;">{{ prToggle }}</div>
@@ -1785,7 +1807,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900},&quot;startView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;overview&quot;,&quot;log&quot;],&quot;default&quot;:&quot;overview&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;includeExample&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;showProgramMap&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;adminCode&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;batyam&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Admin&quot;}}">
 class Component extends DCLogic {
   weekdays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  dowShort = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  dowShort = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];   // v3: Hebrew day letters everywhere the strip / map / chips label a day
   startDate = new Date(2026, 6, 12);
   KEY = 'cfby_tracker_v1';
   WEEKLY_TARGET = 5;
@@ -1805,7 +1827,7 @@ class Component extends DCLogic {
 
   emptyDay() {
     const mc = () => ({ name:'', scheme:'', score:'', note:'', result:'', resultMode:'', rx:false, scaled:false, log:{ mode:'time', time:'', rounds:'', reps:'', amount:'', note:'', scaled:'' }, movements:[{name:'',detail:''},{name:'',detail:''},{name:'',detail:''},{name:'',detail:''}] });
-    return { done:false, rest:false, rating:'', pr:false,
+    return { done:false, rest:false, rating:'', pr:false, level:'',
       lift:{ movement:'', planned:'', result:'', log:{ weight:'', reps:'', note:'' } },
       metcon: mc(), metcon2: mc(),
       extras:[{name:'',detail:'',result:'',log:{text:''}},{name:'',detail:'',result:'',log:{text:''}}],
@@ -1895,7 +1917,177 @@ class Component extends DCLogic {
   } };
   pilotKey() { return this.state.selWeek + '_' + this.state.selDay; }
   perSetCount() { return this.state.activeSession==='alt' ? 0 : (this.PER_SET_LIFT[this.pilotKey()] || 0); }
-  perMoveOn(base) { const c = this.PER_MOVE_METCON[this.pilotKey()]; return this.state.activeSession!=='alt' && !!c && c.indexOf(base)>=0; }
+  // v3 (07/09, Ori: "קפדני בכל מקום"): every main-session metcon with two or
+  // more named movements logs a result per movement, and the overall result
+  // opens only once all of them are in — the W4/W5 pilot rule, everywhere.
+  // PER_MOVE_OFF lists the days/bases where it must NOT apply (per embed);
+  // PER_MOVE_METCON still forces it on, PER_MOVE_BOXES still supplies custom
+  // box lists, PER_MOVE_SCORE still mirrors a box into the score.
+  PER_MOVE_OFF = {};
+  perMoveOn(base) {
+    if (this.state.activeSession === 'alt') return false;
+    const off = this.PER_MOVE_OFF[this.pilotKey()];
+    if (off && off.indexOf(base) >= 0) return false;
+    const on = this.PER_MOVE_METCON[this.pilotKey()];
+    if (on && on.indexOf(base) >= 0) return true;
+    if (this.metconCfg(this.PER_MOVE_BOXES, base)) return true;
+    const t = this.curSession();
+    const m = base === 'metcon2' ? t.metcon2 : t.metcon;
+    return !!m && (m.movements || []).filter(x => x && x.name).length >= 2;
+  }
+  curSession() { const dc = this.state.data[this.state.selWeek].days[this.state.selDay]; return (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc; }
+  // ---- program text (v3) ---------------------------------------------------
+  // Level lines ("L1 = …", "Level 2 — …", "L3-4 — …", plus the lines that
+  // follow each one up to a blank line) render as a small table; everything
+  // else stays plain text. Every line resolves its own direction
+  // (unicode-bidi: plaintext) so Hebrew lines inside an English block read
+  // right-to-left. Display only — the program text itself is never touched.
+  planEl(text, size) {
+    const t = String(text || ''); if (!t.trim()) return null;
+    const LV = /^\s*(?:Level|L)\s*(\d)(?:\s*[-–]\s*(\d))?\s*[=:—–-]+\s*(.*)$/i;
+    const parts = []; let buf = [], group = null;
+    const flushText = () => { const tx = buf.join('\n').replace(/^\n+|\n+$/g, ''); if (tx.trim()) parts.push({ type:'text', text: tx }); buf = []; };
+    const flushGroup = () => { if (group) { parts.push(group); group = null; } };
+    t.split('\n').forEach(line => {
+      const m = line.match(LV);
+      if (m) { flushText(); if (!group) group = { type:'levels', rows:[] }; group.rows.push({ label:'L'+m[1]+(m[2] ? ('-'+m[2]) : ''), lines:[m[3]] }); }
+      else if (group) { if (!line.trim()) { flushGroup(); buf.push(line); } else group.rows[group.rows.length-1].lines.push(line); }
+      else buf.push(line);
+    });
+    flushGroup(); flushText();
+    const txt = { whiteSpace:'pre-line', unicodeBidi:'plaintext', textAlign:'start', fontSize: size || '13px', color:'var(--muted)', lineHeight:1.6 };
+    return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'7px' } },
+      parts.map((pt, i) => pt.type === 'text'
+        ? React.createElement('div', { key:i, dir:'auto', style: txt }, pt.text)
+        : React.createElement('div', { key:i, dir:'ltr', style:{ display:'grid', gridTemplateColumns:'auto 1fr', gap:'5px 10px', alignItems:'start', background:'var(--paper)', border:'1px solid var(--line)', borderRadius:'10px', padding:'8px 10px' } },
+            pt.rows.flatMap((r, j) => [
+              React.createElement('span', { key:'l'+j, style:{ font:"700 11px/1.2 'Oswald',sans-serif", letterSpacing:'.05em', color:'#fff', background:'var(--navy-bg)', borderRadius:'6px', padding:'4px 7px', whiteSpace:'nowrap', marginTop:'2px' } }, r.label),
+              React.createElement('div', { key:'c'+j, dir:'auto', style: Object.assign({}, txt, { color:'var(--ink)' }) }, r.lines.join('\n').trim())
+            ]))
+      ));
+  }
+  // Collapsible day blocks (v3): a block that already holds a result folds to
+  // one line; the athlete can open/close any block by its header. Explicit
+  // choices live in memory only, per day and session.
+  toggleBlock(key, cur) { const bo = Object.assign({}, this.state.blockOpen); bo[key] = !cur; this.setState({ blockOpen: bo }); }
+  // Level the athlete worked at (L1-L4), saved on the SESSION (day.level /
+  // alt.level) — v3, per Ori: one level per workout, kept with the result so
+  // "last time" compares like with like. Never required for completion.
+  levelPills() {
+    const t = this.curSession();
+    const cur = String(t.level || '');
+    const last = cur ? '' : this.lastLevel();
+    const btn = (k, on, hint) => React.createElement('button', {
+      key:k, onClick:()=>this.onEditPath('level', on ? '' : k), title: hint || ('רמה ' + k),
+      style:{ border:'1.5px '+((!on && hint) ? 'dashed' : 'solid')+' '+((on || hint) ? 'var(--navy)' : 'var(--line)'), background:on?'var(--navy-bg)':'var(--card)', color:on?'#fff':'var(--muted)', borderRadius:'999px', padding:'6px 12px', fontWeight:700, fontSize:'12px', cursor:'pointer', fontFamily:"'Oswald',sans-serif", letterSpacing:'.04em', transition:'all .15s' }
+    }, 'L'+k);
+    return React.createElement('div', { dir:'rtl', style:{ display:'flex', gap:'6px', alignItems:'center', flexWrap:'wrap' } },
+      React.createElement('span', { style:{ fontSize:'12px', fontWeight:600, color:'var(--muted)' } }, 'באיזו רמה עבדת?'),
+      ['1','2','3','4'].map(k => btn(k, cur===k, (!cur && last===k) ? 'הרמה שבחרת בפעם הקודמת' : '')),
+      (!cur && last) ? React.createElement('span', { style:{ fontSize:'11px', color:'var(--muted)' } }, '· בפעם הקודמת L'+last) : null
+    );
+  }
+  // Most recent level chosen on an earlier day of the block ('' if none).
+  lastLevel() {
+    const g = this.state.selWeek*7 + this.state.selDay;
+    for (let i = g-1; i >= 0; i--) {
+      const d = this.state.data[Math.floor(i/7)].days[i%7];
+      for (const x of [d, d.alt]) { if (x && /^[1-4]$/.test(String(x.level||''))) return String(x.level); }
+    }
+    return '';
+  }
+  // ---- "בפעם הקודמת עשית…" (v3) ------------------------------------------
+  // The most recent EARLIER day of the block where the same movement / metcon
+  // (name normalized: the text before " — ", minus test tags) carries a
+  // result. Block-local by design — block 2 starts clean.
+  // Lifts match on the movement alone (the text before " — ", the same
+  // identity the PR table uses); metcons match on the whole name minus the
+  // test tags, because "CapaciTest #2 — Monostructural (RETEST)" IS the name.
+  normName(v, isLift) {
+    let t = String(v||'');
+    if (isLift) t = t.split('—')[0];
+    return t.replace(/\((?:retest|baseline|re-test)\)/ig,' ').replace(/capacitest\s*#?\s*\d*/ig,' ')
+      .toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+  }
+  hebDow = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  whenLabel(i) { return 'שבוע ' + (Math.floor(i/7)+1) + ' · יום ' + this.hebDow[i%7]; }
+  resultText(m) {
+    const M = (m && m.log) || {};
+    const mode = m.resultMode || M.mode || 'time';
+    if (mode === 'time') return M.time || '';
+    if (mode === 'amount') return M.amount || '';
+    return [M.rounds && (M.rounds + ' סבבים'), M.reps && (M.reps + ' חזרות')].filter(Boolean).join(' + ');
+  }
+  prevLift(gi, movement) {
+    const key = this.normName(movement, true); if (!key) return null;
+    for (let i = gi-1; i >= 0; i--) {
+      const d = this.state.data[Math.floor(i/7)].days[i%7];
+      for (const x of [d, d.alt]) {
+        if (!x || !x.lift || !x.lift.log || !x.lift.log.weight) continue;
+        if (this.normName(x.lift.movement, true) === key) return { i, weight: parseFloat(x.lift.log.weight), reps: x.lift.log.reps || '', level: x.level || '' };
+      }
+    }
+    return null;
+  }
+  prevMetcon(gi, m) {
+    const key = this.normName(m && m.name); if (!key) return null;
+    for (let i = gi-1; i >= 0; i--) {
+      const d = this.state.data[Math.floor(i/7)].days[i%7];
+      for (const x of [d, d.alt]) {
+        if (!x) continue;
+        for (const mm of [x.metcon, x.metcon2]) {
+          if (!mm || this.normName(mm.name) !== key) continue;
+          const sc = this.metconScore(mm); if (!sc) continue;
+          return { i, text: this.resultText(mm), score: sc, mode: (mm.resultMode || (mm.log && mm.log.mode) || 'time'), rx: !!mm.rx, level: x.level || '' };
+        }
+      }
+    }
+    return null;
+  }
+  mmss(sec) { sec = Math.round(Math.abs(sec)); return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0'); }
+  lastLine(text, delta, deltaGood) {
+    return React.createElement('div', { dir:'rtl', style:{ display:'flex', gap:'6px', alignItems:'center', flexWrap:'wrap', fontSize:'12px', color:'var(--muted)', background:'var(--paper)', border:'1px solid var(--line)', borderRadius:'10px', padding:'7px 10px' } },
+      React.createElement('span', { style:{ flex:'none' } }, '🕘'),
+      React.createElement('span', { style:{ fontWeight:600 } }, text),
+      delta ? React.createElement('span', { style:{ fontWeight:700, color: deltaGood === null ? 'var(--muted)' : (deltaGood ? 'var(--greenink)' : 'var(--red)') } }, delta) : null
+    );
+  }
+  lastLiftEl(day, gi) {
+    const pv = this.prevLift(gi, day.lift && day.lift.movement); if (!pv) return null;
+    const curW = parseFloat(day.lift && day.lift.log && day.lift.log.weight);
+    let delta = '', good = null;
+    if (curW > 0 && pv.weight > 0 && curW !== pv.weight) { const d = Math.round((curW - pv.weight)*10)/10; delta = (d > 0 ? '+' : '−') + Math.abs(d) + ' ק"ג מהפעם הקודמת'; good = d > 0; }
+    const lvl = pv.level ? (' · L' + pv.level + ((day.level && day.level !== pv.level) ? ' (רמה שונה)' : '')) : '';
+    return this.lastLine('בפעם הקודמת · ' + this.whenLabel(pv.i) + ': ' + pv.weight + ' ק"ג' + (pv.reps ? (' × ' + pv.reps) : '') + lvl, delta, good);
+  }
+  lastMetconEl(day, m, gi) {
+    const pv = this.prevMetcon(gi, m); if (!pv) return null;
+    const cur = this.metconScore(m);
+    const mode = (m.resultMode || (m.log && m.log.mode) || 'time');
+    let delta = '', good = null;
+    if (cur && mode === pv.mode) {
+      if (mode === 'time') { const d = cur.v - pv.score.v; if (d) { delta = (d < 0 ? 'מהיר ב-' : 'איטי ב-') + this.mmss(d); good = d < 0; } }
+      else if (mode === 'amount') { const d = Math.round((cur.v - pv.score.v)*10)/10; if (d) { delta = (d > 0 ? '+' : '−') + Math.abs(d) + ' מהפעם הקודמת'; good = d > 0; } }
+      else { const rd = Math.floor(cur.v/100000) - Math.floor(pv.score.v/100000), rp = (cur.v%100000) - (pv.score.v%100000); const d = rd*100000 + rp; if (d) { delta = (d > 0 ? '+' : '−') + (Math.abs(rd) ? (Math.abs(rd) + ' סבבים') : (Math.abs(rp) + ' חזרות')) + ' מהפעם הקודמת'; good = d > 0; } }
+    }
+    const lvl = pv.level ? (' · L' + pv.level + ((day.level && day.level !== pv.level) ? ' (רמה שונה)' : '')) : '';
+    return this.lastLine('בפעם הקודמת · ' + this.whenLabel(pv.i) + ': ' + pv.text + (pv.rx ? ' · RX' : '') + lvl, delta, good);
+  }
+  // Per-set lift: one tap copies the first weight typed into every set — then
+  // only the sets that differ get corrected (v3, per Ori).
+  fillAllSets(n) {
+    const d = structuredClone(this.state.data);
+    const dc = d[this.state.selWeek].days[this.state.selDay];
+    const t = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
+    const L = t.lift.log || (t.lift.log = { weight:'', reps:'', note:'' });
+    let v = '';
+    for (let i=1; i<=n && !v; i++) v = String(L['s'+i] || '').trim();
+    if (!v) return;
+    for (let i=1; i<=n; i++) L['s'+i] = v;
+    const mx = parseFloat(v);
+    L.weight = mx > 0 ? String(mx) : '';
+    this.save(d); this.setState({ data:d });
+  }
   metconCfg(map, base) { const c = map[this.pilotKey()]; return (c && c[(this.state.activeSession==='alt'?'alt.':'')+base]) || ''; }
   programWeek1() {
     return {
@@ -2287,11 +2479,12 @@ class Component extends DCLogic {
     // a standalone flag — old days keep their PR and free the rating slot.
     nd.pr = !!o.pr || o.rating === 'pr';
     nd.rating = o.rating === 'pr' ? '' : (o.rating || '');
-    // Older scales -> RPE: the short-lived feel scale (easy/good/hard/max,
-    // v1.1.0) and the original quality scale (good/average). 'missed' stays —
-    // it isn't an effort level, so inventing a number for it would be wrong.
-    const FEEL2RPE = { easy:'3', good:'6', average:'5', hard:'8', max:'10' };
-    nd.rating = FEEL2RPE[nd.rating] || nd.rating;
+    // v3: rating is 'easy' | 'ok' | 'hard'. Older values (numeric RPE from
+    // block 1, the v1.1 feel scale) are kept as-is and mapped for display
+    // only by effortKey() — never rewritten, so an untouched day keeps its
+    // sync signature across boots.
+    // Level the athlete worked at (L1-L4), per session (v3).
+    nd.level = /^[1-4]$/.test(String(o.level == null ? '' : o.level)) ? String(o.level) : '';
     if (o.lift) {
       nd.lift.movement = o.lift.movement || '';
       nd.lift.planned = o.lift.planned || '';
@@ -2402,6 +2595,7 @@ class Component extends DCLogic {
     myName: '',
     editingName: false,
     nameDraft: '',
+    blockOpen: {},                        // explicit open/closed per day block (v3 collapsible blocks); memory only
     activeSession: 'main'
   };
   WELCOME_KEY = 'cfby_welcome_v1';
@@ -2491,11 +2685,11 @@ class Component extends DCLogic {
   // Achievement badges, tiered. Computed from a small counter object so the
   // SAME definitions serve my profile (counters from my tracker) and the
   // summary row boot.js publishes for the coach table (board.pub):
-  // t=total workouts, s=best streak, p=PRs, rx=RX metcons, r9=RPE9+ sessions,
+  // t=total workouts, s=best streak, p=PRs, rx=RX metcons, hard=sessions rated 'hard',
   // fw=full weeks. Thresholds must match boot.js publicSummary() semantics.
   badgeList(c) {
     c = c || {};
-    const t=c.t||0, s=c.s||0, p=c.p||0, rx=c.rx||0, r9=c.r9||0, fw=c.fw||0;
+    const t=c.t||0, s=c.s||0, p=c.p||0, rx=c.rx||0, hard=c.hard||0, fw=c.fw||0;
     return [
       { icon:'🎯', label:'אימון ראשון', earned:t>=1 },
       { icon:'⭐', label:'10 אימונים', earned:t>=10 },
@@ -2511,7 +2705,7 @@ class Component extends DCLogic {
       { icon:'🏅', label:'בלוק מושלם', earned:fw>=8 },
       { icon:'🔰', label:'RX ראשון', earned:rx>=1 },
       { icon:'🎖️', label:'10 מטקוני RX', earned:rx>=10 },
-      { icon:'🥵', label:'5 אימוני RPE 9+', earned:r9>=5 }
+      { icon:'🥵', label:'5 אימונים קשים', earned:hard>=5 }
     ];
   }
   badgeCards(list) {
@@ -2553,6 +2747,9 @@ class Component extends DCLogic {
     const target = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
     this.setDeep(target, path, val);
     this.mirrorPmScore(target, path);
+    // v3: the first metcon result of a session adopts the last level chosen
+    // in the block, so the athlete only taps when the level changed.
+    if (/^metcon2?\.log\./.test(path) && !target.level && String(val||'').trim()) { const ll = this.lastLevel(); if (ll) target.level = ll; }
     this.save(d); this.setState({ data: d });
   }
   // Mirror days (PER_MOVE_SCORE): any box edit recomputes the board score —
@@ -2570,55 +2767,67 @@ class Component extends DCLogic {
     L.amount = all ? String(L['mv'+sc.box]||'').trim() : '';
   }
 
-  // Effort = RPE 1-10, matching how the program itself talks ("מאמץ 7 מ-10").
-  // Stored as day.rating = '1'..'10'. PR lives on its own 🏆 toggle (day.pr) so
-  // breaking a record doesn't "use up" the effort rating.
-  RPE_DESC = { 1:'קל מאוד', 2:'קל מאוד', 3:'קל', 4:'קל-בינוני', 5:'בינוני', 6:'בינוני-קשה', 7:'קשה — נשאר בטנק', 8:'קשה מאוד', 9:'כמעט מקסימלי', 10:'מאמץ מקסימלי' };
-  rpeVal(k) { const n = parseInt(k,10); return (n>=1 && n<=10 && String(n)===String(k).trim()) ? n : 0; }
-  rpeColor(n) { return n<=4 ? '#3fa9bf' : n<=6 ? '#3fbf6a' : n<=8 ? '#ef8c25' : 'var(--red)'; }
-  rpeEmoji(n) { return n<=4 ? '😌' : n<=6 ? '💪' : n<=8 ? '🥵' : '🔥'; }
-  // Pre-RPE scales still exist in saved days — keep metas so historical badges
-  // and share texts render. 'pr' migrates to the pr flag; the feel scale
-  // (easy/good/hard/max) and old good/average migrate to RPE in normalizeDay.
+  // Effort = three levels (v3, per Ori 07/09): easy / ok / hard, stored as
+  // day.rating = 'easy' | 'ok' | 'hard'. Numeric RPE from block 1 (and the
+  // even older feel scale) still renders — mapped for DISPLAY only, never
+  // rewritten: 1-4 -> easy, 5-7 -> ok, 8-10 -> hard. PR lives on its own 🏆
+  // toggle (day.pr) so breaking a record doesn't "use up" the effort rating.
+  EFFORT = [
+    { k:'easy', label:'קל',   emoji:'😌', color:'#3fa9bf', desc:'קל — נשאר הרבה בטנק' },
+    { k:'ok',   label:'בסדר', emoji:'💪', color:'#3fbf6a', desc:'בסדר — עבודה טובה, בשליטה' },
+    { k:'hard', label:'קשה',  emoji:'🥵', color:'#ef8c25', desc:'קשה — קרוב למקסימום' }
+  ];
+  effortKey(k) {
+    const v = String(k == null ? '' : k).trim();
+    if (v === 'easy' || v === 'ok' || v === 'hard') return v;
+    if (v === 'good' || v === 'average') return 'ok';
+    if (v === 'max') return 'hard';
+    const n = parseInt(v, 10);
+    if (n >= 1 && n <= 10 && String(n) === v) return n <= 4 ? 'easy' : (n <= 7 ? 'ok' : 'hard');
+    return '';
+  }
+  effortMeta(k) { const key = this.effortKey(k); return key ? this.EFFORT.find(e=>e.k===key) : null; }
+  // Pre-effort values still exist in saved days — keep metas so historical
+  // share texts render. 'pr' migrates to the pr flag in normalizeDay.
   LEGACY_RATINGS = [
     { k:'pr',      label:'PR',      emoji:'🏆', color:'#e8a53a' },
     { k:'missed',  label:'Missed',  emoji:'❌', color:'var(--red)' }
   ];
   ratingMeta(k) {
-    const n = this.rpeVal(k);
-    if (n) return { k:String(n), label:'RPE '+n, emoji:this.rpeEmoji(n), color:this.rpeColor(n) };
+    const e = this.effortMeta(k);
+    if (e) return { k:e.k, label:e.label, emoji:e.emoji, color:e.color };
     return this.LEGACY_RATINGS.find(r=>r.k===k) || null;
   }
 
   effortBar(current, editable) {
-    const cur = this.rpeVal(current);
-    const btns = [];
-    for (let n=1; n<=10; n++) {
-      const on = cur === n;
-      btns.push(React.createElement('button', {
-        key: n,
-        onClick: editable ? (()=>this.onEditPath('rating', on ? '' : String(n))) : undefined,
+    const cur = this.effortKey(current);
+    const btns = this.EFFORT.map(e => {
+      const on = cur === e.k;
+      return React.createElement('button', {
+        key: e.k,
+        onClick: editable ? (()=>this.onEditPath('rating', on ? '' : e.k)) : undefined,
         disabled: !editable && !on,
         style: {
-          flex:'1 1 0', minWidth:'38px', padding:'10px 0', borderRadius:'10px',
-          fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'15px', textAlign:'center',
+          flex:'1 1 0', minWidth:'84px', padding:'12px 0', borderRadius:'12px', fontFamily:'inherit',
+          fontWeight:700, fontSize:'14px', textAlign:'center',
           cursor: editable ? 'pointer' : 'default', transition:'all .15s',
-          border: on ? ('1.5px solid '+this.rpeColor(n)) : '1.5px solid var(--line)',
-          background: on ? this.rpeColor(n) : 'var(--card)',
+          border: on ? ('1.5px solid '+e.color) : '1.5px solid var(--line)',
+          background: on ? e.color : 'var(--card)',
           color: on ? '#fff' : (editable ? 'var(--ink)' : 'var(--ghost)'),
           opacity: (!editable && !on) ? .45 : 1
         }
-      }, String(n)));
-    }
-    // A day still carrying a non-numeric legacy rating (e.g. 'missed') shows it
-    // in the caption until the athlete picks a number.
+      }, e.emoji + ' ' + e.label);
+    });
+    const meta = cur ? this.EFFORT.find(e=>e.k===cur) : null;
+    // A day still carrying a non-effort legacy rating (e.g. 'missed') shows it
+    // in the caption until the athlete picks a level.
     const lg = (!cur && current) ? this.ratingMeta(current) : null;
-    const desc = cur ? (this.rpeEmoji(cur)+' RPE '+cur+' — '+this.RPE_DESC[cur])
-               : lg  ? (lg.emoji+' '+lg.label+' (דירוג ישן — בחר מספר מהסרגל)')
-                     : '‏1 = קל מאוד · 10 = מאמץ מקסימלי';
+    const desc = meta ? (meta.emoji + ' ' + meta.desc)
+               : lg  ? (lg.emoji + ' ' + lg.label + ' (דירוג ישן — בחר רמה)')
+                     : 'איך הרגיש האימון? קל · בסדר · קשה';
     return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'7px' } },
-      React.createElement('div', { style:{ display:'flex', gap:'5px', flexWrap:'wrap' } }, btns),
-      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: cur ? this.rpeColor(cur) : 'var(--muted)' } }, desc)
+      React.createElement('div', { dir:'rtl', style:{ display:'flex', gap:'6px', flexWrap:'wrap' } }, btns),
+      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: meta ? meta.color : 'var(--muted)' } }, desc)
     );
   }
 
@@ -2712,8 +2921,16 @@ class Component extends DCLogic {
       onChange:(e)=>this.onLiftSetEdit(i, e.target.value),
       style:{ width:'100%', border:'1px solid rgba(35,64,154,.35)', borderRadius:'10px', padding:'10px 6px', fontSize:'15px', background:'var(--log)', color:'var(--ink)', outline:'none', fontWeight:600, textAlign:'center' }
     }), 'SET '+i));
+    let firstVal = '';
+    for (let i=1; i<=nSets && !firstVal; i++) firstVal = String(L['s'+i] || '').trim();
+    const allSame = !!firstVal && Array.from({length:nSets}, (_,i)=>String(L['s'+(i+1)]||'').trim()).every(v=>v===firstVal);
     return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } },
       React.createElement('div', { dir:'ltr', style:{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(72px,1fr))', gap:'8px' } }, cells),
+      React.createElement('div', { dir:'rtl', style:{ display:'flex', gap:'8px', alignItems:'center', flexWrap:'wrap' } },
+        React.createElement('button', { onClick:()=>this.fillAllSets(nSets), disabled: !firstVal || allSame,
+          style:{ border:'1.5px solid '+((firstVal && !allSame) ? 'var(--blue)' : 'var(--line)'), background:'var(--card)', color:(firstVal && !allSame) ? 'var(--blue)' : 'var(--faint)', borderRadius:'999px', padding:'7px 14px', fontWeight:700, fontSize:'12.5px', cursor:(firstVal && !allSame) ? 'pointer' : 'default', fontFamily:'inherit' } },
+          '⇉ אותו משקל לכל הסטים' + (firstVal ? (' (' + firstVal + ')') : '')),
+        React.createElement('span', { style:{ fontSize:'11.5px', color:'var(--muted)' } }, 'ואז מתקנים רק את הסטים ששונים')),
       React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: L.weight ? 'var(--greenink)' : 'var(--muted)' } },
         L.weight ? ('🏆 הסט הכבד ביותר — ' + L.weight + 'kg — נרשם לטבלת השיאים') : 'משקל (ק״ג) לכל סט — גם אם עבדתם עם אותו משקל בכל הסטים'),
       React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
@@ -2801,7 +3018,8 @@ class Component extends DCLogic {
         pill(!!metcon.scaled, 'var(--blue)', 'rgba(35,64,154,.1)', ()=>this.setRxScaled(base,'scaled'), 'ביצוע מותאם — רשום את משקלי העבודה שלך', 'עשיתי Scaled')
       ),
       rxNote ? React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color:'var(--muted)', lineHeight:1.5 } }, rxNote) : null,
-      metcon.scaled ? this.unit(this.txtEl(base+'.log.scaled', M.scaled, 'למשל: 40kg במקום 60, מתח עם גומייה…'), 'משקלי עבודה · Scaled') : null
+      metcon.scaled ? this.unit(this.txtEl(base+'.log.scaled', M.scaled, 'למשל: 40kg במקום 60, מתח עם גומייה…'), 'משקלי עבודה · Scaled') : null,
+      base === 'metcon' ? this.levelPills() : null
     );
   }
   // RX and Scaled are mutually exclusive; clicking the active one turns it off.
@@ -2872,7 +3090,7 @@ class Component extends DCLogic {
     return weeks;
   }
   clearDayLog(d) {
-    d.done = false; d.rest = false; d.rating = ''; d.summary = ''; d.pr = false;
+    d.done = false; d.rest = false; d.rating = ''; d.summary = ''; d.pr = false; d.level = '';
     if (d.lift) d.lift.log = { weight:'', reps:'', note:'' };
     if (d.metcon) { d.metcon.rx = false; d.metcon.scaled = false; d.metcon.log = { mode:(d.metcon.log&&d.metcon.log.mode)||'time', time:'', rounds:'', reps:'', amount:'', note:'', scaled:'' }; }
     if (d.metcon2) { d.metcon2.rx = false; d.metcon2.scaled = false; d.metcon2.log = { mode:(d.metcon2.log&&d.metcon2.log.mode)||'time', time:'', rounds:'', reps:'', amount:'', note:'', scaled:'' }; }
@@ -2914,18 +3132,36 @@ class Component extends DCLogic {
       );
     }
     const c = this.canComplete(day);
+    const missing = this.missingLabels(day, c);
+    // v3: what is missing is a FIXED, loud line next to the button — the toast
+    // used to vanish before anyone read it (Oren + David, 04/09).
     return React.createElement('div', { dir:'rtl', style:{ display:'flex', flexDirection:'column', gap:'10px', background:'var(--card)', border:'1px solid var(--line)', borderRadius:'14px', padding:'16px' } },
-      React.createElement('div', { style:{ fontSize:'13px', color:'var(--muted)', lineHeight:1.6 } },
-        c.ok ? 'הכול מוכן — לחיצה על שמור תזין את האימון כהושלם ותשמור את התוצאות שלך.'
-             : (c.anyPresent ? ('כדי לשמור את האימון יש למלא: ' ) : 'אין עדיין אימון להשלים ליום הזה.'),
-        c.ok || !c.anyPresent ? null : React.createElement('b', { style:{ color:'var(--orange)' } }, c.missing.join(' · '))
-      ),
+      c.ok ? React.createElement('div', { style:{ fontSize:'13px', color:'var(--muted)', lineHeight:1.6 } }, 'הכול מוכן — לחיצה על שמור תזין את האימון כהושלם ותשמור את התוצאות שלך.')
+      : !c.anyPresent ? React.createElement('div', { style:{ fontSize:'13px', color:'var(--muted)', lineHeight:1.6 } }, 'אין עדיין אימון להשלים ליום הזה.')
+      : React.createElement('div', { style:{ display:'flex', gap:'10px', alignItems:'flex-start', background:'rgba(239,91,37,.08)', border:'1px solid rgba(239,91,37,.45)', borderRadius:'12px', padding:'10px 12px' } },
+          React.createElement('span', { style:{ fontSize:'18px', flex:'none' } }, '⚠️'),
+          React.createElement('div', { style:{ fontSize:'13px', color:'var(--ink)', lineHeight:1.6 } },
+            React.createElement('div', { style:{ fontWeight:700 } }, 'האימון עוד לא נספר — חסר:'),
+            React.createElement('div', { style:{ color:'var(--orange)', fontWeight:700 } }, missing.join(' · ')))),
       React.createElement('button', {
         onClick:()=>this.saveDay(),
         disabled: !c.anyPresent,
         style:{ background: c.ok ? 'var(--orange)' : 'var(--dim)', color: c.ok ? '#fff' : 'var(--faint)', border:'none', borderRadius:'12px', padding:'14px', fontWeight:700, fontSize:'15px', cursor: c.anyPresent ? 'pointer' : 'not-allowed' }
       }, '💾 שמור אימון והשלם')
     );
+  }
+  // The missing list with per-movement detail for the selected day (the
+  // metcon's score box is locked until every movement box is filled).
+  missingLabels(day, c) {
+    return c.missing.map(lbl => {
+      const base = lbl === 'תוצאה למטקון' ? 'metcon' : (lbl === 'תוצאה למטקון השני' ? 'metcon2' : '');
+      if (!base || !this.perMoveOn(base)) return lbl;
+      const m = day[base]; const M = (m && m.log) || {};
+      const boxes = this.metconCfg(this.PER_MOVE_BOXES, base);
+      const n = boxes ? boxes.length : (m.movements || []).filter(x=>x && x.name).length;
+      let empty = 0; for (let i=1; i<=n; i++) if (!String(M['mv'+i]||'').trim()) empty++;
+      return empty ? (lbl.replace('תוצאה', 'תוצאה ל-' + empty + ' תנועות') ) : lbl;
+    });
   }
   saveDay() {
     if (this.selIsFuture()) { this.toast('אימון עתידי — אפשר לשמור רק ביום האימון'); return; }
@@ -3026,7 +3262,7 @@ class Component extends DCLogic {
     const viewMovements = met.movements.map((m,i)=>({ num:i+1, name:m.name, detail:m.detail })).filter(m=>m.name||m.detail);
     const view2Movements = met2.movements.map((m,i)=>({ num:i+1, name:m.name, detail:m.detail })).filter(m=>m.name||m.detail);
     const fut = this.selIsFuture();   // future day -> plan is view-only, no result inputs
-    const viewExtras = day.extras.map((e,i)=>({ i, num:i+1, name:e.name, detail:e.detail, result:e.result, resultBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.extraBar(i,e)) })).filter(e=>e.name||e.detail);
+    const viewExtras = day.extras.map((e,i)=>({ i, num:i+1, name:e.name, detail:e.detail, detailEl: this.planEl(e.detail, '12.5px'), result:e.result, resultBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.extraBar(i,e)) })).filter(e=>e.name||e.detail);
 
     const vShowLift = !!(day.lift.movement || day.lift.planned);
     const vShowMetcon = !!(met.name || met.scheme || met.note || viewMovements.length);
@@ -3035,15 +3271,15 @@ class Component extends DCLogic {
 
     const dayObj = {
       done: day.done,
-      lift: { movement: day.lift.movement, planned: day.lift.planned, result: day.lift.result },
+      lift: { movement: day.lift.movement, planned: day.lift.planned, plannedEl: this.planEl(day.lift.planned, '13px'), result: day.lift.result },
       metcon: {
-        name: met.name, scheme: met.scheme, score: met.score, note: met.note, result: met.result,
+        name: met.name, scheme: met.scheme, score: met.score, note: met.note, noteEl: this.planEl(met.note, '12.5px'), result: met.result,
         hasScheme: !!met.scheme, hasScore: !!met.score, hasNote: !!met.note,
         movements: met.movements.map((m,i)=>({ i, num:i+1, name:m.name, detail:m.detail })),
         viewMovements
       },
       metcon2: {
-        name: met2.name, scheme: met2.scheme, score: met2.score, note: met2.note,
+        name: met2.name, scheme: met2.scheme, score: met2.score, note: met2.note, noteEl: this.planEl(met2.note, '12.5px'),
         hasScheme: !!met2.scheme, hasNote: !!met2.note,
         viewMovements: view2Movements
       },
@@ -3053,6 +3289,20 @@ class Component extends DCLogic {
       viewExtras
     };
     const rMeta = this.ratingMeta(day.rating);
+    // collapsible blocks (v3): auto-fold a block that already holds a result
+    // (or everything once the day is saved); explicit taps win.
+    const bkey = (b) => selWeek+'_'+selDay+'_'+(asAlt?'alt':'main')+'_'+b;
+    const isOpen = (b, has) => { const ex = this.state.blockOpen[bkey(b)]; return ex != null ? ex : !(has || day.done); };
+    const liftHas = this.liftLogged(day), metHas = this.metconLogged(met), met2Has = this.metconLogged(met2);
+    const exPresent = day.extras.filter(e=>e.name||e.detail);
+    const exLogged = exPresent.filter(e=>e.log && String(e.log.text||'').trim()).length;
+    const extraHas = exPresent.length > 0 && exLogged === exPresent.length;
+    const liftOpen = isOpen('lift', liftHas), metconOpen = isOpen('metcon', metHas), metcon2Open = isOpen('metcon2', met2Has), extraOpen = isOpen('extra', extraHas);
+    const L0 = day.lift.log || {};
+    const liftSum = liftHas ? (L0.weight + ' ק"ג' + (L0.reps ? (' × ' + L0.reps) : '')) : '';
+    const metSum = metHas ? (this.resultText(met) + (met.rx ? ' · RX' : (met.scaled ? ' · Scaled' : ''))) : '';
+    const met2Sum = met2Has ? (this.resultText(met2) + (met2.rx ? ' · RX' : (met2.scaled ? ' · Scaled' : ''))) : '';
+    const extraSum = exPresent.length ? (exLogged + '/' + exPresent.length + ' תועדו') : '';
 
     const prList = [];
     // Per-movement records: the heaviest weight ever logged in LIFT, grouped by
@@ -3093,16 +3343,16 @@ class Component extends DCLogic {
     // my card and what others see of me can never disagree.
     let fullWeeks = 0;
     for (let w=0; w<8; w++) { if (this.weekStats(w).completed >= this.myTargetVal()) fullWeeks++; }
-    let rxCount = 0, rxOf = 0, r9Count = 0;
+    let rxCount = 0, rxOf = 0, hardCount = 0;
     data.forEach(wk=>wk.days.forEach(d0=>[d0, d0.alt].forEach(dd=>{
       if (!dd) return;
-      if (dd.done && this.rpeVal(dd.rating)>=9) r9Count++;
+      if (dd.done && this.effortKey(dd.rating)==='hard') hardCount++;
       [dd.metcon, dd.metcon2].forEach(m=>{ if (m && this.metconScore(m)) { rxOf++; if (m.rx) rxCount++; } });
     })));
     // overview card: RX metcons out of every metcon with a result (same
     // counter as the RX badges, so the two numbers can never disagree)
     const statRxSub = rxOf ? ('מתוך ' + rxOf + ' מטקונים שתועדו') : 'עוד לא תועד מטקון';
-    const badges = this.badgeList({ t: totalDone, s: best, p: prList.length, rx: rxCount, r9: r9Count, fw: fullWeeks });
+    const badges = this.badgeList({ t: totalDone, s: best, p: prList.length, rx: rxCount, hard: hardCount, fw: fullWeeks });
     const badgeCount = badges.filter(b=>b.earned).length + ' / ' + badges.length;
     const badgeCards = this.badgeCards(badges);
 
@@ -3178,13 +3428,26 @@ class Component extends DCLogic {
       prToggle: (fut || otherDone) ? null : this.prToggle(this.dayHasPR(day), true),
       hasPRBadge: this.dayHasPR(day),
       liftBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.liftBar(day.lift, this.perSetCount())),
+      lastLift: (fut || otherDone) ? null : this.lastLiftEl(day, gi),
+      lastMetcon: (fut || otherDone) ? null : this.lastMetconEl(day, met, gi),
+      lastMetcon2: (fut || otherDone) ? null : this.lastMetconEl(day, met2, gi),
+      liftOpen, metconOpen, metcon2Open, extraOpen,
+      liftChev: liftOpen ? '▾' : '▸', metconChev: metconOpen ? '▾' : '▸', metcon2Chev: metcon2Open ? '▾' : '▸', extraChev: extraOpen ? '▾' : '▸',
+      liftSum: liftOpen ? '' : liftSum, metconSum: metconOpen ? '' : metSum, metcon2Sum: metcon2Open ? '' : met2Sum, extraSum: extraOpen ? '' : extraSum,
+      toggleLift: ()=>this.toggleBlock(bkey('lift'), liftOpen),
+      toggleMetcon: ()=>this.toggleBlock(bkey('metcon'), metconOpen),
+      toggleMetcon2: ()=>this.toggleBlock(bkey('metcon2'), metcon2Open),
+      toggleExtra: ()=>this.toggleBlock(bkey('extra'), extraOpen),
+      liftMissing: !fut && !otherDone && !day.done && this.liftPresent(day) && !this.liftLogged(day),
+      metconMissing: !fut && !otherDone && !day.done && this.metconPresent(met) && !this.metconLogged(met),
+      metcon2Missing: !fut && !otherDone && !day.done && this.metconPresent(met2) && !this.metconLogged(met2),
       saveBar: this.saveBarEl(day, otherDone, asAlt),
       metconBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.metconBar(day.metcon, 'metcon')),
       metcon2Bar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.metconBar(day.metcon2, 'metcon2')),
       hasRating: !!rMeta,
       ratingLabel: rMeta ? (rMeta.emoji + ' ' + rMeta.label) : '',
       ratingBadgeStyle: rMeta ? ('display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; font-family:\'Oswald\',sans-serif; font-weight:700; font-size:12px; letter-spacing:.04em; color:#fff; background:'+rMeta.color+';') : 'display:none;',
-      dayWeekday: this.weekdays[selDay],
+      dayWeekday: 'יום ' + this.hebDow[selDay],
       dayDate: this.dateStr(this.dateAt(gi)),
       dayIsEmpty: !vShowLift && !vShowMetcon && !vShowMetcon2 && !vShowExtra,
       vShowLift, vShowMetcon, vShowMetcon2, vShowExtra,

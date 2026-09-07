@@ -44,7 +44,7 @@ alter table public.board add column if not exists weeks jsonb;
 alter table public.board add column if not exists metcons jsonb;
 -- public profile summary each user publishes about themselves (viewable by all):
 -- { t: total workouts, s: best streak, p: PR count, rx: RX metcons,
---   r9: RPE9+ sessions, fw: full weeks, prs: [last 3 {move,res,week}] }
+--   hard: sessions rated 'hard' (v3 effort scale), fw: full weeks, prs: [last 3 {move,res,week}] }
 alter table public.board add column if not exists pub jsonb;
 
 -- 4) SHARED_PROGRAM : single row (id=1) — the admin-authored 8-week program

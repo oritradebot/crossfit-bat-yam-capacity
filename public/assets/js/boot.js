@@ -152,7 +152,7 @@
   // admin himself kept "recovering" to that stale snapshot after a wipe).
   function stripDayLogs(d) {
     if (!d) return d;
-    d.done = false; d.rest = false; d.rating = ""; d.summary = ""; d.pr = false;
+    d.done = false; d.rest = false; d.rating = ""; d.summary = ""; d.pr = false; d.level = "";
     if (d.lift) delete d.lift.log;
     if (d.metcon)  { delete d.metcon.log;  d.metcon.rx = false;  d.metcon.scaled = false; }
     if (d.metcon2) { delete d.metcon2.log; d.metcon2.rx = false; d.metcon2.scaled = false; }
@@ -213,7 +213,7 @@
       return (x.rx || x.scaled || l) ? [!!x.rx, !!x.scaled, l] : null;
     }
     var core = {
-      done: !!d.done, rest: !!d.rest, rating: d.rating || "", summary: d.summary || "", pr: !!d.pr,
+      done: !!d.done, rest: !!d.rest, rating: d.rating || "", summary: d.summary || "", pr: !!d.pr, level: d.level || "",
       lift: cleanLog(d.lift && d.lift.log),
       mc: m(d.metcon), mc2: m(d.metcon2),
       ex: Array.isArray(d.extras) ? d.extras.map(function (x) {
@@ -858,7 +858,7 @@
   function publicSummary(tracker, myTarget) {
     var wk = (tracker && tracker.weeks) || [];
     var target = parseInt(myTarget, 10) || 5;
-    var t = 0, best = 0, run = 0, p = 0, rx = 0, r9 = 0, fw = 0, prs = [];
+    var t = 0, best = 0, run = 0, p = 0, rx = 0, hard = 0, fw = 0, prs = [];
     function prSummary(dd) {
       var parts = [];
       var L = (dd.lift && dd.lift.log) || {};
@@ -883,14 +883,15 @@
             var move = (dd.lift && dd.lift.movement) || (dd.metcon && dd.metcon.name) || "אימון";
             prs.push({ move: move, res: prSummary(dd), week: "W" + (w + 1) });
           }
-          if (dd.done && parseInt(dd.rating, 10) >= 9) r9++;
+          // v3 effort: 'hard' — legacy numeric RPE 8-10 reads as hard too (same map as the app's effortKey)
+          if (dd.done && (dd.rating === "hard" || dd.rating === "max" || parseInt(dd.rating, 10) >= 8)) hard++;
           var e1 = metconEntry(dd.metcon);  if (e1 && e1.rx) rx++;
           var e2 = metconEntry(dd.metcon2); if (e2 && e2.rx) rx++;
         }
       }
       if (wDone >= target) fw++;
     }
-    return { t: t, s: best, p: p, rx: rx, r9: r9, fw: fw, prs: prs.slice(-3).reverse() };
+    return { t: t, s: best, p: p, rx: rx, hard: hard, fw: fw, prs: prs.slice(-3).reverse() };
   }
 
   async function doPushBoard() {
