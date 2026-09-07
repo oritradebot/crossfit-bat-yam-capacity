@@ -2401,8 +2401,8 @@
     // One-time board sync on load: seeding above happens BEFORE the interceptor,
     // so a user who already completed workouts (in their state) wouldn't be on
     // the board until their next change. Push now so they appear immediately —
-    // but never after a failed board fetch (we'd be pushing fallback data).
-    if (!fb.error) pushBoard();
+    // but never after a failed fetch of my own row (we'd be pushing fallback data).
+    if (!mb.error) pushBoard();
 
     // expose a manual sign-out for the app if needed
     // scope:"local" — the default is "global", which revokes the refresh token
