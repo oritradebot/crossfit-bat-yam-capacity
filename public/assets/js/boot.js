@@ -113,7 +113,14 @@
   }
   async function fetchProfile(uid) {
     try {
-      var r = await sb.from("profiles").select("name,is_admin,welcome_seen,gender,birth_date,announcement_seen").eq("id", uid).maybeSingle();
+      // v3: goal + goal_done_at ride the profile (the goal belongs to the
+      // athlete, not the block). Until Ori runs the ALTER they don't exist —
+      // retry without them, same convention as announcement_seen below.
+      var r = await sb.from("profiles").select("name,is_admin,welcome_seen,gender,birth_date,announcement_seen,goal,goal_done_at").eq("id", uid).maybeSingle();
+      if (r.error && /goal/.test(r.error.message || "")) {
+        goalColsMissing = true;
+        r = await sb.from("profiles").select("name,is_admin,welcome_seen,gender,birth_date,announcement_seen").eq("id", uid).maybeSingle();
+      }
       // Transitional: schema not migrated yet — retry without the new column
       // (a profile-fetch failure here would wrongly skip onboarding + popup).
       if (r.error && /announcement_seen/.test(r.error.message || ""))
@@ -383,6 +390,8 @@
   var memTracker = null;   // last tracker JSON string (boot seed / app write)
   var memBoard = null;     // last board JSON string the USER wrote
   var lastPushedName = null;   // profiles.name as last confirmed in the cloud (v3 name sync)
+  var lastPushedGoal = null, lastPushedGoalDone = null;   // profiles.goal / goal_done_at as last confirmed (v3 goal card)
+  var goalColsMissing = false; // the v3 ALTER hasn't run yet — keep the goal local, don't retry every push
   var memDts = null;       // per-day stamp map (see DTS_KEY)
   var memDirty = false;    // true while a write is not yet confirmed pushed
   var memSeq = 0;          // bumps on every tracker write (push-race token)
@@ -931,6 +940,19 @@
         if (pr.error) console.warn("[sync] profile name update failed:", pr.error.message || pr.error);
         else lastPushedName = row.name;
       } catch (e) { console.warn("[sync] profile name update threw:", (e && e.message) || e); }
+    }
+    // v3 goal card: the goal + its "reached" stamp live on the profile too.
+    // Same own-row update; a missing column (ALTER not run yet) is noted once
+    // and the goal simply stays on the device until it exists.
+    var g = b.myGoal || "", gd = b.myGoalDone || null;
+    if (!r.error && !goalColsMissing && (g !== (lastPushedGoal || "") || gd !== lastPushedGoalDone)) {
+      try {
+        var pg = await sb.from("profiles").update({ goal: g, goal_done_at: gd }).eq("id", pushCtx.uid);
+        if (pg.error) {
+          if (/goal/.test(pg.error.message || "")) { goalColsMissing = true; console.warn("[sync] profiles.goal columns missing — goal stays local until the v3 ALTER runs"); }
+          else console.warn("[sync] profile goal update failed:", pg.error.message || pg.error);
+        } else { lastPushedGoal = g; lastPushedGoalDone = gd; }
+      } catch (e) { console.warn("[sync] profile goal update threw:", (e && e.message) || e); }
     }
   }
   function pushBoard() {
@@ -2014,7 +2036,7 @@
     try { localStorage.setItem("cfby_onb_v1", "1"); } catch (e) {}
     try { localStorage.setItem("cfby_reset_v1", "1"); } catch (e) {}
     localStorage.removeItem(K.TRACKER_KEY); // empty -> the app builds its built-in program
-    lsSetRaw(K.BOARD_KEY, { myName: "אורי (dev)", myGender: "male", myAge: 30 });
+    lsSetRaw(K.BOARD_KEY, { myName: "אורי (dev)", myGender: "male", myAge: 30, myGoal: "", myGoalDone: null });
     window.cfbySignOut = function () { location.reload(); };
     window.cfbyIsAdmin = false;
     // dev preview: the recap gate is open so the share flow is testable
@@ -2185,10 +2207,16 @@
     var prevB = lsGet(K.BOARD_KEY) || {};
     var seedB = {
       myName: (myRow && myRow.name) || (mb.error && prevB.myName) || prof.name || (session.user.email || "").split("@")[0],
+      // v3 goal card: cloud wins when the columns exist; otherwise whatever
+      // this device already holds (the cloud never had it).
+      myGoal: (prof.goal != null) ? prof.goal : (prevB.myGoal || ""),
+      myGoalDone: (prof.goal_done_at !== undefined) ? (prof.goal_done_at || null) : (prevB.myGoalDone || null),
       myGender: prof.gender || null,
       myAge: ageFrom(prof.birth_date)
     };
     lastPushedName = prof.name || null;
+    lastPushedGoal = (prof.goal != null) ? prof.goal : null;
+    lastPushedGoalDone = (prof.goal_done_at !== undefined) ? (prof.goal_done_at || null) : null;
     memBoard = JSON.stringify(seedB);
     try { lsSetRaw(K.BOARD_KEY, seedB); } catch (e) {}
 

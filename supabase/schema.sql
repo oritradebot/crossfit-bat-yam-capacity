@@ -21,6 +21,12 @@ alter table public.profiles add column if not exists gender       text;
 alter table public.profiles add column if not exists birth_date   date;
 -- id of the last block announcement this user saw (popup shows once per user)
 alter table public.profiles add column if not exists announcement_seen text;
+-- v3 (07/09/2026) goal card: the athlete's own goal + when they marked it
+-- reached. On the person, not the block — a block reset never touches it.
+-- (To run by hand on the live DB per the schema-drift workflow; until then
+-- boot.js keeps the goal on the device and retries once the columns exist.)
+alter table public.profiles add column if not exists goal         text;
+alter table public.profiles add column if not exists goal_done_at timestamptz;
 
 -- 2) STATES : each user's full tracker blob (program + their own results)
 create table if not exists public.states (

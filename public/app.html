@@ -1048,14 +1048,25 @@
 
     <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
       <div style="animation:fadeUp .35s ease both;">
+        <sc-if value="{{ showFirstWorkout }}" hint-placeholder-val="{{ false }}">
+          <div dir="rtl" style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; border-radius:18px; padding:18px 20px; margin-bottom:22px; box-shadow:0 8px 28px var(--shcol2);">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <span style="font-size:24px;">🚀</span>
+              <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:19px; letter-spacing:.03em;">האימון הראשון שלך</div>
+              <span style="font-size:12.5px; color:#b9c4e6;">שלושה צעדים וזה רץ</span>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin-top:14px;">
+              <div style="display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; color:#ffb08f;">1</span><div style="font-size:13px; line-height:1.5;"><b>פתח את האימון של היום</b><br><span style="color:#b9c4e6;">בטאב יומן, או בכפתור הכתום למטה</span></div></div>
+              <div style="display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; color:#ffb08f;">2</span><div style="font-size:13px; line-height:1.5;"><b>רשום מה עשית</b><br><span style="color:#b9c4e6;">משקל לכל סט, תוצאה לכל תנועה, RX או Scaled</span></div></div>
+              <div style="display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; color:#ffb08f;">3</span><div style="font-size:13px; line-height:1.5;"><b>שמור אימון והשלם</b><br><span style="color:#b9c4e6;">רק אז היום נספר. הכול מסתנכרן לענן לבד</span></div></div>
+            </div>
+            <button onClick="{{ gotoToday }}" style="margin-top:14px; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:11px 20px; font-weight:700; font-size:14px; cursor:pointer;">← לאימון של היום</button>
+          </div>
+        </sc-if>
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:22px;">
           <div style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--blue); line-height:1;">{{ statSessions }}<span style="font-size:16px; color:var(--muted);">/{{ statTarget }}</span></div>
             <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">אימונים שהושלמו</div>
-          </div>
-          <div style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px;">
-            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--ink); line-height:1;">{{ statPct }}<span style="font-size:18px; color:var(--muted);">%</span></div>
-            <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">מהיעד · 5 בשבוע</div>
           </div>
           <div style="background:var(--orange); color:#fff; border-radius:16px; padding:16px 18px;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; line-height:1;">{{ statWeekly }}</div>
@@ -1072,6 +1083,28 @@
           </div>
         </div>
 
+        <div dir="rtl" style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 18px; margin-bottom:22px;">
+          <sc-if value="{{ goalEditing }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <span style="font-size:20px; flex:none;">🎯</span>
+              <input dir="auto" value="{{ goalDraft }}" onChange="{{ onGoalDraft }}" placeholder="מה המטרה שלך לבלוק? למשל: להוציא Muscle-up ראשון" style="flex:1; min-width:200px; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:15px; background:var(--field); color:var(--ink); outline:none;">
+              <button onClick="{{ saveGoal }}" style="flex:none; background:var(--orange); color:#fff; border:none; border-radius:10px; padding:10px 16px; font-weight:700; font-size:13px; cursor:pointer;">שמור</button>
+              <sc-if value="{{ goalHasText }}" hint-placeholder-val="{{ false }}"><button onClick="{{ cancelGoal }}" style="flex:none; background:none; color:var(--muted); border:none; font-size:13px; cursor:pointer;">ביטול</button></sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{ goalShowing }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <span style="font-size:22px; flex:none;">{{ goalIcon }}</span>
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:11px; color:var(--muted); font-weight:600; letter-spacing:.04em;">{{ goalLabel }}</div>
+                <div dir="auto" style="font-weight:700; font-size:15px; {{ goalTextStyle }}">{{ goalText }}</div>
+              </div>
+              <button onClick="{{ toggleGoalDone }}" style="{{ goalDoneStyle }}">{{ goalDoneLabel }}</button>
+              <button onClick="{{ editGoal }}" title="עריכת המטרה" style="flex:none; background:var(--chip); color:var(--muted); border:none; border-radius:8px; width:30px; height:30px; font-size:13px; cursor:pointer;">✎</button>
+            </div>
+          </sc-if>
+        </div>
+
         <div style="background:linear-gradient(120deg,#141f38,#22336a); color:#fff; border-radius:18px; padding:20px 22px; margin-bottom:22px; box-shadow:0 8px 28px var(--shcol2);">
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <span style="font-family:'Oswald',sans-serif; font-weight:600; font-size:13px; letter-spacing:.04em; color:#8fa4d8;">השבוע</span>
@@ -1084,6 +1117,7 @@
               <button onClick="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" style="{{ c.miniStyle }}">
                 <span style="font-size:10px; font-weight:700; opacity:.85; letter-spacing:.03em;">{{ c.dow }}</span>
                 <span style="font-family:'Oswald',sans-serif; font-weight:600; font-size:15px;">{{ c.dnum }}</span>
+                <span style="font-size:13px; line-height:1; min-height:14px;">{{ c.icon }}</span>
               </button>
             </sc-for>
           </div>
@@ -1776,6 +1810,17 @@
     </div>
   </sc-if>
 
+  <sc-if value="{{ hasCelebrate }}" hint-placeholder-val="{{ false }}">
+    <div dir="rtl" style="position:fixed; left:50%; bottom:80px; transform:translateX(-50%); width:calc(100% - 32px); max-width:380px; background:var(--card); color:var(--ink); border:1.5px solid #e8a53a; border-radius:18px; padding:14px 16px; z-index:121; box-shadow:0 16px 40px rgba(0,0,0,.28); display:flex; align-items:center; gap:12px; animation:fadeUp .25s ease both;">
+      <span style="font-size:30px; flex:none;">🎉</span>
+      <div style="flex:1; min-width:0;">
+        <div style="font-weight:700; font-size:15px;">{{ celebrateTitle }}</div>
+        <div dir="auto" style="font-size:12.5px; color:var(--muted); margin-top:2px;">{{ celebrateSub }}</div>
+      </div>
+      <button onClick="{{ celebrateShare }}" style="flex:none; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:8px 14px; font-weight:700; font-size:12.5px; cursor:pointer;">📤 שתף</button>
+      <button onClick="{{ celebrateClose }}" style="flex:none; background:none; border:none; color:var(--muted); font-size:16px; cursor:pointer;">✕</button>
+    </div>
+  </sc-if>
   <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--navy-bg); color:#fff; padding:12px 22px; border-radius:999px; font-weight:600; font-size:14px; z-index:120; box-shadow:0 10px 30px rgba(0,0,0,.3); animation:fadeUp .2s ease both;">{{ toast }}</div>
   </sc-if>
@@ -1970,6 +2015,81 @@ class Component extends DCLogic {
   // one line; the athlete can open/close any block by its header. Explicit
   // choices live in memory only, per day and session.
   toggleBlock(key, cur) { const bo = Object.assign({}, this.state.blockOpen); bo[key] = !cur; this.setState({ blockOpen: bo }); }
+  // ---- celebration (v3): a PR or a streak milestone gets confetti + a card ----
+  // Only for the athlete's own moments, never about anyone else. The canvas
+  // hangs off <html>, not <body>: the runtime rebuilds <body> on every render
+  // and would throw a body-level canvas out mid-animation.
+  celebrate(title, sub) {
+    if (this._ct) clearTimeout(this._ct);
+    this.setState({ celebrate: { title, sub: sub || '' } });
+    this._ct = setTimeout(()=>this.setState({ celebrate: null }), 5000);
+    try { this.confetti(); } catch (e) {}
+  }
+  confetti() {
+    const html = document.documentElement;
+    const c = document.createElement('canvas');
+    c.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99980;';
+    const W = c.width = window.innerWidth, H = c.height = window.innerHeight;
+    html.appendChild(c);
+    const ctx = c.getContext('2d');
+    const cols = ['#EF5B25','#23409A','#3fbf6a','#e8a53a','#ffffff'];
+    const P = Array.from({ length: 90 }, () => ({ x: W/2 + (Math.random()-.5)*W*.5, y: H*.35, vx: (Math.random()-.5)*14, vy: -Math.random()*14 - 4, r: 4 + Math.random()*5, c: cols[Math.floor(Math.random()*cols.length)], a: Math.random()*Math.PI, s: (Math.random()-.5)*.3 }));
+    const t0 = performance.now();
+    const step = (t) => {
+      const k = (t - t0) / 1000;
+      ctx.clearRect(0, 0, W, H);
+      P.forEach(q => { q.vy += .45; q.x += q.vx; q.y += q.vy; q.vx *= .985; q.a += q.s; ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.a); ctx.fillStyle = q.c; ctx.globalAlpha = Math.max(0, 1 - k/1.6); ctx.fillRect(-q.r/2, -q.r/2, q.r, q.r*1.6); ctx.restore(); });
+      if (k < 1.7) requestAnimationFrame(step); else c.remove();
+    };
+    requestAnimationFrame(step);
+  }
+  // Consecutive completed days ending at global day index gi (inclusive).
+  runEndingAt(gi) {
+    let n = 0;
+    for (let i = gi; i >= 0; i--) { const d = this.state.data[Math.floor(i/7)].days[i%7]; if (this.dayComplete(d)) n++; else break; }
+    return n;
+  }
+  // Heaviest weight logged for a movement on any OTHER day of the block.
+  bestWeightFor(movement, exceptGi) {
+    const key = this.normName(movement, true); if (!key) return 0;
+    let best = 0;
+    for (let i = 0; i < 56; i++) {
+      if (i === exceptGi) continue;
+      const d = this.state.data[Math.floor(i/7)].days[i%7];
+      for (const x of [d, d.alt]) { if (!x || !x.lift || !x.lift.log) continue; if (this.normName(x.lift.movement, true) !== key) continue; const w = parseFloat(x.lift.log.weight); if (w > best) best = w; }
+    }
+    return best;
+  }
+  // A lift weight that beats the block's best for that movement fires the
+  // celebration once per day (debounced past the keystrokes).
+  checkLiftPR(gi) {
+    if (this._prT) clearTimeout(this._prT);
+    this._prT = setTimeout(() => {
+      const d = this.state.data[Math.floor(gi/7)].days[gi%7];
+      const x = (this.state.activeSession==='alt' && d.alt) ? d.alt : d;
+      const w = parseFloat(x.lift && x.lift.log && x.lift.log.weight);
+      if (!(w > 0)) return;
+      const best = this.bestWeightFor(x.lift.movement, gi);
+      if (!(best > 0) || w <= best) return;
+      this._prSeen = this._prSeen || {};
+      const k = gi + ':' + Math.round(w*10);
+      if (this._prSeen[k]) return; this._prSeen[k] = 1;
+      this.celebrate('שיא חדש! 🏆', (x.lift.movement || '').split('—')[0].trim() + ' · ' + w + ' ק"ג (הקודם: ' + best + ')');
+    }, 1400);
+  }
+  // Which kind of day the week strip / map shows (v3 icons).
+  dayIcon(day) {
+    if (!day) return '';
+    if (day.rest && !this.dayComplete(day)) return '🛌';
+    const isTest = (x) => !!x && /capacitest/i.test((x.lift && x.lift.movement || '') + ' ' + (x.metcon && x.metcon.name || '') + ' ' + ((x.extras||[]).map(e=>e && e.name || '').join(' ')));
+    if (isTest(day)) return '🧪';
+    if (day.alt && day.alt.done && !day.done) return '🚴';
+    if (day.lift && day.lift.movement) return '🏋️';
+    if (day.metcon && (day.metcon.name || (day.metcon.movements||[]).some(m=>m && m.name))) return '⏱️';
+    if (day.alt && this.dayHasPlan(day.alt)) return '🚴';
+    if ((day.extras||[]).some(e=>e && (e.name||e.detail))) return '➕';
+    return '';
+  }
   // Level the athlete worked at (L1-L4), saved on the SESSION (day.level /
   // alt.level) — v3, per Ori: one level per workout, kept with the result so
   // "last time" compares like with like. Never required for completion.
@@ -2596,6 +2716,9 @@ class Component extends DCLogic {
     editingName: false,
     nameDraft: '',
     blockOpen: {},                        // explicit open/closed per day block (v3 collapsible blocks); memory only
+    myGoalDone: null,                     // ISO stamp when the goal was marked reached (v3 goal card), null = open
+    goalEditing: false, goalDraft: '',
+    celebrate: null,                      // { title, sub } — the PR / streak card (v3), auto-hides
     activeSession: 'main'
   };
   WELCOME_KEY = 'cfby_welcome_v1';
@@ -2634,7 +2757,7 @@ class Component extends DCLogic {
     // athletes ever reaches this device.
     try { const raw = localStorage.getItem(this.BOARD_KEY); if (raw) { const b = JSON.parse(raw); this.setState({
       myName: b.myName || '', nameDraft: b.myName || '',
-      myTarget: b.myTarget || this.WEEKLY_TARGET, myGoal: b.myGoal || '',
+      myTarget: b.myTarget || this.WEEKLY_TARGET, myGoal: b.myGoal || '', myGoalDone: b.myGoalDone || null,
       myGender: b.myGender || null, myAge: (b.myAge != null ? b.myAge : null)
     }); } } catch (e) {}
     // Block-recap gate flag: boot.js fetches it with the announcement (after
@@ -2717,7 +2840,7 @@ class Component extends DCLogic {
   segLight(active) { return 'border:none; cursor:pointer; padding:8px 18px; border-radius:999px; font-weight:700; font-size:13px; transition:all .15s; ' + (active ? 'background:var(--navy-bg); color:#fff;' : 'background:var(--chip); color:var(--muted);'); }
   // BOARD_KEY holds only my own fields now (v3): boot.js pushes the name to
   // my summary row + profile. Nothing about other athletes lives here.
-  saveBoard() { try { localStorage.setItem(this.BOARD_KEY, JSON.stringify({ myName:this.state.myName, myTarget:this.state.myTarget, myGoal:this.state.myGoal, myGender:this.state.myGender, myAge:this.state.myAge })); } catch (e) {} }
+  saveBoard() { try { localStorage.setItem(this.BOARD_KEY, JSON.stringify({ myName:this.state.myName, myTarget:this.state.myTarget, myGoal:this.state.myGoal, myGoalDone:this.state.myGoalDone || null, myGender:this.state.myGender, myAge:this.state.myAge })); } catch (e) {} }
   myTargetVal() { return this.state.myTarget || this.WEEKLY_TARGET; }
   saveMoves() { try { localStorage.setItem(this.MOVES_KEY, JSON.stringify(this.state.moves)); } catch (e) {} }
 
@@ -2751,6 +2874,9 @@ class Component extends DCLogic {
     // in the block, so the athlete only taps when the level changed.
     if (/^metcon2?\.log\./.test(path) && !target.level && String(val||'').trim()) { const ll = this.lastLevel(); if (ll) target.level = ll; }
     this.save(d); this.setState({ data: d });
+    const gi0 = this.state.selWeek*7 + this.state.selDay;
+    if (path === 'pr' && val === true) this.celebrate('שיא חדש! 🏆', ((target.lift && target.lift.movement) || (target.metcon && target.metcon.name) || 'אימון').split('—')[0].trim());
+    if (path === 'lift.log.weight') this.checkLiftPR(gi0);
   }
   // Mirror days (PER_MOVE_SCORE): any box edit recomputes the board score —
   // log.amount = the score box while ALL boxes hold a value, '' otherwise, so
@@ -2954,6 +3080,7 @@ class Component extends DCLogic {
     Object.keys(L).forEach(k=>{ if (/^s\d+$/.test(k)) { const n = parseFloat(L[k]); if (n > mx) mx = n; } });
     L.weight = mx > 0 ? String(mx) : '';
     this.save(d); this.setState({ data:d });
+    this.checkLiftPR(this.state.selWeek*7 + this.state.selDay);
   }
   metconBar(metcon, base) {
     base = base || 'metcon';
@@ -3173,7 +3300,11 @@ class Component extends DCLogic {
     const c = this.canComplete(t);
     if (!c.ok) { this.toast(c.anyPresent ? ('חסר: ' + c.missing.join(' · ')) : 'אין אימון להשלים'); return; }
     t.done = true; t.rest = false;
-    this.save(d); this.setState({ data:d });
+    this.save(d); this.setState({ data:d }, () => {
+      // streak milestones (the badge thresholds) — once, when the run reaches them
+      const run = this.runEndingAt(this.state.selWeek*7 + this.state.selDay);
+      if (run === 5 || run === 10) this.celebrate('רצף של ' + run + ' ימים! 🔥', 'שמרת על הקצב — ' + run + ' ימי אימון רצופים');
+    });
     // This toast fires before any network I/O, so it must not CLAIM the cloud
     // — "מסתנכרן…" states the push has started, which is true (the write just
     // scheduled it); whether it LANDED belongs to boot.js's badge and footer
@@ -3235,7 +3366,7 @@ class Component extends DCLogic {
 
     const thisWeekCells = data[cwi].days.map((day, di) => {
       const gi = cwi*7+di; const st = this.dayState(day);
-      return { wi: cwi, di, dow: this.dowShort[di], dnum: this.dateAt(gi).getDate(), title: this.dowShort[di]+' '+this.dateStr(this.dateAt(gi)), miniStyle: this.miniStyle(st, gi===ti, this.isMissed(gi,day)) };
+      return { wi: cwi, di, dow: this.dowShort[di], dnum: this.dateAt(gi).getDate(), icon: this.dayIcon(day), title: this.dowShort[di]+' '+this.dateStr(this.dateAt(gi)), miniStyle: this.miniStyle(st, gi===ti, this.isMissed(gi,day)) };
     });
     const curWeekDone = data[cwi].days.reduce((s,x)=>s+(x.done?1:0)+(x.alt&&x.alt.done?1:0),0);
 
@@ -3405,6 +3536,24 @@ class Component extends DCLogic {
 
       statSessions: done, statTarget: target, statPct: pct,
       statRx: rxCount, statRxSub,
+      // goal card (v3): stored on the athlete (profiles.goal via boot.js), not on the block
+      goalEditing: this.state.goalEditing || !this.state.myGoal,
+      goalShowing: !(this.state.goalEditing || !this.state.myGoal),
+      goalDraft: this.state.goalDraft,
+      goalHasText: !!this.state.myGoal,
+      onGoalDraft: (e)=>this.setState({ goalDraft: e.target.value }),
+      saveGoal: ()=>{ const v=(this.state.goalDraft||'').trim(); if(!v) return; this.setState({ myGoal:v, goalEditing:false, myGoalDone:null }, ()=>{ this.saveBoard(); this.toast('המטרה נשמרה 🎯'); }); },
+      cancelGoal: ()=>this.setState({ goalEditing:false }),
+      editGoal: ()=>this.setState({ goalEditing:true, goalDraft:this.state.myGoal }),
+      toggleGoalDone: ()=>{ const done = !this.state.myGoalDone; this.setState({ myGoalDone: done ? new Date().toISOString() : null }, ()=>{ this.saveBoard(); if (done) this.celebrate('המטרה הושגה! 🎯', this.state.myGoal); }); },
+      goalIcon: this.state.myGoalDone ? '🏁' : '🎯',
+      goalLabel: this.state.myGoalDone ? ('המטרה שלך · הושגה ' + this.dateStr(new Date(this.state.myGoalDone))) : 'המטרה שלך לבלוק',
+      goalText: this.state.myGoal,
+      goalTextStyle: this.state.myGoalDone ? 'text-decoration:line-through; color:var(--muted);' : 'color:var(--ink);',
+      goalDoneLabel: this.state.myGoalDone ? '✓ הושג' : 'הושג?',
+      goalDoneStyle: 'flex:none; border-radius:999px; padding:8px 14px; font-weight:700; font-size:12.5px; cursor:pointer; font-family:inherit; ' + (this.state.myGoalDone ? 'background:var(--greenbg,rgba(63,191,106,.14)); color:var(--greenink); border:1.5px solid rgba(63,191,106,.5);' : 'background:var(--card); color:var(--blue); border:1.5px solid var(--blue);'),
+      // first-workout card (v3): until the first completed day of the block
+      showFirstWorkout: done === 0,
       statWeekly: curWeekDone + '/' + this.myTargetVal(),
       curWeekNum: cwi+1, curWeekRange: this.rangeStr(cwi), curWeekDone,
       dowHeaders: this.dowShort,
@@ -3506,6 +3655,11 @@ class Component extends DCLogic {
       shareCopy: ()=>this.shareCopyText(),
       builderBody: this.builderBodyEl(),
       hasToast: !!this.state.toast, toast: this.state.toast,
+      hasCelebrate: !!this.state.celebrate,
+      celebrateTitle: this.state.celebrate ? this.state.celebrate.title : '',
+      celebrateSub: this.state.celebrate ? this.state.celebrate.sub : '',
+      celebrateClose: ()=>this.setState({ celebrate:null }),
+      celebrateShare: ()=>this.setState({ celebrate:null, shareOpen:true, shareType:'day', shareWi:selWeek, shareDi:selDay }),
       welcomeOpen: this.state.welcomeOpen,
       openWelcome: ()=>this.setState({ welcomeOpen:true }),
       closeWelcome: ()=>{ try { localStorage.setItem(this.WELCOME_KEY, '1'); } catch (e) {} this.setState({ welcomeOpen:false }); },
