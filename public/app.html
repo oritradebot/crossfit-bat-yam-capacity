@@ -1277,7 +1277,7 @@
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
           <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.04em; color:var(--navy);">יומן אימונים</div>
           <div style="margin-inline-start:auto; display:flex; gap:8px;">
-            <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+            <sc-if value="{{ editTools }}" hint-placeholder-val="{{ false }}">
               <button onClick="{{ openMoves }}" style="background:var(--card); color:var(--navy); border:1px solid var(--line); border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">🏃 תנועות</button>
               <button onClick="{{ openBuilder }}" style="background:var(--navy-bg); color:#fff; border:none; border-radius:10px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer;">🛠️ בנה שבוע</button>
             </sc-if>
@@ -1323,7 +1323,7 @@
             </div>
             <button onClick="{{ nextDay }}" style="background:rgba(255,255,255,.12); border:none; color:#fff; width:34px; height:34px; border-radius:10px; cursor:pointer; font-size:18px; flex:none;">›</button>
             <div style="margin-inline-start:auto; display:flex; align-items:center; gap:8px;">
-              <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+              <sc-if value="{{ editTools }}" hint-placeholder-val="{{ false }}">
                 <div style="display:flex; background:rgba(255,255,255,.1); border-radius:999px; padding:3px; gap:2px;">
                   <button onClick="{{ setViewMode }}" style="{{ viewTabStyle }}">צפייה</button>
                   <button onClick="{{ setEditMode }}" style="{{ editTabStyle }}">עריכה</button>
@@ -1347,10 +1347,10 @@
                   <div style="width:88px; height:88px; margin:0 auto 18px; border-radius:50%; background:radial-gradient(circle at 50% 35%, rgba(35,64,154,.14), rgba(35,64,154,.04)); display:flex; align-items:center; justify-content:center; font-size:42px; animation:floaty 2.8s ease-in-out infinite;">🗓️</div>
                   <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:30px; letter-spacing:.14em; color:var(--blue);">COMING SOON</div>
                   <div style="font-size:13.5px; color:var(--muted); margin-top:8px; line-height:1.6; max-width:300px; margin-inline:auto;">האימון של היום עוד לא פורסם. הוא יופיע כאן ברגע שהמאמן יעלה אותו — בינתיים אפשר לתעד ימים אחרים או לסמן מנוחה.</div>
-                  <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+                  <sc-if value="{{ editTools }}" hint-placeholder-val="{{ false }}">
                     <button onClick="{{ setEditMode }}" style="margin-top:20px; background:var(--blue); color:#fff; border:none; border-radius:999px; padding:11px 24px; font-weight:700; font-size:14px; cursor:pointer;">+ הזן אימון עכשיו</button>
                   </sc-if>
-                  <sc-if value="{{ notAdmin }}" hint-placeholder-val="{{ true }}">
+                  <sc-if value="{{ notEditTools }}" hint-placeholder-val="{{ true }}">
                     <button onClick="{{ gotoToday }}" style="margin-top:20px; background:var(--paper); color:var(--navy); border:1px solid var(--line); border-radius:999px; padding:11px 24px; font-weight:700; font-size:14px; cursor:pointer;">← חזרה לאימון של היום</button>
                   </sc-if>
                 </div>
@@ -2749,6 +2749,7 @@ class Component extends DCLogic {
     myGoalDone: null,                     // ISO stamp when the goal was marked reached (v3 goal card), null = open
     goalEditing: false, goalDraft: '',
     celebrate: null,                      // { title, sub } — the PR / streak card (v3), auto-hides
+    editToolsOn: false,                   // v3: builder / movement library / day editing only when the panel switched them on for this device
     activeSession: 'main'
   };
   WELCOME_KEY = 'cfby_welcome_v1';
@@ -2779,6 +2780,9 @@ class Component extends DCLogic {
     const ti = this.todayIdx();
     if (ti >= 0) this.setState({ selWeek: Math.floor(ti/7), selDay: ti%7 });
     try { if (localStorage.getItem('cfby_admin') === '1') this.setState({ isAdmin: true }); } catch (e) {}
+    try { this.setState({ editToolsOn: localStorage.getItem('cfby_editmode') === '1' }); } catch (e) {}
+    try { window.addEventListener('cfby-edittools', (e)=>this.setState({ editToolsOn: !!(e && e.detail), editMode: false })); } catch (e) {}
+    try { window.cfbyStartDate = this.startDate; } catch (e) {}   // the admin panel's test-week banner needs the block calendar
     try { if (!localStorage.getItem(this.ONB_KEY)) this.setState({ onbOpen: true }); } catch (e) {}
     try { const raw = localStorage.getItem(this.MOVES_KEY); if (raw) { const m = JSON.parse(raw); if (Array.isArray(m) && m.length) this.setState({ moves: m }); } } catch (e) {}
     // Load my own fields that boot.js seeded from Supabase (display name,
@@ -3578,6 +3582,7 @@ class Component extends DCLogic {
       setViewMode: ()=>this.setState({editMode:false}),
       setEditMode: ()=>this.setState({editMode:true}),
       isAdmin: this.state.isAdmin, notAdmin: !this.state.isAdmin,
+      editTools: !!(this.state.isAdmin && this.state.editToolsOn), notEditTools: !(this.state.isAdmin && this.state.editToolsOn),
       adminOpen: this.state.adminOpen, adminError: this.state.adminError,
       openAdmin: ()=>this.setState({adminOpen:true, adminError:false, adminInput:''}),
       closeAdmin: ()=>this.setState({adminOpen:false}),

@@ -868,6 +868,14 @@
     var wk = (tracker && tracker.weeks) || [];
     var target = parseInt(myTarget, 10) || 5;
     var t = 0, best = 0, run = 0, p = 0, rx = 0, hard = 0, fw = 0, prs = [];
+    // v3 coach table: sessions with an entry that was never saved as done,
+    // and the last completed day (global index) — the panel marks 🟠 / 🔴
+    // from these without ever reading anyone's 70KB tracker blob.
+    var partial = 0, partialKeys = [], lastGi = -1;
+    function hasEntry(dd) {
+      var L = (dd.lift && dd.lift.log) || {};
+      return !!(L.weight || metconEntry(dd.metcon) || metconEntry(dd.metcon2));
+    }
     function prSummary(dd) {
       var parts = [];
       var L = (dd.lift && dd.lift.log) || {};
@@ -883,7 +891,9 @@
         var day = days[d]; if (!day) continue;
         if (day.done) { t++; wDone++; }
         if (day.alt && day.alt.done) { t++; wDone++; }
-        if (day.done || (day.alt && day.alt.done)) { run++; if (run > best) best = run; } else run = 0;
+        var dayDone = !!(day.done || (day.alt && day.alt.done));
+        if (dayDone) { run++; if (run > best) best = run; lastGi = w * 7 + d; } else run = 0;
+        if (!dayDone && (hasEntry(day) || (day.alt && hasEntry(day.alt)))) { partial++; if (partialKeys.length < 5) partialKeys.push(w + "_" + d); }
         var sessions = [day, day.alt];
         for (var s = 0; s < sessions.length; s++) {
           var dd = sessions[s]; if (!dd) continue;
@@ -900,7 +910,23 @@
       }
       if (wDone >= target) fw++;
     }
-    return { t: t, s: best, p: p, rx: rx, hard: hard, fw: fw, prs: prs.slice(-3).reverse() };
+    // Tests (v3): the recap card's own config + reader, run on the raw tracker
+    // through a tiny shim (readSlot only touches state.data + metconScore).
+    // Missing card code (never on a real boot) simply means no tests field.
+    var tests = null;
+    try {
+      var RC = window.BlockRecap;
+      if (RC && Array.isArray(RC.tests) && RC._readSlot) {
+        var shim = { state: { data: wk }, metconScore: function (m) { var e = metconEntry(m); return e ? { v: e.v, dir: e.dir } : null; } };
+        tests = RC.tests.map(function (tt) {
+          var b = RC._readSlot(shim, tt.base, tt), a = tt.retest ? RC._readSlot(shim, tt.retest, tt) : null;
+          return { key: tt.key, short: tt.short, base: b ? b.text : null, after: a ? a.text : null, retest: !!tt.retest };
+        });
+      }
+    } catch (e) { tests = null; }
+    var out = { t: t, s: best, p: p, rx: rx, hard: hard, fw: fw, prs: prs.slice(-3).reverse(), partial: partial, partial_keys: partialKeys, last_gi: lastGi };
+    if (tests) out.tests = tests;
+    return out;
   }
 
   async function doPushBoard() {
@@ -1212,6 +1238,17 @@
       ".cfa-t th,.cfa-t td{padding:9px 10px;text-align:right;font-size:13px;border-bottom:1px solid #243657}" +
       ".cfa-t th{color:#8ea3c9;font-size:11px;text-transform:uppercase}" +
       ".cfa-badge{font-size:10px;padding:1px 7px;border-radius:12px;background:#ef5b2533;color:#ff9f7a;font-weight:700}" +
+      ".cfa-st{font-size:11.5px;font-weight:700;white-space:nowrap}.cfa-st.red{color:#ff8a80}.cfa-st.org{color:#ffb74d}.cfa-st.grn{color:#7ee2a8}.cfa-st.gry{color:#8ea3c9}" +
+      ".cfa-copy{background:transparent;border:1px solid #2e4a7d;color:#9fc2ff;border-radius:6px;padding:5px 9px;font:700 11px 'Heebo',sans-serif;cursor:pointer;margin-left:6px}" +
+      ".cfa-copy:hover{background:#2e4a7d;color:#fff}" +
+      ".cfa-banner{background:#3a2412;border:1px solid #ffb74d;color:#ffd699;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:700;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}" +
+      ".cfa-banner.blue{background:#16233f;border-color:#2e4a7d;color:#c9d6f2}" +
+      ".cfa-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}" +
+      ".cfa-t.coach th,.cfa-t.coach td{white-space:nowrap;padding:7px 8px;font-size:12.5px}" +
+      ".cfa-t.coach td.num{text-align:center;font-family:'Oswald',sans-serif;font-size:14px}" +
+      ".cfa-t.coach td.tests{font-size:11.5px;color:#c9d6f2}" +
+      ".cfa-tog{background:transparent;border:1px solid #2e4a7d;color:#9fc2ff;border-radius:8px;padding:8px 12px;font:700 12px 'Heebo',sans-serif;cursor:pointer}" +
+      ".cfa-tog.on{background:#2e4a7d;color:#fff}" +
       ".cfa-del{background:transparent;border:1px solid #e74c3c;color:#e74c3c;border-radius:6px;padding:5px 10px;font:700 11px 'Heebo',sans-serif;cursor:pointer}" +
       ".cfa-del:hover{background:#e74c3c;color:#fff}" +
       ".cfa-key{background:transparent;border:1px solid #4a90d9;color:#7ab8f5;border-radius:6px;padding:5px 10px;font:700 11px 'Heebo',sans-serif;cursor:pointer;margin-left:6px}" +
@@ -1262,6 +1299,8 @@
     ov.innerHTML =
       '<div class="cfa-box">' +
         '<div class="cfa-head"><h2><span>👥</span> ניהול משתתפים</h2><button class="cfa-x" id="cfaX">✕ סגור</button></div>' +
+        '<div class="cfa-banner" id="cfaBkBanner" style="display:none"></div>' +
+        '<div class="cfa-banner blue" id="cfaTestBanner" style="display:none"></div>' +
         '<div class="cfa-add">' +
           '<div><label>שם משתמש (אנגלית)</label><input id="cfaU" class="ltr" placeholder="username"></div>' +
           '<div><label>שם לתצוגה</label><input id="cfaN" placeholder="השם"></div>' +
@@ -1309,6 +1348,16 @@
             '<button class="cfa-wipe" id="cfaWipeGo" disabled>🧨 אפס בלוק</button>' +
           '</div>' +
         '</div>' +
+        '<div class="cfa-ann">' +
+          '<h3>🛠 מצב עריכה באפליקציה</h3>' +
+          '<p class="sub">כפתורי הבונה, ספריית התנועות ועריכת יום מוסתרים כברירת מחדל (v3). מפעילים רק במכשיר הזה, לשעת חירום.</p>' +
+          '<div class="row"><button class="cfa-tog" id="cfaEditTog">🛠 מצב עריכה: כבוי</button><span class="cfa-annst" id="cfaEditSt"></span></div>' +
+        '</div>' +
+        '<div class="cfa-ann">' +
+          '<h3>📊 התקדמות המתאמנים</h3>' +
+          '<p class="sub">תמונת מצב של כל הרוסטר — נוכחות, שיאים, מטקוני RX ומבחנים. בלי מקומות ובלי ניקוד; מיון לפי שם. מתעדכן בכל פתיחת אפליקציה של המתאמן.</p>' +
+          '<div class="cfa-wrap" id="cfaCoach">טוען…</div>' +
+        '</div>' +
         '<p class="cfa-msg" id="cfaMsg"></p>' +
         '<p class="cfa-stat" id="cfaStat"></p>' +
         '<div id="cfaList">טוען…</div>' +
@@ -1320,36 +1369,115 @@
       if(diff<1) return "היום"; if(diff<2) return "אתמול"; if(diff<7) return Math.floor(diff)+" ימים";
       return d.toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"2-digit"});}catch(e){return "—";} }
 
+    // ---- v3 coach view: status per athlete + WhatsApp text to copy ----------
+    // Everything here comes from profiles + states.updated_at + the small
+    // board summary rows — never from the 70KB tracker blobs (egress).
+    var INACTIVE_DAYS = 14;   // Ori's number (07/09): "לא תיעד שבועיים"
+    var APP_URL = location.origin + "/";
+    function esc(x) { return String(x == null ? "" : x).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function firstName(n) { return String(n || "").trim().split(/\s+/)[0] || ""; }
+    function waText(kind, u, pub) {
+      var nm = firstName(u.name);
+      if (kind === "inactive") return "היי " + nm + " 👋 לא ראיתי תיעוד באפליקציה כבר שבועיים. הכול בסדר? כל אימון שתרשום נשמר ובונה לך את המבחנים והשיאים שלך — גם השלמה אחורה נספרת. " + APP_URL;
+      if (kind === "partial") return "היי " + nm + " 👋 ראיתי שהתחלת להזין " + (pub && pub.partial > 1 ? pub.partial + " אימונים" : "אימון") + " באפליקציה אבל לא לחצת \"שמור אימון והשלם\" — ככה היום לא נספר. חסר רק שדה או שניים (משקל לכוח או תוצאה למטקון), ואז שמירה. " + APP_URL;
+      return "היי " + nm + " 👋 השבוע חוזרים על המבחנים של תחילת הבלוק. יש לך תוצאת בסיס — בואו נראה כמה התקדמת 💪 " + APP_URL;
+    }
+    function copyText(txt, btn) {
+      var done = function () { if (btn) { var o = btn.textContent; btn.textContent = "✓ הועתק"; setTimeout(function () { btn.textContent = o; }, 1800); } };
+      var legacy = function () { try { var ta = document.createElement("textarea"); ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); done(); } catch (e) { amsg("ההעתקה נכשלה — סמן והעתק ידנית", "err"); } };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(legacy); else legacy();
+    }
+    // Test week: the recap card's config knows where the re-measures live;
+    // the app exposes its start date. Current or next week -> the banner.
+    function testWeekInfo() {
+      try {
+        var RC = window.BlockRecap, sd = window.cfbyStartDate;
+        if (!RC || !Array.isArray(RC.tests) || !sd) return null;
+        var gi = Math.floor((new Date().setHours(0,0,0,0) - new Date(sd).setHours(0,0,0,0)) / 86400000);
+        var cw = Math.floor(gi / 7);
+        var soon = RC.tests.filter(function (t) { return t.retest && (t.retest.wi === cw || t.retest.wi === cw + 1); });
+        return soon.length ? { tests: soon, week: soon[0].retest.wi + 1, now: soon[0].retest.wi === cw } : null;
+      } catch (e) { return null; }
+    }
+    function statusOf(u, s, b) {
+      var pub = (b && b.pub) || null;
+      var last = s && s.updated_at ? Date.parse(s.updated_at) : 0;
+      if (!last) return { cls: "gry", txt: "⚪ עוד לא התחיל", kind: "" };
+      if (Date.now() - last > INACTIVE_DAYS * 86400000) return { cls: "red", txt: "🔴 לא תיעד " + Math.floor((Date.now() - last) / 86400000) + " ימים", kind: "inactive" };
+      if (pub && pub.partial > 0) return { cls: "org", txt: "🟠 הזנה חלקית · " + pub.partial + (pub.partial === 1 ? " יום" : " ימים"), kind: "partial" };
+      return { cls: "grn", txt: "🟢 פעיל", kind: "" };
+    }
     async function refresh() {
       var profs = await sb.from("profiles").select("id,name,email,is_admin,created_at");
       if (profs.error) { document.getElementById("cfaList").textContent = "שגיאה: " + profs.error.message; return; }
       var st = await sb.from("states").select("user_id,updated_at");
-      var bd = await sb.from("board").select("user_id,results");
+      var bd = await sb.from("board").select("user_id,name,weeks,pub,updated_at");
       var sMap = {}, bMap = {};
       (st.data || []).forEach(function (r) { sMap[r.user_id] = r; });
       (bd.data || []).forEach(function (r) { bMap[r.user_id] = r; });
       var users = (profs.data || []).sort(function (a, b) { return (a.name || "").localeCompare(b.name || ""); });
       var active = users.filter(function (u) { return sMap[u.id]; }).length;
       document.getElementById("cfaStat").textContent = users.length + " משתמשים · " + active + " התחילו למלא";
+      var tw = testWeekInfo();
       var rows = users.map(function (u) {
-        var s = sMap[u.id], b = bMap[u.id];
-        var logged = b && b.results ? Object.keys(b.results).length : 0;
+        var s = sMap[u.id], b = bMap[u.id], pub = (b && b.pub) || null;
         var isMe = u.id === meId;
-        return '<tr><td>' + (u.name || "—") + (u.is_admin ? ' <span class="cfa-badge">Admin</span>' : '') + (isMe ? ' (אתה)' : '') + '</td>' +
-          '<td style="direction:ltr;text-align:right;color:#8ea3c9">' + (u.email || "—") + '</td>' +
+        var stt = statusOf(u, s, b);
+        // test week: athletes with a baseline and no re-measure yet get the 🧪 text instead
+        var testKind = "";
+        if (tw && pub && Array.isArray(pub.tests) && pub.tests.some(function (t) { return t.base && !t.after; })) testKind = "test";
+        var kind = stt.kind || testKind;
+        return '<tr><td>' + esc(u.name || "—") + (u.is_admin ? ' <span class="cfa-badge">Admin</span>' : '') + (isMe ? ' (אתה)' : '') + '</td>' +
+          '<td style="direction:ltr;text-align:right;color:#8ea3c9">' + esc(u.email || "—") + '</td>' +
+          '<td><span class="cfa-st ' + stt.cls + '">' + stt.txt + (testKind ? ' · 🧪' : '') + '</span></td>' +
           '<td>' + fmtWhen(s ? s.updated_at : null) + '</td>' +
-          '<td>' + logged + '</td>' +
-          '<td><button class="cfa-key" data-id="' + u.id + '" data-name="' + (u.name || "") + '">🔑 סיסמה</button>' +
-            (isMe ? '' : '<button class="cfa-del" data-id="' + u.id + '" data-name="' + (u.name || "") + '">מחק</button>') + '</td></tr>';
+          '<td>' + (kind ? '<button class="cfa-copy" data-kind="' + kind + '" data-id="' + u.id + '" title="העתקת הודעת וואטסאפ אישית">📋 הודעה</button>' : '') +
+            '<button class="cfa-key" data-id="' + u.id + '" data-name="' + esc(u.name || "") + '">🔑 סיסמה</button>' +
+            (isMe ? '' : '<button class="cfa-del" data-id="' + u.id + '" data-name="' + esc(u.name || "") + '">מחק</button>') + '</td></tr>';
       }).join("");
       document.getElementById("cfaList").innerHTML =
-        '<table class="cfa-t"><thead><tr><th>שם</th><th>שם משתמש</th><th>פעילות</th><th>אימונים</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+        '<table class="cfa-t"><thead><tr><th>שם</th><th>שם משתמש</th><th>מצב</th><th>סנכרון אחרון</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+      var byId = {}; users.forEach(function (u) { byId[u.id] = u; });
+      Array.prototype.forEach.call(document.querySelectorAll(".cfa-copy"), function (btn) {
+        btn.onclick = function () { var u = byId[btn.getAttribute("data-id")]; var b = bMap[u.id]; copyText(waText(btn.getAttribute("data-kind"), u, b && b.pub), btn); };
+      });
       Array.prototype.forEach.call(document.querySelectorAll(".cfa-del"), function (b) {
         b.onclick = function () { del(b.getAttribute("data-id"), b.getAttribute("data-name")); };
       });
       Array.prototype.forEach.call(document.querySelectorAll(".cfa-key"), function (b) {
         b.onclick = function () { resetPass(b.getAttribute("data-id"), b.getAttribute("data-name")); };
       });
+      // test-week banner
+      var tb = document.getElementById("cfaTestBanner");
+      if (tb) {
+        if (tw) {
+          var waiting = users.filter(function (u) { var pb = bMap[u.id] && bMap[u.id].pub; return pb && Array.isArray(pb.tests) && pb.tests.some(function (t) { return t.base && !t.after; }); }).length;
+          tb.innerHTML = '🧪 ' + (tw.now ? 'שבוע המבחנים הוא השבוע' : 'שבוע המבחנים מתחיל בשבוע הבא') + ' (שבוע ' + tw.week + ') · ' + waiting + ' מתאמנים עם תוצאת בסיס שעדיין לא נמדדו שוב';
+          tb.style.display = "";
+        } else tb.style.display = "none";
+      }
+      renderCoach(users, bMap, sMap);
+    }
+    // ---- coach progress table (v3, Ori 07/09: "כן, בפאנל") -----------------
+    function renderCoach(users, bMap, sMap) {
+      var el = document.getElementById("cfaCoach"); if (!el) return;
+      var RC = window.BlockRecap, tdefs = (RC && Array.isArray(RC.tests)) ? RC.tests : [];
+      var head = '<tr><th>שם</th><th>אימונים</th><th>שבועות מלאים</th><th>רצף</th><th>שיאים</th><th>RX</th><th>קשים</th>' +
+        tdefs.map(function (t) { return '<th title="' + esc(t.name) + '">🧪 ' + esc(t.short) + '</th>'; }).join("") + '<th>עדכון</th></tr>';
+      var body = users.map(function (u) {
+        var b = bMap[u.id], pub = (b && b.pub) || null;
+        if (!pub) return '<tr><td>' + esc(u.name || "—") + '</td><td colspan="' + (7 + tdefs.length) + '" style="color:#8ea3c9">עוד לא סונכרן</td></tr>';
+        var tmap = {}; (pub.tests || []).forEach(function (t) { tmap[t.key] = t; });
+        var tcells = tdefs.map(function (t) {
+          var x = tmap[t.key];
+          if (!x || !x.base) return '<td class="tests" style="color:#8ea3c9">—</td>';
+          return '<td class="tests"><span dir="ltr">' + esc(x.base) + '</span>' + (x.after ? ' → <b><span dir="ltr">' + esc(x.after) + '</span></b>' : (x.retest ? ' → …' : '')) + '</td>';
+        }).join("");
+        return '<tr><td>' + esc(u.name || "—") + '</td><td class="num">' + (pub.t || 0) + '</td><td class="num">' + (pub.fw || 0) + '</td><td class="num">' + (pub.s || 0) + '</td>' +
+          '<td class="num">' + (pub.p || 0) + '</td><td class="num">' + (pub.rx || 0) + '</td><td class="num">' + (pub.hard || 0) + '</td>' + tcells +
+          '<td style="color:#8ea3c9">' + fmtWhen(b.updated_at) + '</td></tr>';
+      }).join("");
+      el.innerHTML = '<table class="cfa-t coach"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
     }
 
     // ---- backup / restore ------------------------------------------------
@@ -1362,10 +1490,17 @@
       var el = document.getElementById("cfaBkInfo");
       if (!el) return;
       var t = parseInt(rawGet(BK_KEY), 10) || 0;
-      if (!t) { el.textContent = "⚠️ עדיין לא נעשה גיבוי מהמכשיר הזה"; el.className = "cfa-bkinfo warn"; return; }
+      var banner = document.getElementById("cfaBkBanner");
+      if (!t) {
+        el.textContent = "⚠️ עדיין לא נעשה גיבוי מהמכשיר הזה"; el.className = "cfa-bkinfo warn";
+        if (banner) { banner.textContent = "⚠️ אין גיבוי מהמכשיר הזה — לחץ 💾 גיבוי לקובץ. לתוכנית החינמית של Supabase אין גיבוי אוטומטי."; banner.style.display = ""; }
+        return;
+      }
       var days = Math.floor((Date.now() - t) / 86400000);
       el.textContent = days < 1 ? "גיבוי אחרון: היום" : (days === 1 ? "גיבוי אחרון: אתמול" : "גיבוי אחרון: לפני " + days + " ימים");
       el.className = "cfa-bkinfo" + (days >= 7 ? " warn" : "");
+      // v3: a loud reminder once a week has passed (Ori, 07/09)
+      if (banner) { if (days >= 7) { banner.textContent = "⚠️ עברו " + days + " ימים מהגיבוי האחרון — לחץ 💾 גיבוי לקובץ (אין גיבוי אוטומטי בתוכנית החינמית)."; banner.style.display = ""; } else banner.style.display = "none"; }
     }
 
     async function backup() {
@@ -1783,10 +1918,20 @@
     // scrollbar sits at the same right edge as the panel's and swallowed the
     // scrolling on desktop — the app scrolled invisibly while the panel stood
     // still. Lock the page scroll on open, restore on close.
+    // v3: the in-app edit tools (builder, movement library, day editing) are
+    // hidden unless this device switched them on here — an emergency switch,
+    // not a daily tool. The app listens for the event and flips its state.
+    var EDIT_KEY = "cfby_editmode";
+    function editToolsRefresh() {
+      var on = rawGet(EDIT_KEY) === "1";
+      var b = document.getElementById("cfaEditTog"), st = document.getElementById("cfaEditSt");
+      if (b) { b.textContent = "🛠 מצב עריכה: " + (on ? "דולק" : "כבוי"); b.className = "cfa-tog" + (on ? " on" : ""); }
+      if (st) st.textContent = on ? "כפתורי העריכה מוצגים באפליקציה במכשיר הזה" : "";
+    }
     function openPanel() {
       ov.classList.add("open");
       document.documentElement.style.overflow = "hidden";
-      bkInfo(); annStatus(); recapStatus(); wipeStatus(); refresh();
+      bkInfo(); annStatus(); recapStatus(); wipeStatus(); editToolsRefresh(); refresh();
     }
     function closePanel() {
       ov.classList.remove("open");
@@ -1816,6 +1961,12 @@
       if (annBox && annBox.scrollIntoView) annBox.scrollIntoView({ behavior: "smooth", block: "start" });
     };
     document.getElementById("cfaX").onclick = closePanel;
+    document.getElementById("cfaEditTog").onclick = function () {
+      var on = rawGet(EDIT_KEY) !== "1";
+      try { if (on) localStorage.setItem(EDIT_KEY, "1"); else localStorage.removeItem(EDIT_KEY); } catch (e) {}
+      editToolsRefresh();
+      try { window.dispatchEvent(new CustomEvent("cfby-edittools", { detail: on })); } catch (e) {}
+    };
     // NO backdrop-click close: the box has no background of its own, so on wide
     // screens the overlay margins look like part of the panel — and on Windows,
     // clicking the overlay's own scrollbar targets the overlay too. Both used to
