@@ -343,6 +343,8 @@
   global.BlockRecap = {
     build: build, tests: CAPACITESTS,
     gateState: gateState, isOpen: isOpen,
-    _readSlot: readSlot, _mmss: mmss
+    // v3 (07/09): the in-app tests screen (שיאים ומבחנים) reuses the same
+    // rows the card draws — one config, one reader, one delta rule.
+    _readSlot: readSlot, _mmss: mmss, _buildTest: buildTest
   };
 })(typeof window !== 'undefined' ? window : this);
