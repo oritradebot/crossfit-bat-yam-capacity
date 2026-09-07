@@ -29,7 +29,7 @@ create table if not exists public.states (
   updated_at timestamptz not null default now()
 );
 
--- 3) BOARD : shared leaderboard — everyone can read everyone
+-- 3) BOARD : per-user summary row (v3) — read by its owner + admins (was the shared leaderboard)
 create table if not exists public.board (
   user_id    uuid primary key references auth.users(id) on delete cascade,
   name       text not null default '',
@@ -268,7 +268,13 @@ create policy states_admin on public.states for all to authenticated
 drop policy if exists board_read  on public.board;
 drop policy if exists board_write on public.board;
 drop policy if exists board_admin on public.board;
-create policy board_read  on public.board for select to authenticated using (true);
+-- v3 (07/09/2026): the board table is a per-user summary row, not a shared
+-- leaderboard any more — only its owner and admins may read it. The app has
+-- fetched only its own row since v3 phase 1; the admin panel reads them all.
+-- (To run by hand on the live DB after the phase-1 deploy, per the
+-- schema-drift workflow.)
+create policy board_read  on public.board for select to authenticated
+  using (user_id = auth.uid() or public.is_admin());
 create policy board_write on public.board for all    to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy board_admin on public.board for all    to authenticated

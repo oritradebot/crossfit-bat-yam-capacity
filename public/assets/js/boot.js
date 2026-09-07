@@ -68,6 +68,15 @@
       document.head.appendChild(s);
     });
   }
+  // html2canvas (~200KB) is needed only when someone shares a card — loaded on
+  // the first share tap, not at boot (v3). One in-flight promise; a failed
+  // load (offline) resets so the next tap tries again.
+  var h2cLoad = null;
+  window.cfbyLoadHtml2canvas = function () {
+    if (window.html2canvas) return Promise.resolve();
+    if (!h2cLoad) h2cLoad = loadScript("assets/js/html2canvas.js").catch(function (e) { h2cLoad = null; throw e; });
+    return h2cLoad;
+  };
   function lsGet(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
   function lsSetRaw(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
 
@@ -377,10 +386,11 @@
   var memDts = null;       // per-day stamp map (see DTS_KEY)
   var memDirty = false;    // true while a write is not yet confirmed pushed
   var memSeq = 0;          // bumps on every tracker write (push-race token)
-  // Day keys ("w_d") written since the last confirmed FULL states push — the
-  // close-time RPC's payload (v1.7.3). A handful of days is ~2KB and always
-  // fits under the 64KB keepalive cap that the full blob outgrew; and because
-  // it lives in memory, it survives a dead localStorage just like memTracker.
+  // Day keys ("w_d") written since the last confirmed push — the payload of
+  // the push_days RPC: the close-time channel since v1.7.3 and, since v3, the
+  // routine save path too. A handful of days is ~2KB and always fits under the
+  // 64KB keepalive cap that the full blob outgrew; and because it lives in
+  // memory, it survives a dead localStorage just like memTracker.
   var memDirtyDays = {};
   // DIRTY_KEY can get STUCK when storage stops accepting writes: the push
   // succeeds but removeItem fails, and the stale stamp would block self-update
@@ -620,6 +630,54 @@
     return r;
   }
 
+  // push_days (v1.7.3 RPC) for the routine save path (v3). A missing RPC
+  // (PostgREST 404 / PGRST202) is remembered for the session: the full
+  // blob takes over silently, exactly like before v3.
+  function rpcMissing(err) {
+    if (!err) return false;
+    var m = String(err.message || err.details || err.hint || "");
+    return err.code === "PGRST202" || err.status === 404 || /could not find the function|schema cache/i.test(m);
+  }
+  async function rpcWithRetry(fn, args) {
+    var r;
+    try { r = await sb.rpc(fn, args); } catch (e) { r = { data: null, error: e }; }
+    if (r.error && !rpcMissing(r.error)) {
+      try { await sb.auth.refreshSession(); } catch (e) {}
+      try { r = await sb.rpc(fn, args); } catch (e2) { r = { data: null, error: e2 }; }
+    }
+    return r;
+  }
+  // The RPC stamps the states row with the SERVER clock; read the stamp back
+  // after a days-only push so checkCloudFresh does not mistake our own push
+  // for another device's and reload the page. A few bytes, never the blob.
+  async function refreshServerStamp() {
+    try {
+      var r = await sb.from("states").select("updated_at").eq("user_id", pushCtx.uid).maybeSingle();
+      if (!r.error && r.data && r.data.updated_at) lastServerStamp = r.data.updated_at;
+    } catch (e) {}
+  }
+  // Shared failure path of both push channels: surface it, mark a dead
+  // session when it is one, keep retrying underneath — never block a write,
+  // never navigate (iron rules 2 + 3).
+  function pushFailed(what, err) {
+    console.error("[sync] " + what + " failed:", (err && (err.message || err.code)) || err);
+    // The retry helper already refreshed the session once and retried. If it
+    // STILL reads as an auth failure while the network is up, the session is
+    // genuinely dead — an endless red "retrying" badge would never resolve.
+    // Say so instead, but never block the write and never navigate.
+    var em = String((err && (err.message || err.code)) || "");
+    if (navigator.onLine !== false &&
+        (err.code === "PGRST301" || err.status === 401 ||
+         /jwt|token|unauthorized|not authenticated/i.test(em))) sessionDead = true;
+    syncShow(navigator.onLine === false ? "offline" : (sessionDead ? "reauth" : "error"));
+    clearTimeout(retryT);
+    // Keep retrying underneath either way — a session that heals on its own
+    // re-syncs with no user action — just back off against an auth wall.
+    retryT = setTimeout(doPushState, sessionDead ? 60000 : 10000);
+  }
+  var PUSH_DAYS_MAX = 20;       // more dirty days than this -> the blob is the cheaper payload
+  var rpcUnavailable = false;   // push_days missing on this DB (404) — full blob from then on
+
   var t1 = null, t2 = null, retryT = null;
   var pushCtx = { uid: null, isAdmin: false };
   // ISO stamp of the newest server states row this page knows about — set at
@@ -645,6 +703,69 @@
     var stamp = rawGet(DIRTY_KEY);
     var seqAtStart = memSeq;
     if (stamp !== null || memDirty) syncShow("saving");
+    // ---- v3 (07/09/2026): days-only routine push ------------------------
+    // Routine saves ride the push_days RPC — the close-time channel since
+    // v1.7.3 — carrying ONLY the days written since the last confirmed push
+    // (~2KB each) instead of the whole ~70KB blob on every save. The RPC
+    // applies day-level last-writer-wins server-side with the very same day
+    // stamps the boot merge uses, so a stale device still cannot clobber a
+    // newer day. The full upsert below stays for what the RPC cannot do:
+    //   - nothing day-shaped is pending (a dirty stamp from a previous
+    //     session, an admin plan edit, a program overlay: no dirty day keys)
+    //   - the admin: shared_program is published from the same full blob
+    //   - more than PUSH_DAYS_MAX dirty days (mass retro-logging)
+    //   - the RPC is not installed, or answers anything but ok ('norow' =
+    //     no server row yet — the upsert creates it)
+    var dayKeys = Object.keys(memDirtyDays);
+    if (!pushCtx.isAdmin && !rpcUnavailable && dayKeys.length > 0 && dayKeys.length <= PUSH_DAYS_MAX) {
+      var wk = tracker.weeks || [], all = dtsGet(), days = {}, dts = {}, sentKeys = [], sentDts = {};
+      for (var di = 0; di < dayKeys.length; di++) {
+        var kp = dayKeys[di].split("_");
+        var dayObj = wk[+kp[0]] && wk[+kp[0]].days ? wk[+kp[0]].days[+kp[1]] : undefined;
+        if (dayObj) { days[dayKeys[di]] = dayObj; dts[dayKeys[di]] = all[dayKeys[di]] || Date.now(); sentKeys.push(dayKeys[di]); sentDts[dayKeys[di]] = dts[dayKeys[di]]; }
+      }
+      if (sentKeys.length) {
+        pushBusy = true;
+        pushStartedAt = Date.now();
+        var rr;
+        try { rr = await rpcWithRetry("push_days", { p_days: days, p_dts: dts }); }
+        finally { pushBusy = false; }
+        if (pushQueued) { pushQueued = false; setTimeout(doPushState, 0); }
+        var answer = (rr && !rr.error && rr.data) || null;
+        if (rr && rr.error && rpcMissing(rr.error)) {
+          rpcUnavailable = true;
+          console.warn("[sync] push_days is not available (" + (rr.error.message || rr.error.code) + ") — full pushes from now on");
+        } else if (rr && rr.error) {
+          pushFailed("push_days", rr.error);
+          return;
+        } else if (answer && answer.status === "ok") {
+          sessionDead = false;   // a clean push proves the session is alive
+          try { localStorage.setItem(SRVROW_KEY, "1"); } catch (e) {}   // the cloud row exists for this device
+          if (answer.skipped > 0) console.warn("[sync] push_days skipped " + answer.skipped + " day(s) — server newer or structure mismatch; the boot merge reconciles");
+          // Drop the sent keys — unless a day was written again while the
+          // push was in flight (its stamp moved on), which keeps it pending.
+          var cur = dtsGet();
+          for (var si = 0; si < sentKeys.length; si++) {
+            if ((cur[sentKeys[si]] || 0) <= sentDts[sentKeys[si]]) delete memDirtyDays[sentKeys[si]];
+          }
+          // Same clearing rule as the full push: only if nothing was written
+          // while this one was in flight — a newer write must stay unsynced.
+          if (memSeq === seqAtStart) {
+            var showSavedDays = memDirty || stamp !== null;
+            memDirty = false;
+            if (stamp !== null && rawGet(DIRTY_KEY) === stamp) {
+              try { localStorage.removeItem(DIRTY_KEY); } catch (e) {}
+            }
+            dirtyStuck = rawGet(DIRTY_KEY) !== null;
+            if (showSavedDays) syncShow("saved");
+          }
+          await refreshServerStamp();
+          return;
+        } else {
+          console.warn("[sync] push_days answered " + JSON.stringify(answer) + " — falling back to the full push");
+        }
+      }
+    }
     // The per-day stamps ride inside the blob (tracker._dts) so other devices
     // can merge day-by-day; boot strips the field before the app sees it.
     // SNAPSHOT the stamp map — dtsGet() returns the live memDts, which
@@ -660,23 +781,7 @@
     try { r = await upsertWithRetry("states", { user_id: pushCtx.uid, tracker: payload, updated_at: nowIso }); }
     finally { pushBusy = false; }
     if (pushQueued) { pushQueued = false; setTimeout(doPushState, 0); }
-    if (r.error) {
-      console.error("[sync] states push failed:", r.error.message || r.error);
-      // upsertWithRetry already refreshed the session once and retried. If it
-      // STILL reads as an auth failure while the network is up, the session is
-      // genuinely dead — an endless red "retrying" badge would never resolve.
-      // Say so instead, but never block the write and never navigate.
-      var em = String((r.error && (r.error.message || r.error.code)) || "");
-      if (navigator.onLine !== false &&
-          (r.error.code === "PGRST301" || r.error.status === 401 ||
-           /jwt|token|unauthorized|not authenticated/i.test(em))) sessionDead = true;
-      syncShow(navigator.onLine === false ? "offline" : (sessionDead ? "reauth" : "error"));
-      clearTimeout(retryT);
-      // Keep retrying underneath either way — a session that heals on its own
-      // re-syncs with no user action — just back off against an auth wall.
-      retryT = setTimeout(doPushState, sessionDead ? 60000 : 10000);
-      return;
-    }
+    if (r.error) { pushFailed("states push", r.error); return; }
     sessionDead = false;   // a clean push proves the session is alive
     lastServerStamp = nowIso;   // the server row now carries exactly this stamp
     try { localStorage.setItem(SRVROW_KEY, "1"); } catch (e) {}   // the cloud row now exists for this device
@@ -1914,7 +2019,6 @@
     // dev preview: the recap gate is open so the share flow is testable
     // without Supabase. localhost-only — a hosted deployment never runs this.
     window.cfbyBlockRecap = { open: true, opened_at: "2026-09-05T00:00:00.000Z", _dev: true };
-    await loadScript("assets/js/html2canvas.js");
     await loadScript("assets/js/dc-runtime.js");
     await revealApp();
     versionTag();
@@ -2122,7 +2226,6 @@
     window.cfbyBlockRecap = null;
 
     // 4) NOW boot the app (data is already in localStorage)
-    await loadScript("assets/js/html2canvas.js");
     await loadScript("assets/js/dc-runtime.js");
     await revealApp();
     versionTag();

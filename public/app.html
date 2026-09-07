@@ -3394,7 +3394,14 @@ class Component extends DCLogic {
   shareCopyText() { const txt=this.shareText(); const done=()=>this.toast('הטקסט הועתק ✓'); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(()=>this.legacyCopy(txt,done)); else this.legacyCopy(txt,done); }
   shareImage() {
     const el = document.getElementById('share-card');
-    if (!el || !window.html2canvas) { this.toast('מכין תמונה…'); this.shareCopyText(); return; }
+    if (!el) return;
+    // html2canvas is not loaded at boot any more (v3) — fetch it on the first
+    // share tap and come back here; offline (load fails) falls back to text.
+    if (!window.html2canvas) {
+      if (window.cfbyLoadHtml2canvas) { this.toast('מכין תמונה…'); window.cfbyLoadHtml2canvas().then(()=>this.shareImage()).catch(()=>this.shareCopyText()); }
+      else this.shareCopyText();
+      return;
+    }
     // Shared images always render in the LIGHT palette so everyone's WhatsApp
     // gets the same look — flip the theme just for the capture, then restore.
     const html = document.documentElement, prevTheme = html.getAttribute('data-theme');
@@ -3473,6 +3480,12 @@ class Component extends DCLogic {
           BlockRecapCard.el(data, fmt, 'block-recap-preview'))));
   }
   shareBlockImage() {
+    if (!window.html2canvas && window.cfbyLoadHtml2canvas) {
+      // lazy-loaded since v3 — fetch, then re-enter
+      this.toast('מכין תמונה…');
+      window.cfbyLoadHtml2canvas().then(()=>this.shareBlockImage()).catch(()=>this.toast('אין חיבור — נסו שוב כשיש אינטרנט'));
+      return;
+    }
     if (!window.BlockRecapCard || !window.BlockRecap || !window.html2canvas || !window.ReactDOM || !ReactDOM.createRoot) {
       this.toast('הפקת הכרטיס אינה זמינה בדפדפן הזה'); return;
     }
