@@ -995,9 +995,14 @@
     .hd-title .hd-sub { font-size: 10.5px !important; }
     /* actions become a full-width second row. Everything stretches to fill the
        row exactly — nothing overflows, nothing scrolls sideways. */
-    .hd-actions { margin-inline-start: 0 !important; width: 100%; gap: 6px !important; min-width: 0; }
-    .hd-tabs { flex: 1 1 auto; min-width: 0; overflow: hidden !important; }
-    .hd-tab { flex: 1 1 0; min-width: 0; text-align: center; padding: 7px 4px !important; font-size: 12px !important; }
+    /* v3 (Ori, 07/09): the buttons sit on row 1 beside the title; the three
+       tabs get a full-width row 2 so "שיאים ומבחנים" is never cut. */
+    .hd-actions { display: contents !important; }   /* !important: the element carries an inline display:flex */
+    .hd-title { flex: 1 1 auto; min-width: 0; }
+    .hd-title .hd-name, .hd-title .hd-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hd-btn-ico { margin-inline-start: auto; }
+    .hd-tabs { flex: 1 1 100%; width: 100%; order: 10; min-width: 0; overflow: hidden !important; }
+    .hd-tab { flex: 1 1 0; min-width: 0; text-align: center; padding: 9px 4px !important; font-size: 13px !important; }
     .hd-btn { padding: 6px 9px !important; font-size: 11px !important; flex: none; }
     .hd-btn-ico { font-size: 14px !important; }
     main { padding: 14px 12px 56px !important; }
@@ -1086,12 +1091,11 @@
         </div>
 
         <div dir="rtl" style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 18px; margin-bottom:22px;">
-          <sc-if value="{{ goalEditing }}" hint-placeholder-val="{{ true }}">
-            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <sc-if value="{{ goalMissing }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
               <span style="font-size:20px; flex:none;">🎯</span>
-              <input dir="auto" value="{{ goalDraft }}" onChange="{{ onGoalDraft }}" placeholder="מה המטרה שלך לבלוק? למשל: להוציא Muscle-up ראשון" style="flex:1; min-width:200px; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:15px; background:var(--field); color:var(--ink); outline:none;">
-              <button onClick="{{ saveGoal }}" style="flex:none; background:var(--orange); color:#fff; border:none; border-radius:10px; padding:10px 16px; font-weight:700; font-size:13px; cursor:pointer;">שמור</button>
-              <sc-if value="{{ goalHasText }}" hint-placeholder-val="{{ false }}"><button onClick="{{ cancelGoal }}" style="flex:none; background:none; color:var(--muted); border:none; font-size:13px; cursor:pointer;">ביטול</button></sc-if>
+              <div style="flex:1; min-width:0; font-size:13px; color:var(--muted); line-height:1.5;">עוד לא הגדרת מטרה לבלוק. מגדירים אותה בפרטים האישיים.</div>
+              <button onClick="{{ openProfile }}" style="flex:none; background:var(--card); color:var(--blue); border:1.5px solid var(--blue); border-radius:999px; padding:8px 14px; font-weight:700; font-size:12.5px; cursor:pointer;">👤 לפרטים האישיים</button>
             </div>
           </sc-if>
           <sc-if value="{{ goalShowing }}" hint-placeholder-val="{{ false }}">
@@ -1102,7 +1106,6 @@
                 <div dir="auto" style="font-weight:700; font-size:15px; {{ goalTextStyle }}">{{ goalText }}</div>
               </div>
               <button onClick="{{ toggleGoalDone }}" style="{{ goalDoneStyle }}">{{ goalDoneLabel }}</button>
-              <button onClick="{{ editGoal }}" title="עריכת המטרה" style="flex:none; background:var(--chip); color:var(--muted); border:none; border-radius:8px; width:30px; height:30px; font-size:13px; cursor:pointer;">✎</button>
             </div>
           </sc-if>
         </div>
@@ -1119,7 +1122,6 @@
               <button onClick="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" style="{{ c.miniStyle }}">
                 <span style="font-size:10px; font-weight:700; opacity:.85; letter-spacing:.03em;">{{ c.dow }}</span>
                 <span style="font-family:'Oswald',sans-serif; font-weight:600; font-size:15px;">{{ c.dnum }}</span>
-                <span style="font-size:13px; line-height:1; min-height:14px;">{{ c.icon }}</span>
               </button>
             </sc-for>
           </div>
@@ -1495,7 +1497,7 @@
                 </div>
 
                 <div style="grid-column:1 / -1;">{{ saveBar }}</div>
-                <div style="grid-column:1 / -1;"><button onClick="{{ openShareDay }}" style="width:100%; background:var(--card); color:var(--blue); border:1px solid var(--blue); border-radius:12px; padding:11px; font-weight:700; font-size:14px; cursor:pointer;">📤 שתף את האימון כתמונה</button></div>
+                <sc-if value="{{ dayHasEntry }}" hint-placeholder-val="{{ false }}"><div style="grid-column:1 / -1;"><button onClick="{{ openShareDay }}" style="width:100%; background:var(--card); color:var(--blue); border:1px solid var(--blue); border-radius:12px; padding:11px; font-weight:700; font-size:14px; cursor:pointer;">📤 שתף את האימון כתמונה</button></div></sc-if>
               </div>
             </div>
           </sc-if>
@@ -1796,6 +1798,23 @@
             <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">גיל</div><div style="font-weight:700; font-size:16px; color:var(--ink);">{{ profileAge }}</div></div>
             <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">סה"כ אימונים</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--blue);">{{ profileTotalWorkouts }}</div></div>
             <div style="background:var(--log); border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:var(--muted);">רצף הכי ארוך · ימים</div><div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--orange);">{{ profileBestStreak }}</div></div>
+          </div>
+          <div style="background:var(--log); border-radius:12px; padding:12px 14px; margin-bottom:18px;">
+            <div style="font-size:11px; color:var(--muted); margin-bottom:6px;">🎯 המטרה שלי לבלוק</div>
+            <sc-if value="{{ goalEditing }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; gap:6px; align-items:center;">
+                <input dir="auto" value="{{ goalDraft }}" onChange="{{ onGoalDraft }}" placeholder="למשל: להוציא Muscle-up ראשון" style="flex:1; min-width:0; border:1px solid var(--line); border-radius:10px; padding:9px 11px; font-size:15px; background:var(--field); color:var(--ink); outline:none;">
+                <button onClick="{{ saveGoal }}" style="flex:none; background:var(--orange); color:#fff; border:none; border-radius:10px; padding:9px 13px; font-weight:700; font-size:13px; cursor:pointer;">שמור</button>
+                <sc-if value="{{ goalHasText }}" hint-placeholder-val="{{ false }}"><button onClick="{{ cancelGoal }}" style="flex:none; background:none; color:var(--muted); border:none; font-size:13px; cursor:pointer;">ביטול</button></sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{ goalShowing }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; gap:8px; align-items:center;">
+                <div dir="auto" style="flex:1; min-width:0; font-weight:700; font-size:15px; {{ goalTextStyle }}">{{ goalText }}</div>
+                <button onClick="{{ editGoal }}" title="עריכת המטרה" style="flex:none; background:var(--chip); color:var(--muted); border:none; border-radius:8px; width:30px; height:30px; font-size:13px; cursor:pointer;">✎</button>
+              </div>
+              <div style="font-size:11px; color:var(--muted); margin-top:4px;">{{ goalLabel }}</div>
+            </sc-if>
           </div>
           <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px;">
             <span style="font:600 10px/1 'Oswald'; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);">🎖️ תגים</span>
@@ -2126,19 +2145,6 @@ class Component extends DCLogic {
       if (this._prSeen[k]) return; this._prSeen[k] = 1;
       this.celebrate('שיא חדש! 🏆', (x.lift.movement || '').split('—')[0].trim() + ' · ' + w + ' ק"ג (הקודם: ' + best + ')');
     }, 1400);
-  }
-  // Which kind of day the week strip / map shows (v3 icons).
-  dayIcon(day) {
-    if (!day) return '';
-    if (day.rest && !this.dayComplete(day)) return '🛌';
-    const isTest = (x) => !!x && /capacitest/i.test((x.lift && x.lift.movement || '') + ' ' + (x.metcon && x.metcon.name || '') + ' ' + ((x.extras||[]).map(e=>e && e.name || '').join(' ')));
-    if (isTest(day)) return '🧪';
-    if (day.alt && day.alt.done && !day.done) return '🚴';
-    if (day.lift && day.lift.movement) return '🏋️';
-    if (day.metcon && (day.metcon.name || (day.metcon.movements||[]).some(m=>m && m.name))) return '⏱️';
-    if (day.alt && this.dayHasPlan(day.alt)) return '🚴';
-    if ((day.extras||[]).some(e=>e && (e.name||e.detail))) return '➕';
-    return '';
   }
   // Level the athlete worked at (L1-L4), saved on the SESSION (day.level /
   // alt.level) — v3, per Ori: one level per workout, kept with the result so
@@ -2846,7 +2852,7 @@ class Component extends DCLogic {
      scroll the card rather than the (locked) page. Pure DOM styling - nothing
      here touches state, the tracker, or the sync blob. */
   syncShareLock(unmounting) {
-    const want = !unmounting && !!this.state.shareOpen;
+    const want = !unmounting && !!(this.state.shareOpen || this.state.welcomeOpen || this.state.profileOpen);   // v3: the guide + profile card lock the page too (Ori, 07/09)
     if (want === !!this._shareLock) return;
     try {
       const html = document.documentElement;
@@ -3424,7 +3430,7 @@ class Component extends DCLogic {
 
     const thisWeekCells = data[cwi].days.map((day, di) => {
       const gi = cwi*7+di; const st = this.dayState(day);
-      return { wi: cwi, di, dow: this.dowShort[di], dnum: this.dateAt(gi).getDate(), icon: this.dayIcon(day), title: this.dowShort[di]+' '+this.dateStr(this.dateAt(gi)), miniStyle: this.miniStyle(st, gi===ti, this.isMissed(gi,day)) };
+      return { wi: cwi, di, dow: this.dowShort[di], dnum: this.dateAt(gi).getDate(), title: this.dowShort[di]+' '+this.dateStr(this.dateAt(gi)), miniStyle: this.miniStyle(st, gi===ti, this.isMissed(gi,day)) };
     });
     const curWeekDone = data[cwi].days.reduce((s,x)=>s+(x.done?1:0)+(x.alt&&x.alt.done?1:0),0);
 
@@ -3623,6 +3629,7 @@ class Component extends DCLogic {
       // goal card (v3): stored on the athlete (profiles.goal via boot.js), not on the block
       goalEditing: this.state.goalEditing || !this.state.myGoal,
       goalShowing: !(this.state.goalEditing || !this.state.myGoal),
+      goalMissing: !this.state.myGoal,
       goalDraft: this.state.goalDraft,
       goalHasText: !!this.state.myGoal,
       onGoalDraft: (e)=>this.setState({ goalDraft: e.target.value }),
@@ -3671,6 +3678,7 @@ class Component extends DCLogic {
       toggleMetcon: ()=>this.toggleBlock(bkey('metcon'), metconOpen),
       toggleMetcon2: ()=>this.toggleBlock(bkey('metcon2'), metcon2Open),
       toggleExtra: ()=>this.toggleBlock(bkey('extra'), extraOpen),
+      dayHasEntry: !!(day.done || this.liftLogged(day) || this.metconLogged(met) || this.metconLogged(met2)),   // share-as-image only after something was entered (Ori, 07/09)
       liftMissing: !fut && !otherDone && !day.done && this.liftPresent(day) && !this.liftLogged(day),
       metconMissing: !fut && !otherDone && !day.done && this.metconPresent(met) && !this.metconLogged(met),
       metcon2Missing: !fut && !otherDone && !day.done && this.metconPresent(met2) && !this.metconLogged(met2),

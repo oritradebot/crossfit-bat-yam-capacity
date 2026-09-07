@@ -1249,6 +1249,10 @@
       ".cfa-t.coach td.tests{font-size:11.5px;color:#c9d6f2}" +
       ".cfa-tog{background:transparent;border:1px solid #2e4a7d;color:#9fc2ff;border-radius:8px;padding:8px 12px;font:700 12px 'Heebo',sans-serif;cursor:pointer}" +
       ".cfa-tog.on{background:#2e4a7d;color:#fff}" +
+      ".cfa-views{display:flex;gap:6px;margin-bottom:12px}" +
+      ".cfa-view{flex:1;background:transparent;border:1px solid #2e4a7d;color:#9fc2ff;border-radius:10px;padding:9px 10px;font:800 13px 'Heebo',sans-serif;cursor:pointer}" +
+      ".cfa-view.on{background:#2e4a7d;color:#fff}" +
+      ".cfa-h3{font-size:14px;font-weight:800;margin:14px 0 6px;color:#eaf0ff}" +
       ".cfa-del{background:transparent;border:1px solid #e74c3c;color:#e74c3c;border-radius:6px;padding:5px 10px;font:700 11px 'Heebo',sans-serif;cursor:pointer}" +
       ".cfa-del:hover{background:#e74c3c;color:#fff}" +
       ".cfa-key{background:transparent;border:1px solid #4a90d9;color:#7ab8f5;border-radius:6px;padding:5px 10px;font:700 11px 'Heebo',sans-serif;cursor:pointer;margin-left:6px}" +
@@ -1298,8 +1302,10 @@
     ov.id = "cfbyAdminOv";
     ov.innerHTML =
       '<div class="cfa-box">' +
-        '<div class="cfa-head"><h2><span>👥</span> ניהול משתתפים</h2><button class="cfa-x" id="cfaX">✕ סגור</button></div>' +
-        '<div class="cfa-banner" id="cfaBkBanner" style="display:none"></div>' +
+        '<div class="cfa-head"><h2 id="cfaTitle"><span>👥</span> ניהול משתתפים</h2><button class="cfa-x" id="cfaX">✕ סגור</button></div>' +
+        '<div class="cfa-views"><button class="cfa-view on" id="cfaViewBtnPeople">👥 משתתפים</button><button class="cfa-view" id="cfaViewBtnApp">⚙️ ניהול האפליקציה</button></div>' +
+        '<p class="cfa-msg" id="cfaMsg"></p>' +
+        '<div id="cfaViewPeople">' +
         '<div class="cfa-banner blue" id="cfaTestBanner" style="display:none"></div>' +
         '<div class="cfa-add">' +
           '<div><label>שם משתמש (אנגלית)</label><input id="cfaU" class="ltr" placeholder="username"></div>' +
@@ -1307,6 +1313,17 @@
           '<div><label>סיסמה</label><input id="cfaP" class="ltr" placeholder="סיסמה"></div>' +
           '<button id="cfaAdd">+ הוסף</button>' +
         '</div>' +
+        '<div class="cfa-ann">' +
+          '<h3>📊 התקדמות המתאמנים</h3>' +
+          '<p class="sub">תמונת מצב של כל הרוסטר — נוכחות, שיאים, מטקוני RX ומבחנים. בלי מקומות ובלי ניקוד; מיון לפי שם. מתעדכן בכל פתיחת אפליקציה של המתאמן.</p>' +
+          '<div class="cfa-wrap" id="cfaCoach">טוען…</div>' +
+        '</div>' +
+        '<h3 class="cfa-h3">📋 כל המתאמנים הרשומים</h3>' +
+        '<p class="cfa-stat" id="cfaStat"></p>' +
+        '<div id="cfaList">טוען…</div>' +
+        '</div>' +
+        '<div id="cfaViewApp" style="display:none">' +
+        '<div class="cfa-banner" id="cfaBkBanner" style="display:none"></div>' +
         '<div class="cfa-tools">' +
           '<button class="cfa-bk" id="cfaBk">💾 גיבוי לקובץ</button>' +
           '<button class="cfa-bk" id="cfaRs">♻️ שחזור מגיבוי</button>' +
@@ -1353,14 +1370,7 @@
           '<p class="sub">כפתורי הבונה, ספריית התנועות ועריכת יום מוסתרים כברירת מחדל (v3). מפעילים רק במכשיר הזה, לשעת חירום.</p>' +
           '<div class="row"><button class="cfa-tog" id="cfaEditTog">🛠 מצב עריכה: כבוי</button><span class="cfa-annst" id="cfaEditSt"></span></div>' +
         '</div>' +
-        '<div class="cfa-ann">' +
-          '<h3>📊 התקדמות המתאמנים</h3>' +
-          '<p class="sub">תמונת מצב של כל הרוסטר — נוכחות, שיאים, מטקוני RX ומבחנים. בלי מקומות ובלי ניקוד; מיון לפי שם. מתעדכן בכל פתיחת אפליקציה של המתאמן.</p>' +
-          '<div class="cfa-wrap" id="cfaCoach">טוען…</div>' +
         '</div>' +
-        '<p class="cfa-msg" id="cfaMsg"></p>' +
-        '<p class="cfa-stat" id="cfaStat"></p>' +
-        '<div id="cfaList">טוען…</div>' +
       '</div>';
     document.body.appendChild(ov);
 
@@ -1928,7 +1938,19 @@
       if (b) { b.textContent = "🛠 מצב עריכה: " + (on ? "דולק" : "כבוי"); b.className = "cfa-tog" + (on ? " on" : ""); }
       if (st) st.textContent = on ? "כפתורי העריכה מוצגים באפליקציה במכשיר הזה" : "";
     }
-    function openPanel() {
+    // v3 (Ori, 07/09): two views — participants (add / progress / roster) and
+    // app management (backup, announcement, recap card, reset, edit mode).
+    function showView(v) {
+      var people = v !== "app";
+      document.getElementById("cfaViewPeople").style.display = people ? "" : "none";
+      document.getElementById("cfaViewApp").style.display = people ? "none" : "";
+      document.getElementById("cfaViewBtnPeople").className = "cfa-view" + (people ? " on" : "");
+      document.getElementById("cfaViewBtnApp").className = "cfa-view" + (people ? "" : " on");
+      document.getElementById("cfaTitle").innerHTML = people ? "<span>👥</span> ניהול משתתפים" : "<span>⚙️</span> ניהול האפליקציה";
+      amsg("");
+    }
+    function openPanel(view) {
+      showView(typeof view === "string" ? view : "people");
       ov.classList.add("open");
       document.documentElement.style.overflow = "hidden";
       bkInfo(); annStatus(); recapStatus(); wipeStatus(); editToolsRefresh(); refresh();
@@ -1961,6 +1983,8 @@
       if (annBox && annBox.scrollIntoView) annBox.scrollIntoView({ behavior: "smooth", block: "start" });
     };
     document.getElementById("cfaX").onclick = closePanel;
+    document.getElementById("cfaViewBtnPeople").onclick = function () { showView("people"); };
+    document.getElementById("cfaViewBtnApp").onclick = function () { showView("app"); };
     document.getElementById("cfaEditTog").onclick = function () {
       var on = rawGet(EDIT_KEY) !== "1";
       try { if (on) localStorage.setItem(EDIT_KEY, "1"); else localStorage.removeItem(EDIT_KEY); } catch (e) {}
@@ -1995,23 +2019,29 @@
     // The app's own "admin mode" (logo -> code "batyam") lives in this key.
     function appAdminMode() { try { return localStorage.getItem("cfby_admin") === "1"; } catch (e) { return false; } }
     function ensureTab() {
-      var existing = document.getElementById("cfbyAdminTab");
+      var existing = document.getElementById("cfbyAdminTab"), existing2 = document.getElementById("cfbyAdminTab2");
       // User management is only relevant inside the app's admin mode.
       if (!appAdminMode()) {
         if (existing) existing.remove();
+        if (existing2) existing2.remove();
         // close the panel if admin mode was just exited
         if (ov.classList.contains("open")) closePanel();
         return;
       }
-      if (existing) return;
+      if (existing && existing2) return;
       var guide = findGuideBtn();
       if (!guide) return;
-      var tab = document.createElement("button");
-      tab.id = "cfbyAdminTab"; tab.__cfbyTab = true;
-      tab.textContent = "👥 משתתפים";
-      tab.style.cssText = guide.style.cssText;           // match the guide button exactly
-      tab.onclick = openPanel;
-      guide.parentNode.insertBefore(tab, guide.nextSibling); // place it beside the guide
+      // two compact launchers (icon only — row 1 of the phone header is tight)
+      var mk = function (id, icon, title, view) {
+        var tab = document.createElement("button");
+        tab.id = id; tab.__cfbyTab = true;
+        tab.textContent = icon; tab.title = title;
+        tab.style.cssText = guide.style.cssText;           // match the guide button exactly
+        tab.onclick = function () { openPanel(view); };
+        return tab;
+      };
+      if (!existing2) guide.parentNode.insertBefore(mk("cfbyAdminTab2", "⚙️", "ניהול האפליקציה", "app"), guide.nextSibling);
+      if (!existing)  guide.parentNode.insertBefore(mk("cfbyAdminTab", "👥", "ניהול משתתפים", "people"), guide.nextSibling);
     }
     ensureTab();
     var mo = new MutationObserver(function () { ensureTab(); });
@@ -2052,11 +2082,13 @@
       ov.innerHTML =
         '<div class="box">' +
           '<h2>👋 בוא נכיר</h2>' +
-          '<p class="sub">פרטים לקטגוריית התחרות שלך</p>' +
+          '<p class="sub">כמה פרטים לפרופיל שלך</p>' +
           '<label>מין</label>' +
           '<div class="gwrap"><button class="g" data-g="male">זכר</button><button class="g" data-g="female">נקבה</button></div>' +
           '<label>תאריך לידה</label>' +
           '<input id="cfbyDob" type="date">' +
+          '<label>המטרה שלך לבלוק (לא חובה)</label>' +
+          '<input id="cfbyGoal" type="text" dir="auto" placeholder="למשל: להוציא Muscle-up ראשון" maxlength="120">' +
           '<button class="go" id="cfbyGo" disabled>המשך</button>' +
         '</div>';
       document.body.appendChild(ov);
@@ -2075,7 +2107,8 @@
       dob.oninput = refresh;
       go.onclick = function () {
         if (!gender || !dob.value) return;
-        var out = { gender: gender, birth_date: dob.value };
+        var goalEl = ov.querySelector("#cfbyGoal");
+        var out = { gender: gender, birth_date: dob.value, goal: (goalEl && goalEl.value || "").trim() };
         css.remove(); ov.remove();
         resolve(out);
       };
@@ -2242,8 +2275,17 @@
     if (!prof._err && (!prof.gender || !prof.birth_date)) {
       try {
         var got = await askProfileDetails();
-        await sb.from("profiles").upsert({ id: uid, gender: got.gender, birth_date: got.birth_date });
+        var up = { id: uid, gender: got.gender, birth_date: got.birth_date };
+        if (got.goal) up.goal = got.goal;
+        var upr = await sb.from("profiles").upsert(up);
+        // goal column not there yet (v3 ALTER pending): save the rest, keep the
+        // goal on the device — the seed below picks it up from prof.goal.
+        if (upr.error && got.goal && /goal/.test(upr.error.message || "")) {
+          goalColsMissing = true;
+          await sb.from("profiles").upsert({ id: uid, gender: got.gender, birth_date: got.birth_date });
+        }
         prof.gender = got.gender; prof.birth_date = got.birth_date;
+        if (got.goal) prof.goal = got.goal;
       } catch (e) { console.error("[onboarding]", e); }
     }
 
