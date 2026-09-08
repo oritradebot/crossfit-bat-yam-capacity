@@ -10,7 +10,7 @@ description: Embed a week of CrossFit workouts into the Capacity Tracker from Or
 ## שלב 1 · קריאת המקור
 
 ```
-C:\Users\leaan\Desktop\crossfit manager project\אימונים להטמעה\week N\
+C:\Users\leaan\Desktop\crossfit manager project\בלוק 2 אימונים להטמעה\WEEK N\      (בלוק 1: ...\בלוק 1 אימונים להטמעה\week N\)
 ```
 
 קובץ `.jpeg` אחד ליום, שמות בעברית:
@@ -37,9 +37,11 @@ C:\Users\leaan\Desktop\crossfit manager project\אימונים להטמעה\week
 
 ב-`public/app.html`:
 
-1. `programWeekN()` — מבנה מלא לפי `program.md §1`
+1. `programWeekN()` — מבנה מלא לפי `program.md §1`. **מבלוק 2:** הפונקציה כבר קיימת ומחזירה
+   `this.blankWeek()` (שבוע ריק במפורש) — מחליפים את הגוף בתוכן. **לא נוגעים ב-`demoWeekN()`** (בלוק 1, לדמו).
 2. `overlay(N-1, this.programWeekN())` ב-`applyProgram()` (~שורה 2424)
 3. **`resultMode` לכל מטקון** — טבלת ההחלטה ב-`program.md §2`. במקרה גבולי — שאל.
+3ב. **בריף יומי** — הכותרת "Brief" בצילום נכנסת ל-`brief` של היום, מילה במילה (מבלוק 2, אורי 07/09).
 4. **ימים ריקים במפורש:** אין lift ביום? `lift: { movement:'', planned:'' }`.
    פחות extras מהשבוע הקודם? הוסף `['','']`. (אחרת נשאר תוכן ישן אצל המשתמשים.)
 

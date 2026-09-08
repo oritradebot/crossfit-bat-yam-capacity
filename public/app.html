@@ -579,7 +579,8 @@
      slot: { wi, di, src }
        src 'lift.weight' | 'lift.reps' | 'metcon' | 'metcon2' | 'extra0' | 'extra1'
      ====================================================================== */
-  var CAPACITESTS = [
+  // BLOCK 1 tests — kept for /demo only (window.cfbyDemo). See testList().
+  var CAPACITESTS_BLOCK1 = [
     { key: 'squat',
       name: 'Back Squat — שלשה כבדה',
       short: 'כוח רגליים',
@@ -613,6 +614,21 @@
       retest: null                                    // no re-measure in W8
     }
   ];
+  // BLOCK 2 (Ori, 07/09/2026): the Sunday 4 x 10 Back Squat is the block's
+  // test and it repeats EVERY WEEK — a `weekly` slot instead of base/retest:
+  // measured on day `di` of each week; the first measured week is the
+  // "before", the latest measured week after it is the "after", and the
+  // in-app screen also lists every week's value. More tests arrive per embed.
+  var CAPACITESTS_BLOCK2 = [
+    { key: 'squat10',
+      name: 'Back Squat — 4 x 10 (מבחן שבועי)',
+      short: 'עשיריות בק סקוואט · כל יום ראשון',
+      unit: 'ק"ג',
+      betterWhen: 'higher',
+      weekly: { di: 0, src: 'lift.weight' }
+    }
+  ];
+  function testList() { return global.cfbyDemo ? CAPACITESTS_BLOCK1 : CAPACITESTS_BLOCK2; }
 
   /* ---- value readers ---------------------------------------------------- */
   function dayAt(app, wi, di) {
@@ -663,15 +679,35 @@
     return m + ':' + (s < 10 ? '0' : '') + s;
   }
 
+  /* ---- weekly tests (block 2) ---------------------------------------------
+     One value per week (same day, same reader). The slots a weekly test
+     exposes to the card are the first measured week and the latest one.   */
+  function weeklyPoints(app, t) {
+    var pts = [];
+    for (var wi = 0; wi < 8; wi++) {
+      var r = readSlot(app, { wi: wi, di: t.weekly.di, src: t.weekly.src }, t);
+      pts.push(r ? { wi: wi, v: r.v, text: r.text, short: (t.weekly.src === 'lift.weight' ? trimNum(r.v) : r.text), ltr: !!r.ltr } : null);
+    }
+    return pts;
+  }
+  function testSlots(app, t) {
+    if (!t.weekly) return { base: t.base || null, retest: t.retest || null };
+    var m = weeklyPoints(app, t).filter(Boolean);
+    var first = m[0] || null, last = m.length > 1 ? m[m.length - 1] : null;
+    var slot = function (p) { return p ? { wi: p.wi, di: t.weekly.di, src: t.weekly.src } : null; };
+    return { base: slot(first), retest: slot(last) };
+  }
+
   /* ---- one graph row ----------------------------------------------------
      pct = value / max(before, after) — computed per row, so each test owns
      its own scale. On a timed test the slower time is the full bar.         */
   function buildTest(app, t) {
-    var b = readSlot(app, t.base, t);
+    var S = testSlots(app, t);
+    var b = readSlot(app, S.base, t);
     if (!b) return null;                       // never baselined -> not on the card at all
-    var a = readSlot(app, t.retest, t);
+    var a = readSlot(app, S.retest, t);
     var row = {
-      key: t.key, name: t.name, short: t.short, betterWhen: t.betterWhen,
+      key: t.key, name: t.name, short: t.short, betterWhen: t.betterWhen, weekly: !!t.weekly,
       before: b.text, after: a ? a.text : '',
       ltrValues: !!b.ltr,
       beforePct: 100, afterPct: 0, delta: '', deltaAbs: '', gain: null
@@ -859,7 +895,7 @@
     var rx = rxCount(app);
     var hard = hardCount(app);
     var goal = { text: String(app.state.myGoal || '').trim(), done: !!app.state.myGoalDone };
-    var tests = CAPACITESTS.map(function (t) { return buildTest(app, t); }).filter(Boolean);
+    var tests = testList().map(function (t) { return buildTest(app, t); }).filter(Boolean);
     var measured = tests.filter(function (t) { return t.after; });
     var improved = measured.filter(function (t) { return t.gain > 0; });
 
@@ -880,7 +916,7 @@
                pct: champ.betterWhen === 'lower' ? ('-' + Math.round(champ.gain * 100) + '%') : ('+' + Math.round(champ.gain * 100) + '%'),
                lead: 'הקפיצה של הבלוק', leadShort: 'הקפיצה של הבלוק',
                label: champ.name, before: champ.before, after: champ.after,
-               unit: (CAPACITESTS.find(function (t) { return t.key === champ.key; }) || {}).unit || '' };
+               unit: (testList().find(function (t) { return t.key === champ.key; }) || {}).unit || '' };
     }
 
     // Edge case 1: when not everything was re-measured the pill reports the
@@ -910,7 +946,8 @@
   }
 
   global.BlockRecap = {
-    build: build, tests: CAPACITESTS,
+    build: build, get tests() { return testList(); },
+    _slots: testSlots, _points: weeklyPoints,
     gateState: gateState, isOpen: isOpen,
     // v3 (07/09): the in-app tests screen (שיאים ומבחנים) reuses the same
     // rows the card draws — one config, one reader, one delta rule.
@@ -1241,6 +1278,11 @@
                     <div dir="auto" style="font-family:'Oswald',sans-serif; font-weight:700; font-size:20px; {{ t.aStyle }}">{{ t.after }}</div>
                   </button>
                 </div>
+                <sc-if value="{{ t.hasSeries }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:8px; direction:ltr;">
+                    <sc-for list="{{ t.series }}" as="s" hint-placeholder-count="8"><span style="{{ s.style }}">{{ s.txt }}</span></sc-for>
+                  </div>
+                </sc-if>
               </div>
             </sc-for>
           </div>
@@ -1385,6 +1427,15 @@
                 </div>
               </sc-if>
 
+              <sc-if value="{{ hasBrief }}" hint-placeholder-val="{{ false }}">
+                <div style="border:1px solid var(--line); border-inline-start:4px solid var(--orange); border-radius:14px; background:var(--card); padding:12px 16px; margin-bottom:14px;">
+                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                    <span style="font-size:15px;">📣</span>
+                    <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:14px; letter-spacing:.06em; color:var(--navy);">בריף יומי</span>
+                  </div>
+                  <div dir="auto" style="font-size:14px; line-height:1.65; white-space:pre-line; color:var(--ink);">{{ briefText }}</div>
+                </div>
+              </sc-if>
               <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; align-items:start;">
                 <sc-if value="{{ vShowLift }}" hint-placeholder-val="{{ true }}">
                   <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card);">
@@ -1531,6 +1582,14 @@
 
           <sc-if value="{{ editMode }}" hint-placeholder-val="{{ false }}">
             <div style="padding:8px 20px 24px;">
+              <div style="margin-top:18px;">
+                <div style="display:flex; align-items:center; gap:9px; margin-bottom:12px;">
+                  <span style="width:4px; height:20px; background:var(--orange); border-radius:3px;"></span>
+                  <span style="font-size:17px;">📣</span>
+                  <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.06em;">בריף יומי</span>
+                </div>
+                {{ briefField }}
+              </div>
               <div style="margin-top:18px;">
                 <div style="display:flex; align-items:center; gap:9px; margin-bottom:12px;">
                   <span style="width:4px; height:20px; background:var(--blue); border-radius:3px;"></span>
@@ -1958,7 +2017,8 @@ class Component extends DCLogic {
   dowShort = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];   // v3: Hebrew day letters everywhere the strip / map / chips label a day
   // Demo mode (boot.js sets window.cfbyDemo): the calendar is anchored so
   // "today" falls in week 8 — see demoMain in boot.js.
-  startDate = (typeof window !== 'undefined' && window.cfbyDemo && window.cfbyDemo.startDate) || new Date(2026, 6, 12);
+  // Block 2 starts Sunday 06/09/2026 (Ori, 07/09). Block 1 was 12/07/2026.
+  startDate = (typeof window !== 'undefined' && window.cfbyDemo && window.cfbyDemo.startDate) || new Date(2026, 8, 6);
   // Block number (Ori, 07/09): Roman at the very top of the page ("BLOCK II")
   // and stamped on the PR ledger — a record carried over from an earlier block
   // keeps its own label ("BLOCK I") until this block beats it. Bump per block.
@@ -1981,7 +2041,7 @@ class Component extends DCLogic {
 
   emptyDay() {
     const mc = () => ({ name:'', scheme:'', score:'', note:'', result:'', resultMode:'', rx:false, scaled:false, log:{ mode:'time', time:'', rounds:'', reps:'', amount:'', note:'', scaled:'' }, movements:[{name:'',detail:''},{name:'',detail:''},{name:'',detail:''},{name:'',detail:''}] });
-    return { done:false, rest:false, rating:'', pr:false, level:'',
+    return { done:false, rest:false, rating:'', pr:false, level:'', brief:'',
       lift:{ movement:'', planned:'', result:'', log:{ weight:'', reps:'', note:'' } },
       metcon: mc(), metcon2: mc(),
       extras:[{name:'',detail:'',result:'',log:{text:''}},{name:'',detail:'',result:'',log:{text:''}}],
@@ -2117,7 +2177,35 @@ class Component extends DCLogic {
     return weeks;
   }
 
-  PROGRAM_VERSION = 32;
+  PROGRAM_VERSION = 34;
+  // /demo runs block 1 program (demoWeekN) with its own per-day config maps
+  // below; the live maps under it belong to the CURRENT block and start
+  // empty - every /embed-week adds that week entries (program.md section 3).
+  IS_DEMO = !!(typeof window !== 'undefined' && window.cfbyDemo);
+  DEMO_MAPS = {
+    PER_SET_LIFT: {
+      '0_0': 8, '0_1': 8, '0_3': 4, '0_5': 10,
+      '1_0': 6, '1_1': 6, '1_2': 5, '1_3': 4, '1_5': 10,
+      '2_0': 6, '2_1': 6, '2_2': 4, '2_4': 6, '2_5': 10,
+      '3_0': 7, '3_1': 9, '3_2': 5, '3_4': 6, '3_5': 10, '3_6': 4,
+      '4_0': 5, '4_1': 6, '4_2': 5, '4_3': 5, '4_4': 7, '4_5': 6,
+      '5_0': 8, '5_1': 6, '5_2': 6, '5_4': 8, '5_5': 8, '5_6': 4,
+      '6_0': 6, '6_1': 8, '6_2': 6, '6_3': 5, '6_5': 5,
+      '7_0': 8, '7_1': 6, '7_4': 8, '7_5': 8
+    },
+    PER_MOVE_METCON: { '3_4': ['metcon'], '4_2': ['metcon'] },
+    PER_MOVE_BOXES: { '4_2': { 'metcon': ['Burpees','Power cleans (kg)','Max T2B','Shuttle Runs'] } },
+    PER_MOVE_SCORE: { '4_2': { 'metcon': { box:3, label:'סך ה-T2B' } } },
+    METCON_AMOUNT_LABEL: {
+      '4_0': { 'metcon':'כמות חזרות', 'alt.metcon2':'כמות חזרות' },
+      '7_2': { 'metcon':'סך הדאבלים (DU)', 'metcon2':'ממוצע חזרות לדקה' },
+      '7_3': { 'metcon':'כמות חזרות' }
+    },
+    METCON_RX_NOTE: { '4_0': {
+      'metcon':'RX = קפיצות כפולות (DU) · הזנה ללא לחיצה על RX = קפיצות יחידות (SU)',
+      'alt.metcon2':'RX = קפיצות כפולות (DU) · הזנה ללא לחיצה על RX = קפיצות יחידות (SU)'
+    } },
+  };
   // ---- richer result entry (13/08, per Ori; piloted on 06/08) ------------
   // PER_SET_LIFT['weekIdx_dayIdx'] = set count: the LIFT logs a weight per
   // set (log.s1..sN); the heaviest set is mirrored into log.weight, which is
@@ -2131,30 +2219,34 @@ class Component extends DCLogic {
   // '4_3' = 5 of 10 strict press, '5_6' = 4 of 8 rows).
   // Days with no barbell weight to log (gymnastics EMOMs, DB play/bench days,
   // team/carry days) keep the single weight field and are absent here.
-  PER_SET_LIFT = {
-    '0_0': 8, '0_1': 8, '0_3': 4, '0_5': 10,
-    '1_0': 6, '1_1': 6, '1_2': 5, '1_3': 4, '1_5': 10,
-    '2_0': 6, '2_1': 6, '2_2': 4, '2_4': 6, '2_5': 10,
-    '3_0': 7, '3_1': 9, '3_2': 5, '3_4': 6, '3_5': 10, '3_6': 4,
-    '4_0': 5, '4_1': 6, '4_2': 5, '4_3': 5, '4_4': 7, '4_5': 6,
-    '5_0': 8, '5_1': 6, '5_2': 6, '5_4': 8, '5_5': 8, '5_6': 4,
-    '6_0': 6, '6_1': 8, '6_2': 6, '6_3': 5, '6_5': 5,
-    '7_0': 8, '7_1': 6, '7_4': 8, '7_5': 8
+  PER_SET_LIFT = this.IS_DEMO ? this.DEMO_MAPS.PER_SET_LIFT : {
+    // W1 (07/09): 4 x 10 squats · 8-set snatch complex · 6-set C&J complex · 6 x 2 power cleans · OHS build-to-heavy = 8 open boxes
+    '0_0': 4, '0_1': 8, '0_2': 6, '0_4': 6, '0_5': 8
   };
   // PER_MOVE_METCON: these metcon bases log a result per movement
   // (log.mv1..mvN) and the board-score input stays locked until every
   // movement has one. '3_4' = the 06/08 pilot; '4_2' added 28/08 (per Ori).
-  PER_MOVE_METCON = { '3_4': ['metcon'], '4_2': ['metcon'] };
+  PER_MOVE_METCON = this.IS_DEMO ? this.DEMO_MAPS.PER_MOVE_METCON : { '0_2': ['metcon'] };
   // PER_MOVE_BOXES (28/08, per Ori): custom box lists for per-movement days
   // whose boxes aren't 1:1 with the movement list (one movement can yield two
   // numbers). Labels in order → log.mv1..mvN; days absent here keep deriving
   // one box per movement name.
-  PER_MOVE_BOXES = { '4_2': { 'metcon': ['Burpees','Power cleans (kg)','Max T2B','Shuttle Runs'] } };
+  PER_MOVE_BOXES = this.IS_DEMO ? this.DEMO_MAPS.PER_MOVE_BOXES : {
+    // W1: every PER_MOVE_SCORE day lists its boxes here too (mirrorPmScore also falls back to the movement list since 08/09)
+    '0_0': { 'metcon': ['Cal Row','Chest to bar pull ups','Max Handstand push ups'] },
+    '0_2': { 'metcon': ['Bike (cals)','Burpees over cones','Power cleans'] },
+    '0_3': { 'metcon': ['Double unders','Kettlebell swings','V-Ups','Max Wallwalks'] }
+  };
   // PER_MOVE_SCORE: on these days the board score (log.amount) MIRRORS box
   // #box once ALL boxes are filled — the LIFT heaviest-set trick — so there
   // is no separate score entry. Clearing any box clears the score, which
   // keeps the save gate enforcing the full breakdown.
-  PER_MOVE_SCORE = { '4_2': { 'metcon': { box:3, label:'סך ה-T2B' } } };
+  PER_MOVE_SCORE = this.IS_DEMO ? this.DEMO_MAPS.PER_MOVE_SCORE : {
+    // W1: the declared score is one of the per-movement totals — mirror it, no second entry
+    '0_0': { 'metcon': { box:3, label:'סך ה-HSPU' } },
+    '0_2': { 'metcon': { box:3, label:'סך הפאוור קלינים' } },
+    '0_3': { 'metcon': { box:4, label:'סך ה-Wallwalks' } }
+  };
   // METCON_AMOUNT_LABEL / METCON_RX_NOTE (28/08, per Ori): amount-mode days
   // whose board score is a rep count label the input as such (instead of the
   // generic מ׳/קל׳), and days where RX has a specific meaning spell it out
@@ -2163,15 +2255,12 @@ class Component extends DCLogic {
   // Resolved at render time like the pilot maps above — no state fields, no
   // PROGRAM_VERSION bump; logs stay under log.amount so closed-week results
   // keep scoring.
-  METCON_AMOUNT_LABEL = {
-    '4_0': { 'metcon':'כמות חזרות', 'alt.metcon2':'כמות חזרות' },
-    '7_2': { 'metcon':'סך הדאבלים (DU)', 'metcon2':'ממוצע חזרות לדקה' },
-    '7_3': { 'metcon':'כמות חזרות' }
+  METCON_AMOUNT_LABEL = this.IS_DEMO ? this.DEMO_MAPS.METCON_AMOUNT_LABEL : {
+    '0_0': { 'metcon':'סך ה-HSPU', 'alt.metcon':'סך הברפיז' },
+    '0_2': { 'metcon':'סך הפאוור קלינים' },
+    '0_3': { 'metcon':'סך ה-Wallwalks' }
   };
-  METCON_RX_NOTE = { '4_0': {
-    'metcon':'RX = קפיצות כפולות (DU) · הזנה ללא לחיצה על RX = קפיצות יחידות (SU)',
-    'alt.metcon2':'RX = קפיצות כפולות (DU) · הזנה ללא לחיצה על RX = קפיצות יחידות (SU)'
-  } };
+  METCON_RX_NOTE = this.IS_DEMO ? this.DEMO_MAPS.METCON_RX_NOTE : {};
   pilotKey() { return this.state.selWeek + '_' + this.state.selDay; }
   perSetCount() { return this.state.activeSession==='alt' ? 0 : (this.PER_SET_LIFT[this.pilotKey()] || 0); }
   // v3 (07/09, Ori: "קפדני בכל מקום"): every main-session metcon with two or
@@ -2446,7 +2535,87 @@ class Component extends DCLogic {
     this.save(d); this.setState({ data:d });
   }
   metconCfg(map, base) { const c = map[this.pilotKey()]; return (c && c[(this.state.activeSession==='alt'?'alt.':'')+base]) || ''; }
+  // ======================================================================
+  // BLOCK 2 program (from 07/09/2026). Week N is embedded with /embed-week
+  // before it starts; until then it is EXPLICITLY blank: applyProgram only
+  // touches keys that exist in the source (program.md, trap #1), so a blank
+  // week must spell out every field ('') to wipe a device that still carries
+  // last block's program. A blank week renders as COMING SOON.
+  // ======================================================================
+  blankWeek() {
+    const d = () => ({ brief:'', lift:{ movement:'', planned:'' }, metcon:{}, metcon2:{}, extras:[['',''],['','']] });
+    const w = {}; for (let i = 0; i < 7; i++) w[i] = d();
+    w[0].alt = d();   // Sunday endurance slot, cleared too
+    return w;
+  }
   programWeek1() {
+    // WEEK 1 · 06/09-12/09/2026 (block 2) — from Ori's screenshots 07/09.
+    // Saturday was not sent yet: day 6 stays explicitly blank (COMING SOON).
+    const w = this.blankWeek();
+    w[0] = {
+      brief: 'שבוע חדש, בלוק חדש, ואתגר חדש: עשיריות בק סקוואט שאנחנו הולכים לפגוש בכל שבוע.\nנתחיל כבר היום 😉',
+      lift: { movement:'Back Squat — 4 x 10 (Weekly Test)', planned:'Every 3:00 for 4 sets:\n10 reps @65-70% of your Back Squat 3RM\n\nDon\'t have that number, or don\'t trust it? @55-60% of the 1RM you think you own.\nAll four sets the same weight. Pick the one you can finish, not the one you can start.' },
+      metcon: { name:'2:00 On / 1:00 Off x 4', scheme:'4 intervals · 2:00 work / 1:00 rest', score:'Total HSPU', resultMode:'amount', note:'L1 = 12/9 cals, 5-10 pull ups, pike push ups\nL2 = 14/11 cals, 10 C2B\nL3 = 18/14 cals, 14 C2B\n\nScore — total HSPU.\nGoal — aggressive but conservative row, unbroken pull ups, and 20 seconds + for HSPU.', movements:[['Cal Row',''],['Chest to bar pull ups',''],['Max Handstand push ups','remaining time']] },
+      metcon2: {},
+      extras: [['Capacity Extra','3 sets:\nMax effort deadhang\ninto\n8+8 Gorilla rows @moderate\nRest 60-90s\n\nAdd weight to the deadhang if you can (vest or weights on a belt).'],['','']],
+      alt: {
+        lift: { movement:'', planned:'' },
+        metcon: { name:'3:00 On / 1:00 Off x 4 (Endurance)', scheme:'4 intervals · 3:00 work / 1:00 rest', score:'Total burpees', resultMode:'amount', note:'הזינו את סך הברפיז מארבעת הסבבים.', movements:[['Run','200'],['Wall Balls','15'],['Max Burpee OT Line','remaining time']] },
+        metcon2: { name:'METCON-B — Row 1600 / 1000 / 800', scheme:'Row 1600 · 1000 · 800 · Rest 2.5 min', score:'Total row time', resultMode:'time', note:'Row:\n1600\n1000\n800\nRest 2.5 min\n\nהזינו את זמן החתירה הכולל (בלי המנוחות).', movements:[['Row','1600'],['Row','1000'],['Row','800']] },
+        extras: [['',''],['','']]
+      }
+    };
+    w[1] = {
+      brief: 'יום שני הטכני - עם אימון סנאץ מלא מקצה לקצה: מעבודת פוזיציות חשובה, ועד עבודה מהירה עם מוט קל יותר.',
+      lift: { movement:'Snatch + Hang Snatch', planned:'Every 1:30 x 8 sets:\n1 Snatch\n1 Hang snatch (above knee)\n\nSets 1-3 — 65-70%\nSets 4-6 — 70-73%\nSets 7-8 — 73-76%\n\nSquat snatches are preferred.\nNo 1RM? Build by feel — heavy-ish and still fast.' },
+      metcon: { name:'4 Rounds For Time', scheme:'4 Rounds For Time · Cap 15:00', score:'Time', resultMode:'time', note:'L1 = 8 BJO, @30/20kg\nL2 = 10 BJO, @35/25kg\nL3 = 12 BJO, @40/30kg, optional 5th round\n\nScore — time for the 4 rounds.\nנעצרתם בקאפ? הזינו 15:00 והוסיפו בהערה איפה עצר אתכם השעון.', movements:[['Run','200m'],['Box jump overs','8-12 by level'],['Power snatches','12']] },
+      metcon2: {},
+      extras: [['Capacity Extra','Every 90 seconds for 8 sets, alternate:\n5 Sandbag over the shoulder @building\n5 Bench presses (pause the first rep if possible)\n\nNo sandbag? Heavy DB from the floor to the shoulder, or a D-ball.'],['','']]
+    };
+    w[2] = {
+      brief: 'קומפלקס מצוין של קלין וג׳רק שיוביל אותנו גם לעבודת תחנות ואינטרוולים עם מוט לא קל. תנו גז היום - יש לנו מעט מאוד זמן בכל תחנה.',
+      lift: { movement:'Clean & Jerk Complex', planned:'Every 2:00 x 6 sets:\n1 Power clean\n1 Hang squat clean (above knee)\n1 Jerk (of choice)\n\n2 sets @6RPE\n2 sets @7RPE\n2 sets @8RPE' },
+      metcon: { name:'In Teams of 4 — Stations', scheme:'4 stations · 30 seconds rest, 15 seconds transition (teams of 4)', score:'Total power cleans', resultMode:'amount', note:'Stations:\nBike\nBurpees over cones\nPower cleans\nRest\n\nמשקלים מומלצים:\nL1 = 40/30kg\nL2 = 60/40kg\nL3 = 70/45kg\n\nיוצא שהתחנה האחרונה היא 1:15 של מנוחה ברצף. בכל תחנה - עובדים הכי מהר שאפשר.\nמסדרים שורה של קונוסים (טיפה גבוהים, אם יש. לא השטוחים) ומבצעים את הברפיז מעליהם. המוטות יהיו במרחק בטוח משם בהמשך הרחבה.\nהזינו את סך הפאוור קלינים מכל האימון.', movements:[['Bike',''],['Burpees over cones',''],['Power cleans','']] },
+      metcon2: {},
+      extras: [['Capacity Extra','Every 90 seconds for 4 sets:\n3 Clean pulls\n\nYou can perform them as \'floating clean pulls\'.\nHeavier than your top complex.\nFinish the pull before the arms think about working.\n\ninto\n\n3 sets:\n30 seconds Front rack hold @heavy (start from rack)\ninto\n10-15 Banded face pulls\nRest 60s'],['','']]
+    };
+    w[3] = {
+      brief: 'תרגול סקיל היום כחלק ראשון, ועבודה אירובית ארוכה ללא מנוחות כחלק שני. נסו להרוויח מעל דקה לעבודה על הקיר/ידיים בכל פעם.',
+      lift: { movement:'Handstand work — Skill 15:00', planned:'Advanced — Handstand walk, 5 attempts of 5-10m\nIntermediate — Wall facing hold, 5 sets of 20-30s\nBeginner — Slow wall walks, 5 sets of 3, 3s hold at the top' },
+      metcon: { name:'Every 5:00 for 15:00', scheme:'Every 5:00 for 15:00', score:'Total wallwalks', resultMode:'amount', note:'L1 = 12/8kg, 20 DU or 20s practice\nL2 = 20/12kg, 40 DU\nL3 = 24/16kg, 60 DU\n\nScore — total wallwalks.', movements:[['Double unders',''],['Kettlebell swings','15'],['V-Ups','15'],['Max Wallwalks','remaining time']] },
+      metcon2: {},
+      extras: [['BY Extra','3 rounds:\n10 Single arm DB row (each side)\ninto\n10 Tempo push ups (3s down)\ninto\n12 Ring rows\nRest 60-90s\n\ninto\n\n3 rounds, no rush:\n10 Banded pull aparts\n10+10 Half kneeling DB press\n30s Side plank each side'],['','']]
+    };
+    w[4] = {
+      brief: 'אולי יום הכוח הכי מהנה שלנו השבוע - סט ארוך של קלינים, עם מעט מאוד מנוחה בין הסטים.\nעבודת דופק כלכך פשוטה שקשה להסתתר. תזכרו את התוצאה שאתם משיגים פה היום.',
+      lift: { movement:'Power Clean', planned:'Every 2:00 for 6 sets:\n2 Power cleans\nReset each rep.\n\n2 sets @6RPE\n2 sets @7RPE\n2 sets @8RPE' },
+      metcon: { name:'AMRAP 15:00', scheme:'AMRAP 15:00', score:'Total reps across', resultMode:'rounds', note:'Regular weight ball, DB, and box height.\n\nScore — total reps across.\nהזינו כמה סבבים (+חזרות) הושלמו (סבב = 35 חזרות).', movements:[['Wall balls','15'],['Single arm DB hang clean & jerks','10'],['Box jump @step down','10']] },
+      metcon2: {},
+      extras: [['Capacity Extra','Front Squat\nEvery 2:00 for 5 sets:\n3 reps, 3 seconds down on every rep.\n\n@60-65% of your Front squat max.\nNot heavy. The tempo is the load.'],['','']]
+    };
+    w[5] = {
+      brief: 'יום טכני מאוד, עם התנועה המורכבת והמאתגרת ביותר שיש לנו בלקסיקון.\nנמשיך אח״כ עם מטקון פשוט יותר. יש בו סקיל - ואנחנו ננסה לשמור אותו היום חלק ויפה.',
+      lift: { movement:'Overhead Squat — Heavy 3', planned:'In 14:00, build to a heavy set of 3.\nEvery 1:30-2:00.\nTake it from the rack.\n\nNo percentages — Climb by feel.' },
+      metcon: { name:'AMRAP 20:00', scheme:'AMRAP 20:00', score:'Total reps (10m = 1 rep)', resultMode:'rounds', note:'L1 = 300m, 10 BFB, 5-10 T2B\nL2 = 400m, 12 BFB, 12 T2B\nL3 = 500m, 15 BFB, 15 T2B\n\nScore — total reps (10m = 1 rep).\nהזינו כמה סבבים (+חזרות) הושלמו (סבב = 45-50 / 64 / 80 חזרות לפי הרמה, כל 10 מ׳ ריצה = חזרה).\nמכוונים היום לריצה לא מהירה מדי, ברפיז די מהירים, וסט גדול ואפילו רצוף על המתח!', movements:[['Run','300-500m by level'],['Bar facing burpees','10-15 by level'],['T2B','5-15 by level']] },
+      metcon2: {},
+      extras: [['Capacity Extra','Behind the neck jerk\nEvery 90 seconds for 6 sets:\n2 reps\n\n"Regular" narrow grip. Not a snatch grip.\nDip vertical. Make sure the bar goes up, not forward/backwards.\n\n*New to these? Stay light and split under it. The bar path is the whole point.\n\ninto\n\n3 rounds, no rush:\n10-12 Hip extensions\n10+10 Half-kneeling DB press\n30s Hollow hold'],['','']]
+    };
+    return w;
+  }
+  programWeek2() { return this.blankWeek(); }
+  programWeek3() { return this.blankWeek(); }
+  programWeek4() { return this.blankWeek(); }
+  programWeek5() { return this.blankWeek(); }
+  programWeek6() { return this.blankWeek(); }
+  programWeek7() { return this.blankWeek(); }
+  programWeek8() { return this.blankWeek(); }
+
+  // ======================================================================
+  // BLOCK 1 program (12/07 - 05/09/2026), kept verbatim for /demo ONLY: the
+  // demo's sample logs (DEMO_LOG) were written against these workouts. The
+  // real app never reads demoWeekN (see applyProgram).
+  // ======================================================================
+  demoWeek1() {
     return {
       0: {
         lift: { movement:'Back Squat — CapaciTest #1 (Baseline)', planned:'Build to a heavy set of 3, by feel.\nEvery 2:30 — add weight each set.\nSuggested jumps: 60-70-80-85-90% of your estimated 3RM, then smaller jumps.\n\nהמטרה: שלשה כבדה, גריינד טוב — אבל להשתדל להימנע מכשל.' },
@@ -2490,7 +2659,7 @@ class Component extends DCLogic {
       }
     };
   }
-  programWeek2() {
+  demoWeek2() {
     return {
       0: {
         lift: { movement:'Clean & Jerk Complex', planned:'Every 1:30 x 6 sets:\nSquat clean\nHang squat clean (below knee)\nJerk\n\nSets 1-2 — 68%\nSets 3-4 — 72%\nSets 5-6 — 75%\n\nPull fully, speed under. Jerk vertical, locked.' },
@@ -2535,7 +2704,7 @@ class Component extends DCLogic {
       }
     };
   }
-  programWeek3() {
+  demoWeek3() {
     return {
       4: {
         lift: { movement:'Power Clean + Hang Squat Clean', planned:'Every 2:00 for 6 sets:\nPower clean + Hang squat clean\n\n2 sets @65%\n2 sets @70%\n1 set @75%+\n1 set @80%+\n\nPower before squat → translate that pull into a perfect extension.' },
@@ -2581,7 +2750,7 @@ class Component extends DCLogic {
       }
     };
   }
-  programWeek4() {
+  demoWeek4() {
     return {
       0: {
         lift: { movement:'Clean & Jerk — Heavy Single Day', planned:'Every 2:00 x 7 sets:\nSets 1-2: Clean pull + Squat clean + Jerk @75%\nSets 3-7: C&J, climbing\n\n+Suggested climb — 80% → 85% → 90%\n\nNo misses — heavy means fast and made. Jerk of choice.' },
@@ -2625,7 +2794,7 @@ class Component extends DCLogic {
       }
     };
   }
-  programWeek5() {
+  demoWeek5() {
     return {
       0: {
         lift: { movement:'Back Squat', planned:'Every 3:00 for 5 sets:\nSets 1-2: 3 reps @80%\nSets 3-4: 2 reps @85%\nSet 5: 2 reps @88%+\n\nPercentages off your CapaciTest #1 3RM.\nהסקוואטים הכבדים ביותר בבלוק. המוט זז מהר או שאתם מפסיקים — לא גריינדים בשבוע כזה.\nלא בדקתם שלשה? 2 סטים @7.5RPE, 2 @8.5, 1 @9.' },
@@ -2670,7 +2839,7 @@ class Component extends DCLogic {
       }
     };
   }
-  programWeek6() {
+  demoWeek6() {
     return {
       0: {
         lift: { movement:'Clean & Jerk — Sharp Singles', planned:'Every 1:30-2:00 x 8 sets:\n3 Sets @75-78%\n5 Sets @80-88%\n\nIf a rep feels slow under the bar — don\'t add weight.\nאו לפי תחושה: שלושה סטים במאמץ 6-7 מתוך 10, וחמישה סטים במאמץ 8 מתוך 10.\nלא מחפשים היום מקסימום — מחפשים מהירות מתחת למוט.' },
@@ -2709,7 +2878,7 @@ class Component extends DCLogic {
       }
     };
   }
-  programWeek7() {
+  demoWeek7() {
     return {
       0: {
         lift: { movement:'Snatch + Hang Snatch', planned:'Every 2:00 x 6 sets:\nSnatch + Hang snatch\n\nBoth reps should be full snatches.\nThis is a back off week — so limit weight to 75-80%.\n\nשבוע אחרון לפני הטסטים — מורידים הילוך במשקלים, אבל לא בעבודה. הפוקוס הוא על מנחים, לא על מספרים.\nאו לפי תחושה: מאמץ של 7 מתוך 10, ולא מעבר לזה.\nאם שתי החזרות נראות אותו דבר במשקל הזה — השבוע הבא יהיה שבוע מעולה.' },
@@ -2752,7 +2921,7 @@ class Component extends DCLogic {
       }
     };
   }
-  programWeek8() {
+  demoWeek8() {
     return {
       0: {
         lift: { movement:'Back Squat — CapaciTest #1 (RETEST)', planned:'Build to a heavy set of 3, by feel.\nEvery 2:30-3:00 — add weight each set.\nSuggested jumps: 60-70-80-85-90% of your 3RM, then smaller jumps.\n\nשבוע מבדקים לפנינו — עם כמה חלקים חשובים מאוד שבהם נרצה למדוד איפה אנחנו עומדים.\nשימו לב לתוצאות מהשבוע של ה-12 ביולי: זה בדיוק אותו טסט.' },
@@ -2802,6 +2971,7 @@ class Component extends DCLogic {
     const fill = (day, src) => {
       if (!day || !src) return;
       if (src.lift) { day.lift.movement = src.lift.movement||''; day.lift.planned = src.lift.planned||''; }
+      if (src.brief != null) day.brief = String(src.brief || '');
       if (src.metcon) fillMetcon(day.metcon, src.metcon);
       if (src.metcon2) fillMetcon(day.metcon2, src.metcon2);
       if (src.extras) src.extras.forEach((e,i)=>{ if(i<2){ day.extras[i].name=e[0]||''; day.extras[i].detail=e[1]||''; } });
@@ -2814,14 +2984,17 @@ class Component extends DCLogic {
         if (src.alt) { if (!day.alt) day.alt = this.emptyDay(); fill(day.alt, src.alt); }
       });
     };
-    overlay(0, this.programWeek1());
-    overlay(1, this.programWeek2());
-    overlay(2, this.programWeek3());
-    overlay(3, this.programWeek4());
-    overlay(4, this.programWeek5());
-    overlay(5, this.programWeek6());
-    overlay(6, this.programWeek7());
-    overlay(7, this.programWeek8());
+    // /demo (window.cfbyDemo) keeps block 1 program, whose workouts the
+    // sample logs describe; the real app runs the current block.
+    const demo = this.IS_DEMO;
+    overlay(0, demo ? this.demoWeek1() : this.programWeek1());
+    overlay(1, demo ? this.demoWeek2() : this.programWeek2());
+    overlay(2, demo ? this.demoWeek3() : this.programWeek3());
+    overlay(3, demo ? this.demoWeek4() : this.programWeek4());
+    overlay(4, demo ? this.demoWeek5() : this.programWeek5());
+    overlay(5, demo ? this.demoWeek6() : this.programWeek6());
+    overlay(6, demo ? this.demoWeek7() : this.programWeek7());
+    overlay(7, demo ? this.demoWeek8() : this.programWeek8());
   }
 
   normalizeDay(o) {
@@ -2877,6 +3050,9 @@ class Component extends DCLogic {
     }
     if (Array.isArray(o.extras)) o.extras.forEach((e,i)=>{ if(i<2){ const EL=e.log||{}; nd.extras[i]={name:e.name||'',detail:e.detail||'',result:e.result||'',log:{text: EL.text!==undefined ? EL.text : (e.result||'')}}; }});
     nd.summary = o.summary || '';
+    // v3 block 2 (Ori, 07/09): the coach's daily brief. Program text like
+    // lift.planned — not a log, not in the sync signature, embedded per week.
+    nd.brief = String(o.brief || '');
     if (o.alt) nd.alt = this.normalizeDay(o.alt);
     return nd;
   }
@@ -3117,7 +3293,7 @@ class Component extends DCLogic {
   onEditPath(path, val) {
     const d = structuredClone(this.state.data);
     const dc = d[this.state.selWeek].days[this.state.selDay];
-    const target = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
+    const target = (path !== 'brief' && this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;   // the daily brief is per day, not per session
     this.setDeep(target, path, val);
     this.mirrorPmScore(target, path);
     // v3: the first metcon result of a session adopts the last level chosen
@@ -3136,10 +3312,17 @@ class Component extends DCLogic {
     const pm = path.match(/^(metcon2?)\.log\.mv\d+$/);
     if (!pm || !this.perMoveOn(pm[1])) return;
     const sc = this.metconCfg(this.PER_MOVE_SCORE, pm[1]);
-    const boxes = this.metconCfg(this.PER_MOVE_BOXES, pm[1]);
-    if (!sc || !boxes) return;
+    if (!sc) return;
+    // Box numbering must match metconBar: a custom list is 1..N; otherwise the
+    // named movements keep their original index (08/09: a mirror day without a
+    // custom list used to bail here, so its score was never written and the
+    // day could never be completed).
+    const custom = this.metconCfg(this.PER_MOVE_BOXES, pm[1]);
+    const boxes = custom ? custom.map((lbl,i)=>({ n:i+1 }))
+                         : (((target[pm[1]] && target[pm[1]].movements) || []).map((m,i)=>({ n:i+1, name:m && m.name })).filter(m=>m.name));
+    if (!boxes.length) return;
     const L = (target[pm[1]] && target[pm[1]].log) || {};
-    const all = boxes.every((_,i)=>String(L['mv'+(i+1)]||'').trim());
+    const all = boxes.every(b=>String(L['mv'+b.n]||'').trim());
     L.amount = all ? String(L['mv'+sc.box]||'').trim() : '';
   }
 
@@ -3827,21 +4010,35 @@ class Component extends DCLogic {
     // the app and the recap card can never disagree. Empty config = hidden.
     const RC = (typeof window !== 'undefined' && window.BlockRecap) || null;
     const testRows = ((RC && Array.isArray(RC.tests) && RC._buildTest) ? RC.tests : []).map(t => {
-      const b = RC._readSlot(this, t.base, t), a = t.retest ? RC._readSlot(this, t.retest, t) : null;
+      // Block 2: a weekly test exposes the first measured week as "before" and
+      // the latest one as "after" (RC._slots); the chips under the two cells
+      // list every week. Block-1 style base/retest tests pass through unchanged.
+      const S = RC._slots ? RC._slots(this, t) : { base: t.base || null, retest: t.retest || null };
+      const b = S.base ? RC._readSlot(this, S.base, t) : null, a = S.retest ? RC._readSlot(this, S.retest, t) : null;
       const row = b ? RC._buildTest(this, t) : null;
       const good = (row && row.gain != null && row.after) ? (row.gain > 0) : null;
-      const bwhen = t.base ? this.whenLabel(t.base.wi*7 + t.base.di) : '';
-      const awhen = t.retest ? this.whenLabel(t.retest.wi*7 + t.retest.di) : 'אין מדידה חוזרת בתוכנית';
+      const nowWi = Math.max(0, Math.min(7, cwi));
+      const firstSlot = S.base || (t.weekly ? { wi: 0, di: t.weekly.di } : (t.base || null));
+      const nextSlot = S.retest || (t.weekly ? { wi: nowWi, di: t.weekly.di } : (t.retest || null));
+      const canOpenAfter = !!(S.retest || t.weekly);
+      const bwhen = firstSlot ? this.whenLabel(firstSlot.wi*7 + firstSlot.di) : '';
+      const awhen = S.retest ? this.whenLabel(S.retest.wi*7 + S.retest.di) : (t.weekly ? ('חוזר כל יום ' + this.hebDow[t.weekly.di]) : 'אין מדידה חוזרת בתוכנית');
+      const pts = (t.weekly && RC._points) ? RC._points(this, t) : null;
       const btn = 'text-align:start; background:var(--log); border:none; border-radius:10px; padding:9px 11px; font-family:inherit; color:var(--ink); ';
       return {
         key: t.key, name: t.name, short: t.short,
-        before: b ? b.text : 'עדיין לא נמדד', after: a ? a.text : (t.retest ? 'עדיין לא נמדד' : '—'),
+        before: b ? b.text : 'עדיין לא נמדד', after: a ? a.text : (canOpenAfter ? 'עדיין לא נמדד' : '—'),
         bStyle: (b ? 'color:var(--ink);' : 'color:var(--faint); font-size:14px;') + (b && b.ltr ? ' direction:ltr;' : ''),
         aStyle: (a ? 'color:var(--blue);' : 'color:var(--faint); font-size:14px;') + (a && a.ltr ? ' direction:ltr;' : ''),
-        aBtnStyle: btn + (t.retest ? 'cursor:pointer;' : 'cursor:default; opacity:.6;'),
+        aBtnStyle: btn + (canOpenAfter ? 'cursor:pointer;' : 'cursor:default; opacity:.6;'),
         bwhen, awhen,
-        bwi: t.base ? t.base.wi : 0, bdi: t.base ? t.base.di : 0,
-        awi: t.retest ? t.retest.wi : (t.base ? t.base.wi : 0), adi: t.retest ? t.retest.di : (t.base ? t.base.di : 0),
+        bwi: firstSlot ? firstSlot.wi : 0, bdi: firstSlot ? firstSlot.di : 0,
+        awi: nextSlot ? nextSlot.wi : 0, adi: nextSlot ? nextSlot.di : 0,
+        hasSeries: !!pts,
+        series: pts ? pts.map((p, i) => ({
+          txt: 'W' + (i + 1) + ' ' + (p ? p.short : '–'),
+          style: 'font-size:11px; font-weight:700; border-radius:8px; padding:3px 7px; ' + (p ? 'background:rgba(35,64,154,.10); color:var(--navy);' : 'background:var(--chip); color:var(--faint);') + (i === nowWi ? ' outline:1.5px solid var(--orange);' : '')
+        })) : [],
         delta: (row && row.after) ? (row.delta + ' · ' + row.deltaAbs) : '',
         deltaStyle: 'font-size:12px; font-weight:700; border-radius:999px; padding:3px 10px; ' + ((row && row.after) ? (good ? 'background:rgba(63,191,106,.14); color:var(--greenink);' : (good === false ? 'background:rgba(216,52,43,.12); color:var(--red);' : 'background:var(--chip); color:var(--muted);')) : 'display:none;')
       };
@@ -3978,7 +4175,11 @@ class Component extends DCLogic {
       ratingBadgeStyle: rMeta ? ('display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; font-family:\'Oswald\',sans-serif; font-weight:700; font-size:12px; letter-spacing:.04em; color:#fff; background:'+rMeta.color+';') : 'display:none;',
       dayWeekday: 'יום ' + this.hebDow[selDay],
       dayDate: this.dateStr(this.dateAt(gi)),
-      dayIsEmpty: !vShowLift && !vShowMetcon && !vShowMetcon2 && !vShowExtra,
+      dayIsEmpty: !String((data[selWeek].days[selDay] || {}).brief || '').trim() && !vShowLift && !vShowMetcon && !vShowMetcon2 && !vShowExtra,
+      // v3 block 2 (Ori, 07/09): the coach's daily brief opens the day, above LIFT (per day, shared by both sessions)
+      hasBrief: !!String((data[selWeek].days[selDay] || {}).brief || '').trim(),
+      briefText: String((data[selWeek].days[selDay] || {}).brief || ''),
+      briefField: this.areaEl('brief', (data[selWeek].days[selDay] || {}).brief, 'בריף יומי — מה חשוב היום…', 64),
       vShowLift, vShowMetcon, vShowMetcon2, vShowExtra,
       plannedField: this.areaEl('lift.planned', day.lift.planned, 'סטים, חזרות, אחוזים, דגשים…', 80),
       noteField: this.areaEl('metcon.note', met.note, 'הערות / הסבר על המטקון…', 64),
@@ -4159,6 +4360,7 @@ class Component extends DCLogic {
   clearDay(di) { const wi=this.state.builderWi; const d=structuredClone(this.state.data); d[wi].days[di]=this.emptyDay(); this.save(d); this.setState({ data:d }); this.toast('היום נוקה'); }
   planOnly(src) {
     const nd = this.emptyDay();
+    nd.brief = src.brief || '';
     nd.lift.movement = src.lift.movement; nd.lift.planned = src.lift.planned;
     nd.metcon.name = src.metcon.name; nd.metcon.scheme = src.metcon.scheme; nd.metcon.score = src.metcon.score; nd.metcon.note = src.metcon.note;
     src.metcon.movements.forEach((m,i)=>{ nd.metcon.movements[i] = { name:m.name, detail:m.detail }; });

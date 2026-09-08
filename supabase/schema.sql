@@ -365,9 +365,13 @@ begin
       from public.shared_program sp
      where sp.id = 1;
 
-  delete from public.states;
+  -- PostgREST connections run with pg-safeupdate loaded: a DELETE with no
+  -- WHERE clause is refused even inside a function ("DELETE requires a
+  -- WHERE clause", seen on the first live reset 07/09/2026). WHERE TRUE
+  -- satisfies it and still deletes every row.
+  delete from public.states where true;
   get diagnostics v_ds = row_count;
-  delete from public.board;
+  delete from public.board where true;
   get diagnostics v_db = row_count;
 
   update public.shared_program

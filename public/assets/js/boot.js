@@ -395,6 +395,19 @@
   // died: keep the local copy, as always). Cleared whenever the local copy is
   // dropped, so a fresh start after a reset is protected like a new user.
   var SRVROW_KEY = "cfby_srvrow_v1";
+  // ---- block epoch (block 2, 07/09/2026) ---------------------------------
+  // The row-gone rule above only protects the FIRST storage of an account
+  // that opens after a block reset: the moment it recreates the cloud row,
+  // every other storage of the same account (phone + computer, or on iOS
+  // Safari + the home-screen app) finds a row again, and the day merge lets
+  // its logged last-block days beat the blank new-block scaffold. So each
+  // device also remembers which block its local copy was made under; a copy
+  // from an older block is dropped BEFORE any merge, whatever the cloud
+  // holds (Ori, 06/09: discard + one-time notice). No mark = a block-1 era
+  // device. Bump BLOCK together with BLOCK_NUM in app.html, every block.
+  var BLOCK = 2;
+  var BLOCK_KEY = "cfby_block_v1";
+  var STALE_NOTE_KEY = "cfby_stalenote_v1";   // pending one-time notice about dropped unsynced last-block days
   // Drop this device's copy of the tracker + board: memory mirrors first (they
   // are the source of truth for pushes), pending push timers, then storage.
   // Used by boot's "row gone" branch and after an admin reset on the admin's
@@ -950,8 +963,10 @@
       if (RC && Array.isArray(RC.tests) && RC._readSlot) {
         var shim = { state: { data: wk }, metconScore: function (m) { var e = metconEntry(m); return e ? { v: e.v, dir: e.dir } : null; } };
         tests = RC.tests.map(function (tt) {
-          var b = RC._readSlot(shim, tt.base, tt), a = tt.retest ? RC._readSlot(shim, tt.retest, tt) : null;
-          return { key: tt.key, short: tt.short, base: b ? b.text : null, after: a ? a.text : null, retest: !!tt.retest };
+          // block 2: weekly tests resolve their own slots (first / latest measured week)
+          var S = RC._slots ? RC._slots(shim, tt) : { base: tt.base || null, retest: tt.retest || null };
+          var b = S.base ? RC._readSlot(shim, S.base, tt) : null, a = S.retest ? RC._readSlot(shim, S.retest, tt) : null;
+          return { key: tt.key, short: tt.short, base: b ? b.text : null, after: a ? a.text : null, retest: !!(S.retest || tt.weekly) };
         });
       }
     } catch (e) { tests = null; }
@@ -1221,6 +1236,10 @@
           for (var ci = 0; ck && ci < ck.length; ci++) memDirtyDays[ck[ci]] = 1;
         } catch (e) {}
         try { orig(DIRTY_KEY, String(Date.now())); } catch (e) {}
+        // Re-stamp the block mark with every tracker write, so a copy can never
+        // sit in storage without it (a storage that rejected the boot-time mark
+        // and recovered later would otherwise be dropped as block 1 next boot).
+        try { orig(BLOCK_KEY, String(BLOCK)); } catch (e) {}
       }
       // The app swallows setItem failures (quota full / restricted mode) — the
       // user would keep logging workouts while NOTHING persists on the device.
@@ -1410,7 +1429,7 @@
             'המבחנים לא נשמרים. דורש את עמודת profiles.prs (schema.sql); בלי העמודה האיפוס נעצר לפני המחיקה.</span></label>' +
           '<div class="cfa-locks" id="cfaWipeLocks">בודק…</div>' +
           '<div class="row">' +
-            '<input id="cfaWipeLabel" class="ltr cfa-short" value="block-1" placeholder="block-1" title="תווית לארכיון (למשל block-1, block-2-tests)">' +
+            '<input id="cfaWipeLabel" class="ltr cfa-short" value="block-' + BLOCK + '" placeholder="block-' + BLOCK + '" title="תווית לארכיון (למשל block-' + BLOCK + ', block-' + BLOCK + '-tests)">' +
             '<input id="cfaWipeCount" class="ltr cfa-short" inputmode="numeric" placeholder="מספר המתאמנים" autocomplete="off">' +
             '<button class="cfa-wipe" id="cfaWipeGo" disabled>🧨 אפס בלוק</button>' +
           '</div>' +
@@ -1848,7 +1867,7 @@
     // Records outlive the block (Ori, 07/09): the block number of the data
     // being wiped comes from the archive label ("block-1" -> 1) and stamps the
     // ledger, so a carried record shows "BLOCK I" in the next block.
-    function wipeBlockNum(label) { var m = /(\d+)/.exec(label || ""); return m ? parseInt(m[1], 10) : 1; }
+    function wipeBlockNum(label) { var m = /(\d+)/.exec(label || ""); return m ? parseInt(m[1], 10) : BLOCK; }
     function roman(n) {
       n = parseInt(n, 10); if (!(n > 0)) return "";
       var T = [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]], s = "";
@@ -1859,7 +1878,7 @@
     function wipeCarryHint() {
       var lab = document.getElementById("cfaWipeLabel"), chk = document.getElementById("cfaWipeCarry"), blk = document.getElementById("cfaWipeCarryBlk");
       if (!lab || !chk || !blk) return;
-      var label = (lab.value || "").trim() || "block-1";
+      var label = (lab.value || "").trim() || ("block-" + BLOCK);
       blk.textContent = "BLOCK " + roman(wipeBlockNum(label));
       if (!carryTouched) chk.checked = !/test/i.test(label);   // test data never becomes a record
     }
@@ -1940,7 +1959,7 @@
       // A push in flight (or pending) could land AFTER the delete and recreate
       // this account's row with last block's data — wait for a quiet moment.
       if (pushBusy || unsynced()) { amsg("יש שמירה בתהליך — חכה לחיווי ☁️ מסונכרן בתחתית המסך ונסה שוב", "err"); return; }
-      var label = (document.getElementById("cfaWipeLabel").value || "").trim() || "block-1";
+      var label = (document.getElementById("cfaWipeLabel").value || "").trim() || ("block-" + BLOCK);
       var carry = !!(document.getElementById("cfaWipeCarry") || {}).checked;
       var blk = wipeBlockNum(label);
       var btn = document.getElementById("cfaWipeGo");
@@ -2544,6 +2563,27 @@
     // silently erase workouts synced from the first.
     var localTracker = lsGet(K.TRACKER_KEY);
     var localDts = lsGet(DTS_KEY) || {};
+    // Block epoch (see BLOCK above): a local copy made under an earlier block
+    // is last block's data — drop it now, before the merge below could carry
+    // it into the new block. Unsynced days go with it; the notice says so.
+    var localBlock = parseInt(rawGet(BLOCK_KEY), 10) || 1;
+    var blockStale = !!(localTracker && localTracker.weeks) && localBlock < BLOCK;
+    // A dirty stamp alone does not prove unsynced days (the close-time push
+    // deliberately leaves it set on success); only a dirty stamp PLUS a failed
+    // close-time push (kaFail, read above) earns the one-time notice.
+    var staleDirty = blockStale && (parseInt(rawGet(DIRTY_KEY), 10) || 0) > 0 && !!kaFail;
+    if (blockStale) {
+      console.warn("[sync] local copy is from block " + localBlock + " — dropping it for block " + BLOCK + (staleDirty ? " (it had unsynced days)" : ""));
+      dropLocalCopy();
+      localTracker = null; localDts = {};
+      // the notice must survive a boot that never completes (offline overlay, app killed)
+      if (staleDirty) { try { localStorage.setItem(STALE_NOTE_KEY, "1"); } catch (e) {} }
+    }
+    // Write the mark only once the old copy is verifiably gone from storage —
+    // a removeItem that silently no-ops (iOS restricted storage) must retry
+    // the drop on the next boot instead of trusting a block-1 blob as current.
+    if (!blockStale || rawGet(K.TRACKER_KEY) === null) { try { localStorage.setItem(BLOCK_KEY, String(BLOCK)); } catch (e) {} }
+    else console.warn("[sync] storage kept the old copy — block mark not written, will retry next boot");
     var st = await fetchMyState(uid);
     if (st.error && !(localTracker && localTracker.weeks)) {
       // Server unreachable and nothing local to boot from — wait, don't guess.
@@ -2565,7 +2605,7 @@
     var rowGone = !st.error && !(mine && mine.tracker && mine.tracker.weeks) &&
                   !!(localTracker && localTracker.weeks) &&
                   rawGet(SRVROW_KEY) === "1" && !prof._err && !prof._missing;
-    var staleNotice = rowGone && dirtyTs > 0;   // unsynced days are being dropped — say so, once
+    var staleNotice = (rowGone && dirtyTs > 0 && !!kaFail) || staleDirty || rawGet(STALE_NOTE_KEY) === "1";   // unsynced days are being dropped — say so, once
     if (st.error) {
       // Server unreachable but the device has a copy: boot from it, touch
       // NOTHING. Only data that was already marked unsynced gets pushed once
@@ -2700,7 +2740,11 @@
         showAnnouncement({ title: "בלוק חדש", body: "נמצאו רישומים מהבלוק הקודם שלא סונכרנו, הם לא נכללים בבלוק החדש" },
                          null, { icon: "🔄", button: "הבנתי", confetti: false });
       } catch (e) {}
+      try { localStorage.removeItem(STALE_NOTE_KEY); } catch (e) {}
     }
+    // The two block constants live in different files; a missed bump reopens
+    // the second-storage hole silently, so at least say so in the console.
+    try { if (typeof window.cfbyBlockNum === "number" && window.cfbyBlockNum !== BLOCK) console.error("[sync] boot.js BLOCK " + BLOCK + " != app.html BLOCK_NUM " + window.cfbyBlockNum + " — bump both together"); } catch (e) {}
 
     // Block announcement: pops ONCE per user, and only when the admin has
     // published one whose id this user hasn't seen. No announcement row (the
