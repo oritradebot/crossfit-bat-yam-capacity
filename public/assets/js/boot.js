@@ -17,7 +17,7 @@
   // the self-update check below — installed PWAs kept running stale bundles
   // for days, and "close the app fully and reopen" proved unreliable advice.
   // Semantic versioning per Ori: 1.0.1 and counting.
-  var BUILD = "3.0.1";
+  var BUILD = "3.0.2";
   var K = window.CFBY;
   // ---- demo mode (07/09, participant feedback rounds) ---------------------
   // app.html?demo=1 boots the app as a fictional athlete (see demoMain) in a
