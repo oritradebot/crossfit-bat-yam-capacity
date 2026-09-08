@@ -1128,7 +1128,7 @@
             </div>
             <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin-top:14px;">
               <div style="display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; color:#ffb08f;">1</span><div style="font-size:13px; line-height:1.5;"><b>פתח את האימון של היום</b><br><span style="color:#b9c4e6;">בטאב יומן, או בכפתור הכתום למטה</span></div></div>
-              <div style="display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; color:#ffb08f;">2</span><div style="font-size:13px; line-height:1.5;"><b>רשום מה עשית</b><br><span style="color:#b9c4e6;">משקל לכל סט, תוצאה לכל תנועה, RX או Scaled</span></div></div>
+              <div style="display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; color:#ffb08f;">2</span><div style="font-size:13px; line-height:1.5;"><b>רשום מה עשית</b><br><span style="color:#b9c4e6;">משקל לכל סט, הרמה שעבדת בה, והתוצאה</span></div></div>
               <div style="display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; color:#ffb08f;">3</span><div style="font-size:13px; line-height:1.5;"><b>שמור אימון והשלם</b><br><span style="color:#b9c4e6;">רק אז היום נספר. הכול מסתנכרן לענן לבד</span></div></div>
             </div>
             <button onClick="{{ gotoToday }}" style="margin-top:14px; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:11px 20px; font-weight:700; font-size:14px; cursor:pointer;">← לאימון של היום</button>
@@ -1143,11 +1143,6 @@
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; line-height:1;">{{ statWeekly }}</div>
             <div style="font-size:12px; color:#ffe0d3; font-weight:600; letter-spacing:.04em; margin-top:6px;">יעד השבוע</div>
           </div>
-          <button onClick="{{ setLog }}" title="ליומן" style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px; text-align:start; cursor:pointer; font-family:inherit;">
-            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--orange); line-height:1;">{{ statRx }}</div>
-            <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">מטקוני RX בבלוק</div>
-            <div dir="rtl" style="font-size:11px; font-weight:700; margin-top:6px; color:var(--muted);">{{ statRxSub }}</div>
-          </button>
           <div style="background:var(--navy-bg); color:#fff; border-radius:16px; padding:16px 18px;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; line-height:1;">{{ curWeekNum }}<span style="font-size:16px; color:#9fb0dd;">/8</span></div>
             <div style="font-size:12px; color:#9fb0dd; font-weight:600; letter-spacing:.04em; margin-top:6px;">שבוע נוכחי</div>
@@ -1710,7 +1705,7 @@
           </sc-if>
           <sc-if value="{{ welcomeStep1 }}" hint-placeholder-val="{{ false }}">
             <div style="display:flex; gap:10px; align-items:flex-start;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; color:var(--orange); flex:none;">1</span><div style="line-height:1.5; font-size:13px;"><b>בוחרים יום ביומן.</b> <span style="color:var(--muted);">ימים שעברו אפשר להשלים אחורה; ימים עתידיים לצפייה בלבד.</span></div></div>
-            <div style="display:flex; gap:10px; align-items:flex-start;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; color:var(--orange); flex:none;">2</span><div style="line-height:1.5; font-size:13px;"><b>רושמים מה עשית.</b> <span style="color:var(--muted);">משקל לכל סט (יש כפתור "אותו משקל לכולם"), תוצאה לכל תנועה במטקון ואז התוצאה הכוללת, "עשיתי כמו שכתוב (RX)" או Scaled, באיזו רמה עבדת, ואיך הרגיש.</span></div></div>
+            <div style="display:flex; gap:10px; align-items:flex-start;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; color:var(--orange); flex:none;">2</span><div style="line-height:1.5; font-size:13px;"><b>רושמים מה עשית.</b> <span style="color:var(--muted);">משקל לכל סט (יש כפתור "אותו משקל לכולם"), במטקון קודם באיזו רמה עבדת ואז התוצאה (בימי תחנות גם ספירה לכל תחנה), ואיך הרגיש.</span></div></div>
             <div style="display:flex; gap:10px; align-items:flex-start;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; color:var(--orange); flex:none;">3</span><div style="line-height:1.5; font-size:13px;"><b>לוחצים "שמור אימון והשלם".</b> <span style="color:var(--muted);">רק אז היום נספר. אם חסר משהו — האפליקציה אומרת בדיוק מה.</span></div></div>
             <div style="background:rgba(239,91,37,.08); border:1px solid rgba(239,91,37,.3); border-radius:11px; padding:9px 12px; font-size:12.5px; line-height:1.5; color:var(--ink);">🕘 כשתרגיל או מטקון חוזרים, תראה ליד ההזנה <b>מה עשית בפעם הקודמת</b> — וההפרש.</div>
           </sc-if>
@@ -2201,10 +2196,6 @@ class Component extends DCLogic {
       '7_2': { 'metcon':'סך הדאבלים (DU)', 'metcon2':'ממוצע חזרות לדקה' },
       '7_3': { 'metcon':'כמות חזרות' }
     },
-    METCON_RX_NOTE: { '4_0': {
-      'metcon':'RX = קפיצות כפולות (DU) · הזנה ללא לחיצה על RX = קפיצות יחידות (SU)',
-      'alt.metcon2':'RX = קפיצות כפולות (DU) · הזנה ללא לחיצה על RX = קפיצות יחידות (SU)'
-    } },
     TIME_SPLITS: {},
     ROUND_REPS: {},
   };
@@ -2246,11 +2237,11 @@ class Component extends DCLogic {
   PER_MOVE_SCORE = this.IS_DEMO ? this.DEMO_MAPS.PER_MOVE_SCORE : {
     // W1: none. Tue used to mirror the power cleans box — Ori (08/09) wants the total of all rounds typed separately.
   };
-  // METCON_AMOUNT_LABEL / METCON_RX_NOTE (28/08, per Ori): amount-mode days
-  // whose board score is a rep count label the input as such (instead of the
-  // generic מ׳/קל׳), and days where RX has a specific meaning spell it out
-  // under the RX/Scaled pills. Keyed 'weekIdx_dayIdx' → { base: text }, base
-  // is 'metcon'/'metcon2' with an 'alt.' prefix for the endurance session.
+  // METCON_AMOUNT_LABEL (28/08, per Ori): amount-mode days whose board score
+  // is a rep count label the input as such (instead of the generic מ׳/קל׳).
+  // Keyed 'weekIdx_dayIdx' → { base: text }, base is 'metcon'/'metcon2' with
+  // an 'alt.' prefix for the endurance session. (METCON_RX_NOTE went with the
+  // RX/Scaled pills on 08/09 — after picking a level they mean nothing.)
   // Resolved at render time like the pilot maps above — no state fields, no
   // PROGRAM_VERSION bump; logs stay under log.amount so closed-week results
   // keep scoring.
@@ -2259,7 +2250,6 @@ class Component extends DCLogic {
     '0_2': { 'metcon':'סך הפאוור קלינים מכל הסבבים' },
     '0_3': { 'metcon':'סך ה-Wallwalks' }
   };
-  METCON_RX_NOTE = this.IS_DEMO ? this.DEMO_MAPS.METCON_RX_NOTE : {};
   // TIME_SPLITS (08/09, per Ori: "3 קוביות, אחת לכל מקצה, שיעזרו לסכום את סה"כ
   // זמן החתירה"): a time-mode metcon whose score is the sum of several
   // distance efforts logs one XX:XX box per interval (log.t1..tN) and the
@@ -2520,7 +2510,7 @@ class Component extends DCLogic {
         for (const mm of [x.metcon, x.metcon2]) {
           if (!mm || this.normName(mm.name) !== key) continue;
           const sc = this.metconScore(mm); if (!sc) continue;
-          return { i, text: this.resultTextAt(Math.floor(i/7)+'_'+(i%7), x, (x === d.alt ? 'alt.' : '') + (mm === x.metcon2 ? 'metcon2' : 'metcon'), mm), score: sc, mode: (mm.resultMode || (mm.log && mm.log.mode) || 'time'), rx: !!mm.rx, level: x.level || '' };
+          return { i, text: this.resultTextAt(Math.floor(i/7)+'_'+(i%7), x, (x === d.alt ? 'alt.' : '') + (mm === x.metcon2 ? 'metcon2' : 'metcon'), mm), score: sc, mode: (mm.resultMode || (mm.log && mm.log.mode) || 'time'), level: x.level || '' };
         }
       }
     }
@@ -2553,7 +2543,7 @@ class Component extends DCLogic {
       else { const rd = Math.floor(cur.v/100000) - Math.floor(pv.score.v/100000), rp = (cur.v%100000) - (pv.score.v%100000); const d = rd*100000 + rp; if (d) { delta = (d > 0 ? '+' : '−') + (Math.abs(rd) ? (Math.abs(rd) + ' סבבים') : (Math.abs(rp) + ' חזרות')) + ' מהפעם הקודמת'; good = d > 0; } }
     }
     const lvl = pv.level ? (' · L' + pv.level + ((day.level && day.level !== pv.level) ? ' (רמה שונה)' : '')) : '';
-    return this.lastLine('בפעם הקודמת · ' + this.whenLabel(pv.i) + ': ' + pv.text + (pv.rx ? ' · RX' : '') + lvl, delta, good);
+    return this.lastLine('בפעם הקודמת · ' + this.whenLabel(pv.i) + ': ' + pv.text + lvl, delta, good);
   }
   // ---- "הורד את הנתונים שלי" (v3, Ori 07/09): every logged session as a CSV row ----
   // UTF-8 with BOM so Excel opens the Hebrew correctly. Shares as a file where
@@ -3303,11 +3293,13 @@ class Component extends DCLogic {
   // Achievement badges, tiered. Computed from a small counter object so the
   // SAME definitions serve my profile (counters from my tracker) and the
   // summary row boot.js publishes for the coach table (board.pub):
-  // t=total workouts, s=best streak, p=PRs, rx=RX metcons, hard=sessions rated 'hard',
+  // t=total workouts, s=best streak, p=PRs, hard=sessions rated 'hard',
   // fw=full weeks. Thresholds must match boot.js publicSummary() semantics.
+  // (The two RX badges went with the RX pills, 08/09; boot.js still publishes
+  // the rx counter, it is simply unused here.)
   badgeList(c) {
     c = c || {};
-    const t=c.t||0, s=c.s||0, p=c.p||0, rx=c.rx||0, hard=c.hard||0, fw=c.fw||0;
+    const t=c.t||0, s=c.s||0, p=c.p||0, hard=c.hard||0, fw=c.fw||0;
     return [
       { icon:'🎯', label:'אימון ראשון', earned:t>=1 },
       { icon:'⭐', label:'10 אימונים', earned:t>=10 },
@@ -3321,8 +3313,6 @@ class Component extends DCLogic {
       { icon:'💪', label:'שבוע מלא', earned:fw>=1 },
       { icon:'📅', label:'3 שבועות מלאים', earned:fw>=3 },
       { icon:'🏅', label:'בלוק מושלם', earned:fw>=8 },
-      { icon:'🔰', label:'RX ראשון', earned:rx>=1 },
-      { icon:'🎖️', label:'10 מטקוני RX', earned:rx>=10 },
       { icon:'🥵', label:'5 אימונים קשים', earned:hard>=5 }
     ];
   }
@@ -3704,11 +3694,6 @@ class Component extends DCLogic {
           React.createElement('span', { style:{ fontWeight:700, color:'var(--muted)', paddingBottom:'10px' } }, '+'),
           this.unit(this.numEl(base+'.log.reps', M.reps, '0'), 'reps / חזרות')
         );
-    const rxNote = this.metconCfg(this.METCON_RX_NOTE, base);
-    const pill = (on, activeColor, activeBg, onClick, title, label) => React.createElement('button', {
-      onClick, title,
-      style:{ display:'inline-flex', alignItems:'center', gap:'6px', border:'1.5px solid '+(on?activeColor:'var(--line)'), background:on?activeBg:'var(--card)', color:on?activeColor:'var(--muted)', borderRadius:'999px', padding:'7px 14px', fontWeight:700, fontSize:'12.5px', cursor:'pointer', transition:'all .15s' }
-    }, (on?'✓':'○') + ' ' + label);
     return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } },
       levels.length ? this.levelPills(levels) : null,   // step 1 (08/09): the level comes first
       pmBlock,
@@ -3718,24 +3703,11 @@ class Component extends DCLogic {
       React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } }, inputs, this.unit(this.txtEl(base+'.log.note', M.note, 'הערה'), 'note')),
       (lvNeed && !pmMoves.length && !splits) ? React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color:'var(--orange)' } }, '🔒 בחרו רמה בשלב 1 — ואז תיפתח הזנת התוצאה') : null,
       rrLine,
-      React.createElement('div', { style:{ display:'flex', gap:'8px', flexWrap:'wrap' } },
-        pill(!!metcon.rx, 'var(--orange)', 'rgba(239,91,37,.12)', ()=>this.setRxScaled(base,'rx'), rxNote || 'ביצוע במשקלים ובתנועות שכתובים באימון', 'עשיתי כמו שכתוב (RX)'),
-        pill(!!metcon.scaled, 'var(--blue)', 'rgba(35,64,154,.1)', ()=>this.setRxScaled(base,'scaled'), 'ביצוע מותאם — רשום את משקלי העבודה שלך', 'עשיתי Scaled')
-      ),
-      rxNote ? React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color:'var(--muted)', lineHeight:1.5 } }, rxNote) : null,
-      metcon.scaled ? this.unit(this.txtEl(base+'.log.scaled', M.scaled, 'למשל: 40kg במקום 60, מתח עם גומייה…'), 'משקלי עבודה · Scaled') : null
     );
   }
-  // RX and Scaled are mutually exclusive; clicking the active one turns it off.
-  setRxScaled(base, which) {
-    const d = structuredClone(this.state.data);
-    const dc = d[this.state.selWeek].days[this.state.selDay];
-    const t = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
-    const m = base==='metcon2' ? t.metcon2 : t.metcon;
-    if (which==='rx') { m.rx = !m.rx; if (m.rx) m.scaled = false; }
-    else { m.scaled = !m.scaled; if (m.scaled) m.rx = false; }
-    this.save(d); this.setState({ data:d });
-  }
+  // (The RX / Scaled pills, the RX note and the "משקלי עבודה · Scaled" field
+  // were removed 08/09, per Ori — after picking a level they mean nothing.
+  // The rx/scaled flags stay in the data model and the sync signature.)
   extraBar(i, ex) {
     const E = ex.log || {};
     return this.txtEl('extras.'+i+'.log.text', E.text, '✎ זמן / משקל / חזרות / תוצאה');
@@ -4130,8 +4102,8 @@ class Component extends DCLogic {
     const liftOpen = isOpen('lift', liftHas), metconOpen = isOpen('metcon', metHas), metcon2Open = isOpen('metcon2', met2Has), extraOpen = isOpen('extra', extraHas);
     const L0 = day.lift.log || {};
     const liftSum = liftHas ? (L0.weight + ' ק"ג' + (L0.reps ? (' × ' + L0.reps) : '')) : '';
-    const metSum = metHas ? (this.resultTextAt(selWeek+'_'+selDay, day, (asAlt?'alt.':'')+'metcon', met) + (met.rx ? ' · RX' : (met.scaled ? ' · Scaled' : ''))) : '';
-    const met2Sum = met2Has ? (this.resultTextAt(selWeek+'_'+selDay, day, (asAlt?'alt.':'')+'metcon2', met2) + (met2.rx ? ' · RX' : (met2.scaled ? ' · Scaled' : ''))) : '';
+    const metSum = metHas ? this.resultTextAt(selWeek+'_'+selDay, day, (asAlt?'alt.':'')+'metcon', met) : '';
+    const met2Sum = met2Has ? this.resultTextAt(selWeek+'_'+selDay, day, (asAlt?'alt.':'')+'metcon2', met2) : '';
     const extraSum = exPresent.length ? (exLogged + '/' + exPresent.length + ' תועדו') : '';
 
     // ---- records (v3, Ori 07/09): this block's laid over the ledger of earlier blocks ----
@@ -4148,11 +4120,10 @@ class Component extends DCLogic {
     // my card and what others see of me can never disagree.
     let fullWeeks = 0;
     for (let w=0; w<8; w++) { if (this.weekStats(w).completed >= this.myTargetVal()) fullWeeks++; }
-    let rxCount = 0, rxOf = 0, hardCount = 0;
+    let hardCount = 0;
     data.forEach(wk=>wk.days.forEach(d0=>[d0, d0.alt].forEach(dd=>{
       if (!dd) return;
       if (dd.done && this.effortKey(dd.rating)==='hard') hardCount++;
-      [dd.metcon, dd.metcon2].forEach(m=>{ if (m && this.metconScore(m)) { rxOf++; if (m.rx) rxCount++; } });
     })));
     // ---- tests screen (v3, Ori 07/09): the card's own config + readers, so
     // the app and the recap card can never disagree. Empty config = hidden.
@@ -4192,10 +4163,7 @@ class Component extends DCLogic {
       };
     });
     const testsMeasured = testRows.length ? (testRows.filter(r => r.delta).length + ' מתוך ' + testRows.length + ' נמדדו שוב') : '';
-    // overview card: RX metcons out of every metcon with a result (same
-    // counter as the RX badges, so the two numbers can never disagree)
-    const statRxSub = rxOf ? ('מתוך ' + rxOf + ' מטקונים שתועדו') : 'עוד לא תועד מטקון';
-    const badges = this.badgeList({ t: totalDone, s: best, p: PT.curFlagCount, rx: rxCount, hard: hardCount, fw: fullWeeks });
+    const badges = this.badgeList({ t: totalDone, s: best, p: PT.curFlagCount, hard: hardCount, fw: fullWeeks });
     const badgeCount = badges.filter(b=>b.earned).length + ' / ' + badges.length;
     const badgeCards = this.badgeCards(badges);
 
@@ -4253,7 +4221,6 @@ class Component extends DCLogic {
       editTabStyle: this.segStyle(editMode),
 
       statSessions: done, statTarget: target, statPct: pct,
-      statRx: rxCount, statRxSub,
       hasTests: testRows.length > 0, testRows, testsMeasured,
       // goal card (v3): stored on the athlete (profiles.goal via boot.js), not on the block
       goalEditing: this.state.goalEditing || !this.state.myGoal,

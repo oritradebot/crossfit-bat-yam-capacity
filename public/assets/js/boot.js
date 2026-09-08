@@ -1379,7 +1379,7 @@
         '</div>' +
         '<div class="cfa-ann">' +
           '<h3>📊 התקדמות המתאמנים</h3>' +
-          '<p class="sub">תמונת מצב של כל הרוסטר — נוכחות, שיאים, מטקוני RX ומבחנים. בלי מקומות ובלי ניקוד; מיון לפי שם. מתעדכן בכל פתיחת אפליקציה של המתאמן.</p>' +
+          '<p class="sub">תמונת מצב של כל הרוסטר — נוכחות, שיאים, אימונים קשים ומבחנים. בלי מקומות ובלי ניקוד; מיון לפי שם. מתעדכן בכל פתיחת אפליקציה של המתאמן.</p>' +
           '<div class="cfa-wrap" id="cfaCoach">טוען…</div>' +
         '</div>' +
         '<div id="cfaAthlete" style="display:none"></div>' +
@@ -1594,11 +1594,11 @@
     function renderCoach(users, bMap, sMap) {
       var el = document.getElementById("cfaCoach"); if (!el) return;
       var RC = window.BlockRecap, tdefs = (RC && Array.isArray(RC.tests)) ? RC.tests : [];
-      var head = '<tr><th>שם</th><th>אימונים</th><th>שבועות מלאים</th><th>רצף</th><th>שיאים</th><th>RX</th><th>קשים</th>' +
+      var head = '<tr><th>שם</th><th>אימונים</th><th>שבועות מלאים</th><th>רצף</th><th>שיאים</th><th>קשים</th>' +
         tdefs.map(function (t) { return '<th title="' + esc(t.name) + '">🧪 ' + esc(t.short) + '</th>'; }).join("") + '<th>עדכון</th></tr>';
       var body = users.map(function (u) {
         var b = bMap[u.id], pub = (b && b.pub) || null;
-        if (!pub) return '<tr><td>' + esc(u.name || "—") + '</td><td colspan="' + (7 + tdefs.length) + '" style="color:#8ea3c9">עוד לא סונכרן</td></tr>';
+        if (!pub) return '<tr><td>' + esc(u.name || "—") + '</td><td colspan="' + (6 + tdefs.length) + '" style="color:#8ea3c9">עוד לא סונכרן</td></tr>';
         var tmap = {}; (pub.tests || []).forEach(function (t) { tmap[t.key] = t; });
         var tcells = tdefs.map(function (t) {
           var x = tmap[t.key];
@@ -1606,7 +1606,7 @@
           return '<td class="tests"><span dir="ltr">' + esc(x.base) + '</span>' + (x.after ? ' → <b><span dir="ltr">' + esc(x.after) + '</span></b>' : (x.retest ? ' → …' : '')) + '</td>';
         }).join("");
         return '<tr><td>' + esc(u.name || "—") + '</td><td class="num">' + (pub.t || 0) + '</td><td class="num">' + (pub.fw || 0) + '</td><td class="num">' + (pub.s || 0) + '</td>' +
-          '<td class="num">' + (pub.p || 0) + '</td><td class="num">' + (pub.rx || 0) + '</td><td class="num">' + (pub.hard || 0) + '</td>' + tcells +
+          '<td class="num">' + (pub.p || 0) + '</td><td class="num">' + (pub.hard || 0) + '</td>' + tcells +
           '<td style="color:#8ea3c9">' + fmtWhen(b.updated_at) + '</td></tr>';
       }).join("");
       el.innerHTML = '<table class="cfa-t coach"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
