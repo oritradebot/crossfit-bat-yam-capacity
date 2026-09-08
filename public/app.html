@@ -2205,6 +2205,8 @@ class Component extends DCLogic {
       'metcon':'RX = קפיצות כפולות (DU) · הזנה ללא לחיצה על RX = קפיצות יחידות (SU)',
       'alt.metcon2':'RX = קפיצות כפולות (DU) · הזנה ללא לחיצה על RX = קפיצות יחידות (SU)'
     } },
+    TIME_SPLITS: {},
+    ROUND_REPS: {},
   };
   // ---- richer result entry (13/08, per Ori; piloted on 06/08) ------------
   // PER_SET_LIFT['weekIdx_dayIdx'] = set count: the LIFT logs a weight per
@@ -2232,20 +2234,18 @@ class Component extends DCLogic {
   // numbers). Labels in order → log.mv1..mvN; days absent here keep deriving
   // one box per movement name.
   PER_MOVE_BOXES = this.IS_DEMO ? this.DEMO_MAPS.PER_MOVE_BOXES : {
-    // W1: every PER_MOVE_SCORE day lists its boxes here too (mirrorPmScore also falls back to the movement list since 08/09)
-    '0_0': { 'metcon': ['Cal Row','Chest to bar pull ups','Max Handstand push ups'] },
-    '0_2': { 'metcon': ['Bike (cals)','Burpees over cones','Power cleans'] },
-    '0_3': { 'metcon': ['Double unders','Kettlebell swings','V-Ups','Max Wallwalks'] }
+    // W1 Tue: stations — one count per station, the score mirrors the power cleans (PER_MOVE_SCORE)
+    '0_2': { 'metcon': ['Bike (cals)','Burpees over cones (reps)','Power cleans (reps)'] },
+    // W1 Thu (08/09, per Ori): a day without level lines logs the weight per movement that HAS one — nothing for the box jump
+    '0_4': { 'metcon': ['Wall balls (kg)','Single arm DB (kg)'] }
   };
   // PER_MOVE_SCORE: on these days the board score (log.amount) MIRRORS box
   // #box once ALL boxes are filled — the LIFT heaviest-set trick — so there
   // is no separate score entry. Clearing any box clears the score, which
   // keeps the save gate enforcing the full breakdown.
   PER_MOVE_SCORE = this.IS_DEMO ? this.DEMO_MAPS.PER_MOVE_SCORE : {
-    // W1: the declared score is one of the per-movement totals — mirror it, no second entry
-    '0_0': { 'metcon': { box:3, label:'סך ה-HSPU' } },
-    '0_2': { 'metcon': { box:3, label:'סך הפאוור קלינים' } },
-    '0_3': { 'metcon': { box:4, label:'סך ה-Wallwalks' } }
+    // W1 Tue: the declared score is one of the per-station counts — mirror it, no second entry
+    '0_2': { 'metcon': { box:3, label:'סך הפאוור קלינים' } }
   };
   // METCON_AMOUNT_LABEL / METCON_RX_NOTE (28/08, per Ori): amount-mode days
   // whose board score is a rep count label the input as such (instead of the
@@ -2261,6 +2261,25 @@ class Component extends DCLogic {
     '0_3': { 'metcon':'סך ה-Wallwalks' }
   };
   METCON_RX_NOTE = this.IS_DEMO ? this.DEMO_MAPS.METCON_RX_NOTE : {};
+  // TIME_SPLITS (08/09, per Ori: "3 קוביות, אחת לכל מקצה, שיעזרו לסכום את סה"כ
+  // זמן החתירה"): a time-mode metcon whose score is the sum of several
+  // distance efforts logs one XX:XX box per interval (log.t1..tN) and the
+  // total (log.time) is computed from them once all are in — nothing else to
+  // type. Keyed like the maps above, the value is the box label list.
+  TIME_SPLITS = this.IS_DEMO ? this.DEMO_MAPS.TIME_SPLITS : {
+    // W1 Sun endurance · METCON-B row 1600 / 1000 / 800 — total row time
+    '0_0': { 'alt.metcon2': ['Row 1600','Row 1000','Row 800'] }
+  };
+  // ROUND_REPS (08/09, per Ori: "תשכלל מספר חזרות לכל סט לפי הרמה … 3 סיבובים
+  // מלאים + 20 חזרות → לפי הרמה לסכום את כמות החזרות הכוללת"): a rounds+reps
+  // metcon whose round size depends on the level. The athlete logs full rounds
+  // + the reps of the last partial round; the app shows and reports the total
+  // (rounds × size + reps) for the level picked in step 1. Value = reps per
+  // round by level, from the plan's level lines (Ori's numbers for a range).
+  ROUND_REPS = this.IS_DEMO ? this.DEMO_MAPS.ROUND_REPS : {
+    // W1 Fri · AMRAP 20 — L1 300m+10+5-10 (Ori: 50) · L2 400m+12+12 = 64 · L3 500m+15+15 = 80 (10m run = 1 rep)
+    '0_5': { 'metcon': { '1': 50, '2': 64, '3': 80 } }
+  };
   pilotKey() { return this.state.selWeek + '_' + this.state.selDay; }
   perSetCount() { return this.state.activeSession==='alt' ? 0 : (this.PER_SET_LIFT[this.pilotKey()] || 0); }
   // v3 (07/09, Ori: "קפדני בכל מקום"): every main-session metcon with two or
@@ -2269,7 +2288,15 @@ class Component extends DCLogic {
   // PER_MOVE_OFF lists the days/bases where it must NOT apply (per embed);
   // PER_MOVE_METCON still forces it on, PER_MOVE_BOXES still supplies custom
   // box lists, PER_MOVE_SCORE still mirrors a box into the score.
-  PER_MOVE_OFF = {};
+  PER_MOVE_OFF = this.IS_DEMO ? {} : {
+    // 08/09, per Ori ("ביום כמו שני לא צריך את שלושת הקוביות אלא רק באיזו רמה ומה תוצאת הזמן", then "גם בראשון
+    // ורביעי — זה קלאסי מהמקרים שהתכוונתי אליהם"): a day whose plan writes levels logs the LEVEL + the score
+    // only, never a box per movement — the level already says what was done. Every W1 level day is listed.
+    '0_0': ['metcon'],   // Sun · total HSPU
+    '0_1': ['metcon'],   // Mon · finishing time
+    '0_3': ['metcon'],   // Wed · total wallwalks
+    '0_5': ['metcon']    // Fri · rounds + reps, total via ROUND_REPS
+  };
   perMoveOn(base) {
     if (this.state.activeSession === 'alt') return false;
     const off = this.PER_MOVE_OFF[this.pilotKey()];
@@ -2383,22 +2410,48 @@ class Component extends DCLogic {
       this.celebrate('שיא חדש! 🏆', (x.lift.movement || '').split('—')[0].trim() + ' · ' + w + ' ק"ג (הקודם: ' + prevTxt + ')');
     }, 1400);
   }
-  // Level the athlete worked at (L1-L4), saved on the SESSION (day.level /
-  // alt.level) — v3, per Ori: one level per workout, kept with the result so
-  // "last time" compares like with like. Never required for completion.
-  levelPills() {
+  // Level the athlete worked at, saved on the SESSION (day.level / alt.level)
+  // — v3, per Ori: one level per workout, kept with the result so "last time"
+  // compares like with like.
+  // 08/09 (Ori): the level is STEP 1 of the result entry — the pills offer
+  // exactly the levels the plan writes for the metcon (planLevels; L1-L3 in
+  // block 2, no L4) and every result field below stays locked until one is
+  // picked (metconBar). A day whose plan has no level lines shows no pills.
+  levelPills(levels) {
     const t = this.curSession();
     const cur = String(t.level || '');
     const last = cur ? '' : this.lastLevel();
     const btn = (k, on, hint) => React.createElement('button', {
-      key:k, onClick:()=>this.onEditPath('level', on ? '' : k), title: hint || ('רמה ' + k),
+      key:k, onClick:()=>this.pickLevel(k), title: hint || ('רמה ' + k),
       style:{ border:'1.5px '+((!on && hint) ? 'dashed' : 'solid')+' '+((on || hint) ? 'var(--navy)' : 'var(--line)'), background:on?'var(--navy-bg)':'var(--card)', color:on?'#fff':'var(--muted)', borderRadius:'999px', padding:'6px 12px', fontWeight:700, fontSize:'12px', cursor:'pointer', fontFamily:"'Oswald',sans-serif", letterSpacing:'.04em', transition:'all .15s' }
     }, 'L'+k);
-    return React.createElement('div', { dir:'rtl', style:{ display:'flex', gap:'6px', alignItems:'center', flexWrap:'wrap' } },
-      React.createElement('span', { style:{ fontSize:'12px', fontWeight:600, color:'var(--muted)' } }, 'באיזו רמה עבדת?'),
-      ['1','2','3','4'].map(k => btn(k, cur===k, (!cur && last===k) ? 'הרמה שבחרת בפעם הקודמת' : '')),
+    const row = React.createElement('div', { dir:'rtl', style:{ display:'flex', gap:'6px', alignItems:'center', flexWrap:'wrap' } },
+      React.createElement('span', { style:{ fontSize:'12px', fontWeight:700, color:'var(--navy)' } }, 'שלב 1 · באיזו רמה עבדת?'),
+      levels.map(n => String(n)).map(k => btn(k, cur===k, (!cur && last===k) ? 'הרמה שבחרת בפעם הקודמת' : '')),
       (!cur && last) ? React.createElement('span', { style:{ fontSize:'11px', color:'var(--muted)' } }, '· בפעם הקודמת L'+last) : null
     );
+    return row;
+  }
+  // Level pill tap: pick the level (step 1); tapping the active pill clears it.
+  pickLevel(k) {
+    const d = structuredClone(this.state.data);
+    const dc = d[this.state.selWeek].days[this.state.selDay];
+    const t = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
+    t.level = String(t.level || '') === k ? '' : k;
+    this.save(d); this.setState({ data: d });
+  }
+  // The levels the plan writes for a metcon — read from its "L1 = …" /
+  // "Level 2 — …" lines, the same lines planEl renders as a table. [] when
+  // the day has no levels (then there is nothing to pick and no step 1).
+  planLevels(metcon) {
+    const LV = /^\s*(?:Level|L)\s*(\d)(?:\s*[-–]\s*(\d))?\s*[=:—–-]+/i;
+    const set = {};
+    String((metcon && metcon.note) || '').split('\n').forEach(line => {
+      const m = line.match(LV); if (!m) return;
+      const a = +m[1], b = m[2] ? +m[2] : a;
+      for (let i = a; i <= b; i++) if (i >= 1 && i <= 4) set[i] = 1;
+    });
+    return Object.keys(set).map(Number).sort();
   }
   // Most recent level chosen on an earlier day of the block ('' if none).
   lastLevel() {
@@ -2424,6 +2477,23 @@ class Component extends DCLogic {
   }
   hebDow = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
   whenLabel(i) { return 'שבוע ' + (Math.floor(i/7)+1) + ' · יום ' + this.hebDow[i%7]; }
+  // Total reps of a rounds+reps result on a ROUND_REPS day: rounds × the
+  // level's round size + the partial round. null when the day/base has no
+  // round sizes, no level is picked, or nothing is logged. key = 'wi_di',
+  // base carries the 'alt.' prefix for the endurance session.
+  roundTotal(key, sess, base) {
+    const cfg = this.ROUND_REPS[key]; const per = cfg && cfg[base]; if (!per || !sess) return null;
+    const size = per[String(sess.level || '')]; if (!size) return null;
+    const m = /metcon2$/.test(base) ? sess.metcon2 : sess.metcon; const L = (m && m.log) || {};
+    const r = parseInt(L.rounds, 10) || 0, x = parseInt(L.reps, 10) || 0;
+    if (!r && !x) return null;
+    return { size, rounds: r, reps: x, total: r * size + x };
+  }
+  // resultText plus the level-based rep total where one applies.
+  resultTextAt(key, sess, base, m) {
+    const t = this.resultText(m); const rt = this.roundTotal(key, sess, base);
+    return rt ? (t + ' = ' + rt.total + ' חזרות') : t;
+  }
   resultText(m) {
     const M = (m && m.log) || {};
     const mode = m.resultMode || M.mode || 'time';
@@ -2451,7 +2521,7 @@ class Component extends DCLogic {
         for (const mm of [x.metcon, x.metcon2]) {
           if (!mm || this.normName(mm.name) !== key) continue;
           const sc = this.metconScore(mm); if (!sc) continue;
-          return { i, text: this.resultText(mm), score: sc, mode: (mm.resultMode || (mm.log && mm.log.mode) || 'time'), rx: !!mm.rx, level: x.level || '' };
+          return { i, text: this.resultTextAt(Math.floor(i/7)+'_'+(i%7), x, (x === d.alt ? 'alt.' : '') + (mm === x.metcon2 ? 'metcon2' : 'metcon'), mm), score: sc, mode: (mm.resultMode || (mm.log && mm.log.mode) || 'time'), rx: !!mm.rx, level: x.level || '' };
         }
       }
     }
@@ -2503,7 +2573,7 @@ class Component extends DCLogic {
         const sets = Object.keys(L).filter(k=>/^s\d+$/.test(k)).sort((a,b)=>+a.slice(1)-+b.slice(1)).map(k=>L[k]).join(' / ');
         const met = [x.metcon, x.metcon2].filter(m => m && (m.name || this.metconScore(m)));
         const metName = met.map(m => m.name).join(' + ');
-        const metRes = met.map(m => this.resultText(m)).filter(Boolean).join(' + ');
+        const metRes = met.map(m => this.resultTextAt(wi+'_'+di, x, (x === day.alt ? 'alt.' : '') + (m === x.metcon2 ? 'metcon2' : 'metcon'), m)).filter(Boolean).join(' + ');
         const rxs = met.map(m => m.rx ? 'RX' : (m.scaled ? ('Scaled' + (m.log && m.log.scaled ? ' (' + m.log.scaled + ')' : '')) : '')).filter(Boolean).join(' + ');
         const extras = (x.extras || []).filter(e => e && e.name && e.log && e.log.text).map(e => e.name + ': ' + e.log.text).join(' | ');
         rows.push([this.dateStr(this.dateAt(gi)), wi+1, this.hebDow[di], sess, x.done ? 'כן' : 'לא', (x.lift && x.lift.movement) || '', L.weight || '', L.reps || '', sets, metName, metRes, rxs, x.level ? ('L' + x.level) : '', eff(x.rating), this.dayHasPR(x) ? 'כן' : '', extras, x.summary || '']);
@@ -3036,8 +3106,8 @@ class Component extends DCLogic {
       nd.metcon.scaled = !!src.scaled;
       const M = src.log || {};
       nd.metcon.log = { mode: M.mode||'time', time: M.time||'', rounds: M.rounds||'', reps: M.reps||'', amount: M.amount||'', note: M.note!==undefined ? M.note : (src.result||''), scaled: M.scaled||'' };
-      // per-movement pilot fields (mv1..mvN) must survive normalization
-      Object.keys(M).forEach(k=>{ if (/^mv\d+$/.test(k) && M[k]) nd.metcon.log[k] = M[k]; });
+      // per-movement pilot fields (mv1..mvN) and split times (t1..tN) must survive normalization
+      Object.keys(M).forEach(k=>{ if (/^(mv|t)\d+$/.test(k) && M[k]) nd.metcon.log[k] = M[k]; });
       if (Array.isArray(src.movements)) src.movements.forEach((m,i)=>{ if(i<4){ nd.metcon.movements[i].name=m.name||''; nd.metcon.movements[i].detail=m.detail||''; }});
     }
     const src2 = o.metcon2;
@@ -3045,7 +3115,7 @@ class Component extends DCLogic {
       nd.metcon2.name = src2.name||''; nd.metcon2.scheme = src2.scheme||''; nd.metcon2.score = src2.score||''; nd.metcon2.note = src2.note||''; nd.metcon2.resultMode = src2.resultMode||''; nd.metcon2.rx = !!src2.rx; nd.metcon2.scaled = !!src2.scaled;
       const M2 = src2.log || {};
       nd.metcon2.log = { mode: M2.mode||'time', time: M2.time||'', rounds: M2.rounds||'', reps: M2.reps||'', amount: M2.amount||'', note: M2.note||'', scaled: M2.scaled||'' };
-      Object.keys(M2).forEach(k=>{ if (/^mv\d+$/.test(k) && M2[k]) nd.metcon2.log[k] = M2[k]; });
+      Object.keys(M2).forEach(k=>{ if (/^(mv|t)\d+$/.test(k) && M2[k]) nd.metcon2.log[k] = M2[k]; });
       if (Array.isArray(src2.movements)) src2.movements.forEach((m,i)=>{ if(i<4){ nd.metcon2.movements[i].name=m.name||''; nd.metcon2.movements[i].detail=m.detail||''; }});
     }
     if (Array.isArray(o.extras)) o.extras.forEach((e,i)=>{ if(i<2){ const EL=e.log||{}; nd.extras[i]={name:e.name||'',detail:e.detail||'',result:e.result||'',log:{text: EL.text!==undefined ? EL.text : (e.result||'')}}; }});
@@ -3296,9 +3366,8 @@ class Component extends DCLogic {
     const target = (path !== 'brief' && this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;   // the daily brief is per day, not per session
     this.setDeep(target, path, val);
     this.mirrorPmScore(target, path);
-    // v3: the first metcon result of a session adopts the last level chosen
-    // in the block, so the athlete only taps when the level changed.
-    if (/^metcon2?\.log\./.test(path) && !target.level && String(val||'').trim()) { const ll = this.lastLevel(); if (ll) target.level = ll; }
+    // (08/09: the level is step 1 of the entry, picked explicitly — the old
+    // "first result adopts last level" shortcut is gone.)
     this.save(d); this.setState({ data: d });
     const gi0 = this.state.selWeek*7 + this.state.selDay;
     if (path === 'pr' && val === true) this.celebrate('שיא חדש! 🏆', ((target.lift && target.lift.movement) || (target.metcon && target.metcon.name) || 'אימון').split('—')[0].trim());
@@ -3456,6 +3525,28 @@ class Component extends DCLogic {
       style:{ flex:1, minWidth:'120px', border:'1px solid rgba(35,64,154,.35)', borderRadius:'10px', padding:'10px 12px', fontSize:'14px', background:'var(--log)', color:'var(--ink)', outline:'none' }
     });
   }
+  // Time entry (08/09, per Ori: "הזנת התוצאה תהיה אוטומטית XX:XX"): digits
+  // only on a numeric keypad, formatted from the right as you type — 1 → 0:01,
+  // 12 → 0:12, 123 → 1:23, 1230 → 12:30 — no colon to find. Stored as shown.
+  fmtTime(raw) {
+    let d = String(raw == null ? '' : raw).replace(/\D/g, '').replace(/^0+/, '');
+    if (!d) return '';
+    if (d.length > 4) d = d.slice(0, 4);   // mm:ss tops out at 99:59; extra digits are ignored
+    d = d.padStart(3, '0');
+    return d.slice(0, -2) + ':' + d.slice(-2);
+  }
+  secs(t) {
+    const m = String(t == null ? '' : t).trim().match(/^(\d+):(\d{1,2})$/);
+    return m ? (+m[1]) * 60 + (+m[2]) : NaN;
+  }
+  fmtSecs(n) { const m = Math.floor(n / 60), r = n % 60; return m + ':' + (r < 10 ? '0' : '') + r; }
+  timeEl(path, val, onChange) {
+    return React.createElement('input', {
+      dir:'ltr', inputMode:'numeric', value: val || '', placeholder:'mm:ss',
+      onChange:(e)=>{ const v = this.fmtTime(e.target.value); if (onChange) onChange(v); else this.onEditPath(path, v); },
+      style:{ width:'100%', border:'1px solid rgba(35,64,154,.35)', borderRadius:'10px', padding:'10px 12px', fontSize:'15px', background:'var(--log)', color:'var(--ink)', outline:'none', fontWeight:600, textAlign:'center' }
+    });
+  }
   unit(el, label) {
     return React.createElement('div', { style:{ flex:1, display:'flex', flexDirection:'column', gap:'4px', alignItems:'stretch' } },
       React.createElement('span', { style:{ font:"600 9px/1 'Oswald'", letterSpacing:'.08em', textTransform:'uppercase', color:'var(--muted)', textAlign:'center' } }, label),
@@ -3515,11 +3606,38 @@ class Component extends DCLogic {
     this.save(d); this.setState({ data:d });
     this.checkLiftPR(this.state.selWeek*7 + this.state.selDay);
   }
+  // One time per interval (TIME_SPLITS): log.t1..tN, and log.time = their sum
+  // once every box holds a time ('' otherwise, so the save gate keeps asking
+  // for the full breakdown). Empty boxes are deleted, like the LIFT sets.
+  onSplitEdit(base, i, val) {
+    const d = structuredClone(this.state.data);
+    const dc = d[this.state.selWeek].days[this.state.selDay];
+    const t = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
+    const m = base==='metcon2' ? t.metcon2 : t.metcon;
+    const L = m.log || (m.log = { mode:'time', time:'', rounds:'', reps:'', amount:'', note:'', scaled:'' });
+    const v = this.fmtTime(val);
+    if (v) L['t'+i] = v; else delete L['t'+i];
+    const n = (this.metconCfg(this.TIME_SPLITS, base) || []).length;
+    let sum = 0, all = n > 0;
+    for (let k = 1; k <= n && all; k++) { const sec = this.secs(L['t'+k]); if (isFinite(sec)) sum += sec; else all = false; }
+    L.time = all ? this.fmtSecs(sum) : '';
+    this.save(d); this.setState({ data:d });
+  }
   metconBar(metcon, base) {
     base = base || 'metcon';
     const M = metcon.log || {};
     const fixed = metcon.resultMode || '';
     const mode = fixed || M.mode || 'time';
+    // Step 1 (08/09, per Ori): on a day whose plan writes levels, the level is
+    // picked first and every result field below stays locked until it is; the
+    // box / score steps then count from 2.
+    const levels = base === 'metcon' ? this.planLevels(metcon) : [];
+    const lvNeed = levels.length > 0 && !String(this.curSession().level || '');
+    const step = levels.length ? 1 : 0;
+    const lockEl = (val) => React.createElement('input', {
+      disabled:true, placeholder:'🔒', value: val || '',
+      style:{ width:'100%', border:'1px dashed var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'15px', background:'var(--paper)', color:'var(--faint)', outline:'none', fontWeight:600, textAlign:'center' }
+    });
     // Per-movement pilot: first a result per movement (log.mv1..mvN), and only
     // when all of them are in does the board-score input open up. Custom-box
     // days (PER_MOVE_BOXES) label the boxes themselves; mirror days
@@ -3533,32 +3651,54 @@ class Component extends DCLogic {
     const pmAll = pmMoves.length>0 && pmMoves.every(m=>String(M['mv'+m.n]||'').trim());
     const pmLocked = pmMoves.length>0 && !pmAll;
     const pmScore = pmMoves.length ? this.metconCfg(this.PER_MOVE_SCORE, base) : '';
+    // Weight-only days (08/09, W1 Thu: every box is a "(kg)"): the boxes are the
+    // working weights, not a result breakdown — no average of them.
+    const kgOnly = !!(pmBoxes && pmBoxes.length && pmBoxes.every(l => /\(kg\)/.test(l)));
     let pmAvg = null;
-    if (pmAll && !pmScore) { const nums = pmMoves.map(m=>parseFloat(M['mv'+m.n])); if (nums.every(n=>isFinite(n) && n>0)) pmAvg = Math.round(nums.reduce((s,x)=>s+x,0)/nums.length*10)/10; }
+    if (pmAll && !pmScore && !kgOnly) { const nums = pmMoves.map(m=>parseFloat(M['mv'+m.n])); if (nums.every(n=>isFinite(n) && n>0)) pmAvg = Math.round(nums.reduce((s,x)=>s+x,0)/nums.length*10)/10; }
     const pmBlock = pmMoves.length ? React.createElement(React.Fragment, null,
-      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:700, color:'var(--navy)' } }, 'שלב 1 · ' + (pmBoxes ? 'פירוט התוצאה' : 'תוצאה לכל תנועה') + (metcon.score ? ' — ' + metcon.score : '')),
+      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:700, color:'var(--navy)' } }, 'שלב ' + (step+1) + ' · ' + (kgOnly ? 'משקלי העבודה' : (pmBoxes ? 'פירוט התוצאה' : 'תוצאה לכל תנועה')) + ((metcon.score && !kgOnly) ? ' — ' + metcon.score : '')),
       React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
-        pmMoves.map(m=>this.unit(this.numEl(base+'.log.mv'+m.n, M['mv'+m.n], '0'), m.name))),
-      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: pmLocked ? 'var(--orange)' : 'var(--greenink)' } },
-        pmLocked ? (pmScore ? ('🔒 מלאו את כל ' + pmMoves.length + ' הקוביות — התוצאה (' + pmScore.label + ') תתמלא אוטומטית')
-                            : ('🔒 שלב 2 · מלאו תוצאה לכל ' + pmMoves.length + ' התנועות — ואז תיפתח הזנת התוצאה'))
-                 : (pmScore ? ('✓ התוצאה (' + pmScore.label + '): ' + (M.amount || M['mv'+pmScore.box] || '') + ' — נרשמת אוטומטית')
-                            : ('✓ שלב 2 · הזנת התוצאה פתוחה' + (pmAvg!=null ? ' — ממוצע התנועות: ' + pmAvg : ''))))
+        pmMoves.map(m=>this.unit(lvNeed ? lockEl(M['mv'+m.n]) : this.numEl(base+'.log.mv'+m.n, M['mv'+m.n], '0'), m.name))),
+      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: (lvNeed || pmLocked) ? 'var(--orange)' : 'var(--greenink)' } },
+        lvNeed ? '🔒 בחרו רמה בשלב 1 — ואז ייפתחו הקוביות'
+               : pmLocked ? (pmScore ? ('🔒 מלאו את כל ' + pmMoves.length + ' הקוביות — התוצאה (' + pmScore.label + ') תתמלא אוטומטית')
+                                     : ('🔒 שלב ' + (step+2) + ' · ' + (kgOnly ? 'מלאו את המשקלים' : ('מלאו תוצאה לכל ' + pmMoves.length + ' התנועות')) + ' — ואז תיפתח הזנת התוצאה'))
+                          : (pmScore ? ('✓ התוצאה (' + pmScore.label + '): ' + (M.amount || M['mv'+pmScore.box] || '') + ' — נרשמת אוטומטית')
+                                     : ('✓ שלב ' + (step+2) + ' · הזנת התוצאה פתוחה' + (pmAvg!=null ? ' — ממוצע התנועות: ' + pmAvg : ''))))
     ) : null;
+    // Split days (TIME_SPLITS): one XX:XX box per interval; the total is the
+    // sum, written by onSplitEdit once every box is in — nothing else to type.
+    const splits = mode === 'time' ? this.metconCfg(this.TIME_SPLITS, base) : '';
+    const spAll = !!splits && splits.every((_,i)=>String(M['t'+(i+1)]||'').trim());
+    const spBlock = splits ? React.createElement(React.Fragment, null,
+      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:700, color:'var(--navy)' } }, 'שלב ' + (step+1) + ' · זמן לכל מקצה' + (metcon.score ? ' — ' + metcon.score : '')),
+      React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
+        splits.map((lbl,i)=>this.unit(lvNeed ? lockEl(M['t'+(i+1)]) : this.timeEl('', M['t'+(i+1)], v=>this.onSplitEdit(base, i+1, v)), lbl))),
+      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: spAll ? 'var(--greenink)' : 'var(--orange)' } },
+        spAll ? ('✓ הזמן הכולל: ' + (M.time || '') + ' — מחושב אוטומטית מסכום המקצים')
+              : ('🔒 מלאו את ' + splits.length + ' המקצים — הזמן הכולל יחושב אוטומטית'))
+    ) : null;
+    // ROUND_REPS days: the round size follows the level picked in step 1, and
+    // the total (rounds × size + reps) is shown as it is typed.
+    const rrCfg = mode === 'rounds' ? this.metconCfg(this.ROUND_REPS, base) : '';
+    const rrLevel = rrCfg ? String(this.curSession().level || '') : '';
+    const rrSize = (rrCfg && rrLevel) ? rrCfg[rrLevel] : 0;
+    const rrTot = rrSize ? this.roundTotal(this.pilotKey(), this.curSession(), (this.state.activeSession==='alt'?'alt.':'')+base) : null;
+    const rrLine = rrSize ? React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: rrTot ? 'var(--greenink)' : 'var(--muted)', lineHeight:1.5 } },
+        rrTot ? ('✓ סך החזרות לפי L' + rrLevel + ': ' + rrTot.rounds + ' × ' + rrTot.size + ' + ' + rrTot.reps + ' = ' + rrTot.total + ' חזרות')
+              : ('סבב ברמה L' + rrLevel + ' = ' + rrSize + ' חזרות · הזינו סבבים מלאים + חזרות מהסבב האחרון — הסך יחושב לבד')) : null;
     const seg = (k, lbl) => React.createElement('button', {
       key:k, onClick:()=>this.onEditPath(base+'.log.mode', k),
       style:{ flex:1, border:'none', cursor:'pointer', padding:'6px 10px', borderRadius:'8px', fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'12px', transition:'all .15s',
         background: mode===k ? 'var(--blue)' : 'transparent', color: mode===k ? '#fff' : 'var(--muted)' }
     }, lbl);
     let inputs;
-    if (pmLocked) inputs = this.unit(React.createElement('input', {
-        disabled:true, placeholder:'🔒',
-        value:(mode==='time' ? M.time : mode==='amount' ? M.amount : [M.rounds, M.reps].filter(Boolean).join(' + ')) || '',
-        style:{ width:'100%', border:'1px dashed var(--line)', borderRadius:'10px', padding:'10px 12px', fontSize:'15px', background:'var(--paper)', color:'var(--faint)', outline:'none', fontWeight:600, textAlign:'center' }
-      }), 'Score / תוצאה');
-    else if (pmScore) inputs = null; // mirror day — the score box IS the score, nothing to type here
+    const curRes = (mode==='time' ? M.time : mode==='amount' ? M.amount : [M.rounds, M.reps].filter(Boolean).join(' + ')) || '';
+    if (lvNeed || pmLocked) inputs = this.unit(lockEl(curRes), mode==='time' ? 'time / זמן' : 'Score / תוצאה');
+    else if (pmScore || splits) inputs = null; // mirror / split day — the boxes ARE the score, nothing to type here
     else if (mode==='amount') inputs = this.unit(this.numEl(base+'.log.amount', M.amount, '0'), pmMoves.length ? 'Score / תוצאה' : (this.metconCfg(this.METCON_AMOUNT_LABEL, base) || 'כמות (מ׳ / קל׳)'));
-    else if (mode==='time') inputs = this.unit(this.txtEl(base+'.log.time', M.time, 'mm:ss'), 'time / זמן');
+    else if (mode==='time') inputs = this.unit(this.timeEl(base+'.log.time', M.time), 'time / זמן');
     else inputs = React.createElement(React.Fragment, null,
           this.unit(this.numEl(base+'.log.rounds', M.rounds, '0'), 'rounds / סבבים'),
           React.createElement('span', { style:{ fontWeight:700, color:'var(--muted)', paddingBottom:'10px' } }, '+'),
@@ -3570,16 +3710,20 @@ class Component extends DCLogic {
       style:{ display:'inline-flex', alignItems:'center', gap:'6px', border:'1.5px solid '+(on?activeColor:'var(--line)'), background:on?activeBg:'var(--card)', color:on?activeColor:'var(--muted)', borderRadius:'999px', padding:'7px 14px', fontWeight:700, fontSize:'12.5px', cursor:'pointer', transition:'all .15s' }
     }, (on?'✓':'○') + ' ' + label);
     return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } },
+      levels.length ? this.levelPills(levels) : null,   // step 1 (08/09): the level comes first
       pmBlock,
+      spBlock,
       fixed ? null : React.createElement('div', { style:{ display:'flex', gap:'2px', background:'var(--chip)', borderRadius:'10px', padding:'3px', width:'fit-content' } }, seg('time','Time'), seg('rounds','Rounds + Reps')),
+      (levels.length && !pmMoves.length && !splits) ? React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:700, color:'var(--navy)' } }, 'שלב 2 · ' + (mode==='time' ? 'הזמן שסיימתם' : 'התוצאה') + (metcon.score ? ' — ' + metcon.score : '')) : null,
       React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } }, inputs, this.unit(this.txtEl(base+'.log.note', M.note, 'הערה'), 'note')),
+      (lvNeed && !pmMoves.length && !splits) ? React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color:'var(--orange)' } }, '🔒 בחרו רמה בשלב 1 — ואז תיפתח הזנת התוצאה') : null,
+      rrLine,
       React.createElement('div', { style:{ display:'flex', gap:'8px', flexWrap:'wrap' } },
         pill(!!metcon.rx, 'var(--orange)', 'rgba(239,91,37,.12)', ()=>this.setRxScaled(base,'rx'), rxNote || 'ביצוע במשקלים ובתנועות שכתובים באימון', 'עשיתי כמו שכתוב (RX)'),
         pill(!!metcon.scaled, 'var(--blue)', 'rgba(35,64,154,.1)', ()=>this.setRxScaled(base,'scaled'), 'ביצוע מותאם — רשום את משקלי העבודה שלך', 'עשיתי Scaled')
       ),
       rxNote ? React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color:'var(--muted)', lineHeight:1.5 } }, rxNote) : null,
-      metcon.scaled ? this.unit(this.txtEl(base+'.log.scaled', M.scaled, 'למשל: 40kg במקום 60, מתח עם גומייה…'), 'משקלי עבודה · Scaled') : null,
-      base === 'metcon' ? this.levelPills() : null
+      metcon.scaled ? this.unit(this.txtEl(base+'.log.scaled', M.scaled, 'למשל: 40kg במקום 60, מתח עם גומייה…'), 'משקלי עבודה · Scaled') : null
     );
   }
   // RX and Scaled are mutually exclusive; clicking the active one turns it off.
@@ -3596,12 +3740,16 @@ class Component extends DCLogic {
     const E = ex.log || {};
     return this.txtEl('extras.'+i+'.log.text', E.text, '✎ זמן / משקל / חזרות / תוצאה');
   }
-  logSummaryText(day) {
+  // key ('wi_di') + alt let a ROUND_REPS day add its level-based rep total.
+  logSummaryText(day, key, alt) {
     const parts = [];
     const L = (day.lift&&day.lift.log)||{}; if (L.weight||L.reps) parts.push([L.weight&&(L.weight+'kg'), L.reps&&(L.reps+' reps')].filter(Boolean).join(' × '));
     const M = (day.metcon&&day.metcon.log)||{};
     if (M.mode==='time' && M.time) parts.push(M.time);
-    else if ((M.rounds||M.reps)) parts.push([M.rounds&&(M.rounds+' rds'), M.reps&&(M.reps+' reps')].filter(Boolean).join(' + '));
+    else if ((M.rounds||M.reps)) {
+      const rt = key ? this.roundTotal(key, day, (alt?'alt.':'')+'metcon') : null;
+      parts.push([M.rounds&&(M.rounds+' rds'), M.reps&&(M.reps+' reps')].filter(Boolean).join(' + ') + (rt ? (' = ' + rt.total + ' reps') : ''));
+    }
     return parts.join(' · ');
   }
 
@@ -3632,7 +3780,7 @@ class Component extends DCLogic {
           const lift = dd.lift || {}, L = lift.log || {};
           if (this.dayHasPR(dd)) {
             const move = lift.movement || (dd.metcon && dd.metcon.name) || ((dd.extras||[]).find(e=>e&&e.name)||{}).name || 'Workout';
-            const res = this.logSummaryText(dd) || L.note || (dd.metcon && dd.metcon.log && dd.metcon.log.note) || '';
+            const res = this.logSummaryText(dd, w+'_'+d, dd === base.alt) || L.note || (dd.metcon && dd.metcon.log && dd.metcon.log.note) || '';
             out.flags.push({ key: this.normName(move, true), move, res, wi:w, di:d, week:w+1, block, date:this.dateStr(this.dateAt(gi)) });
           }
           const rawName = String(lift.movement || '').split('—')[0].trim();
@@ -3982,8 +4130,8 @@ class Component extends DCLogic {
     const liftOpen = isOpen('lift', liftHas), metconOpen = isOpen('metcon', metHas), metcon2Open = isOpen('metcon2', met2Has), extraOpen = isOpen('extra', extraHas);
     const L0 = day.lift.log || {};
     const liftSum = liftHas ? (L0.weight + ' ק"ג' + (L0.reps ? (' × ' + L0.reps) : '')) : '';
-    const metSum = metHas ? (this.resultText(met) + (met.rx ? ' · RX' : (met.scaled ? ' · Scaled' : ''))) : '';
-    const met2Sum = met2Has ? (this.resultText(met2) + (met2.rx ? ' · RX' : (met2.scaled ? ' · Scaled' : ''))) : '';
+    const metSum = metHas ? (this.resultTextAt(selWeek+'_'+selDay, day, (asAlt?'alt.':'')+'metcon', met) + (met.rx ? ' · RX' : (met.scaled ? ' · Scaled' : ''))) : '';
+    const met2Sum = met2Has ? (this.resultTextAt(selWeek+'_'+selDay, day, (asAlt?'alt.':'')+'metcon2', met2) + (met2.rx ? ' · RX' : (met2.scaled ? ' · Scaled' : ''))) : '';
     const extraSum = exPresent.length ? (exLogged + '/' + exPresent.length + ' תועדו') : '';
 
     // ---- records (v3, Ori 07/09): this block's laid over the ledger of earlier blocks ----
@@ -4391,7 +4539,7 @@ class Component extends DCLogic {
     }
     const wi = this.state.shareWi;
     const lines = ['🔥 CrossFit Bat Yam — שבוע '+(wi+1), this.rangeStr(wi), ''];
-    data[wi].days.forEach((day,di)=>{ if (!this.dayHasPlan(day) && !this.dayComplete(day)) return; const src=(day.alt && day.alt.done && !day.done) ? day.alt : day; const title=src.lift.movement||src.metcon.name||'אימון'; const res=this.logSummaryText(src); const rm=this.ratingMeta(src.rating); lines.push((this.dayComplete(day)?'✅':'⬜')+' '+this.dowShort[di]+' — '+title+(res?(' · '+res):'')+(this.dayHasPR(src)?' 🏆':'')+(rm?(' '+rm.emoji):'')); });
+    data[wi].days.forEach((day,di)=>{ if (!this.dayHasPlan(day) && !this.dayComplete(day)) return; const src=(day.alt && day.alt.done && !day.done) ? day.alt : day; const title=src.lift.movement||src.metcon.name||'אימון'; const res=this.logSummaryText(src, wi+'_'+di, src === day.alt); const rm=this.ratingMeta(src.rating); lines.push((this.dayComplete(day)?'✅':'⬜')+' '+this.dowShort[di]+' — '+title+(res?(' · '+res):'')+(this.dayHasPR(src)?' 🏆':'')+(rm?(' '+rm.emoji):'')); });
     const dn = data[wi].days.filter(x=>this.dayComplete(x)).length;
     lines.push('', 'סה"כ ' + dn + '/5 אימונים הושלמו');
     return lines.join('\n');
@@ -4617,7 +4765,7 @@ class Component extends DCLogic {
     } else {
       const wi = this.state.shareWi;
       const rows = [];
-      data[wi].days.forEach((day,di)=>{ if (!this.dayHasPlan(day) && !this.dayComplete(day)) return; const src=(day.alt && day.alt.done && !day.done) ? day.alt : day; const title=src.lift.movement||src.metcon.name||'אימון'; const res=this.logSummaryText(src); const rm=this.ratingMeta(src.rating); rows.push({ di, title, res, done:this.dayComplete(day), emoji:(this.dayHasPR(src)?'🏆':'')+(rm?rm.emoji:'') }); });
+      data[wi].days.forEach((day,di)=>{ if (!this.dayHasPlan(day) && !this.dayComplete(day)) return; const src=(day.alt && day.alt.done && !day.done) ? day.alt : day; const title=src.lift.movement||src.metcon.name||'אימון'; const res=this.logSummaryText(src, wi+'_'+di, src === day.alt); const rm=this.ratingMeta(src.rating); rows.push({ di, title, res, done:this.dayComplete(day), emoji:(this.dayHasPR(src)?'🏆':'')+(rm?rm.emoji:'') }); });
       const dn = data[wi].days.filter(x=>this.dayComplete(x)).length;
       body = React.createElement('div', null,
         React.createElement('div', { style:{ display:'flex', alignItems:'baseline', gap:'8px', margin:'2px 0 12px' } },
