@@ -2234,8 +2234,8 @@ class Component extends DCLogic {
   // numbers). Labels in order → log.mv1..mvN; days absent here keep deriving
   // one box per movement name.
   PER_MOVE_BOXES = this.IS_DEMO ? this.DEMO_MAPS.PER_MOVE_BOXES : {
-    // W1 Tue: stations — one count per station, the score mirrors the power cleans (PER_MOVE_SCORE)
-    '0_2': { 'metcon': ['Bike (cals)','Burpees over cones (reps)','Power cleans (reps)'] },
+    // W1 Tue (08/09, per Ori): level + one count per station per round, then a separate result box — total power cleans of ALL rounds
+    '0_2': { 'metcon': ['Bike (cals / round)','Burpees (reps / round)','Power cleans (reps / round)'] },
     // W1 Thu (08/09, per Ori): a day without level lines logs the weight per movement that HAS one — nothing for the box jump
     '0_4': { 'metcon': ['Wall balls (kg)','Single arm DB (kg)'] }
   };
@@ -2244,8 +2244,7 @@ class Component extends DCLogic {
   // is no separate score entry. Clearing any box clears the score, which
   // keeps the save gate enforcing the full breakdown.
   PER_MOVE_SCORE = this.IS_DEMO ? this.DEMO_MAPS.PER_MOVE_SCORE : {
-    // W1 Tue: the declared score is one of the per-station counts — mirror it, no second entry
-    '0_2': { 'metcon': { box:3, label:'סך הפאוור קלינים' } }
+    // W1: none. Tue used to mirror the power cleans box — Ori (08/09) wants the total of all rounds typed separately.
   };
   // METCON_AMOUNT_LABEL / METCON_RX_NOTE (28/08, per Ori): amount-mode days
   // whose board score is a rep count label the input as such (instead of the
@@ -2257,7 +2256,7 @@ class Component extends DCLogic {
   // keep scoring.
   METCON_AMOUNT_LABEL = this.IS_DEMO ? this.DEMO_MAPS.METCON_AMOUNT_LABEL : {
     '0_0': { 'metcon':'סך ה-HSPU', 'alt.metcon':'סך הברפיז' },
-    '0_2': { 'metcon':'סך הפאוור קלינים' },
+    '0_2': { 'metcon':'סך הפאוור קלינים מכל הסבבים' },
     '0_3': { 'metcon':'סך ה-Wallwalks' }
   };
   METCON_RX_NOTE = this.IS_DEMO ? this.DEMO_MAPS.METCON_RX_NOTE : {};
@@ -3655,7 +3654,8 @@ class Component extends DCLogic {
     // working weights, not a result breakdown — no average of them.
     const kgOnly = !!(pmBoxes && pmBoxes.length && pmBoxes.every(l => /\(kg\)/.test(l)));
     let pmAvg = null;
-    if (pmAll && !pmScore && !kgOnly) { const nums = pmMoves.map(m=>parseFloat(M['mv'+m.n])); if (nums.every(n=>isFinite(n) && n>0)) pmAvg = Math.round(nums.reduce((s,x)=>s+x,0)/nums.length*10)/10; }
+    const wantAvg = /\bavg\b|average|ממוצע/i.test(metcon.score || '');   // the boxes' mean is a score only when the plan says "average"
+    if (pmAll && !pmScore && !kgOnly && wantAvg) { const nums = pmMoves.map(m=>parseFloat(M['mv'+m.n])); if (nums.every(n=>isFinite(n) && n>0)) pmAvg = Math.round(nums.reduce((s,x)=>s+x,0)/nums.length*10)/10; }
     const pmBlock = pmMoves.length ? React.createElement(React.Fragment, null,
       React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:700, color:'var(--navy)' } }, 'שלב ' + (step+1) + ' · ' + (kgOnly ? 'משקלי העבודה' : (pmBoxes ? 'פירוט התוצאה' : 'תוצאה לכל תנועה')) + ((metcon.score && !kgOnly) ? ' — ' + metcon.score : '')),
       React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
@@ -3697,7 +3697,7 @@ class Component extends DCLogic {
     const curRes = (mode==='time' ? M.time : mode==='amount' ? M.amount : [M.rounds, M.reps].filter(Boolean).join(' + ')) || '';
     if (lvNeed || pmLocked) inputs = this.unit(lockEl(curRes), mode==='time' ? 'time / זמן' : 'Score / תוצאה');
     else if (pmScore || splits) inputs = null; // mirror / split day — the boxes ARE the score, nothing to type here
-    else if (mode==='amount') inputs = this.unit(this.numEl(base+'.log.amount', M.amount, '0'), pmMoves.length ? 'Score / תוצאה' : (this.metconCfg(this.METCON_AMOUNT_LABEL, base) || 'כמות (מ׳ / קל׳)'));
+    else if (mode==='amount') inputs = this.unit(this.numEl(base+'.log.amount', M.amount, '0'), this.metconCfg(this.METCON_AMOUNT_LABEL, base) || (pmMoves.length ? 'Score / תוצאה' : 'כמות (מ׳ / קל׳)'));
     else if (mode==='time') inputs = this.unit(this.timeEl(base+'.log.time', M.time), 'time / זמן');
     else inputs = React.createElement(React.Fragment, null,
           this.unit(this.numEl(base+'.log.rounds', M.rounds, '0'), 'rounds / סבבים'),
