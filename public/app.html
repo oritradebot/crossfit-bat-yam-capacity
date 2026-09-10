@@ -1445,7 +1445,7 @@
                   <div style="border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card);">
                     <div onClick="{{ toggleLift }}" title="פתיחה / קיפול" style="display:flex; align-items:center; gap:8px; padding:11px 16px; background:var(--paper); border-bottom:1px solid var(--line); cursor:pointer; user-select:none;">
                       <span style="font-size:15px;">🏋️</span>
-                      <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">LIFT</span>
+                      <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:15px; letter-spacing:.05em; color:var(--navy);">{{ liftLabel }}</span>
                       <span dir="auto" style="font-size:12px; font-weight:700; color:var(--greenink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;">{{ liftSum }}</span>
                       <sc-if value="{{ liftMissing }}" hint-placeholder-val="{{ false }}"><span style="margin-inline-start:auto; background:rgba(239,91,37,.12); color:var(--orange); border:1px solid rgba(239,91,37,.4); border-radius:999px; padding:3px 9px; font-size:11px; font-weight:700;">חסר משקל</span></sc-if>
                       <span style="margin-inline-start:auto; color:var(--muted); font-size:14px; flex:none;">{{ liftChev }}</span>
@@ -2308,6 +2308,15 @@ class Component extends DCLogic {
     '0_3': ['metcon'],   // Wed · total wallwalks
     '0_5': ['metcon']    // Fri · rounds + reps, total via ROUND_REPS
   };
+  // 10/09, per Ori ("תשנה ספציפית ביום רביעי את המילה LIFT ל-SKILL ואל תדרוש באותו יום חובה להזנה של החלק
+  // הזה … אך ורק לרביעי"): days whose FIRST slot is a skill, not a lift. The block header reads SKILL
+  // and the slot is not required to complete the day — the metcon result still is (the usual
+  // standard, minus the lift). The plan text stays where it is; nothing moves to EXTRA. Keyed
+  // 'weekIdx_dayIdx' like every map here, resolved at render — no state field, no sync impact.
+  SKILL_DAYS = this.IS_DEMO ? {} : {
+    '0_3': 1   // W1 Wed · Handstand work — Skill 15:00
+  };
+  isSkillKey(key) { return !!(key && this.SKILL_DAYS[key]); }
   // ---- session helpers (perMoveOn, curSession) --------------------------------------------------
   perMoveOn(base) {
     if (this.state.activeSession === 'alt') return false;
@@ -3902,20 +3911,26 @@ class Component extends DCLogic {
     const r = (parseInt(M.rounds,10)||0)*100000 + (parseInt(M.reps,10)||0);
     return r > 0 ? { v: r, dir: 'high' } : null;
   }
-  canComplete(day) {
+  // key = 'weekIdx_dayIdx' of the day (SKILL_DAYS lookup); asAlt = the endurance
+  // session, whose first slot is never a skill.
+  canComplete(day, key, asAlt) {
     const missing = [];
+    // 10/09 (Ori): on a SKILL day the first slot is not required — the metcon still is.
+    const skill = !asAlt && this.isSkillKey(key);
+    const liftReq = this.liftPresent(day) && !skill;
     // Pure Hebrew — mixing Latin tokens (LIFT, B) into an RTL sentence scrambles
     // the word order in the save bar.
-    if (this.liftPresent(day) && !this.liftLogged(day)) missing.push('משקל לתרגיל הכוח');
+    if (liftReq && !this.liftLogged(day)) missing.push('משקל לתרגיל הכוח');
     if (this.metconPresent(day.metcon) && !this.metconLogged(day.metcon)) missing.push('תוצאה למטקון');
     if (this.metconPresent(day.metcon2) && !this.metconLogged(day.metcon2)) missing.push('תוצאה למטקון השני');
-    const anyPresent = this.liftPresent(day) || this.metconPresent(day.metcon) || this.metconPresent(day.metcon2);
+    const anyPresent = liftReq || this.metconPresent(day.metcon) || this.metconPresent(day.metcon2);
     return { ok: anyPresent && missing.length===0, missing, anyPresent };
   }
   cleanDone(weeks) {
-    weeks.forEach(wk => wk.days.forEach(day => {
-      if (day.done && !this.canComplete(day).ok) day.done = false;
-      if (day.alt && day.alt.done && !this.canComplete(day.alt).ok) day.alt.done = false;
+    weeks.forEach((wk, wi) => wk.days.forEach((day, di) => {
+      const key = wi + '_' + di;
+      if (day.done && !this.canComplete(day, key, false).ok) day.done = false;
+      if (day.alt && day.alt.done && !this.canComplete(day.alt, key, true).ok) day.alt.done = false;
     }));
     return weeks;
   }
@@ -3962,7 +3977,7 @@ class Component extends DCLogic {
         React.createElement('button', { onClick:()=>this.unsaveDay(), style:{ flex:'none', background:'var(--card)', color:'var(--muted)', border:'1px solid var(--line)', borderRadius:'999px', padding:'10px 18px', fontWeight:700, fontSize:'13px', cursor:'pointer' } }, 'בטל שמירה')
       );
     }
-    const c = this.canComplete(day);
+    const c = this.canComplete(day, this.pilotKey(), asAlt);
     const missing = this.missingLabels(day, c);
     // v3: what is missing is a FIXED, loud line next to the button — the toast
     // used to vanish before anyone read it (Oren + David, 04/09).
@@ -4001,7 +4016,7 @@ class Component extends DCLogic {
     const t = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
     const twin = (this.state.activeSession==='alt' && dc.alt) ? dc : dc.alt;
     if (twin && twin.done && !t.done) { this.toast('ביום אינדורנס נספר אימון אחד — בטלו קודם את השמירה של האימון השני'); return; }
-    const c = this.canComplete(t);
+    const c = this.canComplete(t, this.pilotKey(), t !== dc);
     if (!c.ok) { this.toast(c.anyPresent ? ('חסר: ' + c.missing.join(' · ')) : 'אין אימון להשלים'); return; }
     t.done = true; t.rest = false;
     this.save(d); this.setState({ data:d }, () => {
@@ -4133,6 +4148,7 @@ class Component extends DCLogic {
     // first value lands pulled the inputs out from under the athlete's fingers
     // (caught in the 07/09 feedback round). Summaries still show when folded.
     const isOpen = (b, has) => { const ex = this.state.blockOpen[bkey(b)]; return ex != null ? ex : !day.done; };
+    const skillDay = !asAlt && this.isSkillKey(selWeek + '_' + selDay);   // 10/09: SKILL header, slot not required
     const liftHas = this.liftLogged(day), metHas = this.metconLogged(met), met2Has = this.metconLogged(met2);
     const exPresent = day.extras.filter(e=>e.name||e.detail);
     const exLogged = exPresent.filter(e=>e.log && String(e.log.text||'').trim()).length;
@@ -4317,7 +4333,8 @@ class Component extends DCLogic {
       toggleMetcon2: ()=>this.toggleBlock(bkey('metcon2'), metcon2Open),
       toggleExtra: ()=>this.toggleBlock(bkey('extra'), extraOpen),
       dayHasEntry: !!day.done,   // share-as-image only once the day was saved (Ori, 07/09: not during entry)
-      liftMissing: !fut && !otherDone && !day.done && this.liftPresent(day) && !this.liftLogged(day),
+      liftMissing: !fut && !otherDone && !day.done && !skillDay && this.liftPresent(day) && !this.liftLogged(day),
+      liftLabel: skillDay ? 'SKILL' : 'LIFT',
       metconMissing: !fut && !otherDone && !day.done && this.metconPresent(met) && !this.metconLogged(met),
       metcon2Missing: !fut && !otherDone && !day.done && this.metconPresent(met2) && !this.metconLogged(met2),
       saveBar: this.saveBarEl(day, otherDone, asAlt),
@@ -4743,7 +4760,7 @@ class Component extends DCLogic {
       const gi=wi*7+di;
       const rows=[];
       if (day) {
-        if (day.lift&&day.lift.movement){ const L=day.lift.log||{}; rows.push({tag:'LIFT', name:day.lift.movement, res:[L.weight&&(L.weight+'kg'),L.reps&&('× '+L.reps)].filter(Boolean).join(' ')}); }
+        if (day.lift&&day.lift.movement){ const L=day.lift.log||{}; rows.push({tag: this.isSkillKey(wi+'_'+di) ? 'SKILL' : 'LIFT', name:day.lift.movement, res:[L.weight&&(L.weight+'kg'),L.reps&&('× '+L.reps)].filter(Boolean).join(' ')}); }
         if (day.metcon&&day.metcon.name){ const M=day.metcon.log||{}; let r=''; if(M.mode==='time'&&M.time)r=M.time; else if(M.rounds||M.reps)r=[M.rounds&&(M.rounds+' rds'),M.reps&&(M.reps+' reps')].filter(Boolean).join(' + '); else if(M.amount)r=M.amount; rows.push({tag:'METCON', name:day.metcon.name, res:r}); }
         (day.extras||[]).forEach(e=>{ if(e&&e.name) rows.push({tag:'EXTRA', name:e.name, res:''}); });
       }
