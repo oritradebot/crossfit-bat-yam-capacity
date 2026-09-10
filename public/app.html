@@ -2374,6 +2374,7 @@ class Component extends DCLogic {
     this.setState({ celebrate: { title, sub: sub || '' } });
     this._ct = setTimeout(()=>this.setState({ celebrate: null }), 5000);
     try { this.confetti(); } catch (e) {}
+    try { if (navigator.vibrate) navigator.vibrate([40, 60, 40]); } catch (e) {}   // 10/09 (deploy 12): a double buzz with the celebration (Android only)
   }
   confetti() {
     const html = document.documentElement;
@@ -3285,6 +3286,13 @@ class Component extends DCLogic {
     try { window.cfbyStartDate = this.startDate; } catch (e) {}   // the admin panel's test-week banner needs the block calendar
     // The admin panel's block reset folds every athlete's records into
     // profiles.prs with the app's OWN PR code (one source of truth).
+    // 10/09 (deploy 12): home-screen shortcuts (manifest.webmanifest) open a tab directly —
+    // ?view=log lands on today's workout, ?view=prs on records + tests. Nothing else reads ?view.
+    try {
+      const qv = new URLSearchParams(location.search).get('view');
+      if (qv === 'log') { const t = this.todayIdx(); if (t >= 0) this.setState({ view: 'log', selWeek: Math.floor(t / 7), selDay: t % 7, activeSession: 'main' }); else this.setState({ view: 'log' }); }
+      else if (qv === 'prs') this.setState({ view: 'prs' });
+    } catch (e) {}
     try { window.cfbyBlockNum = this.BLOCK_NUM; window.cfbyProgramVersion = this.PROGRAM_VERSION; window.cfbyCollectPRs = (weeks, block)=>this.packLedger(this.collectPRs(weeks, block)); window.cfbyMergePRs = (prev, cur)=>this.mergePRs(prev, cur); } catch (e) {}
     try { if (!localStorage.getItem(this.ONB_KEY)) this.setState({ onbOpen: true }); } catch (e) {}
     // v3: the 3-step guide opens by itself once per profile — boot.js leaves
@@ -4046,6 +4054,7 @@ class Component extends DCLogic {
     // — "מסתנכרן…" states the push has started, which is true (the write just
     // scheduled it); whether it LANDED belongs to boot.js's badge and footer
     // line. "נשמר במכשיר" was read as "device-only, no cloud sync" (01/08).
+    try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {}   // 10/09 (deploy 12): a short buzz on save (Android only)
     this.toast('🎉 האימון הושלם ונשמר — מסתנכרן לענן…');
   }
   unsaveDay() {
