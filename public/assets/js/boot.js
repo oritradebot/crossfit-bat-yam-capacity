@@ -1397,6 +1397,10 @@
         '<p class="cfa-msg" id="cfaMsg"></p>' +
         '<div id="cfaViewPeople">' +
         '<div class="cfa-banner blue" id="cfaTestBanner" style="display:none"></div>' +
+        '<div class="cfa-ann" id="cfaWeekly" style="padding:12px 14px">' +
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px"><b>📅 סיכום השבוע</b><span id="cfaWeeklyRange" style="color:#8ea3c9;font-size:12px"></span><button class="cfa-tog" id="cfaWeeklyCopy" style="margin-inline-start:auto">📋 העתק לוואטסאפ</button></div>' +
+          '<pre id="cfaWeeklyText" dir="rtl" style="white-space:pre-wrap;font:13px/1.6 Heebo,sans-serif;margin:0;color:#eaf0ff">טוען…</pre>' +
+        '</div>' +
         '<div class="cfa-add">' +
           '<div><label>שם משתמש (אנגלית)</label><input id="cfaU" class="ltr" placeholder="username"></div>' +
           '<div><label>שם לתצוגה</label><input id="cfaN" placeholder="השם"></div>' +
@@ -1605,6 +1609,7 @@
         } else tb.style.display = "none";
       }
       renderCoach(users, bMap, sMap);
+      weeklySummary(users, bMap, sMap);
     }
     // ---- athlete log viewer (v3, Ori 07/09) ---------------------------------
     // Read-only, loaded ONLY on a tap (one 70KB blob per view — never for the
@@ -1644,6 +1649,48 @@
       document.getElementById("cfaAthX").onclick = function () { box.style.display = "none"; };
     }
     // ---- coach progress table (v3, Ori 07/09: "כן, בפאנל") -----------------
+    // ---- 📅 weekly summary (deploy 14, 10/09; Ori: a panel screen + WhatsApp copy, no server) ----
+    // Built from what refresh() already holds: board.weeks (completed per week), board.pub
+    // (partial days, last PRs, tests), states.updated_at (inactive). Nothing extra is fetched.
+    var lastWeeklyText = "";
+    function weeklySummary(users, bMap, sMap) {
+      var box = document.getElementById("cfaWeeklyText"), rng = document.getElementById("cfaWeeklyRange");
+      if (!box) return;
+      try {
+        var sd = window.cfbyStartDate ? new Date(window.cfbyStartDate) : null;
+        if (!sd || isNaN(sd.getTime())) { box.textContent = "—"; return; }
+        var d0 = new Date(sd); d0.setHours(0, 0, 0, 0);
+        var gi = Math.floor((new Date().setHours(0, 0, 0, 0) - d0.getTime()) / 86400000);
+        var cw = Math.max(0, Math.min(7, Math.floor(gi / 7)));
+        var ws = new Date(d0); ws.setDate(ws.getDate() + cw * 7); var we = new Date(ws); we.setDate(we.getDate() + 6);
+        var fd = function (d) { return (d.getDate() < 10 ? "0" : "") + d.getDate() + "/" + (d.getMonth() + 1 < 10 ? "0" : "") + (d.getMonth() + 1); };
+        var wl = "W" + (cw + 1);
+        var trained = [], notYet = [], inactive = [], partial = [], notStarted = [], prs = [], tests = [];
+        users.forEach(function (u) {
+          var b = bMap[u.id], st0 = sMap[u.id], pub = (b && b.pub) || null, nm = firstName(u.name) || u.name || "?";
+          if (!st0) { notStarted.push(nm); return; }
+          var st = statusOf(u, st0, b);
+          var n = (b && Array.isArray(b.weeks) && b.weeks[cw] && b.weeks[cw].completed) || 0;
+          if (n > 0) trained.push({ nm: nm, n: n }); else if (st.kind !== "inactive") notYet.push(nm);
+          if (st.kind === "inactive") inactive.push(nm + " (" + Math.floor((Date.now() - Date.parse(st0.updated_at)) / 86400000) + " ימים)");
+          if (pub && pub.partial > 0) partial.push(nm);
+          ((pub && pub.prs) || []).forEach(function (x) { if (x.week === wl) prs.push(nm + " — " + x.move + (x.res ? " " + x.res : "")); });
+          ((pub && pub.tests) || []).forEach(function (t) { if (t.base && t.after) tests.push(t.short + ": " + nm + " " + t.base + " → " + t.after); });
+        });
+        trained.sort(function (a, c) { return c.n - a.n; });
+        var lines = ["📅 סיכום שבוע " + (cw + 1) + " (" + fd(ws) + "–" + fd(we) + ")"];
+        if (trained.length) lines.push("✅ התאמנו השבוע: " + trained.map(function (t) { return t.nm + " (" + t.n + "/5)"; }).join(", "));
+        if (notYet.length) lines.push("⏳ עוד לא השבוע: " + notYet.join(", "));
+        if (partial.length) lines.push("🟠 הזנה חלקית (לא נלחץ שמור): " + partial.join(", "));
+        if (inactive.length) lines.push("🔴 לא תיעדו " + INACTIVE_DAYS + "+ ימים: " + inactive.join(", "));
+        if (prs.length) lines.push("🏆 שיאים השבוע: " + prs.join(" · "));
+        if (tests.length) lines.push("🧪 מבחנים: " + tests.join(" · "));
+        if (notStarted.length) lines.push("⚪ עוד לא התחילו: " + notStarted.join(", "));
+        lastWeeklyText = lines.join("\n");
+        box.textContent = lastWeeklyText;
+        if (rng) rng.textContent = "שבוע " + (cw + 1) + " · " + fd(ws) + "–" + fd(we);
+      } catch (e) { box.textContent = "—"; }
+    }
     function renderCoach(users, bMap, sMap) {
       var el = document.getElementById("cfaCoach"); if (!el) return;
       var RC = window.BlockRecap, tdefs = (RC && Array.isArray(RC.tests)) ? RC.tests : [];
@@ -2286,6 +2333,7 @@
     document.getElementById("cfaViewBtnHealth").onclick = function () { showView("health"); };
     document.getElementById("cfaHealthRefresh").onclick = function () { healthRender(); auditRender(); };
     document.getElementById("cfaHealthClear").onclick = function () { healthClear(); };
+    document.getElementById("cfaWeeklyCopy").onclick = function () { copyText(lastWeeklyText || "", this); };
     document.getElementById("cfaEditTog").onclick = function () {
       var on = rawGet(EDIT_KEY) !== "1";
       try { if (on) localStorage.setItem(EDIT_KEY, "1"); else localStorage.removeItem(EDIT_KEY); } catch (e) {}
