@@ -1094,7 +1094,7 @@
     </sc-if>
     <div class="hd-block" style="width:100%; text-align:center; font-family:'Oswald',sans-serif; font-weight:700; font-size:11px; letter-spacing:.34em; text-indent:.34em; line-height:1; padding:6px 0 5px; background:rgba(0,0,0,.24); color:#e8c98a;">{{ blockLabel }}</div>
     <div class="hd-in" style="width:100%; max-width:1040px; padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-      <button class="hd-logo" onClick="{{ openAdmin }}" title="לחיצה על הלוגו — כניסת מנהל" style="background:none; border:none; padding:0; cursor:pointer; flex:none; position:relative;">
+      <button class="hd-logo" onClick="{{ openAdmin }}" title="לחיצה על הלוגו — כלי מנהל (לחשבון מנהל בלבד)" style="background:none; border:none; padding:0; cursor:pointer; flex:none; position:relative;">
         <img src="assets/logo.png" alt="CrossFit Bat Yam" style="width:46px; height:46px; border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.25); display:block;">
         <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
           <span style="position:absolute; bottom:-4px; inset-inline-end:-6px; background:var(--orange); color:#fff; font:700 8px/1 'Oswald'; letter-spacing:.05em; padding:3px 5px; border-radius:6px; box-shadow:0 0 0 2px #16213c;">ADMIN</span>
@@ -2000,7 +2000,7 @@
     <div style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--navy-bg); color:#fff; padding:12px 22px; border-radius:999px; font-weight:600; font-size:14px; z-index:120; box-shadow:0 10px 30px rgba(0,0,0,.3); animation:fadeUp .2s ease both;">{{ toast }}</div>
   </sc-if>
 
-  <!-- ---- template: admin code modal (adminOpen) ---- -->
+  <!-- ---- template: admin tools modal (adminOpen) — account-gated since 10/09 ---- -->
   <sc-if value="{{ adminOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeAdmin }}" style="position:fixed; inset:0; background:rgba(12,18,34,.55); backdrop-filter:blur(3px); z-index:90; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeUp .2s ease both;">
       <div onClick="{{ stop }}" style="background:var(--card); border-radius:20px; padding:26px 26px 24px; width:100%; max-width:340px; box-shadow:0 20px 60px rgba(12,18,34,.4);">
@@ -2009,16 +2009,12 @@
           <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; letter-spacing:.05em; color:var(--navy);">ADMIN ACCESS</div>
         </div>
         <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
-          <div style="font-size:13px; color:var(--muted); margin:10px 0 18px;">אתה מחובר כמנהל — יש לך הרשאות עריכה מלאות.</div>
-          <button onClick="{{ adminLogout }}" style="width:100%; background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">התנתק ממצב מנהל</button>
+          <div style="font-size:13px; color:var(--muted); margin:10px 0 18px;">החשבון שלך מנהל — כלי המנהל פתוחים במכשיר הזה.</div>
+          <button onClick="{{ adminLogout }}" style="width:100%; background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">הסתר את כלי המנהל עד הפתיחה הבאה</button>
         </sc-if>
         <sc-if value="{{ notAdmin }}" hint-placeholder-val="{{ true }}">
-          <div style="font-size:13px; color:var(--muted); margin:10px 0 14px;">הזן קוד מנהל כדי לפתוח עריכת אימונים. שאר המשתמשים יכולים לצפות ולסמן אימון כהושלם.</div>
-          {{ adminInputField }}
-          <sc-if value="{{ adminError }}" hint-placeholder-val="{{ false }}">
-            <div style="font-size:12px; color:var(--red); font-weight:600; margin-top:8px;">קוד שגוי, נסה שוב.</div>
-          </sc-if>
-          <button onClick="{{ adminSubmit }}" style="width:100%; margin-top:14px; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">כניסה</button>
+          <div style="font-size:13px; color:var(--muted); margin:10px 0 14px;">כלי המנהל מוסתרים במכשיר הזה עד הפתיחה הבאה. החשבון שלך מנהל — אפשר להציג אותם שוב.</div>
+          <button onClick="{{ adminSubmit }}" style="width:100%; margin-top:14px; background:var(--blue); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:14px; cursor:pointer;">הצג את כלי המנהל</button>
         </sc-if>
       </div>
     </div>
@@ -2026,7 +2022,7 @@
 </div>
 </x-dc>
 <!-- ==== SECTION: app logic — class Component (plain JS run by dc-runtime); sub-sections = // ---- banners ==== -->
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900},&quot;startView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;overview&quot;,&quot;log&quot;],&quot;default&quot;:&quot;overview&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;includeExample&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;showProgramMap&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;adminCode&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;batyam&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Admin&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900},&quot;startView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;overview&quot;,&quot;log&quot;],&quot;default&quot;:&quot;overview&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;includeExample&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;showProgramMap&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;}}">
 class Component extends DCLogic {
   weekdays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   dowShort = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];   // v3: Hebrew day letters everywhere the strip / map / chips label a day
@@ -3240,7 +3236,6 @@ class Component extends DCLogic {
   MOVES_KEY = 'cfby_moves_v1';
   BOARD_KEY = 'cfby_board_v1';
 
-  adminCode() { return (this.props && this.props.adminCode) || 'batyam'; }
 
   componentDidMount() {
     let saved = null;
@@ -3261,7 +3256,14 @@ class Component extends DCLogic {
     }
     const ti = this.todayIdx();
     if (ti >= 0) this.setState({ selWeek: Math.floor(ti/7), selDay: ti%7 });
-    try { if (localStorage.getItem('cfby_admin') === '1') this.setState({ isAdmin: true }); } catch (e) {}
+    // 10/09 (Ori: "לבטל — הכול לפי החשבון"): admin mode follows the ACCOUNT. boot.js sets
+    // window.cfbyIsAdmin from profiles.is_admin before the app boots; the old logo → code
+    // door is gone. cfby_admin stays as the device flag the panel launchers (boot.js
+    // ensureTab) listen to — written here for an admin account, cleared for anyone else.
+    try {
+      if (window.cfbyIsAdmin === true) { localStorage.setItem('cfby_admin', '1'); this.setState({ isAdmin: true }); }
+      else localStorage.removeItem('cfby_admin');
+    } catch (e) {}
     try { this.setState({ editToolsOn: localStorage.getItem('cfby_editmode') === '1' }); } catch (e) {}
     try { window.addEventListener('cfby-edittools', (e)=>this.setState({ editToolsOn: !!(e && e.detail), editMode: false })); } catch (e) {}
     try { window.cfbyStartDate = this.startDate; } catch (e) {}   // the admin panel's test-week banner needs the block calendar
@@ -4261,14 +4263,13 @@ class Component extends DCLogic {
       isAdmin: this.state.isAdmin, notAdmin: !this.state.isAdmin,
       editTools: !!(this.state.isAdmin && this.state.editToolsOn), notEditTools: !(this.state.isAdmin && this.state.editToolsOn),
       adminOpen: this.state.adminOpen, adminError: this.state.adminError,
-      openAdmin: ()=>{ if (window.cfbyDemo) { this.toast('בגרסת הדמו אין כניסת מנהל 🙂'); return; } this.setState({adminOpen:true, adminError:false, adminInput:''}); },
+      openAdmin: ()=>{ if (window.cfbyDemo) { this.toast('בגרסת הדמו אין כניסת מנהל 🙂'); return; } if (window.cfbyIsAdmin !== true) return; this.setState({adminOpen:true, adminError:false, adminInput:''}); },
       isDemo: !!window.cfbyDemo,
       footNote: window.cfbyDemo ? 'גרסת דמו — הנתונים נשארים במכשיר הזה בלבד · CrossFit Bat Yam' : 'הנתונים מסתנכרנים לענן אוטומטית · CrossFit Bat Yam',
       blockRange: (()=>{ const a=this.dateAt(0), b=this.dateAt(55); const f=(d)=>this.pad(d.getDate())+'/'+this.pad(d.getMonth()+1); return '8 שבועות · ' + f(a) + ' → ' + f(b); })(),
       demoReset: ()=>{ if (window.cfbyDemo && confirm('להתחיל את הדמו מחדש? מה שהזנת בדמו יימחק והנתונים לדוגמה ייטענו שוב.')) window.cfbyDemo.reset(); },
       closeAdmin: ()=>this.setState({adminOpen:false}),
       stop: (e)=>e.stopPropagation(),
-      adminInputField: this.adminInputEl(),
       adminSubmit: ()=>this.submitAdmin(),
       adminLogout: ()=>{ try{localStorage.removeItem('cfby_admin');}catch(e){} this.setState({isAdmin:false, adminOpen:false, editMode:false}); },
       viewTabStyle: this.segStyle(!editMode),
@@ -4498,22 +4499,11 @@ class Component extends DCLogic {
     if (today && !active) s += ' box-shadow:0 0 0 2px var(--orange);';
     return base + s;
   }
-  adminInputEl() {
-    return React.createElement('input', {
-      type: 'password', value: this.state.adminInput, placeholder: 'קוד מנהל',
-      autoFocus: true,
-      onChange: (e) => this.setState({ adminInput: e.target.value, adminError: false }),
-      onKeyDown: (e) => { if (e.key === 'Enter') this.submitAdmin(); },
-      style: { width:'100%', border:'1px solid var(--line)', borderRadius:'12px', padding:'12px 14px', fontSize:'15px', background:'var(--field)', color:'var(--ink)', outline:'none', letterSpacing:'.1em' }
-    });
-  }
   submitAdmin() {
-    if ((this.state.adminInput || '').trim().toLowerCase() === this.adminCode().toLowerCase()) {
-      try { localStorage.setItem('cfby_admin', '1'); } catch (e) {}
-      this.setState({ isAdmin: true, adminOpen: false, adminError: false, adminInput: '' });
-    } else {
-      this.setState({ adminError: true });
-    }
+    // Account-gated (10/09): only an admin account can show the tools again; no code.
+    if (window.cfbyIsAdmin !== true) { this.setState({ adminOpen: false }); return; }
+    try { localStorage.setItem('cfby_admin', '1'); } catch (e) {}
+    this.setState({ isAdmin: true, adminOpen: false, adminError: false, adminInput: '' });
   }
   doneBtnStyle(done) {
     return 'border:none; cursor:pointer; padding:8px 16px; border-radius:999px; font-weight:700; font-size:12px; transition:all .15s; white-space:nowrap; ' +

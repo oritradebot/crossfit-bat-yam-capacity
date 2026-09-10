@@ -10,6 +10,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Bat Yam Capacity">
 <link rel="apple-touch-icon" href="/assets/icons/icon-180.png">
+<script src="assets/js/supabase.js"></script>
+<script src="assets/js/supa-config.js"></script>
 <style>
   /* Same card + gradient as the login page, so the closed door looks like ours. */
   :root{--card:#16233f;--line:#243657;--orange:#ef5b25;--txt:#eaf0ff;--mut:#8ea3c9;}
@@ -43,9 +45,10 @@
     <h1>תכף נחזור לבלוק חדש</h1>
     <p>המשתמש שלכם נשמר - הנתונים מתאפסים לגמרי</p>
     <div class="brand">BAT YAM CAPACITY</div>
-    <form class="staff" id="staff" autocomplete="off">
-      <label for="code">קוד צוות</label>
-      <input id="code" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="go">
+    <form class="staff" id="staff">
+      <label for="user">כניסת מנהל — מסמנת את המכשיר הזה כמכשיר צוות</label>
+      <input id="user" type="text" placeholder="username" autocomplete="username" autocapitalize="none" spellcheck="false">
+      <input id="pass" type="password" placeholder="••••••••" autocomplete="current-password" enterkeyhint="go" style="margin-top:8px">
       <button id="go" type="submit">כניסה</button>
       <div class="msg" id="msg"></div>
     </form>
@@ -58,7 +61,8 @@
   // on. This page's only jobs: look like ours, go back to the app on its own
   // the moment the flag goes off, and let a staff device through.
   var STAFF_KEY = "cfby_staff";
-  var CODE = "batyam";           // the app's own admin code (Ori: "אותו קוד")
+  var DOMAIN = "@batyam.app";     // the synthetic sign-in domain (same as index.html)
+  var sb = window.supabase.createClient(window.SUPA_URL, window.SUPA_ANON_KEY);
   var $ = function (id) { return document.getElementById(id); };
   function goApp() { location.replace("app.html"); }
 
@@ -79,21 +83,38 @@
     if (document.visibilityState === "visible") check();
   });
 
-  // Staff mode: tap the logo, type the code. Sets a device-level flag, so a
-  // plain (non-admin) test account passes on this device too.
+  // Staff mode (10/09, Ori: "הכול לפי החשבון"): tap the logo, sign in with an
+  // ADMIN account. A successful admin login marks this DEVICE as staff, so a
+  // plain (non-admin) test account passes on it afterwards — the same device
+  // flag as before, but no shared code anywhere.
   $("logo").addEventListener("click", function () {
     var s = $("staff");
     s.classList.toggle("open");
-    if (s.classList.contains("open")) { try { $("code").focus(); } catch (e) {} }
+    if (s.classList.contains("open")) { try { $("user").focus(); } catch (e) {} }
   });
-  function submit() {
-    var v = ($("code").value || "").trim().toLowerCase();
+  var busy = false;
+  async function submit() {
+    if (busy) return;
+    var u = ($("user").value || "").trim().toLowerCase(), p = $("pass").value || "";
     var m = $("msg");
-    if (v !== CODE) { m.textContent = "קוד שגוי"; m.className = "msg err"; return; }
-    try { localStorage.setItem(STAFF_KEY, "1"); }
-    catch (e) { m.textContent = "המכשיר לא מאפשר שמירה מקומית"; m.className = "msg err"; return; }
-    m.textContent = "מצב צוות הופעל, נכנסים…"; m.className = "msg ok";
-    goApp();
+    if (!u || !p) { m.textContent = "מלא שם משתמש וסיסמה"; m.className = "msg err"; return; }
+    busy = true; $("go").disabled = true; m.textContent = "רגע…"; m.className = "msg";
+    try {
+      var l = await sb.auth.signInWithPassword({ email: u + DOMAIN, password: p });
+      if (l.error || !l.data || !l.data.user) { m.textContent = "שם משתמש או סיסמה שגויים"; m.className = "msg err"; return; }
+      var pr = await sb.from("profiles").select("is_admin").eq("id", l.data.user.id).maybeSingle();
+      if (pr.error) { m.textContent = "שגיאה בבדיקת החשבון, נסה שוב"; m.className = "msg err"; return; }
+      if (!pr.data || pr.data.is_admin !== true) {
+        try { await sb.auth.signOut({ scope: "local" }); } catch (e) {}
+        m.textContent = "החשבון הזה אינו מנהל"; m.className = "msg err"; return;
+      }
+      try { localStorage.setItem(STAFF_KEY, "1"); }
+      catch (e) { m.textContent = "המכשיר לא מאפשר שמירה מקומית"; m.className = "msg err"; return; }
+      m.textContent = "מצב צוות הופעל, נכנסים…"; m.className = "msg ok";
+      goApp();
+    } catch (e) {
+      m.textContent = "שגיאה בהתחברות, נסה שוב"; m.className = "msg err";
+    } finally { busy = false; $("go").disabled = false; }
   }
   // A real <form>, so Enter / the keyboard's "Go" key submit on every platform.
   $("staff").addEventListener("submit", function (e) { e.preventDefault(); submit(); });

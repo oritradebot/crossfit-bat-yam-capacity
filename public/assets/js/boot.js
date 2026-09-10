@@ -379,7 +379,7 @@
   // is network-first, no-store skips the HTTP cache). Fail-OPEN: an
   // unreadable flag proves nothing, and a gym with bad reception must never
   // read as "closed for a new block".
-  var STAFF_KEY = "cfby_staff";     // set by maintenance.html (logo tap + the app's admin code)
+  var STAFF_KEY = "cfby_staff";     // set by maintenance.html (logo tap + an ADMIN account login, 10/09)
   function staffDevice() { return rawGet(STAFF_KEY) === "1"; }
   async function maintenanceFlag() {
     try {
@@ -2205,7 +2205,7 @@
       }
       return null;
     }
-    // The app's own "admin mode" (logo -> code "batyam") lives in this key.
+    // The app's admin mode lives in this key (10/09: follows the account via window.cfbyIsAdmin — no code).
     function appAdminMode() { try { return localStorage.getItem("cfby_admin") === "1"; } catch (e) { return false; } }
     function ensureTab() {
       var existing = document.getElementById("cfbyAdminTab"), existing2 = document.getElementById("cfbyAdminTab2");
@@ -2411,7 +2411,8 @@
     localStorage.removeItem(K.TRACKER_KEY); // empty -> the app builds its built-in program
     lsSetRaw(K.BOARD_KEY, { myName: "אורי (dev)", myGender: "male", myAge: 30, myGoal: "", myGoalDone: null, prevPRs: lsGet("cfby_dev_prs") || null });
     window.cfbySignOut = function () { location.reload(); };
-    window.cfbyIsAdmin = false;
+    // ?dev=1&admin=1 previews the in-app admin tools (10/09: admin mode follows the account, no code)
+    window.cfbyIsAdmin = /[?&]admin(=|&|$)/.test(location.search);
     // dev preview: the recap gate is open so the share flow is testable
     // without Supabase. localhost-only — a hosted deployment never runs this.
     window.cfbyBlockRecap = { open: true, opened_at: "2026-09-05T00:00:00.000Z", _dev: true };

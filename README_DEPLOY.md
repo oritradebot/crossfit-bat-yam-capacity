@@ -58,7 +58,7 @@ capacity-app/
    update public.profiles set is_admin = true
    where id = (select id from auth.users where email = 'YOUR-EMAIL');
    ```
-3. מעכשיו, כשאתה עורך את התוכנית באפליקציה (מצב Admin, קוד `batyam`), היא נשמרת ל‑`shared_program` וכל המשתמשים רואים אותה. לכל משתמש נשמרות התוצאות האישיות שלו בנפרד.
+3. מעכשיו, כשאתה עורך את התוכנית באפליקציה (מצב מנהל — נפתח אוטומטית לחשבון עם `is_admin`; מ-10/09 אין קוד), היא נשמרת ל‑`shared_program` וכל המשתמשים רואים אותה. לכל משתמש נשמרות התוצאות האישיות שלו בנפרד.
 
 ---
 
