@@ -1034,7 +1034,7 @@
   textarea { line-height: 1.5; }
   ::-webkit-scrollbar { height: 8px; width: 8px; }
   ::-webkit-scrollbar-thumb { background: var(--scrollthumb); border-radius: 8px; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }   /* ends in transform:none and animations beat inline styles: never center a fadeUp element with left:50% + translateX(-50%) - use left:0; right:0; margin:0 auto (3.1.1) */
   @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
 
   /* ---- mobile (all styling in this app is inline, so phone fixes live here
@@ -1995,8 +1995,9 @@
   </sc-if>
 
   <!-- ---- template: celebration overlay (hasCelebrate) ---- -->
+  <!-- 3.1.1: centered with left/right:0 + margin auto, not translateX(-50%) - the fadeUp keyframes overrode the transform, so the card's left edge sat at mid-screen and half of it ran off the right edge on phones -->
   <sc-if value="{{ hasCelebrate }}" hint-placeholder-val="{{ false }}">
-    <div dir="rtl" style="position:fixed; left:50%; bottom:80px; transform:translateX(-50%); width:calc(100% - 32px); max-width:380px; background:var(--card); color:var(--ink); border:1.5px solid #e8a53a; border-radius:18px; padding:14px 16px; z-index:121; box-shadow:0 16px 40px rgba(0,0,0,.28); display:flex; align-items:center; gap:12px; animation:fadeUp .25s ease both;">
+    <div dir="rtl" style="position:fixed; left:0; right:0; margin:0 auto; bottom:80px; width:calc(100% - 32px); max-width:380px; background:var(--card); color:var(--ink); border:1.5px solid #e8a53a; border-radius:18px; padding:14px 16px; z-index:121; box-shadow:0 16px 40px rgba(0,0,0,.28); display:flex; align-items:center; gap:12px; animation:fadeUp .25s ease both;">
       <span style="font-size:30px; flex:none;">🎉</span>
       <div style="flex:1; min-width:0;">
         <div style="font-weight:700; font-size:15px;">{{ celebrateTitle }}</div>
@@ -2007,8 +2008,9 @@
     </div>
   </sc-if>
   <!-- ---- template: toast (hasToast) ---- -->
+  <!-- 3.1.1: same centering fix as the celebration card (the toast sat right of center) -->
   <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
-    <div style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--navy-bg); color:#fff; padding:12px 22px; border-radius:999px; font-weight:600; font-size:14px; z-index:120; box-shadow:0 10px 30px rgba(0,0,0,.3); animation:fadeUp .2s ease both;">{{ toast }}</div>
+    <div style="position:fixed; bottom:24px; left:0; right:0; margin:0 auto; width:fit-content; max-width:calc(100% - 32px); background:var(--navy-bg); color:#fff; padding:12px 22px; border-radius:999px; font-weight:600; font-size:14px; z-index:120; box-shadow:0 10px 30px rgba(0,0,0,.3); animation:fadeUp .2s ease both;">{{ toast }}</div>
   </sc-if>
 
   <!-- ---- template: admin tools modal (adminOpen) — account-gated since 10/09 ---- -->
