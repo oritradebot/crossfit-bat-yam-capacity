@@ -66,11 +66,11 @@ create trigger profiles_guard_flags
 
 ### 1.3 ספריית Supabase מ-CDN, לא מוצמדת
 
-שלושה דפים (`index.html`, `app.html`, `confirmed.html`) טוענים `@supabase/supabase-js@2` מ-jsdelivr — כלומר **הגרסה האחרונה של 2.x בכל טעינה**. שינוי שובר או חבילה פגומה ב-CDN נוחתים אצל כולם בלי דיפלוי שלנו. ה-Service Worker לא שומר קבצים ממקור זר, אז פתיחה בלי קליטה תלויה במטמון הדפדפן. **תיקון:** להוריד את הקובץ ל-`assets/js/` (כמו react.js) עם מספר גרסה קבוע, ולשדרג בכוונה. **S.**
+שלושה דפים (`index.html`, `app.html`, `confirmed.html`) טוענים `@supabase/supabase-js@2` מ-jsdelivr — כלומר **הגרסה האחרונה של 2.x בכל טעינה**. שינוי שובר או חבילה פגומה ב-CDN נוחתים אצל כולם בלי דיפלוי שלנו. ה-Service Worker לא שומר קבצים ממקור זר, אז פתיחה בלי קליטה תלויה במטמון הדפדפן. **תיקון:** להוריד את הקובץ ל-`assets/js/` (כמו react.js) עם מספר גרסה קבוע, ולשדרג בכוונה. **S.** **נבנה 10/09 (ענף, 2.116.0) — `release.md` §6.**
 
 ### 1.4 כותרות אבטחה ב-Vercel
 
-`vercel.json` לא מגדיר כותרות. אפשר להוסיף בלי סיכון: `X-Frame-Options: DENY` (אף אחד לא מטמיע אותנו ב-iframe), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` שמכבה מצלמה/מיקרופון/מיקום. CSP מלא מוגבל כי `app.html` בנוי מסקריפטים בתוך הדף — אפשר CSP חלקי (`connect-src` רק Supabase, `frame-ancestors 'none'`, `object-src 'none'`). **S** (בדיקה בטלפון אחרי).
+`vercel.json` לא מגדיר כותרות. אפשר להוסיף בלי סיכון: `X-Frame-Options: DENY` (אף אחד לא מטמיע אותנו ב-iframe), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` שמכבה מצלמה/מיקרופון/מיקום. CSP מלא מוגבל כי `app.html` בנוי מסקריפטים בתוך הדף — אפשר CSP חלקי (`connect-src` רק Supabase, `frame-ancestors 'none'`, `object-src 'none'`). **S** (בדיקה בטלפון אחרי). **נבנה 10/09 (ענף) — `release.md` §6.**
 
 ### 1.5 חשבונות, סיסמאות והחשבון של אורי
 
@@ -333,7 +333,7 @@ AMRAP = ספירה לאחור, For time = סטופר עם קאפ, EMOM = צפצ�
 |---|---|---|---|
 | 0 | **היום, בלי דיפלוי:** אורי מריץ `supabase/2026-09-10-privacy-guard.sql` | — 🧰 | שומר `is_admin`, פרופילים, הלוח, עמודות המטרה. שאילתת אימות בסוף הקובץ |
 | 1 | ✅ רביעי W1 — המשבצת נקראת SKILL ולא חובה להשלמה (`SKILL_DAYS`; בלי PROGRAM_VERSION — מפה שנפתרת בזמן רנדר) | S | נדחף 10/09 לילה |
-| 2 | ספריית Supabase מקומית ומוצמדת (3 דפים) + כותרות אבטחה ב-`vercel.json` | S | |
+| 2 | ספריית Supabase מקומית ומוצמדת (2.116.0, 3 דפים) + כותרות אבטחה ב-`vercel.json` | S | **מוכן על ענף `deploy-2-supabase-local` (10/09 לילה)** — מיזוג ל-main אחרי שאורי בודק את רביעי בטלפון |
 | 3 | סקריפט לפני דיפלוי (`tools/release_check.py`) | S | כלי, לא דיפלוי |
 | 4 | ביטול קוד `batyam`: מצב מנהל לפי החשבון, כניסת מנהל במסך התחזוקה | M | משנה את מסלול משתמש הבדיקה במכשיר של אורי |
 | 5 | גרסת האפליקציה לכל מתאמן בפאנל (`pub.build`) | S | |

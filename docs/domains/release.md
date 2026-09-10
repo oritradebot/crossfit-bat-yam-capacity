@@ -42,3 +42,10 @@
 
 - `git merge` (לא רק Edit ו-checkout) מחזיר CRLF לקבצים — אחרי מיזוג, לבדוק ולנרמל לפני השוואות ולפני commit.
 - הדגל `maintenance` ב-`version.json` (v2.3.0) חי באותו קובץ — לא לדרוס אותו כשמעלים גרסה. ראה `block-transition.md §2`.
+
+## 6. ספריית Supabase מקומית (10/09/2026)
+
+- `public/assets/js/supabase.js` = עותק מוצמד של `@supabase/supabase-js` **2.116.0** (UMD). שלושת הדפים (`index.html`, `app.html`, `confirmed.html`) טוענים אותו במקום `cdn.jsdelivr.net/.../supabase-js@2`, שהיה "הגרסה האחרונה של 2.x" בכל טעינה.
+- למה: שדרוג מכוון במקום אוטומטי (גרסה שוברת ב-CDN לא נוחתת אצל כולם בלי דיפלוי שלנו), ואותו מקור — ה-SW שומר קבצי אותו מקור, ולכן הספרייה זמינה גם בפתיחה בלי קליטה.
+- שדרוג: להוריד `https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.X.Y/dist/umd/supabase.js` מעל הקובץ, לעדכן את מספר הגרסה בהערה שבראשו, ולאמת דף התחברות + אפליקציה בפרודקשן (§3). לא נוגעים ב-`supa-config.js`.
+- כותרות אבטחה ב-`vercel.json` (מאותו דיפלוי): `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy` (מצלמה/מיקרופון/מיקום/תשלום כבויים), ו-CSP חלקי (`frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'`). אימות אחרי פריסה: `curl -sI https://crossfit-bat-yam-capacity.vercel.app/app | grep -iE "frame|csp|content-security|referrer|permissions"`. CSP מלא על סקריפטים לא אפשרי — `app.html` בנוי מסקריפטים בתוך הדף.
