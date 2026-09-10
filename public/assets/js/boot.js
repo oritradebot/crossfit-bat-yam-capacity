@@ -712,6 +712,27 @@
   // Shared failure path of both push channels: surface it, mark a dead
   // session when it is one, keep retrying underneath — never block a write,
   // never navigate (iron rules 2 + 3).
+  // ---- client error reporting (deploy 6, 10/09) ------------------------------
+  // What breaks on athletes' phones used to surface only when someone complained.
+  // Uncaught errors, unhandled rejections and sync failures (while online) go to
+  // client_errors — own row only (RLS insert policy), capped per page session,
+  // deduplicated, never awaited, never thrown. No account yet (login page, dev,
+  // demo) or a table that does not exist yet (SQL not run) = silent no-op.
+  var errUid = null, errSent = 0, errSeen = {}, errTableGone = false;
+  function reportError(kind, message, detail) {
+    try {
+      if (!errUid || errTableGone || errSent >= 20 || navigator.onLine === false) return;
+      var msg = String(message || "").slice(0, 300), det = String(detail || "").slice(0, 500);
+      var key = kind + "|" + msg;
+      if (errSeen[key]) return;
+      errSeen[key] = 1; errSent++;
+      sb.from("client_errors").insert({ user_id: errUid, build: BUILD, kind: kind, message: msg, detail: det, ua: String(navigator.userAgent || "").slice(0, 200) })
+        .then(function (r) { if (r && r.error && (r.error.code === "42P01" || r.error.code === "PGRST205" || /client_errors/.test(r.error.message || ""))) errTableGone = true; }, function () {});
+    } catch (e) {}
+  }
+  window.addEventListener("error", function (e) { reportError("error", e && e.message, (e && e.filename ? String(e.filename).replace(/^.*\//, "") + ":" + e.lineno : "")); });
+  window.addEventListener("unhandledrejection", function (e) { var r = e && e.reason; reportError("rejection", (r && (r.message || r.code)) || String(r), (r && r.stack ? String(r.stack).slice(0, 300) : "")); });
+
   function pushFailed(what, err) {
     console.error("[sync] " + what + " failed:", (err && (err.message || err.code)) || err);
     // The retry helper already refreshed the session once and retried. If it
@@ -719,6 +740,7 @@
     // genuinely dead — an endless red "retrying" badge would never resolve.
     // Say so instead, but never block the write and never navigate.
     var em = String((err && (err.message || err.code)) || "");
+    if (navigator.onLine !== false) reportError("sync", what + " failed: " + em, String((err && err.code) || ""));
     if (navigator.onLine !== false &&
         (err.code === "PGRST301" || err.status === 401 ||
          /jwt|token|unauthorized|not authenticated/i.test(em))) sessionDead = true;
@@ -1251,7 +1273,7 @@
       var failed = false;
       try { orig(key, val); if (rawGet(key) !== val) failed = true; }
       catch (e) { failed = true; }
-      if (failed && (key === K.TRACKER_KEY || key === K.BOARD_KEY)) syncShow("localfail");
+      if (failed && (key === K.TRACKER_KEY || key === K.BOARD_KEY)) { syncShow("localfail"); reportError("localfail", "localStorage write failed for " + key, ""); }
       if (suppressPush) return;
       if (key === K.TRACKER_KEY) {
         // Stamped + marked unsynced above, BEFORE the persist attempt (cleared
@@ -1371,7 +1393,7 @@
     ov.innerHTML =
       '<div class="cfa-box">' +
         '<div class="cfa-head"><h2 id="cfaTitle"><span>👥</span> ניהול משתתפים</h2><button class="cfa-x" id="cfaX">✕ סגור</button></div>' +
-        '<div class="cfa-views"><button class="cfa-view on" id="cfaViewBtnPeople">👥 משתתפים</button><button class="cfa-view" id="cfaViewBtnApp">⚙️ ניהול האפליקציה</button></div>' +
+        '<div class="cfa-views"><button class="cfa-view on" id="cfaViewBtnPeople">👥 משתתפים</button><button class="cfa-view" id="cfaViewBtnApp">⚙️ ניהול האפליקציה</button><button class="cfa-view" id="cfaViewBtnHealth">🩺 בריאות</button></div>' +
         '<p class="cfa-msg" id="cfaMsg"></p>' +
         '<div id="cfaViewPeople">' +
         '<div class="cfa-banner blue" id="cfaTestBanner" style="display:none"></div>' +
@@ -1391,6 +1413,12 @@
         '<div class="row" style="margin-bottom:8px"><button class="cfa-tog" id="cfaNeedOnly">📋 רק מי שצריך הודעה</button><span class="cfa-annst">ממוינים לפי מצב: לא-פעילים, חלקיים, מבחנים, פעילים</span></div>' +
         '<p class="cfa-stat" id="cfaStat"></p>' +
         '<div id="cfaList">טוען…</div>' +
+        '</div>' +
+        '<div id="cfaViewHealth" style="display:none">' +
+        '<div class="cfa-stat" id="cfaHealthStat">טוען…</div>' +
+        '<div class="cfa-ann" id="cfaHealthOld" style="font-size:13px"></div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:12px"><button class="cfa-tog" id="cfaHealthRefresh">↻ רענן</button><button class="cfa-tog" id="cfaHealthClear">🧹 נקה את הרשימה</button></div>' +
+        '<div id="cfaHealthList"></div>' +
         '</div>' +
         '<div id="cfaViewApp" style="display:none">' +
         '<div class="cfa-banner" id="cfaBkBanner" style="display:none"></div>' +
@@ -1456,6 +1484,7 @@
     // Everything here comes from profiles + states.updated_at + the small
     // board summary rows — never from the 70KB tracker blobs (egress).
     var INACTIVE_DAYS = 14;   // Ori's number (07/09): "לא תיעד שבועיים"
+    var lastUsers = [], lastBMap = {};   // last roster fetch (deploy 6: the health view lists old-build devices from it)
     var APP_URL = location.origin + "/";
     function esc(x) { return String(x == null ? "" : x).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
     function firstName(n) { return String(n || "").trim().split(/\s+/)[0] || ""; }
@@ -1512,6 +1541,7 @@
       (st.data || []).forEach(function (r) { sMap[r.user_id] = r; });
       (bd.data || []).forEach(function (r) { bMap[r.user_id] = r; });
       var users = (profs.data || []).sort(function (a, b) { return (a.name || "").localeCompare(b.name || ""); });
+      lastUsers = users; lastBMap = bMap;
       var active = users.filter(function (u) { return sMap[u.id]; }).length;
       document.getElementById("cfaStat").textContent = users.length + " משתמשים · " + active + " התחילו למלא";
       var tw = testWeekInfo();
@@ -2143,14 +2173,55 @@
     }
     // v3 (Ori, 07/09): two views — participants (add / progress / roster) and
     // app management (backup, announcement, recap card, reset, edit mode).
+    // ---- 🩺 health view (deploy 6, 10/09): client error reports + devices on an old build ----
+    function healthTableMissing(err) { return !!err && (err.code === "42P01" || err.code === "PGRST205" || /client_errors/.test(err.message || "")); }
+    var healthBusy = false;
+    async function healthRender() {
+      if (healthBusy) return;
+      healthBusy = true;
+      var stat = document.getElementById("cfaHealthStat"), list = document.getElementById("cfaHealthList"), oldBox = document.getElementById("cfaHealthOld");
+      var old = lastUsers.filter(function (u) { var pb = lastBMap[u.id] && lastBMap[u.id].pub; return pb && pb.build && String(pb.build) !== BUILD; });
+      var unknown = lastUsers.filter(function (u) { var pb = lastBMap[u.id] && lastBMap[u.id].pub; return !(pb && pb.build); }).length;
+      oldBox.innerHTML = '<b>גרסת הקוד עכשיו: <span dir="ltr">' + esc(BUILD) + '</span></b><br>' +
+        (old.length ? ('מכשירים על גרסה ישנה (' + old.length + '): ' + old.map(function (u) { return esc(u.name || "?") + ' <span dir="ltr">(' + esc(String(lastBMap[u.id].pub.build)) + ')</span>'; }).join(' · ')) : 'כל המכשירים שדחפו מאז דיפלוי 5 על הגרסה הנוכחית') +
+        (unknown ? '<br><span style="color:#8ea3c9">' + unknown + ' עוד לא דחפו עם מספר גרסה</span>' : '');
+      stat.textContent = "טוען…";
+      try {
+        var r = await sb.from("client_errors").select("user_id,build,kind,message,detail,created_at").order("created_at", { ascending: false }).limit(50);
+        if (r.error) { stat.textContent = healthTableMissing(r.error) ? "הטבלה client_errors עוד לא קיימת — להריץ את supabase/2026-09-10-client-errors.sql" : ("שגיאה: " + r.error.message); list.innerHTML = ""; return; }
+        var names = {}; lastUsers.forEach(function (u) { names[u.id] = u.name; });
+        var rows = r.data || [], week = Date.now() - 7 * 86400000;
+        var n7 = rows.filter(function (x) { return Date.parse(x.created_at) > week; }).length;
+        stat.textContent = rows.length ? (n7 + " דיווחים ב-7 הימים האחרונים · " + rows.length + " אחרונים מוצגים") : "אין דיווחי שגיאה 👍";
+        list.innerHTML = rows.map(function (x) {
+          return '<div class="cfa-ann" style="padding:10px 12px;margin-bottom:8px">' +
+            '<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:#8ea3c9"><span>' + fmtWhen(x.created_at) + '</span><span>' + esc(names[x.user_id] || "?") + '</span><span dir="ltr">' + esc(x.build || "?") + '</span><span>' + esc(x.kind || "") + '</span></div>' +
+            '<div dir="auto" style="font-size:13px;margin-top:4px">' + esc(x.message || "") + '</div>' +
+            (x.detail ? '<div dir="ltr" style="font-size:11px;color:#8ea3c9;margin-top:2px;word-break:break-all">' + esc(x.detail) + '</div>' : '') +
+          '</div>';
+        }).join("");
+      } catch (e) { stat.textContent = "שגיאה: " + ((e && e.message) || e); }
+      finally { healthBusy = false; }
+    }
+    async function healthClear() {
+      if (!confirm("למחוק את כל דיווחי השגיאה?")) return;
+      var r = await sb.from("client_errors").delete().gte("id", 0);
+      if (r.error) { amsg("המחיקה נכשלה: " + r.error.message, "err"); return; }
+      healthRender();
+    }
+    // v3 (Ori, 07/09): participants / app management; 10/09: + health.
     function showView(v) {
-      var people = v !== "app";
-      document.getElementById("cfaViewPeople").style.display = people ? "" : "none";
-      document.getElementById("cfaViewApp").style.display = people ? "none" : "";
-      document.getElementById("cfaViewBtnPeople").className = "cfa-view" + (people ? " on" : "");
-      document.getElementById("cfaViewBtnApp").className = "cfa-view" + (people ? "" : " on");
-      document.getElementById("cfaTitle").innerHTML = people ? "<span>👥</span> ניהול משתתפים" : "<span>⚙️</span> ניהול האפליקציה";
+      var views = { people: "cfaViewPeople", app: "cfaViewApp", health: "cfaViewHealth" };
+      var btns = { people: "cfaViewBtnPeople", app: "cfaViewBtnApp", health: "cfaViewBtnHealth" };
+      var titles = { people: "<span>👥</span> ניהול משתתפים", app: "<span>⚙️</span> ניהול האפליקציה", health: "<span>🩺</span> בריאות המכשירים" };
+      if (!views[v]) v = "people";
+      Object.keys(views).forEach(function (k) {
+        document.getElementById(views[k]).style.display = k === v ? "" : "none";
+        document.getElementById(btns[k]).className = "cfa-view" + (k === v ? " on" : "");
+      });
+      document.getElementById("cfaTitle").innerHTML = titles[v];
       amsg("");
+      if (v === "health") healthRender();
     }
     function openPanel(view) {
       showView(typeof view === "string" ? view : "people");
@@ -2188,6 +2259,9 @@
     document.getElementById("cfaX").onclick = closePanel;
     document.getElementById("cfaViewBtnPeople").onclick = function () { showView("people"); };
     document.getElementById("cfaViewBtnApp").onclick = function () { showView("app"); };
+    document.getElementById("cfaViewBtnHealth").onclick = function () { showView("health"); };
+    document.getElementById("cfaHealthRefresh").onclick = function () { healthRender(); };
+    document.getElementById("cfaHealthClear").onclick = function () { healthClear(); };
     document.getElementById("cfaEditTog").onclick = function () {
       var on = rawGet(EDIT_KEY) !== "1";
       try { if (on) localStorage.setItem(EDIT_KEY, "1"); else localStorage.removeItem(EDIT_KEY); } catch (e) {}
@@ -2499,6 +2573,7 @@
     var session = ses.data && ses.data.session;
     if (!session) { location.replace("index.html"); return; }
     var uid = session.user.id;
+    errUid = uid;                                        // client error reports carry the account (deploy 6)
     accessToken = session.access_token || accessToken;   // keepalive pushes need it synchronously
 
     // Why the previous close-time push failed, if it did. That push runs while
@@ -2720,6 +2795,7 @@
     if (!interceptorSeen) {
       console.error("[sync] localStorage interceptor is NOT active in this browser — writes would not sync");
       syncShow("nointercept");
+      reportError("nointercept", "localStorage interceptor not active", "");
     }
 
     // Local tracker was newer than the server (a push was lost) — sync it up now.
