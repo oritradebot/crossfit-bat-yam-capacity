@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head>
+<html lang="he"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -1079,6 +1079,12 @@
   @media (max-width: 400px) {
     div[style*="minmax(300px"] { grid-template-columns: 1fr !important; }
   }
+  /* a11y (deploy 13, 10/09): honour the OS "reduce motion" setting, and show keyboard focus */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; scroll-behavior: auto !important; }
+  }
+  button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--orange) !important; outline-offset: 1px; }
 </style>
 </helmet>
 <!-- ---- template: page shell + header ---- -->
@@ -1105,7 +1111,7 @@
         <div class="hd-sub" style="font-size:12px; color:#b9c4e6; font-weight:500;">CAPACITY PROGRAM · מעקב 8 שבועות</div>
       </div>
       <div class="hd-actions" style="margin-inline-start:auto; display:flex; align-items:center; gap:10px;">
-        <button class="hd-btn hd-btn-ico" onClick="{{ openProfile }}" title="הפרופיל שלי" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 11px; font-weight:700; font-size:14px; cursor:pointer; white-space:nowrap; flex:none;">👤</button>
+        <button class="hd-btn hd-btn-ico" onClick="{{ openProfile }}" title="הפרופיל שלי" aria-label="הפרופיל שלי" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 11px; font-weight:700; font-size:14px; cursor:pointer; white-space:nowrap; flex:none;">👤</button>
         <button class="hd-btn" onClick="{{ openWelcome }}" title="איך זה עובד?" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:999px; padding:7px 13px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; flex:none;">❓ מדריך</button>
         <div class="hd-tabs" style="display:flex; background:rgba(255,255,255,.1); border-radius:999px; padding:4px; gap:2px; overflow-x:auto; max-width:100%;">
           <button class="hd-tab" onClick="{{ setOverview }}" style="{{ tabOverviewStyle }}">סקירה</button>
@@ -1171,7 +1177,7 @@
           </div>
           <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-top:16px;">
             <sc-for list="{{ thisWeekCells }}" as="c" hint-placeholder-count="7">
-              <button onClick="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" style="{{ c.miniStyle }}">
+              <button onClick="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" aria-label="{{ c.title }}" style="{{ c.miniStyle }}">
                 <span style="font-size:10px; font-weight:700; opacity:.85; letter-spacing:.03em;">{{ c.dow }}</span>
                 <span style="font-family:'Oswald',sans-serif; font-weight:600; font-size:15px;">{{ c.dnum }}</span>
               </button>
@@ -1212,7 +1218,7 @@
               <div style="display:grid; grid-template-columns:34px repeat(7,1fr); gap:6px; align-items:center;">
                 <div style="font-family:'Oswald',sans-serif; font-weight:600; font-size:12px; color:var(--muted); text-align:center;">W{{ wk.n }}</div>
                 <sc-for list="{{ wk.cells }}" as="c" hint-placeholder-count="7">
-                  <button onClick="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" style="{{ c.cellStyle }}">{{ c.dnum }}</button>
+                  <button onClick="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" aria-label="{{ c.title }}" style="{{ c.cellStyle }}">{{ c.dnum }}</button>
                 </sc-for>
               </div>
             </sc-for>
@@ -1795,7 +1801,7 @@
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; letter-spacing:.04em;">ספריית תנועות</div>
             <div style="font-size:12px; color:#b9c4e6; margin-top:2px;">{{ moveCount }} תנועות · מופיעות כהשלמה אוטומטית בהזנת אימון</div>
           </div>
-          <button onClick="{{ closeMoves }}" style="background:rgba(255,255,255,.14); border:none; color:#fff; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; flex:none;">✕</button>
+          <button onClick="{{ closeMoves }}" aria-label="סגור" style="background:rgba(255,255,255,.14); border:none; color:#fff; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; flex:none;">✕</button>
         </div>
         <div style="padding:16px 20px; border-bottom:1px solid var(--line); display:flex; gap:8px;">
           <input dir="auto" value="{{ moveDraft }}" onChange="{{ onMoveDraft }}" placeholder="הוסף תנועה חדשה — למשל: Sandbag Clean" style="flex:1; min-width:0; border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:15px; background:var(--field); color:var(--ink); outline:none;">
@@ -1805,7 +1811,7 @@
           <sc-for list="{{ moveList }}" as="m" hint-placeholder-count="8">
             <div style="display:flex; align-items:center; gap:10px; background:var(--field); border:1px solid var(--line); border-radius:10px; padding:10px 14px;">
               <span dir="auto" style="flex:1; min-width:0; font-weight:600; font-size:14px; color:var(--ink);">{{ m.name }}</span>
-              <button onClick="{{ removeMove }}" data-m="{{ m.name }}" title="הסר" style="flex:none; background:var(--redbg); color:var(--red); border:none; border-radius:8px; padding:6px 10px; font-weight:700; font-size:13px; cursor:pointer;">✕</button>
+              <button onClick="{{ removeMove }}" data-m="{{ m.name }}" title="הסר" aria-label="הסר תנועה" style="flex:none; background:var(--redbg); color:var(--red); border:none; border-radius:8px; padding:6px 10px; font-weight:700; font-size:13px; cursor:pointer;">✕</button>
             </div>
           </sc-for>
         </div>
@@ -1832,7 +1838,7 @@
         <div onClick="{{ stop }}" style="background:var(--card); border-radius:22px; width:100%; max-width:424px; box-shadow:0 24px 70px rgba(12,18,34,.45); margin:auto; display:flex; flex-direction:column; max-height:calc(100dvh - 40px); overflow:hidden;">
           <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 20px 14px; flex:none;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.04em; color:var(--navy);">{{ shareTitle }}</div>
-            <button onClick="{{ closeShare }}" style="background:var(--paper); border:none; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; color:var(--muted);">✕</button>
+            <button onClick="{{ closeShare }}" aria-label="סגור" style="background:var(--paper); border:none; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; color:var(--muted);">✕</button>
           </div>
           <div id="share-scroll" tabIndex="-1" style="padding:0 20px 20px; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; flex:1 1 auto; min-height:0; outline:none;">
             <div style="display:flex; justify-content:center; margin-bottom:16px;">{{ shareCard }}</div>
@@ -1848,7 +1854,7 @@
         <div onClick="{{ stop }}" style="background:var(--card); border-radius:22px; padding:20px; width:100%; max-width:424px; box-shadow:0 24px 70px rgba(12,18,34,.45); margin:auto;">
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:16px; letter-spacing:.04em; color:var(--navy);">{{ shareTitle }}</div>
-            <button onClick="{{ closeShare }}" style="background:var(--paper); border:none; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; color:var(--muted);">✕</button>
+            <button onClick="{{ closeShare }}" aria-label="סגור" style="background:var(--paper); border:none; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:16px; color:var(--muted);">✕</button>
           </div>
           <div style="display:flex; justify-content:center; margin-bottom:16px;">{{ shareCard }}</div>
           <div style="display:flex; gap:10px;">
@@ -1880,7 +1886,7 @@
             <sc-if value="{{ notNameEditing }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex; align-items:center; gap:8px; min-width:0;">
                 <div dir="auto" style="font-family:'Oswald',sans-serif; font-weight:700; font-size:20px; letter-spacing:.03em; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ profileName }}</div>
-                <button onClick="{{ editName }}" title="שינוי השם המוצג" style="flex:none; background:rgba(255,255,255,.14); border:none; color:#fff; width:28px; height:28px; border-radius:8px; font-size:13px; cursor:pointer;">✎</button>
+                <button onClick="{{ editName }}" title="שינוי השם המוצג" aria-label="שינוי השם המוצג" style="flex:none; background:rgba(255,255,255,.14); border:none; color:#fff; width:28px; height:28px; border-radius:8px; font-size:13px; cursor:pointer;">✎</button>
               </div>
               <div style="font-size:11.5px; color:#b9c4e6; margin-top:4px;">השם שמופיע בכרטיס הסיכום ואצל המאמן</div>
             </sc-if>
@@ -1891,7 +1897,7 @@
               </div>
             </sc-if>
           </div>
-          <button onClick="{{ closeProfile }}" style="flex:none; background:rgba(255,255,255,.14); border:none; color:#fff; width:32px; height:32px; border-radius:9px; font-size:16px; cursor:pointer;">✕</button>
+          <button onClick="{{ closeProfile }}" aria-label="סגור" style="flex:none; background:rgba(255,255,255,.14); border:none; color:#fff; width:32px; height:32px; border-radius:9px; font-size:16px; cursor:pointer;">✕</button>
         </div>
         <div style="padding:20px 24px;">
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
@@ -1912,7 +1918,7 @@
             <sc-if value="{{ goalShowing }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex; gap:8px; align-items:center;">
                 <div dir="auto" style="flex:1; min-width:0; font-weight:700; font-size:15px; {{ goalTextStyle }}">{{ goalText }}</div>
-                <button onClick="{{ editGoal }}" title="עריכת המטרה" style="flex:none; background:var(--chip); color:var(--muted); border:none; border-radius:8px; width:30px; height:30px; font-size:13px; cursor:pointer;">✎</button>
+                <button onClick="{{ editGoal }}" title="עריכת המטרה" aria-label="עריכת המטרה" style="flex:none; background:var(--chip); color:var(--muted); border:none; border-radius:8px; width:30px; height:30px; font-size:13px; cursor:pointer;">✎</button>
               </div>
               <div style="font-size:11px; color:var(--muted); margin-top:4px;">{{ goalLabel }}</div>
             </sc-if>
@@ -1976,7 +1982,7 @@
             <div dir="auto" style="font-family:'Oswald',sans-serif; font-weight:700; font-size:19px; letter-spacing:.03em;">{{ liftChartTitle }}</div>
             <div style="font-size:12px; color:#b9c4e6; margin-top:2px;">{{ liftChartSub }}</div>
           </div>
-          <button onClick="{{ closeLiftChart }}" style="flex:none; background:rgba(255,255,255,.14); border:none; color:#fff; width:32px; height:32px; border-radius:9px; font-size:16px; cursor:pointer;">✕</button>
+          <button onClick="{{ closeLiftChart }}" aria-label="סגור" style="flex:none; background:rgba(255,255,255,.14); border:none; color:#fff; width:32px; height:32px; border-radius:9px; font-size:16px; cursor:pointer;">✕</button>
         </div>
         <div style="padding:18px 18px 8px;">{{ liftChartBody }}</div>
         <sc-if value="{{ liftChartHasDay }}" hint-placeholder-val="{{ true }}">
@@ -1997,7 +2003,7 @@
         <div dir="auto" style="font-size:12.5px; color:var(--muted); margin-top:2px;">{{ celebrateSub }}</div>
       </div>
       <button onClick="{{ celebrateShare }}" style="flex:none; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:8px 14px; font-weight:700; font-size:12.5px; cursor:pointer;">📤 שתף</button>
-      <button onClick="{{ celebrateClose }}" style="flex:none; background:none; border:none; color:var(--muted); font-size:16px; cursor:pointer;">✕</button>
+      <button onClick="{{ celebrateClose }}" aria-label="סגור" style="flex:none; background:none; border:none; color:var(--muted); font-size:16px; cursor:pointer;">✕</button>
     </div>
   </sc-if>
   <!-- ---- template: toast (hasToast) ---- -->
@@ -2377,6 +2383,7 @@ class Component extends DCLogic {
     try { if (navigator.vibrate) navigator.vibrate([40, 60, 40]); } catch (e) {}   // 10/09 (deploy 12): a double buzz with the celebration (Android only)
   }
   confetti() {
+    try { if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch (e) {}   // a11y (deploy 13): no confetti when the OS asks for less motion
     const html = document.documentElement;
     const c = document.createElement('canvas');
     c.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99980;';
