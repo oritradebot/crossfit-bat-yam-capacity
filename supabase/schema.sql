@@ -36,6 +36,9 @@ alter table public.profiles add column if not exists goal_done_at timestamptz;
 -- (Run by hand on the live DB BEFORE the block-1 reset; with the column
 -- missing the panel stops before deleting anything.)
 alter table public.profiles add column if not exists prs          jsonb;
+-- deploy 8 (10/09/2026): when the athlete ticked the privacy notice at signup.
+-- index.html retries the profile upsert without it while the column is missing.
+alter table public.profiles add column if not exists consent_at   timestamptz;
 
 -- 2) STATES : each user's full tracker blob (program + their own results)
 create table if not exists public.states (

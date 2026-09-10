@@ -158,5 +158,8 @@ grant execute on function public.admin_reset_block(text) to authenticated;
 
 notify pgrst, 'reload schema';
 
+-- 8) privacy consent stamp (deploy 8)
+alter table public.profiles add column if not exists consent_at timestamptz;
+
 -- verify: both counts return (0 rows, no error)
 select (select count(*) from public.client_errors) as client_errors, (select count(*) from public.admin_audit) as admin_audit;
