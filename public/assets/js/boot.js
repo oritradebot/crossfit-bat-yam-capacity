@@ -1419,6 +1419,7 @@
         '<div class="cfa-ann" id="cfaHealthOld" style="font-size:13px"></div>' +
         '<div style="display:flex;gap:8px;margin-bottom:12px"><button class="cfa-tog" id="cfaHealthRefresh">↻ רענן</button><button class="cfa-tog" id="cfaHealthClear">🧹 נקה את הרשימה</button></div>' +
         '<div id="cfaHealthList"></div>' +
+        '<h3 style="font-size:14px;margin:18px 0 8px">📜 פעולות מנהל אחרונות</h3><div id="cfaHealthAudit" class="cfa-stat">טוען…</div>' +
         '</div>' +
         '<div id="cfaViewApp" style="display:none">' +
         '<div class="cfa-banner" id="cfaBkBanner" style="display:none"></div>' +
@@ -1491,6 +1492,12 @@
     // 10/09 (deploy 5): which build / program version each athlete's device last pushed
     // (pub.build / pub.pv from publicSummary). Older pubs carry no field. Values come from
     // the athlete's own row, so they are escaped like a name.
+    // 10/09 (deploy 7): admin actions leave a trail. The three RPCs write their own rows
+    // (delete_user / set_password / reset_block); the panel writes the rest here. Fire-and-
+    // forget — the action itself never waits on the log, and a missing table is a no-op.
+    function audit(action, targetName, detail) {
+      try { sb.from("admin_audit").insert({ admin_id: meId, action: action, target_name: String(targetName || ""), detail: detail || null }).then(function () {}, function () {}); } catch (e) {}
+    }
     function verChip(pub) {
       if (!pub || !pub.build) return ' · <span class="cfa-ver" title="המכשיר עוד לא דחף עם מספר גרסה">גרסה ?</span>';
       var oldB = String(pub.build) !== BUILD;
@@ -1741,6 +1748,7 @@
       await putRows("states", data.states || [], "user_id");
       await putRows("board", data.board || [], "user_id");
       await putRows("shared_program", data.shared_program || [], "id");
+      audit("restore", file && file.name, { restored: ok, skipped: skip });
       amsg("השחזור הסתיים: " + ok + " רשומות שוחזרו" +
            (skip ? ", " + skip + " דולגו (כנראה משתמשים שנמחקו מאז הגיבוי)" : "") +
            ". משתתפים יראו את הנתונים בפתיחה הבאה של האפליקציה.", skip ? "" : "ok");
@@ -1888,7 +1896,7 @@
         amsg("הפתיחה נכשלה: " + m, "err"); return;
       }
       recapBroadcast(flag);
-      amsg("כרטיס הסיכום פתוח לכולם 🏁", "ok"); recapStatus();
+      audit("recap_open", "", null); amsg("כרטיס הסיכום פתוח לכולם 🏁", "ok"); recapStatus();
     }
     async function recapCloseGate() {
       if (!confirm("לסגור את כרטיס סיכום הבלוק?\nהכפתור ייעלם אצל המתאמנים (אצלך תישאר תצוגה מקדימה).")) return;
@@ -1896,7 +1904,7 @@
       var r = await sb.from("shared_program").upsert({ id: 1, block_recap: null });
       if (r.error) { amsg("הסגירה נכשלה: " + (r.error.message || r.error), "err"); return; }
       recapBroadcast(null);
-      amsg("כרטיס הסיכום נסגר", "ok"); recapStatus();
+      audit("recap_close", "", null); amsg("כרטיס הסיכום נסגר", "ok"); recapStatus();
     }
 
     // ---- block reset (v2.3.0) -------------------------------------------
@@ -2148,6 +2156,7 @@
           if (up.error) throw up.error;   // surface RLS/other failures instead of a false "created"
         }
         document.getElementById("cfaU").value = ""; document.getElementById("cfaN").value = ""; document.getElementById("cfaP").value = "";
+        audit("add_user", (n || u), { username: u });
         amsg('נוצר "' + (n || u) + '". מסור לו שם משתמש: ' + u, "ok");
         refresh();
       } catch (e) {
@@ -2203,6 +2212,21 @@
       } catch (e) { stat.textContent = "שגיאה: " + ((e && e.message) || e); }
       finally { healthBusy = false; }
     }
+    var AUDIT_LABEL = { delete_user: "מחיקת משתמש", set_password: "איפוס סיסמה", reset_block: "איפוס בלוק", restore: "שחזור מגיבוי", recap_open: "פתיחת כרטיס הסיכום", recap_close: "סגירת כרטיס הסיכום", add_user: "יצירת משתמש" };
+    async function auditRender() {
+      var box = document.getElementById("cfaHealthAudit");
+      try {
+        var r = await sb.from("admin_audit").select("action,target_name,detail,created_at").order("created_at", { ascending: false }).limit(30);
+        if (r.error) { box.textContent = (r.error.code === "42P01" || r.error.code === "PGRST205" || /admin_audit/.test(r.error.message || "")) ? "טבלת admin_audit עוד לא קיימת — להריץ את supabase/2026-09-10-client-errors.sql" : ("שגיאה: " + r.error.message); return; }
+        var rows = r.data || [];
+        if (!rows.length) { box.textContent = "עדיין אין פעולות רשומות"; return; }
+        box.className = "";
+        box.innerHTML = rows.map(function (x) {
+          var d = x.detail ? Object.keys(x.detail).map(function (k) { return k + ": " + x.detail[k]; }).join(" · ") : "";
+          return '<div style="font-size:12px;padding:6px 0;border-bottom:1px solid #243657"><span style="color:#8ea3c9">' + fmtWhen(x.created_at) + '</span> · <b>' + esc(AUDIT_LABEL[x.action] || x.action) + '</b>' + (x.target_name ? ' · ' + esc(x.target_name) : '') + (d ? ' <span style="color:#8ea3c9" dir="ltr">' + esc(d) + '</span>' : '') + '</div>';
+        }).join("");
+      } catch (e) { box.textContent = "שגיאה: " + ((e && e.message) || e); }
+    }
     async function healthClear() {
       if (!confirm("למחוק את כל דיווחי השגיאה?")) return;
       var r = await sb.from("client_errors").delete().gte("id", 0);
@@ -2221,7 +2245,7 @@
       });
       document.getElementById("cfaTitle").innerHTML = titles[v];
       amsg("");
-      if (v === "health") healthRender();
+      if (v === "health") { healthRender(); auditRender(); }
     }
     function openPanel(view) {
       showView(typeof view === "string" ? view : "people");
@@ -2260,7 +2284,7 @@
     document.getElementById("cfaViewBtnPeople").onclick = function () { showView("people"); };
     document.getElementById("cfaViewBtnApp").onclick = function () { showView("app"); };
     document.getElementById("cfaViewBtnHealth").onclick = function () { showView("health"); };
-    document.getElementById("cfaHealthRefresh").onclick = function () { healthRender(); };
+    document.getElementById("cfaHealthRefresh").onclick = function () { healthRender(); auditRender(); };
     document.getElementById("cfaHealthClear").onclick = function () { healthClear(); };
     document.getElementById("cfaEditTog").onclick = function () {
       var on = rawGet(EDIT_KEY) !== "1";

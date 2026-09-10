@@ -122,6 +122,8 @@ as $$
 begin
   if not public.is_admin() then raise exception 'not authorized'; end if;
   if target = auth.uid() then raise exception 'cannot delete yourself'; end if;
+  insert into public.admin_audit (admin_id, action, target, target_name)
+    values (auth.uid(), 'delete_user', target, coalesce((select name from public.profiles where id = target), ''));
   delete from auth.users where id = target;
 end;
 $$;
@@ -141,6 +143,8 @@ as $$
 begin
   if not public.is_admin() then raise exception 'not authorized'; end if;
   if length(new_password) < 6 then raise exception 'password too short'; end if;
+  insert into public.admin_audit (admin_id, action, target, target_name)
+    values (auth.uid(), 'set_password', target, coalesce((select name from public.profiles where id = target), ''));
   update auth.users
      set encrypted_password = crypt(new_password, gen_salt('bf')),
          updated_at = now()
@@ -409,6 +413,9 @@ begin
      set weeks = null, block_recap = null, announcement = null, updated_at = now()
    where id = 1;
 
+  insert into public.admin_audit (admin_id, action, target_name, detail)
+    values (auth.uid(), 'reset_block', p_label, jsonb_build_object('archived_states', v_as, 'archived_board', v_ab,
+                                                                 'deleted_states', v_ds, 'deleted_board', v_db));
   return jsonb_build_object('archived_states', v_as, 'archived_board', v_ab,
                             'deleted_states', v_ds, 'deleted_board', v_db,
                             'label', p_label);
@@ -447,6 +454,31 @@ create policy client_errors_insert on public.client_errors for insert to authent
 drop policy if exists client_errors_admin on public.client_errors;
 create policy client_errors_admin on public.client_errors for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
+
+-- ============================================================
+--  ADMIN AUDIT LOG (deploy 7, 10/09/2026) — who did what, when. The three
+--  admin RPCs write their own rows (delete_user / set_password / reset_block,
+--  as SECURITY DEFINER they bypass RLS); the panel writes restore / recap gate
+--  / add_user directly (admin-only insert policy). Read in the panel's 🩺 view.
+--  No FK to auth.users on purpose: the trail must survive a deleted account.
+-- ============================================================
+create table if not exists public.admin_audit (
+  id          bigserial primary key,
+  admin_id    uuid,
+  action      text not null,          -- delete_user | set_password | reset_block | restore | recap_open | recap_close | add_user
+  target      uuid,
+  target_name text not null default '',
+  detail      jsonb,
+  created_at  timestamptz not null default now()
+);
+create index if not exists admin_audit_created_idx on public.admin_audit (created_at desc);
+alter table public.admin_audit enable row level security;
+drop policy if exists admin_audit_read on public.admin_audit;
+create policy admin_audit_read on public.admin_audit for select to authenticated
+  using (public.is_admin());
+drop policy if exists admin_audit_insert on public.admin_audit;
+create policy admin_audit_insert on public.admin_audit for insert to authenticated
+  with check (public.is_admin() and admin_id = auth.uid());
 
 notify pgrst, 'reload schema';
 
