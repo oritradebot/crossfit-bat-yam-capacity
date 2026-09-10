@@ -58,7 +58,7 @@
 | גרסה | `public/version.json` + `BUILD` | **חייבים להיות זהים.** [`release.md`](docs/domains/release.md) |
 | סכימת DB | `supabase/schema.sql` | מתעדכן ידנית — ה-DB החי מקבל ALTER בנפרד |
 | יומן | `יומן-פרויקט.md` | בלוק 2 והלאה. בלוק 1: `docs/archive/journal-block-1.md` |
-| כלים | `tools/` | `map.py`, `journal_tail.py`; `block_summary.py` + `recap_cards_server.py` רצים על קובץ גיבוי |
+| כלים | `tools/` | `map.py`, `journal_tail.py`, **`release_check.py` (לפני כל commit)**; `block_summary.py` + `recap_cards_server.py` רצים על קובץ גיבוי |
 | דמו למשתתפים | `/demo` → `app.html?demo=1` | `demoMain` ב-boot.js + `DEMO_LOG` ב-app.html — [`personal-v3.md` §ד](docs/domains/personal-v3.md) |
 
 ---
@@ -106,6 +106,6 @@
    עדכן את "פתוח / הבא בתור": פריט שנסגר **נמחק** (הרשומה מתעדת), לא נשאר מחוק.
 2. **מסמך התחום** הרלוונטי: מה אנחנו יודעים עכשיו — **במיוחד "מה נדחה ולמה"**.
 3. **בסוף בלוק:** רשומות הבלוק עוברות ל-`docs/archive/journal-block-N.md` (כמו בלוק 1, 10/09/2026).
-4. commit / push — רק כשאורי מבקש.
+4. commit / push — רק כשאורי מבקש, ורק אחרי ש-`python tools/release_check.py` ירוק.
 
 **ההבדל:** היומן = *מה קרה* (כרונולוגי, לאורי). מסמך התחום = *מה אנחנו יודעים עכשיו* (עדכני, לקלוד).

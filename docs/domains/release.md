@@ -22,6 +22,7 @@
 
 ## 3. הזרימה שעובדת
 
+0. **`python tools/release_check.py`** — חייב להיות ירוק (10/09): BUILD == version.json, BLOCK == BLOCK_NUM, אין CRLF בקבצים המנוהלים, PROGRAM_VERSION עלה אם טקסט התוכנית השתנה מול HEAD, שני בלוקי כרטיס הסיכום זהים ל-`design/block-recap/`, חוקי ברזל 1 ו-4 ב-boot.js, אין סקריפטים מ-CDN. נכשל → מתקנים לפני ה-commit.
 1. commit רק כשאורי מבקש. לפני commit: נרמול CRLF→LF לקבצים שנערכו (`python -c ...` מ-CLAUDE.md), ו-`git diff --stat` לוודא שרק מה שהתכוונו נכנס.
 2. `gh` **לא מותקן** — אין PR מה-CLI. Vercel פורס מ-`main` בלבד. הזרימה: ענף → commit → push לענף → מיזוג fast-forward ל-`main` → push (או ישירות ל-`main` בתיקונים קטנים, כמו ב-08/09).
 3. **אימות מול הפרודקשן אחרי כל פריסה** — ואז commit נפרד ליומן ("journal: … production verified"):

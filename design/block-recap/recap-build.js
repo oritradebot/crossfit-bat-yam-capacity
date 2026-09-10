@@ -30,7 +30,8 @@
      slot: { wi, di, src }
        src 'lift.weight' | 'lift.reps' | 'metcon' | 'metcon2' | 'extra0' | 'extra1'
      ====================================================================== */
-  var CAPACITESTS = [
+  // BLOCK 1 tests — kept for /demo only (window.cfbyDemo). See testList().
+  var CAPACITESTS_BLOCK1 = [
     { key: 'squat',
       name: 'Back Squat — שלשה כבדה',
       short: 'כוח רגליים',
@@ -64,6 +65,21 @@
       retest: null                                    // no re-measure in W8
     }
   ];
+  // BLOCK 2 (Ori, 07/09/2026): the Sunday 4 x 10 Back Squat is the block's
+  // test and it repeats EVERY WEEK — a `weekly` slot instead of base/retest:
+  // measured on day `di` of each week; the first measured week is the
+  // "before", the latest measured week after it is the "after", and the
+  // in-app screen also lists every week's value. More tests arrive per embed.
+  var CAPACITESTS_BLOCK2 = [
+    { key: 'squat10',
+      name: 'Back Squat — 4 x 10 (מבחן שבועי)',
+      short: 'עשיריות בק סקוואט · כל יום ראשון',
+      unit: 'ק"ג',
+      betterWhen: 'higher',
+      weekly: { di: 0, src: 'lift.weight' }
+    }
+  ];
+  function testList() { return global.cfbyDemo ? CAPACITESTS_BLOCK1 : CAPACITESTS_BLOCK2; }
 
   /* ---- value readers ---------------------------------------------------- */
   function dayAt(app, wi, di) {
@@ -114,15 +130,35 @@
     return m + ':' + (s < 10 ? '0' : '') + s;
   }
 
+  /* ---- weekly tests (block 2) ---------------------------------------------
+     One value per week (same day, same reader). The slots a weekly test
+     exposes to the card are the first measured week and the latest one.   */
+  function weeklyPoints(app, t) {
+    var pts = [];
+    for (var wi = 0; wi < 8; wi++) {
+      var r = readSlot(app, { wi: wi, di: t.weekly.di, src: t.weekly.src }, t);
+      pts.push(r ? { wi: wi, v: r.v, text: r.text, short: (t.weekly.src === 'lift.weight' ? trimNum(r.v) : r.text), ltr: !!r.ltr } : null);
+    }
+    return pts;
+  }
+  function testSlots(app, t) {
+    if (!t.weekly) return { base: t.base || null, retest: t.retest || null };
+    var m = weeklyPoints(app, t).filter(Boolean);
+    var first = m[0] || null, last = m.length > 1 ? m[m.length - 1] : null;
+    var slot = function (p) { return p ? { wi: p.wi, di: t.weekly.di, src: t.weekly.src } : null; };
+    return { base: slot(first), retest: slot(last) };
+  }
+
   /* ---- one graph row ----------------------------------------------------
      pct = value / max(before, after) — computed per row, so each test owns
      its own scale. On a timed test the slower time is the full bar.         */
   function buildTest(app, t) {
-    var b = readSlot(app, t.base, t);
+    var S = testSlots(app, t);
+    var b = readSlot(app, S.base, t);
     if (!b) return null;                       // never baselined -> not on the card at all
-    var a = readSlot(app, t.retest, t);
+    var a = readSlot(app, S.retest, t);
     var row = {
-      key: t.key, name: t.name, short: t.short, betterWhen: t.betterWhen,
+      key: t.key, name: t.name, short: t.short, betterWhen: t.betterWhen, weekly: !!t.weekly,
       before: b.text, after: a ? a.text : '',
       ltrValues: !!b.ltr,
       beforePct: 100, afterPct: 0, delta: '', deltaAbs: '', gain: null
@@ -310,7 +346,7 @@
     var rx = rxCount(app);
     var hard = hardCount(app);
     var goal = { text: String(app.state.myGoal || '').trim(), done: !!app.state.myGoalDone };
-    var tests = CAPACITESTS.map(function (t) { return buildTest(app, t); }).filter(Boolean);
+    var tests = testList().map(function (t) { return buildTest(app, t); }).filter(Boolean);
     var measured = tests.filter(function (t) { return t.after; });
     var improved = measured.filter(function (t) { return t.gain > 0; });
 
@@ -331,7 +367,7 @@
                pct: champ.betterWhen === 'lower' ? ('-' + Math.round(champ.gain * 100) + '%') : ('+' + Math.round(champ.gain * 100) + '%'),
                lead: 'הקפיצה של הבלוק', leadShort: 'הקפיצה של הבלוק',
                label: champ.name, before: champ.before, after: champ.after,
-               unit: (CAPACITESTS.find(function (t) { return t.key === champ.key; }) || {}).unit || '' };
+               unit: (testList().find(function (t) { return t.key === champ.key; }) || {}).unit || '' };
     }
 
     // Edge case 1: when not everything was re-measured the pill reports the
@@ -361,7 +397,8 @@
   }
 
   global.BlockRecap = {
-    build: build, tests: CAPACITESTS,
+    build: build, get tests() { return testList(); },
+    _slots: testSlots, _points: weeklyPoints,
     gateState: gateState, isOpen: isOpen,
     // v3 (07/09): the in-app tests screen (שיאים ומבחנים) reuses the same
     // rows the card draws — one config, one reader, one delta rule.
