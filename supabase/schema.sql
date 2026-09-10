@@ -259,16 +259,47 @@ drop policy if exists states_admin_del     on public.states;
 drop policy if exists states_admin_read    on public.states;
 drop policy if exists board_admin_del      on public.board;
 
--- PROFILES: a user reads/writes only their own row; everyone may read names.
+-- PROFILES: a user reads/writes only their own row; admins read all.
+-- (10/09/2026: was "everyone may read names" — a leftover of the shared
+-- leaderboard. The app reads only its own row; the panel reads all as admin.)
 -- Admins may create/edit/delete any profile (needed by the admin panel).
 drop policy if exists profiles_read  on public.profiles;
 drop policy if exists profiles_write on public.profiles;
 drop policy if exists profiles_admin on public.profiles;
-create policy profiles_read  on public.profiles for select to authenticated using (true);
+create policy profiles_read  on public.profiles for select to authenticated
+  using (id = auth.uid() or public.is_admin());
 create policy profiles_write on public.profiles for all    to authenticated
   using (id = auth.uid()) with check (id = auth.uid());
 create policy profiles_admin on public.profiles for all    to authenticated
   using (public.is_admin()) with check (public.is_admin());
+
+-- is_admin is READ-ONLY for API callers who are not already admins
+-- (10/09/2026). RLS cannot restrict columns: profiles_write lets a user
+-- update every column of their own row, so one PATCH with {"is_admin": true}
+-- used to make any member an admin (read everyone, delete users, reset the
+-- block). The SQL editor (role postgres), service_role and the auth signup
+-- trigger are not affected — "make yourself admin" from the README still works.
+create or replace function public.guard_profile_flags()
+  returns trigger
+  language plpgsql
+  set search_path = public
+as $$
+begin
+  if current_user in ('anon', 'authenticated') and not public.is_admin() then
+    if tg_op = 'INSERT' and coalesce(new.is_admin, false) then
+      raise exception 'is_admin is read-only';
+    end if;
+    if tg_op = 'UPDATE' and new.is_admin is distinct from old.is_admin then
+      raise exception 'is_admin is read-only';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists profiles_guard_flags on public.profiles;
+create trigger profiles_guard_flags
+  before insert or update on public.profiles
+  for each row execute function public.guard_profile_flags();
 
 -- STATES: private to the owner; admins may read/delete any row (admin panel).
 drop policy if exists states_owner on public.states;
