@@ -1154,6 +1154,11 @@
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; line-height:1;">{{ curWeekNum }}<span style="font-size:16px; color:#9fb0dd;">/8</span></div>
             <div style="font-size:12px; color:#9fb0dd; font-weight:600; letter-spacing:.04em; margin-top:6px;">שבוע נוכחי</div>
           </div>
+          <!-- ---- level card (deploy 10, 10/09): the slot the RX card left — the level worked at most this block ---- -->
+          <div style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--blue); line-height:1;">{{ statLevel }}</div>
+            <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">{{ statLevelSub }}</div>
+          </div>
         </div>
 
 
@@ -2473,6 +2478,17 @@ class Component extends DCLogic {
     return Object.keys(set).map(Number).sort();
   }
   // Most recent level chosen on an earlier day of the block ('' if none).
+  // 10/09 (deploy 10, Ori: the overview slot RX left): the level the athlete worked at most in this
+  // block — saved sessions only (main + endurance), by the level picked in step 1. Ties go up.
+  levelStats() {
+    const n = { '1': 0, '2': 0, '3': 0 }; let total = 0;
+    (this.state.data || []).forEach(wk => (wk.days || []).forEach(day => {
+      [day, day.alt].forEach(sess => { if (sess && sess.done && sess.level && n[sess.level] != null) { n[sess.level]++; total++; } });
+    }));
+    if (!total) return { top: '', total: 0, n };
+    const top = ['3', '2', '1'].reduce((b, k) => (n[k] > n[b] ? k : b), '3');
+    return { top, total, n };
+  }
   lastLevel() {
     const g = this.state.selWeek*7 + this.state.selDay;
     for (let i = g-1; i >= 0; i--) {
@@ -4276,6 +4292,8 @@ class Component extends DCLogic {
       editTabStyle: this.segStyle(editMode),
 
       statSessions: done, statTarget: target, statPct: pct,
+      statLevel: (()=>{ const lv = this.levelStats(); return lv.top ? ('L' + lv.top) : '—'; })(),
+      statLevelSub: (()=>{ const lv = this.levelStats(); return lv.total ? ('הרמה הכי שכיחה · L1 ×' + lv.n['1'] + ' · L2 ×' + lv.n['2'] + ' · L3 ×' + lv.n['3']) : 'עדיין לא נבחרה רמה'; })(),
       hasTests: testRows.length > 0, testRows, testsMeasured,
       // goal card (v3): stored on the athlete (profiles.goal via boot.js), not on the block
       goalEditing: this.state.goalEditing || !this.state.myGoal,
