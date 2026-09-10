@@ -4,7 +4,8 @@
 (`public/app.html`) עטופה בשכבת התחברות וסנכרון מול Supabase (`public/assets/js/boot.js`).
 פרוסה ב-Vercel מ-`main` בלבד → https://crossfit-bat-yam-capacity.vercel.app
 
-**בעלים והמחליט היחיד: אורי.** הוא בוחר מספרי גרסה, מאשר תוכן תוכנית, ומחליט מה נדחף.
+**בעלים והמחליט היחיד: אורי.** הוא בוחר מספרי גרסה, מאשר תוכן תוכנית, ומחליט מה מקומט ומה נדחף.
+מתאמנים נכנסים בשם משתמש; במסד זה מייל סינתטי `username@batyam.app` — מייל אמיתי לא נשלח אף פעם.
 
 ---
 
@@ -18,9 +19,31 @@
 4. **אסור להשמה על המופע**: `localStorage.setItem = fn`. עוטפים `Storage.prototype.setItem`. (Safari 26 עוקף.)
 5. **אסור לתת לשרת לנצח באמצע סשן.** מיזוג קורה רק ב-boot, ב-`mergeTrackers`.
 6. **אסור להוסיף תוכן תוכנית שאורי לא שלח.** ציטוט: *"אם אין בתוכנית ששלחתי לך אל תוסיף"*.
-7. **אסור לשנות `resultMode` בשבוע סגור** — שובר את ההשוואה מול עצמך (מבחנים, "בפעם הקודמת"); בעבר: מערבב ערכים בדירוג.
+7. **אסור לשנות `resultMode` בשבוע סגור** — שובר את ההשוואה מול עצמך (מבחנים, "בפעם הקודמת").
 
-עצה סטנדרטית של Supabase/React היא **רגרסיה** כאן. פירוט מלא: [`docs/domains/sync.md`](docs/domains/sync.md).
+עצה סטנדרטית של Supabase/React היא **רגרסיה** כאן. התקרית מאחורי כל חוק: [`docs/domains/sync.md`](docs/domains/sync.md).
+
+---
+
+## 💰 חסכון בטוקנים — איך קוראים את הריפו הזה
+
+הקבצים הגדולים **לא נקראים במלואם, אף פעם**: `app.html` (430KB), `boot.js` (175KB), היומן (95KB), הארכיון (250KB).
+
+| צריך | עושים | לא עושים |
+|---|---|---|
+| להתמצא ב-`app.html` / `boot.js` | `python tools/map.py app` (או `boot`, או `app program`) → `sed -n "A,Bp"` על הסקשן בלבד | Read/cat על הקובץ, "לקרוא קצת מהאמצע" |
+| למצוא סימבול | `grep -n "name" public/app.html` → ‏±30 שורות סביב | לקרוא סקשן שלם בשביל שורה אחת |
+| מה קרה לאחרונה | `python tools/journal_tail.py` — רשומה אחרונה + הרשימה הפתוחה (`3` = שלוש אחרונות, `--headings` = רק כותרות) | `cat יומן-פרויקט.md` |
+| ידע תחום | **מסמך התחום הרלוונטי בלבד** (טבלה למטה) | כל `docs/` |
+| היסטוריה | `docs/archive/` — רק כשחוקרים משהו ישן | |
+| חיפוש רחב (הרבה קבצים / כיוונים) | סוכן Explore שמחזיר **מסקנה** | grep-ים חוזרים בקונטקסט הראשי |
+
+- **פלט כלים:** לפני שמדפיסים משהו > ~3KB — `head`, `cut -c1-120`, `grep`. אין להדפיס `settings.local.json` (33KB הרשאות, אפס מידע).
+- **לא קוראים אף פעם:** `demoWeek1..8` (תוכנית בלוק 1, לדמו בלבד, 40KB) · שני סקריפטי כרטיס הסיכום בראש `app.html` (מודבקים מילה במילה מ-`design/block-recap/` — עורכים **שם**) · `public/assets/js/*` חוץ מ-boot.js · `design/block-recap/standalone.html`.
+- **עריכה בקבצים גדולים:** סקריפט Python קצר (חיפוש-והחלפה עם `assert count == 1`, כתיבה עם `newline="
+"`) — לא Read של הקובץ כדי לערוך.
+- **עוגנים:** אזור חדש ב-`app.html`/`boot.js` מקבל באנר `// ---- שם ----` (בתבנית: `<!-- ---- שם ---- -->`; אזור-על: `<!-- ==== SECTION: שם ==== -->`). `map.py` קורא אותם. **אין מספרי שורות במסמכים** — מתיישנים תוך יום.
+- **סוכני-רקע** לניסוח מסמכים ולבדיקות-כיסוי; הקונטקסט הראשי מקבל רק את הדוח.
 
 ---
 
@@ -28,14 +51,15 @@
 
 | מה | איפה | הערה |
 |---|---|---|
-| האפליקציה | `public/app.html` | 4,100 שורות. אל תקרא במלואו — ראה `docs/MAP.md` |
-| שכבת הסנכרון | `public/assets/js/boot.js` | `BUILD` בשורה ~20 |
-| תוכן האימונים | `app.html` → `programWeek1()`..`programWeek8()` | ~2056-2406 |
-| גרסה | `public/version.json` + `BUILD` ב-boot.js | **חייבים להיות זהים** |
+| האפליקציה | `public/app.html` | ~4,900 שורות. [`docs/MAP.md`](docs/MAP.md) + `python tools/map.py app` |
+| שכבת הסנכרון | `public/assets/js/boot.js` | `BUILD` בראש הקובץ (`grep -n "var BUILD"`) |
+| תוכן האימונים | `app.html` → `programWeek1()..programWeek8()` | סקשן **BLOCK 2 program** (`map.py app program`) |
+| מפות ההזנה | `PER_SET_LIFT`, `PER_MOVE_*`, `METCON_AMOUNT_LABEL`, `TIME_SPLITS`, `ROUND_REPS` | סקשן **richer result entry** |
+| גרסה | `public/version.json` + `BUILD` | **חייבים להיות זהים.** [`release.md`](docs/domains/release.md) |
 | סכימת DB | `supabase/schema.sql` | מתעדכן ידנית — ה-DB החי מקבל ALTER בנפרד |
-| יומן | `יומן-פרויקט.md` | מה קרה, כרונולוגי, בעברית לאורי |
-| כלי גיבוי/סיכום | `tools/` | `block_summary.py` + `recap_cards_server.py` — רצים על קובץ גיבוי, לא על הענן |
-| דמו למשתתפים | `/demo` → `app.html?demo=1` | `demoMain` ב-boot.js + `DEMO_LOG` ב-app.html. אחסון מבודד, בלי ענן, בלי מנהל — [`personal-v3.md` §ד](docs/domains/personal-v3.md) |
+| יומן | `יומן-פרויקט.md` | בלוק 2 והלאה. בלוק 1: `docs/archive/journal-block-1.md` |
+| כלים | `tools/` | `map.py`, `journal_tail.py`; `block_summary.py` + `recap_cards_server.py` רצים על קובץ גיבוי |
+| דמו למשתתפים | `/demo` → `app.html?demo=1` | `demoMain` ב-boot.js + `DEMO_LOG` ב-app.html — [`personal-v3.md` §ד](docs/domains/personal-v3.md) |
 
 ---
 
@@ -43,17 +67,16 @@
 
 | תחום | קובץ | מתי |
 |---|---|---|
-| 🏋️ הטמעת תוכנית | [`docs/domains/program.md`](docs/domains/program.md) | הטמעת שבוע, `resultMode`, מפות קונפיג |
-| 🎯 v3 אישי | [`docs/domains/personal-v3.md`](docs/domains/personal-v3.md) | **הסרת הדירוג** (07/09, טרם נבנה), מבחנים באפליקציה, "בפעם הקודמת", מטרה אישית, טבלת מאמן |
-| 🏆 ניקוד | ~~`scoring.md`~~ | **הוסר ב-v3** — אחוזונים/70-30/קטגוריות יורדים. ראה personal-v3.md |
-| ☁️ סנכרון | `docs/domains/sync.md` | Supabase, boot.js, מיזוגים |
-| 🎨 UI/UX | `docs/domains/ui-ux.md` | העדפות עיצוב של אורי |
-| ♿ נגישות | `docs/domains/a11y.md` | |
-| 🚀 שחרור | `docs/domains/release.md` | BUILD, פריסה, אימות |
-| 🔄 מעבר בלוק | [`docs/domains/block-transition.md`](docs/domains/block-transition.md) | מצב תחזוקה, כפתור איפוס + ארכיון, שאריות במכשירים |
-| 💾 גיבוי וייצוא | [`docs/domains/backup.md`](docs/domains/backup.md) | גיבוי מהפאנל, סיכומים לכל משתתף, כרטיסי PNG מגיבוי |
-
-> מסמכי תחום שעדיין לא קיימים — נכתבים בפעם הראשונה שעובדים בתחום, לא מראש.
+| 🏋️ הטמעת תוכנית | [`program.md`](docs/domains/program.md) | הטמעת שבוע, `resultMode`, מפות ההזנה, מלכודות סנכרון בשדות לוג |
+| 🎯 v3 אישי | [`personal-v3.md`](docs/domains/personal-v3.md) | היומן / הסקירה / המבחנים / הפאנל של v3, הכרעות אורי, הדמו. הספק המקורי: `docs/archive/personal-v3-spec-2026-09-07.md` |
+| ☁️ סנכרון | [`sync.md`](docs/domains/sync.md) | Supabase, boot.js, מיזוגים, היסטוריית תקריות, אבחון |
+| 🚀 שחרור | [`release.md`](docs/domains/release.md) | BUILD, version.json, פריסה, אימות מול הפרודקשן |
+| 🔄 מעבר בלוק | [`block-transition.md`](docs/domains/block-transition.md) | מצב תחזוקה, איפוס + ארכיון, שיאים בין בלוקים, עובדות בלוק 2 |
+| 💾 גיבוי וייצוא | [`backup.md`](docs/domains/backup.md) | גיבוי מהפאנל, סיכומים, כרטיסי PNG מגיבוי |
+| 🧭 מפת שיפורים | [`roadmap.md`](docs/roadmap.md) | **הכרעות אורי מ-10/09/2026** — סדר הדיפלויים (§9.2), מה לא נבנה (§9.5). לבדוק לפני כל שיפור חדש |
+| 🏁 כרטיס סיכום בלוק | [`design/block-recap/README.md`](design/block-recap/README.md) | חוק ההדבקה, השער, גדלים |
+| 🎨 UI/UX · ♿ נגישות | — | עדיין לא קיימים; נכתבים בפעם הראשונה שעובדים בתחום |
+| 🏆 ניקוד | — | **הוסר ב-v3** (אחוזונים / 70-30 / קטגוריות) |
 
 ## ⚙️ נהלים חוזרים
 
@@ -63,17 +86,26 @@
 
 ## ⚠️ מלכודות סביבה
 
-- **CRLF:** כלי Edit ו-`git checkout` כותבים CRLF לקבצי LF במחשב הזה.
-  אחרי כל עריכה: `python -c "..."` שמנרמל ל-LF לפני בדיקות השוואה או commit.
-- **Service Worker:** שרת dev מת + SW מגישים snapshot ישן **בשקט**.
-  לפני שסומכים על בדיקה מקומית — השווה תווית גרסה בפוטר (`#cfbyVer`) מול `BUILD`.
-- **`gh` לא מותקן** במחשב הזה. אי אפשר לפתוח PR מה-CLI.
+- **CRLF:** Edit, ‏`git checkout` **וגם `git merge`** כותבים CRLF לקבצי LF. אחרי כל עריכה:
+  `python -c "p='FILE';b=open(p,'rb').read();open(p,'wb').write(b.replace(b'
+',b'
+'))"`.
+  בהשוואות (חוק ההדבקה של הכרטיס) מנרמלים **את שני הצדדים**.
+- **Service Worker:** שרת dev מת + SW מגישים snapshot ישן **בשקט** — גם `fetch(..., {cache:'reload'})`.
+  לפני שסומכים על בדיקה מקומית: תווית הגרסה בפוטר (`#cfbyVer`) מול `BUILD`. שחרור: `navigator.serviceWorker.getRegistrations()` → unregister הכל, `caches.keys()` → delete הכל, reload.
+  שרת משלך מ-`.claude/launch.json` (`capacity-static` … `-6`); `preview_start` מסרב לפורט של צ׳אט אחר.
+- **מצב dev (`?dev=1`) לא מריץ את `main()`** של boot.js — הנתיב האמיתי נבדק רק בפרודקשן. אחרי מחיקת משתנה ב-boot.js: grep על **כל** הקובץ (התיקון החם `fb` ab45b01).
+- **כלים במחשב הזה:** `gh` לא מותקן (אין PR מה-CLI). `node` לא מותקן (אין `node --check`). Python 3.14 כן.
+- **Bash tool:** ‏`$TMPDIR` ריק — כותבים סקריפטים לנתיב ה-scratchpad המפורש. heredoc עם גרש בודד לא מאוזן שובר את הכלי. Python שמדפיס עברית צריך `sys.stdout.reconfigure(encoding="utf-8")` (המסוף cp1255).
 
 ---
 
 ## 🔚 בסוף כל סשן
 
-1. עדכן את `יומן-פרויקט.md` — בעברית פשוטה, מה נעשה + למה. בלי קוד.
-2. עדכן את מסמך התחום הרלוונטי אם למדנו משהו חדש — **במיוחד "מה נדחה ולמה"**.
+1. **יומן** (`יומן-פרויקט.md`): רשומה אחת, **עד ~10 שורות**, בעברית פשוטה, מה נעשה + למה, בלי קוד. פרטים טכניים → מסמך התחום.
+   עדכן את "פתוח / הבא בתור": פריט שנסגר **נמחק** (הרשומה מתעדת), לא נשאר מחוק.
+2. **מסמך התחום** הרלוונטי: מה אנחנו יודעים עכשיו — **במיוחד "מה נדחה ולמה"**.
+3. **בסוף בלוק:** רשומות הבלוק עוברות ל-`docs/archive/journal-block-N.md` (כמו בלוק 1, 10/09/2026).
+4. commit / push — רק כשאורי מבקש.
 
 **ההבדל:** היומן = *מה קרה* (כרונולוגי, לאורי). מסמך התחום = *מה אנחנו יודעים עכשיו* (עדכני, לקלוד).

@@ -37,15 +37,19 @@ C:\Users\leaan\Desktop\crossfit manager project\בלוק 2 אימונים להט
 
 ב-`public/app.html`:
 
+0. **מיקום בלי לקרוא את הקובץ:** `python tools/map.py app program` מחזיר את טווח השורות של
+   סקשן התוכנית; קוראים רק אותו (`sed -n "A,Bp" public/app.html`). לא קוראים את `app.html` במלואו.
 1. `programWeekN()` — מבנה מלא לפי `program.md §1`. **מבלוק 2:** הפונקציה כבר קיימת ומחזירה
    `this.blankWeek()` (שבוע ריק במפורש) — מחליפים את הגוף בתוכן. **לא נוגעים ב-`demoWeekN()`** (בלוק 1, לדמו).
-2. `overlay(N-1, this.programWeekN())` ב-`applyProgram()` (~שורה 2424)
+2. ה-`overlay` לכל 8 השבועות כבר מחווט ב-`applyProgram()` (מבלוק 2) — **אין מה להוסיף שם.**
 3. **`resultMode` לכל מטקון** — טבלת ההחלטה ב-`program.md §2`. במקרה גבולי — שאל.
 3ב. **בריף יומי** — הכותרת "Brief" בצילום נכנסת ל-`brief` של היום, מילה במילה (מבלוק 2, אורי 07/09).
 4. **ימים ריקים במפורש:** אין lift ביום? `lift: { movement:'', planned:'' }`.
    פחות extras מהשבוע הקודם? הוסף `['','']`. (אחרת נשאר תוכן ישן אצל המשתמשים.)
 
 ## שלב 4 · מפות הקונפיג
+
+המפות יושבות בסקשן `richer result entry` (`python tools/map.py app result`).
 
 - `PER_SET_LIFT` — רשומה לכל יום עם מוט. ספירה לפי `program.md §3`.
   ימים בלי משקל מוט → **לא מוסיפים רשומה**.
@@ -64,7 +68,7 @@ C:\Users\leaan\Desktop\crossfit manager project\בלוק 2 אימונים להט
 
 ## שלב 5 · `PROGRAM_VERSION`
 
-העלה ב-1 (שורה ~1997). **בלי זה מכשירים קיימים לא יקבלו את השבוע.**
+העלה ב-1 (`grep -n "PROGRAM_VERSION =" public/app.html` — לא להסתמך על מספר שורה). **בלי זה מכשירים קיימים לא יקבלו את השבוע.**
 
 **אל תיגע** ב-`BUILD` (boot.js) או ב-`version.json`. גרסת האפליקציה זזה רק
 כשאורי נוקב במספר במפורש.
