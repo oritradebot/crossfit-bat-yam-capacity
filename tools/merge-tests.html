@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>בדיקות המיזוג — boot.js</title>
+<!--
+  Browser-run tests for the sync core in public/assets/js/boot.js (deploy 16, 10/09/2026).
+  No Node on this machine, so the page fetches boot.js as TEXT, slices the pure section
+  (stripDayLogs … mergeTrackers) and evaluates it with stubs for the three module globals
+  it touches (dtsGet / memDts / lsSetRaw). Nothing here talks to Supabase.
+
+  Run:  preview_start "recap-preview" (python -m http.server 8161 from the repo root)
+        then open http://localhost:8161/tools/merge-tests.html
+  Read: every line is ✅ or ❌ with expected vs actual; the summary is at the top.
+  Add a case: push a {name, run} object into CASES — run() returns true or a string that explains the failure.
+-->
+<style>
+  :root{--bg:#0f1830;--card:#16233f;--line:#243657;--txt:#eaf0ff;--mut:#8ea3c9;--ok:#7ee2a8;--bad:#ff8a80;--orange:#ef5b25}
+  body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.6 'Heebo',system-ui,sans-serif;padding:20px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--mut);font-size:12px;margin-bottom:16px}
+  #sum{font-size:16px;font-weight:700;margin:12px 0}
+  .ok{color:var(--ok)}.bad{color:var(--bad)}
+  .case{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:8px}
+  .case pre{direction:ltr;text-align:left;font-size:11px;color:var(--mut);white-space:pre-wrap;margin:6px 0 0}
+  code{direction:ltr;unicode-bidi:embed}
+</style>
+</head>
+<body>
+<h1>🧪 בדיקות המיזוג של boot.js</h1>
+<div class="sub">הפונקציות הטהורות של הסנכרון — <code>mergeTrackers</code>, <code>stampChangedDays</code>, <code>cleanLog</code>, <code>logSig</code>, <code>isBlankDay</code>, <code>stripLogs</code> — נטענות מהקובץ האמיתי ורצות על תרחישי העבר (שני מכשירים, יום לא-מוחתם, אופליין → אונליין, טקסט תוכנית). בלי Supabase.</div>
+<div id="sum">טוען את boot.js…</div>
+<div id="out"></div>
+<script>
+(async function () {
+  var out = document.getElementById("out"), sum = document.getElementById("sum");
+  function show(name, res, detail) {
+    var d = document.createElement("div"); d.className = "case";
+    d.innerHTML = (res === true ? '<span class="ok">✅</span> ' : '<span class="bad">❌</span> ') + name +
+      (res === true ? "" : '<pre>' + String(res === false ? (detail || "failed") : res).replace(/</g, "&lt;") + '</pre>');
+    out.appendChild(d);
+    return res === true;
+  }
+  var src;
+  try { src = await fetch("../public/assets/js/boot.js", { cache: "reload" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); }); }
+  catch (e) { sum.textContent = "לא הצלחתי לטעון את boot.js (" + e.message + ") — להריץ מהשרת של תיקיית הריפו (recap-preview, פורט 8161)"; sum.className = "bad"; return; }
+  var a = src.indexOf("  function stripDayLogs(d) {"), b = src.indexOf("  function ageFrom(");
+  if (a < 0 || b < 0 || b < a) { sum.textContent = "לא מצאתי את הסקשן stripDayLogs…ageFrom ב-boot.js — העוגנים זזו?"; sum.className = "bad"; return; }
+  var section = src.slice(a, b);
+  var api;
+  try {
+    api = new Function(
+      "var memDts = {}; function dtsGet() { return memDts || {}; } function lsSetRaw() {}\n" + section +
+      "\nreturn { stripLogs: stripLogs, stripDayLogs: stripDayLogs, cleanLog: cleanLog, logSig: logSig, stampChangedDays: stampChangedDays, isBlankDay: isBlankDay, mergeTrackers: mergeTrackers, setDts: function (d) { memDts = d; }, getDts: function () { return memDts; } };"
+    )();
+  } catch (e) { sum.textContent = "הסקשן לא מתקמפל: " + e.message; sum.className = "bad"; return; }
+
+  // ---- fixtures -----------------------------------------------------------
+  function day(o) {
+    o = o || {};
+    return {
+      lift: { movement: o.move || "Back Squat", planned: o.planned || "5 x 5", log: { weight: o.weight || "", reps: o.reps || "", note: "" } },
+      metcon: { name: o.mname || "AMRAP 12", scheme: "AMRAP 12:00", score: "Rounds", resultMode: "rounds", note: "", rx: false, scaled: false,
+                log: { mode: "rounds", time: "", rounds: o.rounds || "", reps: "", amount: "", note: "", scaled: "" } },
+      extras: [{ name: "Extra", detail: "3 sets", result: "", log: { text: o.extra || "" } }],
+      done: !!o.done, rest: false, rating: o.rating || "", summary: o.summary || "", pr: false, level: o.level || ""
+    };
+  }
+  function week(days) { return { days: days }; }
+  function tracker(weeks, pv) { return { v: 2, pv: pv || 34, weeks: weeks }; }
+  function blankWeek() { var d = []; for (var i = 0; i < 7; i++) d.push(day()); return week(d); }
+  function trk(pv) { return tracker([blankWeek()], pv); }
+  function eq(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+  function J(x) { return JSON.stringify(x); }
+
+  var CASES = [
+    { name: "שני מכשירים, ימים שונים — שני הימים שורדים ו-localWon דולק", run: function () {
+      var L = trk(), S = trk();
+      L.weeks[0].days[0] = day({ weight: "100", done: true });
+      S.weeks[0].days[1] = day({ rounds: "5", done: true });
+      var m = api.mergeTrackers(L, { "0_0": 200 }, S, { "0_1": 150 }, false);
+      var d0 = m.tracker.weeks[0].days[0], d1 = m.tracker.weeks[0].days[1];
+      if (d0.lift.log.weight !== "100" || !d0.done) return "day 0 lost the local log: " + J(d0.lift.log);
+      if (d1.metcon.log.rounds !== "5" || !d1.done) return "day 1 lost the server log: " + J(d1.metcon.log);
+      if (!m.localWon) return "localWon should be true (the merge carries a day the cloud lacks)";
+      if (!eq(m.dts, { "0_0": 200, "0_1": 150 })) return "dts: " + J(m.dts);
+      return true; } },
+    { name: "אותו יום, השרת חדש יותר — השרת מנצח, localWon כבוי", run: function () {
+      var L = trk(), S = trk();
+      L.weeks[0].days[0] = day({ weight: "100", done: true }); S.weeks[0].days[0] = day({ weight: "110", done: true });
+      var m = api.mergeTrackers(L, { "0_0": 100 }, S, { "0_0": 200 }, false);
+      if (m.tracker.weeks[0].days[0].lift.log.weight !== "110") return "expected 110, got " + m.tracker.weeks[0].days[0].lift.log.weight;
+      if (m.localWon) return "localWon should be false";
+      return true; } },
+    { name: "אותו יום, המכשיר חדש יותר — המכשיר מנצח, localWon דולק", run: function () {
+      var L = trk(), S = trk();
+      L.weeks[0].days[0] = day({ weight: "100", done: true }); S.weeks[0].days[0] = day({ weight: "110", done: true });
+      var m = api.mergeTrackers(L, { "0_0": 300 }, S, { "0_0": 200 }, false);
+      if (m.tracker.weeks[0].days[0].lift.log.weight !== "100") return "expected 100, got " + m.tracker.weeks[0].days[0].lift.log.weight;
+      if (!m.localWon) return "localWon should be true";
+      return true; } },
+    { name: "יום מקומי רשום בלי חותמת מול יום ריק בענן — הרשום מנצח (התיקון של 04/09)", run: function () {
+      var L = trk(), S = trk();
+      L.weeks[0].days[2] = day({ weight: "80", done: true });
+      var m = api.mergeTrackers(L, {}, S, {}, false);
+      if (m.tracker.weeks[0].days[2].lift.log.weight !== "80") return "the logged day was replaced by the blank server day";
+      if (!m.localWon) return "localWon should be true";
+      return true; } },
+    { name: "שני הצדדים בלי חותמת ושניהם רשומים — preferLocal מכריע", run: function () {
+      var L = trk(), S = trk();
+      L.weeks[0].days[0] = day({ weight: "100", done: true }); S.weeks[0].days[0] = day({ weight: "110", done: true });
+      var a = api.mergeTrackers(L, {}, S, {}, false).tracker.weeks[0].days[0].lift.log.weight;
+      var b = api.mergeTrackers(L, {}, S, {}, true).tracker.weeks[0].days[0].lift.log.weight;
+      if (a !== "110") return "preferLocal=false should take the server (110), got " + a;
+      if (b !== "100") return "preferLocal=true should take local (100), got " + b;
+      return true; } },
+    { name: "רק טקסט התוכנית שונה (בלי רישומים) — הענן מנצח בשקט, localWon כבוי", run: function () {
+      var L = trk(), S = trk();
+      S.weeks[0].days[0] = day({ planned: "Every 3:00 x 4 sets: 10 reps" });
+      var m = api.mergeTrackers(L, {}, S, {}, false);
+      if (m.tracker.weeks[0].days[0].lift.planned !== "Every 3:00 x 4 sets: 10 reps") return "server plan text not taken";
+      if (m.localWon) return "localWon must stay false for a plan-text-only difference";
+      return true; } },
+    { name: "המכשיר מחזיק 8 שבועות, הענן שבוע אחד — כל השבועות שורדים", run: function () {
+      var L = tracker([blankWeek(), blankWeek(), blankWeek()]), S = tracker([blankWeek()]);
+      L.weeks[2].days[4] = day({ weight: "60", done: true });
+      var m = api.mergeTrackers(L, { "2_4": 5 }, S, {}, false);
+      if (m.tracker.weeks.length !== 3) return "weeks: " + m.tracker.weeks.length;
+      if (m.tracker.weeks[2].days[4].lift.log.weight !== "60") return "week 3 day lost";
+      return true; } },
+    { name: "pv של המיזוג = הגבוה מבין השניים", run: function () {
+      var m = api.mergeTrackers(trk(33), {}, trk(34), {}, false);
+      return m.tracker.pv === 34 ? true : "pv " + m.tracker.pv;
+    } },
+    { name: "stampChangedDays — רק היום שהשתנה מקבל חותמת", run: function () {
+      api.setDts({});
+      var prev = trk(), next = trk();
+      next.weeks[0].days[2] = day({ weight: "70" });
+      var keys = api.stampChangedDays(J(prev), J(next));
+      if (!eq(keys, ["0_2"])) return "keys: " + J(keys);
+      var dts = api.getDts();
+      if (!(dts["0_2"] > 0) || Object.keys(dts).length !== 1) return "dts: " + J(dts);
+      var again = api.stampChangedDays(J(next), J(next));
+      if (again.length) return "no change should stamp nothing, got " + J(again);
+      return true; } },
+    { name: "stampChangedDays — יום חדש שהופיע (אין עותק קודם) נחתם רק אם יש בו רישום", run: function () {
+      api.setDts({});
+      var prev = tracker([]), next = trk();
+      next.weeks[0].days[0] = day({ weight: "90" });
+      var keys = api.stampChangedDays(J(prev), J(next));
+      return eq(keys, ["0_0"]) ? true : "keys: " + J(keys);
+    } },
+    { name: "cleanLog — ריק נמחק, mode לבד לא נספר, שדות מקצה (t1..tN) נשמרים", run: function () {
+      if (api.cleanLog({ weight: "", reps: "", note: "", mode: "time" }) !== null) return "an empty log with only mode must clean to null";
+      var c = api.cleanLog({ weight: "100", reps: "", mode: "time" });
+      if (!eq(c, { weight: "100", mode: "time" })) return "got " + J(c);
+      var t = api.cleanLog({ mode: "time", time: "12:00", t1: "5:00", t2: "7:00", rounds: "" });
+      if (!eq(t, { time: "12:00", t1: "5:00", t2: "7:00", mode: "time" })) return "splits lost: " + J(t);
+      return true; } },
+    { name: "logSig — מתעלם מטקסט התוכנית, רגיש לרישום ולרמה", run: function () {
+      var a = day({ weight: "100", planned: "5x5" }), b = day({ weight: "100", planned: "Every 3:00 x 4" });
+      if (api.logSig(a) !== api.logSig(b)) return "plan text changed the signature";
+      var c = day({ weight: "100", level: "2" });
+      if (api.logSig(a) === api.logSig(c)) return "level did not change the signature";
+      return true; } },
+    { name: "isBlankDay — יום בלי רישום ריק, יום עם משקל / רמה / הערת extra לא ריק", run: function () {
+      if (!api.isBlankDay(day())) return "a fresh day must be blank";
+      if (api.isBlankDay(day({ weight: "50" }))) return "weight should make it non-blank";
+      if (api.isBlankDay(day({ level: "1" }))) return "level should make it non-blank";
+      if (api.isBlankDay(day({ extra: "done" }))) return "extra text should make it non-blank";
+      return true; } },
+    { name: "stripLogs — מסיר את כל הרישומים ומשאיר את טקסט התוכנית", run: function () {
+      var w = [week([day({ weight: "100", done: true, level: "2", rounds: "7", extra: "x", planned: "PLAN" })])];
+      var s = api.stripLogs(w)[0].days[0];
+      if (s.done || s.level || (s.lift && s.lift.log) || (s.metcon && s.metcon.log) || (s.extras[0] && s.extras[0].log)) return "logs survived: " + J(s);
+      if (s.lift.planned !== "PLAN") return "plan text lost";
+      if (w[0].days[0].lift.log.weight !== "100") return "stripLogs mutated its input";
+      return true; } }
+  ];
+
+  var pass = 0;
+  CASES.forEach(function (c) {
+    var r;
+    try { r = c.run(); } catch (e) { r = "threw: " + (e && e.message || e); }
+    if (show(c.name, r)) pass++;
+  });
+  sum.textContent = (pass === CASES.length ? "✅ " : "❌ ") + pass + " / " + CASES.length + " עברו";
+  sum.className = pass === CASES.length ? "ok" : "bad";
+  window.__mergeTests = { pass: pass, total: CASES.length };
+})();
+</script>
+</body>
+</html>
