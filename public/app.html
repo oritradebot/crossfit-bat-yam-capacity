@@ -3269,7 +3269,7 @@ class Component extends DCLogic {
     try { window.cfbyStartDate = this.startDate; } catch (e) {}   // the admin panel's test-week banner needs the block calendar
     // The admin panel's block reset folds every athlete's records into
     // profiles.prs with the app's OWN PR code (one source of truth).
-    try { window.cfbyBlockNum = this.BLOCK_NUM; window.cfbyCollectPRs = (weeks, block)=>this.packLedger(this.collectPRs(weeks, block)); window.cfbyMergePRs = (prev, cur)=>this.mergePRs(prev, cur); } catch (e) {}
+    try { window.cfbyBlockNum = this.BLOCK_NUM; window.cfbyProgramVersion = this.PROGRAM_VERSION; window.cfbyCollectPRs = (weeks, block)=>this.packLedger(this.collectPRs(weeks, block)); window.cfbyMergePRs = (prev, cur)=>this.mergePRs(prev, cur); } catch (e) {}
     try { if (!localStorage.getItem(this.ONB_KEY)) this.setState({ onbOpen: true }); } catch (e) {}
     // v3: the 3-step guide opens by itself once per profile — boot.js leaves
     // WELCOME_KEY unset only for a profile whose welcome_seen is false.

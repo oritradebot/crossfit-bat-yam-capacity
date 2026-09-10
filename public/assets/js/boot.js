@@ -970,7 +970,10 @@
         });
       }
     } catch (e) { tests = null; }
-    var out = { t: t, s: best, p: p, rx: rx, hard: hard, fw: fw, prs: prs.slice(-3).reverse(), partial: partial, partial_keys: partialKeys, last_gi: lastGi };
+    var out = { t: t, s: best, p: p, rx: rx, hard: hard, fw: fw, prs: prs.slice(-3).reverse(), partial: partial, partial_keys: partialKeys, last_gi: lastGi,
+                // 10/09 (deploy 5): the bundle + program version this device runs, so the panel
+                // shows who is stuck on an old build without anyone opening the logs.
+                build: BUILD, pv: (tracker && tracker.pv) || null };
     if (tests) out.tests = tests;
     return out;
   }
@@ -1307,6 +1310,7 @@
       ".cfa-row .acts{flex:none;display:flex;gap:4px}" +
       ".cfa-row .acts button{width:32px;height:30px;padding:0;margin:0;font-size:14px;border-radius:7px}" +
       ".cfa-me{color:#8ea3c9;font-size:11px}" +
+      ".cfa-ver{color:#8ea3c9}.cfa-ver.old{color:#ffb454;font-weight:700}" +
       ".cfa-name:hover{color:#7ab8f5}" +
       ".cfa-views{display:flex;gap:6px;margin-bottom:12px}" +
       ".cfa-view{flex:1;background:transparent;border:1px solid #2e4a7d;color:#9fc2ff;border-radius:10px;padding:9px 10px;font:800 13px 'Heebo',sans-serif;cursor:pointer}" +
@@ -1455,6 +1459,18 @@
     var APP_URL = location.origin + "/";
     function esc(x) { return String(x == null ? "" : x).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
     function firstName(n) { return String(n || "").trim().split(/\s+/)[0] || ""; }
+    // 10/09 (deploy 5): which build / program version each athlete's device last pushed
+    // (pub.build / pub.pv from publicSummary). Older pubs carry no field. Values come from
+    // the athlete's own row, so they are escaped like a name.
+    function verChip(pub) {
+      if (!pub || !pub.build) return ' · <span class="cfa-ver" title="המכשיר עוד לא דחף עם מספר גרסה">גרסה ?</span>';
+      var oldB = String(pub.build) !== BUILD;
+      var curPv = window.cfbyProgramVersion;
+      var oldP = !!(pub.pv && curPv && Number(pub.pv) !== Number(curPv));
+      var txt = String(pub.build) + (oldP ? ' · תוכנית ' + String(pub.pv) : '');
+      var tip = oldB ? ('גרסה ישנה (עכשיו ' + BUILD + ') — תתרענן בפתיחה הבאה') : (oldP ? ('תוכנית ישנה (עכשיו ' + curPv + ')') : 'מעודכן');
+      return ' · <span class="cfa-ver' + ((oldB || oldP) ? ' old' : '') + '" title="' + esc(tip) + '">' + esc(txt) + '</span>';
+    }
     function waText(kind, u, pub) {
       var nm = firstName(u.name);
       if (kind === "inactive") return "היי " + nm + " 👋 לא ראיתי תיעוד באפליקציה כבר שבועיים. הכול בסדר? כל אימון שתרשום נשמר ובונה לך את המבחנים והשיאים שלך — גם השלמה אחורה נספרת. " + APP_URL;
@@ -1518,7 +1534,7 @@
         return '<div class="cfa-row">' +
           '<div class="nm"><button class="cfa-name" data-id="' + u.id + '" data-name="' + esc(u.name || "") + '" title="הצג את היומן של המתאמן">' + esc(u.name || "—") + '</button>' +
             (u.is_admin ? ' <span class="cfa-badge">Admin</span>' : '') + (isMe ? ' <span class="cfa-me">(אתה)</span>' : '') +
-            '<small><span dir="ltr">' + esc(u.email || "—") + '</span> · סנכרון: ' + fmtWhen(s ? s.updated_at : null) + '</small></div>' +
+            '<small><span dir="ltr">' + esc(u.email || "—") + '</span> · סנכרון: ' + fmtWhen(s ? s.updated_at : null) + verChip(r.pub) + '</small></div>' +
           '<span class="cfa-st ' + stt.cls + '">' + stt.txt + (testKind ? ' · 🧪' : '') + '</span>' +
           '<div class="acts">' +
             (kind ? '<button class="cfa-copy" data-kind="' + kind + '" data-id="' + u.id + '" title="העתקת הודעת וואטסאפ אישית">📋</button>' : '') +
