@@ -2421,27 +2421,36 @@ class Component extends DCLogic {
     }
     return best;
   }
-  // A lift weight that beats the block's best for that movement fires the
-  // celebration once per day (debounced past the keystrokes).
+  // A lift weight that beats the block's best for that movement — or the very
+  // first weight logged for it — fires the celebration. The edit handlers ARM
+  // the check; it fires when the athlete LEAVES the field (11/09, Ori's call).
+  // The old 1.4 s debounce popped the card over the open keyboard, and could
+  // fire on a half-typed number ('8' on the way to '80').
+  armLiftPR(gi) { this._prArmed = gi; }
+  flushLiftPR() { const gi = this._prArmed; if (gi == null) return; this._prArmed = null; this.checkLiftPR(gi); }
   checkLiftPR(gi) {
-    if (this._prT) clearTimeout(this._prT);
-    this._prT = setTimeout(() => {
-      const d = this.state.data[Math.floor(gi/7)].days[gi%7];
-      const x = (this.state.activeSession==='alt' && d.alt) ? d.alt : d;
-      const w = parseFloat(x.lift && x.lift.log && x.lift.log.weight);
-      if (!(w > 0)) return;
-      // The record to beat is the block's best OR the one carried over from an
-      // earlier block (profiles.prs) — whichever is heavier.
-      const blockBest = this.bestWeightFor(x.lift.movement, gi);
-      const pv = this.prevBestFor(x.lift.movement);
-      const best = Math.max(blockBest, pv ? pv.best : 0);
-      if (!(best > 0) || w <= best) return;
-      this._prSeen = this._prSeen || {};
-      const k = gi + ':' + Math.round(w*10);
-      if (this._prSeen[k]) return; this._prSeen[k] = 1;
-      const prevTxt = (pv && pv.best >= blockBest) ? (pv.best + ' · ' + this.blockLabel(pv.block)) : String(best);
-      this.celebrate('שיא חדש! 🏆', (x.lift.movement || '').split('—')[0].trim() + ' · ' + w + ' ק"ג (הקודם: ' + prevTxt + ')');
-    }, 1400);
+    const d = this.state.data[Math.floor(gi/7)].days[gi%7];
+    const x = (this.state.activeSession==='alt' && d.alt) ? d.alt : d;
+    const w = parseFloat(x.lift && x.lift.log && x.lift.log.weight);
+    const move = ((x.lift && x.lift.movement) || '').split('—')[0].trim();
+    if (!(w > 0) || !move) return;
+    // The record to beat is the block's best OR the one carried over from an
+    // earlier block (profiles.prs) — whichever is heavier.
+    const blockBest = this.bestWeightFor(x.lift.movement, gi);
+    const pv = this.prevBestFor(x.lift.movement);
+    const best = Math.max(blockBest, pv ? pv.best : 0);
+    if (best > 0 && w <= best) return;
+    // One card per workout: on a per-set day EVERY set blurs, so a climbing
+    // day would otherwise fire a card per set.
+    this._prSeen = this._prSeen || {};
+    const k = gi + ':' + (this.state.activeSession === 'alt' ? 'a' : 'm');
+    if (this._prSeen[k]) return; this._prSeen[k] = 1;
+    // 11/09 (Ori): nothing to compare against — week 1 of a block, or a movement
+    // never logged — is a FIRST record, not silence. Before this, a new athlete
+    // got no card at all for the whole first week (every movement is new).
+    if (!(best > 0)) return this.celebrate('שיא ראשון! 🏆', move + ' · ' + w + ' ק"ג — הבסיס שלך בתנועה הזאת');
+    const prevTxt = (pv && pv.best >= blockBest) ? (pv.best + ' · ' + this.blockLabel(pv.block)) : String(best);
+    this.celebrate('שיא חדש! 🏆', move + ' · ' + w + ' ק"ג (הקודם: ' + prevTxt + ')');
   }
   // ---- level pills — level is step 1 of result entry (levelPills, pickLevel, planLevels, lastLevel) ----
   // Level the athlete worked at, saved on the SESSION (day.level / alt.level)
@@ -3435,7 +3444,7 @@ class Component extends DCLogic {
     this.save(d); this.setState({ data: d });
     const gi0 = this.state.selWeek*7 + this.state.selDay;
     if (path === 'pr' && val === true) this.celebrate('שיא חדש! 🏆', ((target.lift && target.lift.movement) || (target.metcon && target.metcon.name) || 'אימון').split('—')[0].trim());
-    if (path === 'lift.log.weight') this.checkLiftPR(gi0);
+    if (path === 'lift.log.weight') this.armLiftPR(gi0);   // the card fires on blur (numEl), not mid-typing
   }
   // Mirror days (PER_MOVE_SCORE): any box edit recomputes the board score —
   // log.amount = the score box while ALL boxes hold a value, '' otherwise, so
@@ -3581,6 +3590,7 @@ class Component extends DCLogic {
     return React.createElement('input', {
       dir:'auto', inputMode:'decimal', value: val || '', placeholder: ph,
       onChange:(e)=>this.onEditPath(path, e.target.value),
+      onBlur:()=>this.flushLiftPR(),
       style:{ width: w||'100%', border:'1px solid rgba(35,64,154,.35)', borderRadius:'10px', padding:'10px 12px', fontSize:'15px', background:'var(--log)', color:'var(--ink)', outline:'none', fontWeight:600, textAlign:'center' }
     });
   }
@@ -3636,6 +3646,7 @@ class Component extends DCLogic {
     for (let i=1; i<=nSets; i++) cells.push(this.unit(React.createElement('input', {
       dir:'auto', inputMode:'decimal', value: L['s'+i] || '', placeholder:'0',
       onChange:(e)=>this.onLiftSetEdit(i, e.target.value),
+      onBlur:()=>this.flushLiftPR(),
       style:{ width:'100%', border:'1px solid rgba(35,64,154,.35)', borderRadius:'10px', padding:'10px 6px', fontSize:'15px', background:'var(--log)', color:'var(--ink)', outline:'none', fontWeight:600, textAlign:'center' }
     }), 'SET '+i));
     let firstVal = '';
@@ -3671,7 +3682,7 @@ class Component extends DCLogic {
     Object.keys(L).forEach(k=>{ if (/^s\d+$/.test(k)) { const n = parseFloat(L[k]); if (n > mx) mx = n; } });
     L.weight = mx > 0 ? String(mx) : '';
     this.save(d); this.setState({ data:d });
-    this.checkLiftPR(this.state.selWeek*7 + this.state.selDay);
+    this.armLiftPR(this.state.selWeek*7 + this.state.selDay);   // the card fires when the set field loses focus
   }
   // One time per interval (TIME_SPLITS): log.t1..tN, and log.time = their sum
   // once every box holds a time ('' otherwise, so the save gate keeps asking
