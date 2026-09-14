@@ -621,13 +621,16 @@
   // measured on day `di` of each week; the first measured week is the
   // "before", the latest measured week after it is the "after", and the
   // in-app screen also lists every week's value. More tests arrive per embed.
+  // 14/09 (W2): the program may move the test to another day in some weeks —
+  // `byWeek` (weekIdx → dayIdx) overrides `di` for those weeks; weeklyDi()
+  // resolves the day, and every reader goes through it.
   var CAPACITESTS_BLOCK2 = [
     { key: 'squat10',
       name: 'Back Squat — 4 x 10 (מבחן שבועי)',
-      short: 'עשיריות בק סקוואט · כל יום ראשון',
+      short: 'עשיריות בק סקוואט · כל שבוע',
       unit: 'ק"ג',
       betterWhen: 'higher',
-      weekly: { di: 0, src: 'lift.weight' }
+      weekly: { di: 0, src: 'lift.weight', byWeek: { 1: 4 } }   // W1 Sunday · W2 Thursday (Ori, 14/09)
     }
   ];
   function testList() { return global.cfbyDemo ? CAPACITESTS_BLOCK1 : CAPACITESTS_BLOCK2; }
@@ -684,10 +687,14 @@
   /* ---- weekly tests (block 2) ---------------------------------------------
      One value per week (same day, same reader). The slots a weekly test
      exposes to the card are the first measured week and the latest one.   */
+  function weeklyDi(t, wi) {
+    var b = t.weekly && t.weekly.byWeek;
+    return (b && b[wi] != null) ? b[wi] : t.weekly.di;
+  }
   function weeklyPoints(app, t) {
     var pts = [];
     for (var wi = 0; wi < 8; wi++) {
-      var r = readSlot(app, { wi: wi, di: t.weekly.di, src: t.weekly.src }, t);
+      var r = readSlot(app, { wi: wi, di: weeklyDi(t, wi), src: t.weekly.src }, t);
       pts.push(r ? { wi: wi, v: r.v, text: r.text, short: (t.weekly.src === 'lift.weight' ? trimNum(r.v) : r.text), ltr: !!r.ltr } : null);
     }
     return pts;
@@ -696,7 +703,7 @@
     if (!t.weekly) return { base: t.base || null, retest: t.retest || null };
     var m = weeklyPoints(app, t).filter(Boolean);
     var first = m[0] || null, last = m.length > 1 ? m[m.length - 1] : null;
-    var slot = function (p) { return p ? { wi: p.wi, di: t.weekly.di, src: t.weekly.src } : null; };
+    var slot = function (p) { return p ? { wi: p.wi, di: weeklyDi(t, p.wi), src: t.weekly.src } : null; };
     return { base: slot(first), retest: slot(last) };
   }
 
@@ -949,7 +956,7 @@
 
   global.BlockRecap = {
     build: build, get tests() { return testList(); },
-    _slots: testSlots, _points: weeklyPoints,
+    _slots: testSlots, _points: weeklyPoints, _weeklyDi: weeklyDi,
     gateState: gateState, isOpen: isOpen,
     // v3 (07/09): the in-app tests screen (שיאים ומבחנים) reuses the same
     // rows the card draws — one config, one reader, one delta rule.
@@ -1430,9 +1437,14 @@
             <div style="padding:16px 18px;">
               <sc-if value="{{ dayIsEmpty }}" hint-placeholder-val="{{ false }}">
                 <div style="text-align:center; padding:48px 20px 44px;">
-                  <div style="width:88px; height:88px; margin:0 auto 18px; border-radius:50%; background:radial-gradient(circle at 50% 35%, rgba(35,64,154,.14), rgba(35,64,154,.04)); display:flex; align-items:center; justify-content:center; font-size:42px; animation:floaty 2.8s ease-in-out infinite;">🗓️</div>
-                  <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:30px; letter-spacing:.14em; color:var(--blue);">COMING SOON</div>
-                  <div style="font-size:13.5px; color:var(--muted); margin-top:8px; line-height:1.6; max-width:300px; margin-inline:auto;">האימון של היום עוד לא פורסם. הוא יופיע כאן ברגע שהמאמן יעלה אותו — בינתיים אפשר לתעד ימים אחרים או לסמן מנוחה.</div>
+                  <div style="width:88px; height:88px; margin:0 auto 18px; border-radius:50%; background:radial-gradient(circle at 50% 35%, rgba(35,64,154,.14), rgba(35,64,154,.04)); display:flex; align-items:center; justify-content:center; font-size:42px; animation:floaty 2.8s ease-in-out infinite;">{{ emptyIcon }}</div>
+                  <sc-if value="{{ emptyNotHoliday }}" hint-placeholder-val="{{ true }}">
+                    <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:30px; letter-spacing:.14em; color:var(--blue);">COMING SOON</div>
+                    <div style="font-size:13.5px; color:var(--muted); margin-top:8px; line-height:1.6; max-width:300px; margin-inline:auto;">האימון של היום עוד לא פורסם. הוא יופיע כאן ברגע שהמאמן יעלה אותו — בינתיים אפשר לתעד ימים אחרים או לסמן מנוחה.</div>
+                  </sc-if>
+                  <sc-if value="{{ emptyHoliday }}" hint-placeholder-val="{{ false }}">
+                    <div dir="rtl" style="font-weight:800; font-size:30px; color:var(--blue);">{{ emptyTitle }}</div>
+                  </sc-if>
                   <sc-if value="{{ editTools }}" hint-placeholder-val="{{ false }}">
                     <button onClick="{{ setEditMode }}" style="margin-top:20px; background:var(--blue); color:#fff; border:none; border-radius:999px; padding:11px 24px; font-weight:700; font-size:14px; cursor:pointer;">+ הזן אימון עכשיו</button>
                   </sc-if>
@@ -2203,7 +2215,7 @@ class Component extends DCLogic {
   }
 
   // ---- PROGRAM_VERSION (bump on every embed) + IS_DEMO + DEMO_MAPS ------------------------------
-  PROGRAM_VERSION = 34;
+  PROGRAM_VERSION = 35;
   // /demo runs block 1 program (demoWeekN) with its own per-day config maps
   // below; the live maps under it belong to the CURRENT block and start
   // empty - every /embed-week adds that week entries (program.md section 3).
@@ -2245,7 +2257,9 @@ class Component extends DCLogic {
   // team/carry days) keep the single weight field and are absent here.
   PER_SET_LIFT = this.IS_DEMO ? this.DEMO_MAPS.PER_SET_LIFT : {
     // W1 (07/09): 4 x 10 squats · 8-set snatch complex · 6-set C&J complex · 6 x 2 power cleans · OHS build-to-heavy = 8 open boxes
-    '0_0': 4, '0_1': 8, '0_2': 6, '0_4': 6, '0_5': 8
+    '0_0': 4, '0_1': 8, '0_2': 6, '0_4': 6, '0_5': 8,
+    // W2 (14/09): deadlift 8-6-4-2-2 · 8 C&J singles · 8-set snatch complex · 4 x 10 squats · 5 x 3 OHS. Wed (DB) and Sat (dips/rows) have no barbell — no entry
+    '1_0': 5, '1_1': 8, '1_2': 8, '1_4': 4, '1_5': 5
   };
   // PER_MOVE_METCON: these metcon bases log a result per movement
   // (log.mv1..mvN) and the board-score input stays locked until every
@@ -2259,7 +2273,10 @@ class Component extends DCLogic {
     // W1 Tue (08/09, per Ori): level + one count per station per round, then a separate result box — total power cleans of ALL rounds
     '0_2': { 'metcon': ['Bike (cals / round)','Burpees (reps / round)','Power cleans (reps / round)'] },
     // W1 Thu (08/09, per Ori): a day without level lines logs the weight per movement that HAS one — nothing for the box jump
-    '0_4': { 'metcon': ['Wall balls (kg)','Single arm DB (kg)'] }
+    '0_4': { 'metcon': ['Wall balls (kg)','Single arm DB (kg)'] },
+    // W2 (14/09, per Ori): the two days without level lines log the weight of their one loaded movement — Wed D-ball, Thu KB swings
+    '1_3': { 'metcon': ['D-ball (kg)'] },
+    '1_4': { 'metcon': ['KB swings (kg)'] }
   };
   // PER_MOVE_SCORE: on these days the board score (log.amount) MIRRORS box
   // #box once ALL boxes are filled — the LIFT heaviest-set trick — so there
@@ -2279,7 +2296,12 @@ class Component extends DCLogic {
   METCON_AMOUNT_LABEL = this.IS_DEMO ? this.DEMO_MAPS.METCON_AMOUNT_LABEL : {
     '0_0': { 'metcon':'סך ה-HSPU', 'alt.metcon':'סך הברפיז' },
     '0_2': { 'metcon':'סך הפאוור קלינים מכל הסבבים' },
-    '0_3': { 'metcon':'סך ה-Wallwalks' }
+    '0_3': { 'metcon':'סך ה-Wallwalks' },
+    // W2 (14/09): Sun pairs AMRAPs summed into one total (Ori) · Mon total DU · Tue total snatches (Score 1) · Thu EMOMania average
+    '1_0': { 'metcon':'סך החזרות + הקלוריות (בזוג)' },
+    '1_1': { 'metcon':'סך הדאבלים (DU)' },
+    '1_2': { 'metcon':'סך הסנאצ׳ים' },
+    '1_4': { 'metcon':'ממוצע חזרות לדקה' }
   };
   // TIME_SPLITS (08/09, per Ori: "3 קוביות, אחת לכל מקצה, שיעזרו לסכום את סה"כ
   // זמן החתירה"): a time-mode metcon whose score is the sum of several
@@ -2315,7 +2337,9 @@ class Component extends DCLogic {
     '0_0': ['metcon'],   // Sun · total HSPU
     '0_1': ['metcon'],   // Mon · finishing time
     '0_3': ['metcon'],   // Wed · total wallwalks
-    '0_5': ['metcon']    // Fri · rounds + reps, total via ROUND_REPS
+    '0_5': ['metcon'],   // Fri · rounds + reps, total via ROUND_REPS
+    // W2 (14/09): every level day — Sun (pairs total), Mon (total DU), Tue (total snatches), Fri and Sat (time)
+    '1_0': ['metcon'], '1_1': ['metcon'], '1_2': ['metcon'], '1_5': ['metcon'], '1_6': ['metcon']
   };
   // 10/09, per Ori ("תשנה ספציפית ביום רביעי את המילה LIFT ל-SKILL ואל תדרוש באותו יום חובה להזנה של החלק
   // הזה … אך ורק לרביעי"): days whose FIRST slot is a skill, not a lift. The block header reads SKILL
@@ -2326,6 +2350,15 @@ class Component extends DCLogic {
     '0_3': 1   // W1 Wed · Handstand work — Skill 15:00
   };
   isSkillKey(key) { return !!(key && this.SKILL_DAYS[key]); }
+  // 14/09, per Ori ("בשבת במקום COMING SOON תרשום חג שמח ואימוגים של תפוח ודבש"): a day with no
+  // class stays blank in the program (blankWeek — never a brief, which would open an empty
+  // LIFT/METCON day) and is listed here; the empty-day screen then shows the greeting instead
+  // of COMING SOON and drops the "not published yet" line. Keyed 'weekIdx_dayIdx' like every
+  // map here, resolved at render — no state field, no sync impact.
+  HOLIDAYS = this.IS_DEMO ? {} : {
+    '0_6': { title: 'חג שמח', icon: '🍎🍯' }   // W1 Sat 12/09/2026 — Rosh Hashanah, no class
+  };
+  holidayAt(key) { return (key && this.HOLIDAYS[key]) || null; }
   // ---- session helpers (perMoveOn, curSession) --------------------------------------------------
   perMoveOn(base) {
     if (this.state.activeSession === 'alt') return false;
@@ -2675,7 +2708,8 @@ class Component extends DCLogic {
   }
   programWeek1() {
     // WEEK 1 · 06/09-12/09/2026 (block 2) — from Ori's screenshots 07/09.
-    // Saturday was not sent yet: day 6 stays explicitly blank (COMING SOON).
+    // Saturday 12/09 = Rosh Hashanah, no class: day 6 stays explicitly blank and
+    // HOLIDAYS['0_6'] shows חג שמח instead of COMING SOON (Ori, 14/09).
     const w = this.blankWeek();
     w[0] = {
       brief: 'שבוע חדש, בלוק חדש, ואתגר חדש: עשיריות בק סקוואט שאנחנו הולכים לפגוש בכל שבוע.\nנתחיל כבר היום 😉',
@@ -2727,7 +2761,63 @@ class Component extends DCLogic {
     };
     return w;
   }
-  programWeek2() { return this.blankWeek(); }
+  programWeek2() {
+    // WEEK 2 · 13/09-19/09/2026 (block 2) — from Ori's screenshots 14/09 (seven files).
+    // No endurance session this week: Sunday's alt stays explicitly blank.
+    const w = this.blankWeek();
+    const noAlt = w[0].alt;
+    w[0] = {
+      brief: 'אימון ראשון לשנה החדשה, וכיאה לפתיחת שנה: נתחיל אותה בצורה הכי טובה שאפשר. כבד, בזוגות, ועם המון כיף.',
+      lift: { movement:'Deadlift', planned:'8-6-4-2-2\nStart a new set every 2:30' },
+      metcon: { name:'2 x AMRAP 10:00 (In pairs)', scheme:'AMRAP 10:00 into AMRAP 10:00 · in pairs · split work', score:'Total reps + calories across', resultMode:'amount', note:'AMRAP 10:00:\nCalories row (split work)\n10 Hang power cleans (split work)\n\ninto\n\nAMRAP 10:00:\nCalories row (split work)\n10 Synced bar facing burpees\n\nScore — total reps + calories across.\n\nL1 = 15/12 cals, 50/35kg\nL2 = 20/15 cals, 65/45kg\nL3 = 25/20 cals, 80/55kg\n\nהמוט אמור להרגיש די כבד, כזה שצריך לחלק 5-5 בין בני הזוג.\nבני זוג יכולים לעבוד על מוטות שונים במשקלים שונים ולבלים שונים אם רוצים 😎', movements:[['Calories row','split work'],['Hang power cleans','10 · split work'],['Calories row','split work'],['Synced bar facing burpees','10']] },
+      metcon2: {},
+      extras: [['BY Extra','3 rounds, no rush:\n40m Farmers carry\n10+10 DB bicep curls\n30s Side plank each side'],['','']],
+      alt: noAlt
+    };
+    w[1] = {
+      brief: 'אימון שמחולק לשניים: כבד ואז סקיל ואירובי.\nנצלו את הסשן הזה כדי לקחת את הקלין וג\'רק עוד צעד קדימה',
+      lift: { movement:'Clean & Jerk', planned:'Every 1:30 for 8 sets — 1 single\nBuild to a heavy lift for the day\n\nSuggested climb —\n70% / 80% / 85% / 88% / 90%+, then smaller jumps.\n\nSquat cleans. Jerk of choice.\nNew to crossfit? add pauses in the jerk receiving position.' },
+      metcon: { name:'Every 3:00 for 5 sets', scheme:'Every 3:00 for 5 sets', score:'Total Double unders', resultMode:'amount', note:'L1 = 12/9 cals, 8 hanging knee raises, singles\nL2 = 15/12 cals, 12 T2B\nL3 = 18/14 cals, 15 T2B\n\nScore — total Double unders.\nGoal — the row is the buy-in, but it sets the pace. T2B in 1-2 sets max.\n\nהזנקות כל דקה וחצי, כדי שיהיו מכשירים לכולם. מכשירים קרובים למתח! החבלים על הרחבה המרכזית.', movements:[['Cal Row',''],['Toes to bar',''],['Max Double unders','remaining time']] },
+      metcon2: {},
+      extras: [['BY Extra','Every 90 seconds for 4 sets:\n3 Clean pulls @100-105% of today\'s single\n\nמתנצל אבל צריך לבנות מוט מחדש 🙂\nתבנו אותו חכם - אל תשימו ישר 100%\n\nEvery 90 seconds for 6 sets (total), alternate:\n- 8 Pendlay rows\n- Max L sit hold'],['','']]
+    };
+    w[2] = {
+      brief: 'יום מלא בסנאצים, מא\' ועד ת\'. האינטרוולים היום לא ישאירו אף אחד תמים.',
+      lift: { movement:'Snatch + Below knee hang snatch', planned:'Every 1:30 x 8 sets:\n1 Snatch\n1 Below knee hang snatch\n\nSets 1-3 — 68-72%\nSets 4-6 — 72-76%\nSets 7-8 — 76-79%\n\n*Squat snatches are preferred.\nThe bar starts lower this week. Meet it with the legs, not the back.\nOnly a few kg more than last week. This is nowhere near heavy.' },
+      metcon: { name:'AMRAP 4:00 / 3:00 / 2:00', scheme:'3 AMRAPs · 4:00 / 3:00 / 2:00 · Rest 1:00 between', score:'Total snatches', resultMode:'amount', note:'AMRAP 4:00:\n200m Run\nWall balls\nMax hang power snatches\nRest 1:00\n\nAMRAP 3:00:\n200m Run\nWall balls\nMax hang power snatches\nRest 1:00\n\nAMRAP 2:00:\n200m Run\nWall balls\nMax hang power snatches\nRest 1:00\n\nScore 1 — total snatches.\n\nL1 = 20-15-10 WB, @30/20kg\nL2 = 25-20-10 WB, @40/30kg\nL3 = 30-20-10 WB, @50/35kg', movements:[['Run','200m'],['Wall balls',''],['Max hang power snatches','remaining time']] },
+      metcon2: {},
+      extras: [['BY Extra — Part 2 · E2MOM','Every 2:00 for 5 sets:\n200/160m Row\nMax bar facing burpees in remaining time\n\nScore 2 — total Burpees.'],['BY Extra','3 sets:\nMax effort weighted deadhang\ninto\n8+8 Gorilla rows @heavy\nRest 60-90s']]
+    };
+    w[3] = {
+      brief: 'עבודת לחיצות מצוינת, ואחריה 5 סבבים ברוטאליים של ליבה וריאות.',
+      lift: { movement:'Single arm DB push press + Overhead walk', planned:'5 Sets:\n5 Single arm DB push presses\ninto 15-20m Overhead walk\nThen switch arms' },
+      metcon: { name:'5 Rounds For Time', scheme:'5 Rounds For Time · Cap 18:00', score:'Time', resultMode:'time', note:'cap 18:00\nנעצרתם בקאפ? הזינו 18:00 והוסיפו בהערה איפה עצר אתכם השעון.\n\n**You can use a heavy DB and do cleans with it as well — or swap to KB SDHP onto a box.', movements:[['Shuttle runs (8+8m)','8'],['D-ball ground to shoulder**','10'],['Atomic situps','15']] },
+      metcon2: {},
+      extras: [['BY Extra','3 rounds:\n10 Single arm DB row (each side)\ninto\n10 Tempo push ups (3s down)\ninto\n30s Side plank each side\nRest 60-90s'],['','']]
+    };
+    w[4] = {
+      brief: 'העשיריות שלנו חוזרות! בדיוק בזמן כדי לשתק את הרגליים שלכם לסופש.',
+      lift: { movement:'Back Squat — 4 x 10 (Weekly Test)', planned:'Every 3:00 for 4 sets:\n10 reps, climbing\n\nSet 1 — 68%\nSet 2 — 70%\nSets 3-4 — 72-73%\nPercentages off your Back Squat 3RM.\n\nDon\'t have that number? @62-67% of the 1RM you think you own.\n\nDid last week\'s sets?\nSet 1 = a little less than last week.\nSet 2 = last week\'s weight.\nLast two sets = a few kg more.' },
+      metcon: { name:'EMOMania', scheme:'EMOM · 5 minutes, repeat for 4 rounds', score:'Average reps per minute (1m = 1 rep on the HSW)', resultMode:'amount', note:'Minute 1 — Cal machine (row / bike / ski)\nMinute 2 — KB Swings\nMinute 3 — Line facing burpees\nMinute 4 — Meters Handstand walk or wall walks (or HS walk attempts)\nMinute 5 — Rest\n\nRepeat for 4 rounds.\nScore — average reps per minute (1m = 1 rep on the HSW).', movements:[['Cal machine (row / bike / ski)','minute 1'],['KB Swings','minute 2'],['Line facing burpees','minute 3'],['Meters Handstand walk or wall walks','minute 4']] },
+      metcon2: {},
+      extras: [['BY Extra','Every 2:00 for 5 sets:\n4 Touch and go power cleans\n\nBuild by feel, starting around 65%\nDon\'t max'],['','']]
+    };
+    w[5] = {
+      brief: 'יום שישי - טכני מאוד בעבודת הכוח, עם התנועה אולי הכי מאתגרת ודורשת יציבות וטווחים. עבודת הדופק היום אמורה להיות קצת אלימה. נותנים גז, מרגישים מה זה להיכנס בקיר, ונאבקים לסיים.',
+      lift: { movement:'Overhead Squat', planned:'Every 2:00 for 5 sets:\n3 reps, 3 seconds down on every rep\n\nIt\'ll be hard to open the range of motion after yesterday — make the effort.' },
+      metcon: { name:'2 Rounds For Time', scheme:'2 Rounds For Time · Cap 13:00', score:'Time', resultMode:'time', note:'L1 = 20 BJ, 15 ring rows or 10 Pull ups **\nL2 = 25 BJ, 20 pull ups\nL3 = 30 BJ, 25 pull ups\n\ntime cap 13:00\nנעצרתם בקאפ? הזינו 13:00 והוסיפו בהערה איפה עצר אתכם השעון.\n\nהקפיצות אמורות לקחת כ2 דק, והמתח מספר סטים. הדאמבלים לא אמורים להיות קלים.\n**אם אתם עדיין בשלביכם הראשונים במתח, בחרו גרסת מתח שתצטרכו לעבוד קשה בשבילה יחסית ולהשלים אותה בכ2-3 סטים.', movements:[['Box jumps @step down',''],['Pull ups',''],['Devil Clean & Jerks (2xDBs)','10']] },
+      metcon2: {},
+      extras: [['BY Extra','Every 90 seconds for 6 sets, alternate:\n- Double KB Sumo deadlift\n- 6+6 Heavy DB single arm high pulls'],['','']]
+    };
+    w[6] = {
+      brief: 'עבודת כוח מעט שונה, עם לחיצות משיכות בסופר-סט נהדר, ועבודת דופק לא קצרה בזוגות. שימו לב שהכל מסונכרן 😉',
+      lift: { movement:'Dips + Bent row (DB/KB)', planned:'Every 1:30 for 8 sets, alternate:\n- 8-10 Dips (weighted if you can, full range)\n- 8+8 Bent row (DB/KB)\n\nHeavy but clean on both.' },
+      metcon: { name:'4 Rounds For Time (In pairs)', scheme:'4 Rounds For Time · in pairs · synced', score:'Time', resultMode:'time', note:'L1 = 50 DU, 15 SN, 20 Lunges\nL2 = 75 DU, 20 SN, 20 Lunges\nL3 = 100 DU, 20 SN, 30 Lunges\n\nלאנגים ללא משקל, מסונכרנים במהלך כל ההליכה. קפיצות חבל מסונכרנות: אחד מול השני. הקפיצות אמורות לקחת עד דקה וחצי. אפשר להמיר לסינגלים אחד מול השני אם מעוניינים.', movements:[['Synced Double unders',''],['Synced alternating DB snatches',''],['Synced Walking lunges (bodyweight)','steps']] },
+      metcon2: {},
+      extras: [['BY Extra','3 rounds, no rush:\n40m Farmers carry\n10+10 DB bicep curls\n30s Hollow hold'],['','']]
+    };
+    return w;
+  }
   programWeek3() { return this.blankWeek(); }
   programWeek4() { return this.blankWeek(); }
   programWeek5() { return this.blankWeek(); }
@@ -4238,11 +4328,13 @@ class Component extends DCLogic {
       const row = b ? RC._buildTest(this, t) : null;
       const good = (row && row.gain != null && row.after) ? (row.gain > 0) : null;
       const nowWi = Math.max(0, Math.min(7, cwi));
-      const firstSlot = S.base || (t.weekly ? { wi: 0, di: t.weekly.di } : (t.base || null));
-      const nextSlot = S.retest || (t.weekly ? { wi: nowWi, di: t.weekly.di } : (t.retest || null));
+      // 14/09: a weekly test can sit on another day in some weeks (W2: Thursday) — the recap script resolves the day per week
+      const wdi = (wi) => (t.weekly ? (RC._weeklyDi ? RC._weeklyDi(t, wi) : t.weekly.di) : 0);
+      const firstSlot = S.base || (t.weekly ? { wi: 0, di: wdi(0) } : (t.base || null));
+      const nextSlot = S.retest || (t.weekly ? { wi: nowWi, di: wdi(nowWi) } : (t.retest || null));
       const canOpenAfter = !!(S.retest || t.weekly);
       const bwhen = firstSlot ? this.whenLabel(firstSlot.wi*7 + firstSlot.di) : '';
-      const awhen = S.retest ? this.whenLabel(S.retest.wi*7 + S.retest.di) : (t.weekly ? ('חוזר כל יום ' + this.hebDow[t.weekly.di]) : 'אין מדידה חוזרת בתוכנית');
+      const awhen = S.retest ? this.whenLabel(S.retest.wi*7 + S.retest.di) : (t.weekly ? ((t.weekly.byWeek ? 'חוזר כל שבוע · השבוע ביום ' : 'חוזר כל יום ') + this.hebDow[wdi(nowWi)]) : 'אין מדידה חוזרת בתוכנית');
       const pts = (t.weekly && RC._points) ? RC._points(this, t) : null;
       const btn = 'text-align:start; background:var(--log); border:none; border-radius:10px; padding:9px 11px; font-family:inherit; color:var(--ink); ';
       return {
@@ -4394,6 +4486,11 @@ class Component extends DCLogic {
       dayWeekday: 'יום ' + this.hebDow[selDay],
       dayDate: this.dateStr(this.dateAt(gi)),
       dayIsEmpty: !String((data[selWeek].days[selDay] || {}).brief || '').trim() && !vShowLift && !vShowMetcon && !vShowMetcon2 && !vShowExtra,
+      // holiday (HOLIDAYS): greeting instead of COMING SOON on a blank day
+      emptyHoliday: !!this.holidayAt(selWeek + '_' + selDay),
+      emptyNotHoliday: !this.holidayAt(selWeek + '_' + selDay),
+      emptyTitle: (this.holidayAt(selWeek + '_' + selDay) || {}).title || 'COMING SOON',
+      emptyIcon: (this.holidayAt(selWeek + '_' + selDay) || {}).icon || '🗓️',
       // v3 block 2 (Ori, 07/09): the coach's daily brief opens the day, above LIFT (per day, shared by both sessions)
       hasBrief: !!String((data[selWeek].days[selDay] || {}).brief || '').trim(),
       briefText: String((data[selWeek].days[selDay] || {}).brief || ''),

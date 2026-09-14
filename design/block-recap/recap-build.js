@@ -70,13 +70,16 @@
   // measured on day `di` of each week; the first measured week is the
   // "before", the latest measured week after it is the "after", and the
   // in-app screen also lists every week's value. More tests arrive per embed.
+  // 14/09 (W2): the program may move the test to another day in some weeks —
+  // `byWeek` (weekIdx → dayIdx) overrides `di` for those weeks; weeklyDi()
+  // resolves the day, and every reader goes through it.
   var CAPACITESTS_BLOCK2 = [
     { key: 'squat10',
       name: 'Back Squat — 4 x 10 (מבחן שבועי)',
-      short: 'עשיריות בק סקוואט · כל יום ראשון',
+      short: 'עשיריות בק סקוואט · כל שבוע',
       unit: 'ק"ג',
       betterWhen: 'higher',
-      weekly: { di: 0, src: 'lift.weight' }
+      weekly: { di: 0, src: 'lift.weight', byWeek: { 1: 4 } }   // W1 Sunday · W2 Thursday (Ori, 14/09)
     }
   ];
   function testList() { return global.cfbyDemo ? CAPACITESTS_BLOCK1 : CAPACITESTS_BLOCK2; }
@@ -133,10 +136,14 @@
   /* ---- weekly tests (block 2) ---------------------------------------------
      One value per week (same day, same reader). The slots a weekly test
      exposes to the card are the first measured week and the latest one.   */
+  function weeklyDi(t, wi) {
+    var b = t.weekly && t.weekly.byWeek;
+    return (b && b[wi] != null) ? b[wi] : t.weekly.di;
+  }
   function weeklyPoints(app, t) {
     var pts = [];
     for (var wi = 0; wi < 8; wi++) {
-      var r = readSlot(app, { wi: wi, di: t.weekly.di, src: t.weekly.src }, t);
+      var r = readSlot(app, { wi: wi, di: weeklyDi(t, wi), src: t.weekly.src }, t);
       pts.push(r ? { wi: wi, v: r.v, text: r.text, short: (t.weekly.src === 'lift.weight' ? trimNum(r.v) : r.text), ltr: !!r.ltr } : null);
     }
     return pts;
@@ -145,7 +152,7 @@
     if (!t.weekly) return { base: t.base || null, retest: t.retest || null };
     var m = weeklyPoints(app, t).filter(Boolean);
     var first = m[0] || null, last = m.length > 1 ? m[m.length - 1] : null;
-    var slot = function (p) { return p ? { wi: p.wi, di: t.weekly.di, src: t.weekly.src } : null; };
+    var slot = function (p) { return p ? { wi: p.wi, di: weeklyDi(t, p.wi), src: t.weekly.src } : null; };
     return { base: slot(first), retest: slot(last) };
   }
 
@@ -398,7 +405,7 @@
 
   global.BlockRecap = {
     build: build, get tests() { return testList(); },
-    _slots: testSlots, _points: weeklyPoints,
+    _slots: testSlots, _points: weeklyPoints, _weeklyDi: weeklyDi,
     gateState: gateState, isOpen: isOpen,
     // v3 (07/09): the in-app tests screen (שיאים ומבחנים) reuses the same
     // rows the card draws — one config, one reader, one delta rule.
