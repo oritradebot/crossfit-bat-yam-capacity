@@ -79,7 +79,7 @@
       short: 'עשיריות בק סקוואט · כל שבוע',
       unit: 'ק"ג',
       betterWhen: 'higher',
-      weekly: { di: 0, src: 'lift.weight', byWeek: { 1: 4 } }   // W1 Sunday · W2 Thursday (Ori, 14/09)
+      weekly: { di: 0, src: 'lift.weight', byWeek: { 1: 4, 2: 4 } }   // W1 Sunday · W2 + W3 Thursday (Ori, 14/09 · 21/09)
     }
   ];
   function testList() { return global.cfbyDemo ? CAPACITESTS_BLOCK1 : CAPACITESTS_BLOCK2; }

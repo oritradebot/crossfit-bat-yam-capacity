@@ -630,7 +630,7 @@
       short: 'עשיריות בק סקוואט · כל שבוע',
       unit: 'ק"ג',
       betterWhen: 'higher',
-      weekly: { di: 0, src: 'lift.weight', byWeek: { 1: 4 } }   // W1 Sunday · W2 Thursday (Ori, 14/09)
+      weekly: { di: 0, src: 'lift.weight', byWeek: { 1: 4, 2: 4 } }   // W1 Sunday · W2 + W3 Thursday (Ori, 14/09 · 21/09)
     }
   ];
   function testList() { return global.cfbyDemo ? CAPACITESTS_BLOCK1 : CAPACITESTS_BLOCK2; }
@@ -1437,7 +1437,7 @@
             <div style="padding:16px 18px;">
               <sc-if value="{{ dayIsEmpty }}" hint-placeholder-val="{{ false }}">
                 <div style="text-align:center; padding:48px 20px 44px;">
-                  <div style="width:88px; height:88px; margin:0 auto 18px; border-radius:50%; background:radial-gradient(circle at 50% 35%, rgba(35,64,154,.14), rgba(35,64,154,.04)); display:flex; align-items:center; justify-content:center; font-size:42px; animation:floaty 2.8s ease-in-out infinite;">{{ emptyIcon }}</div>
+                  <div dir="rtl" style="min-width:88px; height:88px; padding:0 18px; box-sizing:border-box; margin:0 0 18px; border-radius:44px; background:radial-gradient(circle at 50% 35%, rgba(35,64,154,.14), rgba(35,64,154,.04)); display:inline-flex; align-items:center; justify-content:center; white-space:nowrap; font-size:42px; animation:floaty 2.8s ease-in-out infinite;">{{ emptyIcon }}</div>
                   <sc-if value="{{ emptyNotHoliday }}" hint-placeholder-val="{{ true }}">
                     <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:30px; letter-spacing:.14em; color:var(--blue);">COMING SOON</div>
                     <div style="font-size:13.5px; color:var(--muted); margin-top:8px; line-height:1.6; max-width:300px; margin-inline:auto;">האימון של היום עוד לא פורסם. הוא יופיע כאן ברגע שהמאמן יעלה אותו — בינתיים אפשר לתעד ימים אחרים או לסמן מנוחה.</div>
@@ -2215,7 +2215,7 @@ class Component extends DCLogic {
   }
 
   // ---- PROGRAM_VERSION (bump on every embed) + IS_DEMO + DEMO_MAPS ------------------------------
-  PROGRAM_VERSION = 35;
+  PROGRAM_VERSION = 36;
   // /demo runs block 1 program (demoWeekN) with its own per-day config maps
   // below; the live maps under it belong to the CURRENT block and start
   // empty - every /embed-week adds that week entries (program.md section 3).
@@ -2259,7 +2259,10 @@ class Component extends DCLogic {
     // W1 (07/09): 4 x 10 squats · 8-set snatch complex · 6-set C&J complex · 6 x 2 power cleans · OHS build-to-heavy = 8 open boxes
     '0_0': 4, '0_1': 8, '0_2': 6, '0_4': 6, '0_5': 8,
     // W2 (14/09): deadlift 8-6-4-2-2 · 8 C&J singles · 8-set snatch complex · 4 x 10 squats · 5 x 3 OHS. Wed (DB) and Sat (dips/rows) have no barbell — no entry
-    '1_0': 5, '1_1': 8, '1_2': 8, '1_4': 4, '1_5': 5
+    '1_0': 5, '1_1': 8, '1_2': 8, '1_4': 4, '1_5': 5,
+    // W3 (21/09): Sun deadlift in the skill EMOM (4 rounds) · Tue power clean build-to-heavy 3 = 8 open boxes · Wed 6-set snatch complex ·
+    // Thu 4 x 10 squats + the bonus 5th set (Ori: a 5th box, optional — the heaviest set is the weekly test) · Fri 4 + 4 squat clean + 2 jerks · Sat 5 x 6 Pendlay rows
+    '2_0': 4, '2_2': 8, '2_3': 6, '2_4': 5, '2_5': 8, '2_6': 5
   };
   // PER_MOVE_METCON: these metcon bases log a result per movement
   // (log.mv1..mvN) and the board-score input stays locked until every
@@ -2276,7 +2279,11 @@ class Component extends DCLogic {
     '0_4': { 'metcon': ['Wall balls (kg)','Single arm DB (kg)'] },
     // W2 (14/09, per Ori): the two days without level lines log the weight of their one loaded movement — Wed D-ball, Thu KB swings
     '1_3': { 'metcon': ['D-ball (kg)'] },
-    '1_4': { 'metcon': ['KB swings (kg)'] }
+    '1_4': { 'metcon': ['KB swings (kg)'] },
+    // W3 (21/09): Thu writes only an L1 line, so there is no level step (Ori) and it logs like a day without levels — the
+    // heavy wall ball's weight, nothing for the other movements · Sat (pairs, no levels) the D-ball
+    '2_4': { 'metcon': ['Wall balls (kg)'] },
+    '2_6': { 'metcon': ['D-ball (kg)'] }
   };
   // PER_MOVE_SCORE: on these days the board score (log.amount) MIRRORS box
   // #box once ALL boxes are filled — the LIFT heaviest-set trick — so there
@@ -2301,7 +2308,12 @@ class Component extends DCLogic {
     '1_0': { 'metcon':'סך החזרות + הקלוריות (בזוג)' },
     '1_1': { 'metcon':'סך הדאבלים (DU)' },
     '1_2': { 'metcon':'סך הסנאצ׳ים' },
-    '1_4': { 'metcon':'ממוצע חזרות לדקה' }
+    '1_4': { 'metcon':'ממוצע חזרות לדקה' },
+    // W3 (21/09): Sun total step ups · Thu the 3 AMRAPs summed — the plan says "total meters" but the machine AMRAP is
+    // "for calories", so the label names the machine and leaves the unit open (Ori) · Fri EMOMania average
+    '2_0': { 'metcon':'סך הסטפ-אפים' },
+    '2_4': { 'metcon':'סך המכשיר + C2B + WB' },
+    '2_5': { 'metcon':'ממוצע חזרות לדקה' }
   };
   // TIME_SPLITS (08/09, per Ori: "3 קוביות, אחת לכל מקצה, שיעזרו לסכום את סה"כ
   // זמן החתירה"): a time-mode metcon whose score is the sum of several
@@ -2310,17 +2322,23 @@ class Component extends DCLogic {
   // type. Keyed like the maps above, the value is the box label list.
   TIME_SPLITS = this.IS_DEMO ? this.DEMO_MAPS.TIME_SPLITS : {
     // W1 Sun endurance · METCON-B row 1600 / 1000 / 800 — total row time
-    '0_0': { 'alt.metcon2': ['Row 1600','Row 1000','Row 800'] }
+    '0_0': { 'alt.metcon2': ['Row 1600','Row 1000','Row 800'] },
+    // W3 Tue · 5 sets of run / C&J / run, Rest 1:00 — a time box per set, the total without the rests (Ori, 21/09)
+    '2_2': { 'metcon': ['Set 1','Set 2','Set 3','Set 4','Set 5'] }
   };
   // ROUND_REPS (08/09, per Ori: "תשכלל מספר חזרות לכל סט לפי הרמה … 3 סיבובים
   // מלאים + 20 חזרות → לפי הרמה לסכום את כמות החזרות הכוללת"): a rounds+reps
   // metcon whose round size depends on the level. The athlete logs full rounds
   // + the reps of the last partial round; the app shows and reports the total
   // (rounds × size + reps) for the level picked in step 1. Value = reps per
-  // round by level, from the plan's level lines (Ori's numbers for a range).
+  // round by level, from the plan's level lines (Ori's numbers for a range);
+  // 'men/women' (e.g. '45/40') when the round differs by sex — see roundSize.
   ROUND_REPS = this.IS_DEMO ? this.DEMO_MAPS.ROUND_REPS : {
     // W1 Fri · AMRAP 20 — L1 300m+10+5-10 (Ori: 50) · L2 400m+12+12 = 64 · L3 500m+15+15 = 80 (10m run = 1 rep)
-    '0_5': { 'metcon': { '1': 50, '2': 64, '3': 80 } }
+    '0_5': { 'metcon': { '1': 50, '2': 64, '3': 80 } },
+    // W3 Wed · AMRAP 20 — the calories differ by sex, so each size is 'men/women' (Ori, 21/09):
+    // L1 15/12 cals + 10-15 knee raises (Ori: the top, like W1) + 10 = 40/37 · L2 20/15 + 15 + 10 = 45/40 · L3 25/20 + 20 + 10 = 55/50
+    '2_3': { 'metcon': { '1': '40/37', '2': '45/40', '3': '55/50' } }
   };
   pilotKey() { return this.state.selWeek + '_' + this.state.selDay; }
   perSetCount() { return this.state.activeSession==='alt' ? 0 : (this.PER_SET_LIFT[this.pilotKey()] || 0); }
@@ -2339,7 +2357,10 @@ class Component extends DCLogic {
     '0_3': ['metcon'],   // Wed · total wallwalks
     '0_5': ['metcon'],   // Fri · rounds + reps, total via ROUND_REPS
     // W2 (14/09): every level day — Sun (pairs total), Mon (total DU), Tue (total snatches), Fri and Sat (time)
-    '1_0': ['metcon'], '1_1': ['metcon'], '1_2': ['metcon'], '1_5': ['metcon'], '1_6': ['metcon']
+    '1_0': ['metcon'], '1_1': ['metcon'], '1_2': ['metcon'], '1_5': ['metcon'], '1_6': ['metcon'],
+    // W3 (21/09): Sun (total step ups), Tue (a time per set), Wed (rounds + reps, total via ROUND_REPS), Fri (EMOMania average).
+    // Thu writes only an L1 line — no level step there (planLevels), so it is not a level day
+    '2_0': ['metcon'], '2_2': ['metcon'], '2_3': ['metcon'], '2_5': ['metcon']
   };
   // 10/09, per Ori ("תשנה ספציפית ביום רביעי את המילה LIFT ל-SKILL ואל תדרוש באותו יום חובה להזנה של החלק
   // הזה … אך ורק לרביעי"): days whose FIRST slot is a skill, not a lift. The block header reads SKILL
@@ -2356,7 +2377,8 @@ class Component extends DCLogic {
   // of COMING SOON and drops the "not published yet" line. Keyed 'weekIdx_dayIdx' like every
   // map here, resolved at render — no state field, no sync impact.
   HOLIDAYS = this.IS_DEMO ? {} : {
-    '0_6': { title: 'חג שמח', icon: '🍎🍯' }   // W1 Sat 12/09/2026 — Rosh Hashanah, no class
+    '0_6': { title: 'חג שמח', icon: '🍎🍯' },   // W1 Sat 12/09/2026 — Rosh Hashanah, no class
+    '2_1': { title: 'גמר חתימה טובה וצום קל', icon: '🕊️📖✍️' }   // W3 Mon 21/09/2026 — Yom Kippur, no class (Ori, 21/09)
   };
   holidayAt(key) { return (key && this.HOLIDAYS[key]) || null; }
   // ---- session helpers (perMoveOn, curSession) --------------------------------------------------
@@ -2518,7 +2540,7 @@ class Component extends DCLogic {
   }
   // The levels the plan writes for a metcon — read from its "L1 = …" /
   // "Level 2 — …" lines, the same lines planEl renders as a table. [] when
-  // the day has no levels (then there is nothing to pick and no step 1).
+  // the day has fewer than two levels (then there is nothing to pick and no step 1).
   planLevels(metcon) {
     const LV = /^\s*(?:Level|L)\s*(\d)(?:\s*[-–]\s*(\d))?\s*[=:—–-]+/i;
     const set = {};
@@ -2527,7 +2549,10 @@ class Component extends DCLogic {
       const a = +m[1], b = m[2] ? +m[2] : a;
       for (let i = a; i <= b; i++) if (i >= 1 && i <= 4) set[i] = 1;
     });
-    return Object.keys(set).map(Number).sort();
+    // 21/09 (Ori, W3 Thursday wrote only "L1 = …"): ONE written level is not a choice —
+    // no pills and no lock; the line stays in the plan text as guidance.
+    const lv = Object.keys(set).map(Number).sort();
+    return lv.length > 1 ? lv : [];
   }
   // Most recent level chosen on an earlier day of the block ('' if none).
   // 10/09 (deploy 10, Ori: the overview slot RX left): the level the athlete worked at most in this
@@ -2564,13 +2589,23 @@ class Component extends DCLogic {
   }
   hebDow = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
   whenLabel(i) { return 'שבוע ' + (Math.floor(i/7)+1) + ' · יום ' + this.hebDow[i%7]; }
+  // A ROUND_REPS size: a number, or 'men/women' when the round differs by sex
+  // (W3 Wed, 21/09 — calories 15/12 etc.). The athlete's own profile gender
+  // picks the side; no gender on the profile → 0 (rounds + reps, no total).
+  roundSize(v) {
+    if (typeof v === 'number') return v;
+    const p = String(v || '').split('/');
+    if (p.length < 2) return parseInt(p[0], 10) || 0;
+    const g = this.state.myGender;
+    return parseInt(g === 'female' ? p[1] : g === 'male' ? p[0] : '', 10) || 0;
+  }
   // Total reps of a rounds+reps result on a ROUND_REPS day: rounds × the
   // level's round size + the partial round. null when the day/base has no
   // round sizes, no level is picked, or nothing is logged. key = 'wi_di',
   // base carries the 'alt.' prefix for the endurance session.
   roundTotal(key, sess, base) {
     const cfg = this.ROUND_REPS[key]; const per = cfg && cfg[base]; if (!per || !sess) return null;
-    const size = per[String(sess.level || '')]; if (!size) return null;
+    const size = this.roundSize(per[String(sess.level || '')]); if (!size) return null;
     const m = /metcon2$/.test(base) ? sess.metcon2 : sess.metcon; const L = (m && m.log) || {};
     const r = parseInt(L.rounds, 10) || 0, x = parseInt(L.reps, 10) || 0;
     if (!r && !x) return null;
@@ -2818,7 +2853,60 @@ class Component extends DCLogic {
     };
     return w;
   }
-  programWeek3() { return this.blankWeek(); }
+  programWeek3() {
+    // WEEK 3 · 20/09-26/09/2026 (block 2) — from Ori's screenshots 21/09 (six files).
+    // Ori (21/09): the files named Sunday and Tuesday are swapped — the "רגע לפני הצום"
+    // workout was Sunday 20/09 (Yom Kippur eve) and the power clean day is Tuesday.
+    // Monday 21/09 = Yom Kippur, no class: day 1 stays explicitly blank and
+    // HOLIDAYS['2_1'] shows the greeting instead of COMING SOON.
+    // No endurance session this week: Sunday's alt stays explicitly blank.
+    const w = this.blankWeek();
+    const noAlt = w[0].alt;
+    w[0] = {
+      brief: 'רגע לפני הצום, אימון מאוזן - גם כוח, גם סקיל, גם קצת נפח והזעה. שתהיה גמר חתימה טובה לכולם!',
+      lift: { movement:'Deadlift — Skill & Strength EMOM (DU + Bar MU)', planned:'Skill & Strength Practice\n4 Rounds of the following EMOM:\nMinute 1 — Double unders + 5 Deadlifts\nMinute 2 — Double unders + Bar Muscle ups\nMinute 3 — Rest\n\nL1 = 20 DU, 1-3 Banded MU or 20s transition practice\nL2 = 30 DU, 1-2 MU\nL3 = 40 DU, 5 MU\n\nWeight ±65% of your deadlift\nQuality over speed/volume' },
+      metcon: { name:'Every 4:00 for 5 sets', scheme:'Every 4:00 for 5 sets', score:'Total step ups', resultMode:'amount', note:'Score — total step ups\n\nL1 = start at 12 snatches & burpees, reduce 2 each round\nL2 = start at 16, reduce 2 each round\nL3 = start at 20, reduce 2 each round\n\n(example: L3 = 20-18-16-14-12)', movements:[['Run','200m'],['DB snatches',''],['Burpees over the DBs (lateral)',''],['Max DB box step ups @20/16"','remaining time']] },
+      metcon2: {},
+      extras: [['Capacity Extra','3 rounds, no rush:\n10-12 Hip extensions\n10+10 Half-kneeling DB press\n30s Hollow / L-sit hold'],['','']],
+      alt: noAlt
+    };
+    w[2] = {
+      brief: 'זוכרים את הרביעיות של שבוע שעבר? מורידים חזרה, מעלים הילוך.\nמחכים לנו גם אינטרוולים עצימים. אנחנו לא מרבים לרוץ "מהר", היום אנחנו נכון דווקא להגיע לזה.',
+      lift: { movement:'Power Clean — Heavy 3 (Touch and go)', planned:'In 15:00, build to a heavy set of 3 touch and go power cleans.\nNew set — Every 1:30-2:00.\n\nSuggested climb —\n3 @60% / 65% / 70% / 75% / 80%+, then smaller jumps.' },
+      metcon: { name:'5 Sets — Run / C&J / Run', scheme:'5 Sets · 150m Run / 5-7 C&Js / 150m Run / Rest 1:00', score:'Total time', resultMode:'time', note:'5 Sets:\n150m Run\n5-7 C&Js\n150m Run\nRest 1:00\n\nL1 = 100m, @40/30kg\nL2 = @50/35kg\nL3 = @60/40kg\n\nScore — total time\nGoal — push the first run at 80%, cycle the bar unbroken, then push the second run again.', movements:[['Run','150m'],['C&Js','5-7'],['Run','150m']] },
+      metcon2: {},
+      extras: [['Capacity Extra','3 Sets (every 2:00):\n3 Weighted pull ups\ninto\n10-12 Heavy Russian KB swings (go as heavy as you can)\n\ninto\n\n10+10 Hammer curls\n10+10 KB side bends\nFlow through it ±3 times'],['','']]
+    };
+    w[3] = {
+      brief: 'שתי מטרות/משימות להיום: לקדם את המשיכה שלנו בסנאץ למקום טוב יותר, ולשלוט בתנועות "ארוכות" ולא זריזות. האימון ארוך, תתאימו את קצב התנועה לזה.',
+      lift: { movement:'Snatch + Below knee hang snatch', planned:'Every 2:00 x 6 sets:\n1 Snatch\n1 Below knee hang snatch\nBonus: 1 Overhead squat\n\nSets 1-2 — 72-76%\nSets 3-4 — 76-80%\nSets 5-6 — 80-82%\n\nSquat snatches are preferred.\nאם ביצעתם את הקומפלקס של שבוע שעבר - נסו להוסיף כמה ק"ג בודדים (2-5) אליו.' },
+      metcon: { name:'AMRAP 20:00 — Row / T2B / BBJO', scheme:'AMRAP 20:00', score:'Total reps', resultMode:'rounds', note:'Score — total reps\nGoal — Steady work across. T2B in 2 sets max.\n\nL1 = 15/12 cals, 10-15 hanging knee raises\nL2 = 20/15 cals, 15 T2B\nL3 = 25/20 cals, 20 T2B\n\nחצי קבוצה יכולה להתחיל על המכשירים, והחצי השני על המתח. זה אמור להתאזן\nהזינו כמה סבבים (+חזרות) הושלמו (סבב = 35-40 / 45 / 55 חזרות לפי הרמה לגברים, 32-37 / 40 / 50 לנשים).', movements:[['Calories Row','12-25 by level'],['T2B','10-20 by level'],['Burpee box jump overs','10']] },
+      metcon2: {},
+      extras: [['Capacity Extra','Every 75 seconds for 8 sets, alternate:\n- 6-8 Sotts presses*\n- 8+8 Single leg DB RDL\n\n*Empty or light barbell. Seated on a medball or elevated feet works if the mobility challenge is there.'],['','']]
+    };
+    w[4] = {
+      brief: 'יום כוחני, גם ברגליים וגם בראש - מחכים לנו סטים ארוכים של סקוואט, וחגיגה של אמרפים. הולך להיות נפחי.',
+      lift: { movement:'Back Squat — 4 x 10 (Weekly Test)', planned:'Every 3:00 for 4 sets:\n10 reps, climbing\n\nSet 1 — 72%\nSet 2 — 74%\nSets 3-4 — 75-77%\nOptional: Set 5 — repeat set 4, or a couple of kg more\n\nPercentages off your Back Squat 3RM.\n\nלא יודעים מה ה3RM? תורידו 5% מהכל ותגזרו מה1RM\n\nאם עשיתם את העשיריות של חמישי הקודם:\nכל סט = כמה ק"ג יותר מהסט המקביל של שבוע שעבר.\nהסט החמישי הוא בונוס' },
+      metcon: { name:'3 x AMRAP 6:00', scheme:'AMRAP 6:00 into AMRAP 6:00 into AMRAP 6:00', score:'Total meters + C2B + WB across', resultMode:'amount', note:'AMRAP 6:00:\n4 Shuttle runs\n8 C2B\n\ninto\n\nAMRAP 6:00:\n4 Shuttle runs\n12 Heavy Wallballs\n\ninto\n\nAMRAP 6:00:\nBike/Row/Ski for calories\n\nAdd 2 C2B/WB each round\n\nScore — total meters + C2B + WB across\nGoal — sustained, this is 18:00 of work\n\nL1 = start the C2B at 4 reps, ring rows or jumping C2B', movements:[['Shuttle runs','4 · AMRAP 1 + 2'],['C2B','8, +2 each round · AMRAP 1'],['Heavy Wallballs','12, +2 each round · AMRAP 2'],['Bike/Row/Ski','for calories · AMRAP 3']] },
+      metcon2: {},
+      extras: [['Capacity Extra','Single arm KB reverse lunges (KB in front rack) — 8 reps per arm\ninto 10 DB bench presses\nRest 60s\nRepeat 3-4 times'],['','']]
+    };
+    w[5] = {
+      brief: 'שישי מטורלל לכבוד החג, הכל כדי שיהיה שמח. מוט כבד, ולאחר מכן נפח גבוה. חג שמח ושבת שלום!',
+      lift: { movement:'Squat Clean + 2 Jerks', planned:'Squat clean + 2 Jerks (of choice)\n4 sets @every 1:30\n4 sets @every 2:00\n\nBuild by feel across the sets.\nSplit or push — take the one' },
+      metcon: { name:'Friday EMOMania', scheme:'EMOM 16:00 · 4 minutes, repeat for 4-5 rounds', score:'Average reps per minute on the HSPU/BJO/THR', resultMode:'amount', note:'EMOM 16:00:\nMinute 1 — Double unders\nMinute 2 — HSPU\nMinute 3 — Box jump overs @30/24"\nMinute 4 — Thrusters\n\nRepeat for 4-5 rounds.\nScore — average reps per minute on the HSPU/BJO/THR\n\nLevel 1 = 30 DU, 30/20kg\nLevel 2 = 40 DU, 35/25kg\nLevel 3 = 60 DU, 40/30kg\n\nהמטרה: להציב מספרים לכל דקה כבר מראש.', movements:[['Double unders','minute 1'],['HSPU','minute 2'],['Box jump overs @30/24"','minute 3'],['Thrusters','minute 4']] },
+      metcon2: {},
+      extras: [['Capacity Extra','Every 2:00 seconds for 4 sets:\n30s Front rack hold @heavy (start from rack)\ninto\n8+8 Single arm DB high pulls'],['','']]
+    };
+    w[6] = {
+      brief: 'אימון שבת - בניית גב וכוח משיכה, וחגיגת זוגות כרגיל. בחרו פרטנר טוב להיום, יש הרבה עבודה לעשות.',
+      lift: { movement:'Pendlay Row — into Australian pull ups', planned:'5 Sets:\n6 Pendlay rows @heavy\ninto\nNear max effort set of Australian pull ups\n90s Rest' },
+      metcon: { name:'5 Rounds For Time (In pairs)', scheme:'5 Rounds For Time · in pairs · I go you go · Cap 25:00', score:'Time', resultMode:'time', note:'cap 25:00\nנעצרתם בקאפ? הזינו 25:00 והוסיפו בהערה איפה עצר אתכם השעון.\n\nScore — time', movements:[['Hand release push ups (I go you go)','30'],['Calories (I go you go, women = 20)','25'],['Line facing burpees (I go you go)','20'],['D-ball over the shoulder (I go you go)','15']] },
+      metcon2: {},
+      extras: [['BY Extra','3 rounds, no rush:\n40m Farmers carry\n10+10 DB bicep curls\n30s Hollow hold'],['','']]
+    };
+    return w;
+  }
   programWeek4() { return this.blankWeek(); }
   programWeek5() { return this.blankWeek(); }
   programWeek6() { return this.blankWeek(); }
@@ -3852,7 +3940,7 @@ class Component extends DCLogic {
     // the total (rounds × size + reps) is shown as it is typed.
     const rrCfg = mode === 'rounds' ? this.metconCfg(this.ROUND_REPS, base) : '';
     const rrLevel = rrCfg ? String(this.curSession().level || '') : '';
-    const rrSize = (rrCfg && rrLevel) ? rrCfg[rrLevel] : 0;
+    const rrSize = (rrCfg && rrLevel) ? this.roundSize(rrCfg[rrLevel]) : 0;
     const rrTot = rrSize ? this.roundTotal(this.pilotKey(), this.curSession(), (this.state.activeSession==='alt'?'alt.':'')+base) : null;
     const rrLine = rrSize ? React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: rrTot ? 'var(--greenink)' : 'var(--muted)', lineHeight:1.5 } },
         rrTot ? ('✓ סך החזרות לפי L' + rrLevel + ': ' + rrTot.rounds + ' × ' + rrTot.size + ' + ' + rrTot.reps + ' = ' + rrTot.total + ' חזרות')

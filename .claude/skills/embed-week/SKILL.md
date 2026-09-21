@@ -1,6 +1,6 @@
 ---
 name: embed-week
-description: Embed a week of CrossFit workouts into the Capacity Tracker from Ori's screenshots. Use whenever the task is adding, updating or fixing a program week (הטמעת שבוע, "תטמיע שבוע N", new week's workouts, fixing a day's workout). Reads the screenshots, confirms the day mapping with Ori, writes programWeekN() and the config maps, bumps PROGRAM_VERSION.
+description: Embed a week of CrossFit workouts into the Capacity Tracker from Ori's screenshots. Use whenever the task is adding, updating or fixing a program week (הטמעת שבוע, "תטמיע שבוע N", new week's workouts, fixing a day's workout). Reads the screenshots, confirms the day mapping with Ori, writes programWeekN() and the config maps, bumps PROGRAM_VERSION, and ends with a draft of the week's in-app block message (the admin-panel popup) for Ori to publish.
 ---
 
 # הטמעת שבוע אימונים
@@ -33,6 +33,7 @@ C:\Users\leaan\Desktop\crossfit manager project\בלוק 2 אימונים להט
 ```
 
 **אורי בודק את זה במפורש.** הוא רוצה לדעת ששמות הימים באמת נקראו ולא נוחשו.
+**בריף שלא מתאים לתאריך** (חג, צום, "אתמול") = אולי קבצים הפוכים — שאלה בשער (W3: "רגע לפני הצום" בקובץ של שלישי → ראשון ושלישי הוחלפו).
 **כשאלון, לא כפרוזה** (אורי 14/09: *"תעשה לי את זה כשאלון כמו תמיד"*): המיפוי + כל הכרעה פתוחה (resultMode גבולי,
 ניקוד באקסטרה, תיבות, מבחן שזז, טקסט חשוד בצילום) ב-AskUserQuestion — עד 4 שאלות בסבב, האפשרות המומלצת ראשונה,
 סבבים עד שהכל נענה. המתן לתשובות.
@@ -93,12 +94,33 @@ python -c "p='public/app.html';b=open(p,'rb').read();open(p,'wb').write(b.replac
 - נרמול CRLF ← **חובה** אחרי כל עריכה במחשב הזה
 - בדיקת תקינות: `node --check` על boot.js אם נגעת בו
 - ודא שכל 7 הימים קיימים ושאין `resultMode` חסר
+- **עד 4 תנועות למטקון ועד 2 extras ליום** — `normalizeDay` חותך את השאר בשקט; יותר מזה → מאחדים שורות (program.md §4)
 
 ## שלב 7 · יומן ודיווח
 
 1. הוסף ל-`יומן-פרויקט.md` — כותרת `### 🏋️ הטמעת שבוע N — WEEK N, ‏תאריכים (תאריך) — PROGRAM_VERSION X`,
    ואז בעברית פשוטה: מה הוטמע, החלטות `resultMode` לא-טריוויאליות ולמה.
 2. דווח לאורי: מה הוטמע, ה-`PROGRAM_VERSION` החדש, **ושאל אם לדחוף גרסה**.
+3. באותו דיווח — **נוסח הודעת הבלוק לשבוע** (שלב 8).
+
+## שלב 8 · נוסח הודעת הבלוק לשבוע
+
+אורי 14/09 (*"שכחנו הודעת בלוק חדשה"*): כל שבוע שהוטמע מקבל פופאפ מהפאנל — ⚙️ ניהול האפליקציה ← 📣 הודעת בלוק חדש.
+**אני מנסח, אורי מפרסם.** לא מהקוד, ולא דרך כרום בלי שביקש.
+
+- **הפורמט (נקבע 10/08, בלוק 1):** כותרת `שבוע N באוויר! 🚀` · שורת "כל השבוע כבר טעון באפליקציה" · בולטים לפי נושא,
+  אמוג׳י בראש כל בולט והימים בסוגריים · `וחשוב:` — מה **לא** יום שיא, קאפים וכו׳ · סגירה קבועה:
+  `תעדו הכול באפליקציה — נתראה על רצפת האימונים! 🔥`
+- **התוכן רק מ-`programWeekN()` שהרגע נכתב** (כלל הברזל למטה). שורות "וחשוב" = הערות של אורי מהימים עצמם,
+  בעברית נאמנה. מבחן בלי מדידה חוזרת — לא מזכירים; המבחן השבועי זז ליום אחר (`byWeek`) — מזכירים את היום.
+- **כל טענה על האפליקציה נבדקת ב-grep** מול התווית ב-`app.html` (שם טאב, כפתור) — לא מטקסט המדריך, שכבר התיישן
+  (14/09: במדריך "אותו משקל לכולם", בכפתור `⇉ אותו משקל לכל הסטים`).
+- **מגבלות הפופאפ** (`showAnnouncement` ב-boot.js): טקסט נקי — ירידות שורה נשמרות, `**הדגשה**` מופיעה ככוכביות.
+  בטלפון 375×812 נראים ~470px מהגוף בלי גלילה — בערך חצי מהודעה של 850 תווים / 21 שורות; לא להתארך מעבר לזה.
+  הכפתור קבוע: "קדימה לבלוק! 💪". פרסום חדש מחליף את הקודם, וכל מתאמן רואה אותו פעם אחת.
+- **מסירה:** כותרת וגוף בשני בלוקים של `text` להעתקה, ואז שאלון (מפרסם בעצמי / לקצר / לתקן).
+- **תקדים:** 14/09 — פתיחת בלוק 2 + שבוע 2, עם סעיף חד-פעמי "🆕 מה חדש בבלוק הזה". אחרי שאורי מפרסם, הנוסח
+  נשמר בפאנל תחת 📜 יומן הודעות.
 
 ---
 
