@@ -2215,7 +2215,7 @@ class Component extends DCLogic {
   }
 
   // ---- PROGRAM_VERSION (bump on every embed) + IS_DEMO + DEMO_MAPS ------------------------------
-  PROGRAM_VERSION = 36;
+  PROGRAM_VERSION = 37;
   // /demo runs block 1 program (demoWeekN) with its own per-day config maps
   // below; the live maps under it belong to the CURRENT block and start
   // empty - every /embed-week adds that week entries (program.md section 3).
@@ -2262,7 +2262,9 @@ class Component extends DCLogic {
     '1_0': 5, '1_1': 8, '1_2': 8, '1_4': 4, '1_5': 5,
     // W3 (21/09): Sun deadlift in the skill EMOM (4 rounds) · Tue power clean build-to-heavy 3 = 8 open boxes · Wed 6-set snatch complex ·
     // Thu 4 x 10 squats + the bonus 5th set (Ori: a 5th box, optional — the heaviest set is the weekly test) · Fri 4 + 4 squat clean + 2 jerks · Sat 5 x 6 Pendlay rows
-    '2_0': 4, '2_2': 8, '2_3': 6, '2_4': 5, '2_5': 8, '2_6': 5
+    '2_0': 4, '2_2': 8, '2_3': 6, '2_4': 5, '2_5': 8, '2_6': 5,
+    // W4 (27/09): Sun 3 x 10 squats · Mon 6-set clean complex · Thu 4 x 2+2 T&G power cleans. Tue (DB snatch / bench) and Wed (handstand skill) — no entry
+    '3_0': 3, '3_1': 6, '3_4': 4
   };
   // PER_MOVE_METCON: these metcon bases log a result per movement
   // (log.mv1..mvN) and the board-score input stays locked until every
@@ -2283,7 +2285,10 @@ class Component extends DCLogic {
     // W3 (21/09): Thu writes only an L1 line, so there is no level step (Ori) and it logs like a day without levels — the
     // heavy wall ball's weight, nothing for the other movements · Sat (pairs, no levels) the D-ball
     '2_4': { 'metcon': ['Wall balls (kg)'] },
-    '2_6': { 'metcon': ['D-ball (kg)'] }
+    '2_6': { 'metcon': ['D-ball (kg)'] },
+    // W4 (27/09): the two days without level lines — Tue Score 1 the KB, Wed the sled and the D-ball (Ori); nothing for the box / rope / runs
+    '3_2': { 'metcon': ['KB swings (kg)'] },
+    '3_3': { 'metcon': ['Sled push (kg)','D-ball (kg)'] }
   };
   // PER_MOVE_SCORE: on these days the board score (log.amount) MIRRORS box
   // #box once ALL boxes are filled — the LIFT heaviest-set trick — so there
@@ -2313,7 +2318,10 @@ class Component extends DCLogic {
     // "for calories", so the label names the machine and leaves the unit open (Ori) · Fri EMOMania average
     '2_0': { 'metcon':'סך הסטפ-אפים' },
     '2_4': { 'metcon':'סך המכשיר + C2B + WB' },
-    '2_5': { 'metcon':'ממוצע חזרות לדקה' }
+    '2_5': { 'metcon':'ממוצע חזרות לדקה' },
+    // W4 (27/09): Sun total T2B · Tue Score 2 — the 8:00 run's meters
+    '3_0': { 'metcon':'סך ה-T2B' },
+    '3_2': { 'metcon2':'סך המטרים בריצה' }
   };
   // TIME_SPLITS (08/09, per Ori: "3 קוביות, אחת לכל מקצה, שיעזרו לסכום את סה"כ
   // זמן החתירה"): a time-mode metcon whose score is the sum of several
@@ -2338,7 +2346,11 @@ class Component extends DCLogic {
     '0_5': { 'metcon': { '1': 50, '2': 64, '3': 80 } },
     // W3 Wed · AMRAP 20 — the calories differ by sex, so each size is 'men/women' (Ori, 21/09):
     // L1 15/12 cals + 10-15 knee raises (Ori: the top, like W1) + 10 = 40/37 · L2 20/15 + 15 + 10 = 45/40 · L3 25/20 + 20 + 10 = 55/50
-    '2_3': { 'metcon': { '1': '40/37', '2': '45/40', '3': '55/50' } }
+    '2_3': { 'metcon': { '1': '40/37', '2': '45/40', '3': '55/50' } },
+    // W4 (27/09): Mon AMRAP 14 — cals by level and sex + 15 BJO + 9 jerks: L1 15/12 = 39/36 · L2 18/14 = 42/38 · L3 21/18 = 45/42
+    '3_1': { 'metcon': { '1': '39/36', '2': '42/38', '3': '45/42' } },
+    // Thu AMRAP 10 — 8/6 cals + 12 C&J + L1 40 singles = 60/58 · L2/L3 24 DU = 44/42
+    '3_4': { 'metcon': { '1': '60/58', '2': '44/42', '3': '44/42' } }
   };
   pilotKey() { return this.state.selWeek + '_' + this.state.selDay; }
   perSetCount() { return this.state.activeSession==='alt' ? 0 : (this.PER_SET_LIFT[this.pilotKey()] || 0); }
@@ -2360,7 +2372,9 @@ class Component extends DCLogic {
     '1_0': ['metcon'], '1_1': ['metcon'], '1_2': ['metcon'], '1_5': ['metcon'], '1_6': ['metcon'],
     // W3 (21/09): Sun (total step ups), Tue (a time per set), Wed (rounds + reps, total via ROUND_REPS), Fri (EMOMania average).
     // Thu writes only an L1 line — no level step there (planLevels), so it is not a level day
-    '2_0': ['metcon'], '2_2': ['metcon'], '2_3': ['metcon'], '2_5': ['metcon']
+    '2_0': ['metcon'], '2_2': ['metcon'], '2_3': ['metcon'], '2_5': ['metcon'],
+    // W4 (27/09): Sun (total T2B), Mon and Thu (rounds + reps, total via ROUND_REPS)
+    '3_0': ['metcon'], '3_1': ['metcon'], '3_4': ['metcon']
   };
   // 10/09, per Ori ("תשנה ספציפית ביום רביעי את המילה LIFT ל-SKILL ואל תדרוש באותו יום חובה להזנה של החלק
   // הזה … אך ורק לרביעי"): days whose FIRST slot is a skill, not a lift. The block header reads SKILL
@@ -2368,7 +2382,8 @@ class Component extends DCLogic {
   // standard, minus the lift). The plan text stays where it is; nothing moves to EXTRA. Keyed
   // 'weekIdx_dayIdx' like every map here, resolved at render — no state field, no sync impact.
   SKILL_DAYS = this.IS_DEMO ? {} : {
-    '0_3': 1   // W1 Wed · Handstand work — Skill 15:00
+    '0_3': 1,   // W1 Wed · Handstand work — Skill 15:00
+    '3_3': 1    // W4 Wed · Handstand work — levels by ability (27/09)
   };
   isSkillKey(key) { return !!(key && this.SKILL_DAYS[key]); }
   // 14/09, per Ori ("בשבת במקום COMING SOON תרשום חג שמח ואימוגים של תפוח ודבש"): a day with no
@@ -2907,7 +2922,52 @@ class Component extends DCLogic {
     };
     return w;
   }
-  programWeek4() { return this.blankWeek(); }
+  programWeek4() {
+    // WEEK 4 · 27/09-03/10/2026 (block 2) — from Ori's screenshots 27/09 (five files, WhatsApp names —
+    // the days read from the content: Tuesday says "Big Tuesday"). Sunday-Thursday only for now;
+    // Friday and Saturday stay explicitly blank (COMING SOON) until Ori sends them.
+    // No endurance session this week: Sunday's alt stays explicitly blank.
+    // Sunday's back squat is the weekly tens test (its default day, Ori 27/09).
+    const w = this.blankWeek();
+    const noAlt = w[0].alt;
+    w[0] = {
+      brief: 'יום חשוב של כוח, וסשן סקוואטים נפחי אחרון לפני שאנחנו בודקים (בשבוע הבא) עשיריה כבדה.',
+      lift: { movement:'Back Squat — 3 x 10 (Weekly Test)', planned:'Every 3:00-3:30 for 3 sets:\n10 reps, climbing\n\nSet 1 — 75%\nSet 2 — 77%\nSet 3 — 78-80%\n\nPercentages off your Back Squat 3RM.\nתשאירו עוד בטנק - בשבוע הבא אנחנו חותמים על עשירייה כבדה.' },
+      metcon: { name:'Every 3:00 for 5 sets', scheme:'Every 3:00 for 5 sets', score:'Total T2B', resultMode:'amount', note:'Every 3:00 for 5 sets:\n200m Run\nBar facing burpees\nMax T2B in remaining time\n\nL1 = 10 burpees, hanging knee raises\nL2 = 12 burpees\nL3 = 15 burpees\n\nScore — total T2B\nGoal — earn 1:00+ of T2B each round\n\nפשוט ולעניין - כמה טט"ב תוכלו לצבור?', movements:[['Run','200m'],['Bar facing burpees','10-15 by level'],['Max T2B','remaining time']] },
+      metcon2: {},
+      extras: [['Capacity Extra','תרגול טכני שלא פשוט לבצע אחרי אימון כזה - נסו להרגיש כמה נכון ללכת היום כבד.\n\nEvery 2:00 x 5 sets:\n1 Power snatch\n1 Below knee hang squat snatch\n\n3 Sets @7RPE\n2 Sets — build by feel\n\nInstead of landing in a wide split, find a deep power snatch position.\n\ninto\n\nEvery 90 seconds for 6 sets (total), alternate:\n- 6+6 DB alternating Sotts presses\n- 10-15 Banded face pulls'],['','']],
+      alt: noAlt
+    };
+    w[1] = {
+      brief: 'יום מלא בעבודת מוט, מהתחלה ועד הסוף. תרגול חשוב וטכני של קלינים, ועבודת דופק שלא תשאיר אף אחד רגוע.',
+      lift: { movement:'Clean lift-off + Squat clean + Jerk dip + Jerk', planned:'Every 2:00 x 6 sets:\n1 Clean lift-off\n1 Squat clean\n1 Jerk dip\n1 Jerk (of choice)\n\n2 Sets @6RPE\n2 Sets @7RPE\n2 Sets @8RPE\n\nLift off = lift to knee, and lower back down.\nDip = dip vertically, then reset quickly back to standing.\nRPE - מאמץ מתוך עשר.' },
+      metcon: { name:'AMRAP 14:00 — Row / BJO / Jerks', scheme:'AMRAP 14:00', score:'Total reps', resultMode:'rounds', note:'Score — total reps\n\nL1 = 15/12 Cal, 35/25kg\nL2 = 18/14 Cal, 40/30kg\nL3 = 21/18 Cal, 50/35kg or 60/40kg\n\nהזינו כמה סבבים (+חזרות) הושלמו (סבב = 39 / 42 / 45 חזרות לפי הרמה לגברים, 36 / 38 / 42 לנשים).', movements:[['Cal row','15-21 by level'],['Box jump overs @24/20"','15'],['Jerks','9']] },
+      metcon2: {},
+      extras: [['Capacity Extra','Every 90 seconds for 4 sets:\n3 Clean pulls\n\nYou can perform them as \'floating clean pulls\'.\nHeavier than your top complex.\n\ninto\n\nEvery 90 seconds for 6 sets (total), alternate:\n- 8 Pendlay rows\n- 4-8 Weighted Dips'],['','']]
+    };
+    w[2] = {
+      brief: 'עבודת כוח לא תמיד צריכה להיות עם מוט 😉\nבואו נתחזק עם דאמבלים קצת. עבודת הדופק להיום תהיה ארוכה, עם סיום מונוטוני. גם הזדמנות טובה לצאת לריצה של יותר מ400-800 מטר',
+      lift: { movement:'Heavy DB snatches + Bench press', planned:'Every 75 seconds for 8 sets, alternate:\n- 8 Heavy DB snatches (alternating, non T&G)\n- 6-8 Heavy bench presses / weighted push ups' },
+      metcon: { name:'Big Tuesday — AMRAP 12:00', scheme:'One running clock, 2 scores · AMRAP 12:00 · Rest 1:00 · Max meters Run 8:00', score:'Score 1 — total reps', resultMode:'rounds', note:'One running clock, 2 scores.\n\nAMRAP 12:00:\n15 KB swings\n10 C2B pull ups\n5 Shuttle runs (8+8m)\n\nScore 1 — total reps\n\nכמות החזרות על המתח יכולה להיות כל דבר בין 5 ל10, בשאיפה להחזיק את המתח (וגם את הסווינגים) בסטים רצופים. זה אומר ככל הנראה לקחת משקל אחד פחות ממה שאתם חושבים.\nהזינו כמה סבבים (+חזרות) הושלמו (סבב = 30 חזרות).', movements:[['KB swings','15'],['C2B pull ups','10'],['Shuttle runs (8+8m)','5']] },
+      metcon2: { name:'Max meters Run — 8:00', scheme:'Rest 1:00, then Max meters Run 8:00', score:'Score 2 — total meters', resultMode:'amount', note:'Rest 1:00, then\nMax meters Run — 8:00\n\nScore 2 — total meters', movements:[['Run','max meters · 8:00']] },
+      extras: [['Capacity Extra','4 sets:\nMax L-hang hold\nRest 60-90s\n\ninto\n\n5:00 of side bends with an empty/light barbell in back rack.\nכן, חמש דקות ברצף.'],['','']]
+    };
+    w[3] = {
+      brief: 'היום סובב סביב תרגול סקילים, בכל חלק וחלק.',
+      lift: { movement:'Handstand work', planned:'Advanced — Handstand walk, 5 attempts of 5-10m\nIntermediate — Wall facing hold, 5 sets of 20-30s\nBeginner — Slow wall walks, 5 sets of 3, 3s hold at the top' },
+      metcon: { name:'AMRAP 20:00 — Sled / D-ball / Step overs / Rope', scheme:'AMRAP 20:00', score:'Rounds + reps', resultMode:'rounds', note:'זו עבודת סקיל לא פחות מאשר דופק.\nלמעברים מעל הארגז - כל אובייקט שתרצו (דאמבל/קטלבל/כדור) העיקר שזה יהיה רציף ולא מעיק מדי.\n\nהזינו כמה סבבים (+חזרות) הושלמו.', movements:[['Sled push','30m'],['D-ball over the shoulder','10'],['Box step overs @20/16"','12'],['Rope climb','1']] },
+      metcon2: {},
+      extras: [['BY Extra','3 rounds, no rush:\n10-12 Hip extensions\n10+10 DB bicep curls\n30s Hollow hold'],['','']]
+    };
+    w[4] = {
+      brief: 'המטרה להיום: לבנות ביטחון בסטים כאלה של קלינים. אם תוכלו לקחת את השלשה של שבוע שעבר ולהפוך אותה ל2 זוגות זה יהיה מדהים',
+      lift: { movement:'Power Clean — 2+2 (Touch and go)', planned:'Every 2:00 for 4 sets:\n2+2 Touch and go power cleans\n15 seconds rest between the sets\n\nGuess where you\'ll finish, and work your starting weight back from there.\nThere are a lot of cleans here.' },
+      metcon: { name:'AMRAP 10:00 — Bike / DU / C&J', scheme:'AMRAP 10:00', score:'Total reps', resultMode:'rounds', note:'Score — total reps\nGoal — light and unbroken, push the calories\n\nL1 = 30/25kg, 40 singles\nL2 = 30/25kg, 24 DU\nL3 = 40/30kg, 24 DU\n\nהזינו כמה סבבים (+חזרות) הושלמו (סבב = 60 / 44 / 44 חזרות לפי הרמה לגברים, 58 / 42 / 42 לנשים).', movements:[['Cal bike (row is 2nd choice)','8/6'],['Double unders','24 · L1 = 40 singles'],['C&Js','12']] },
+      metcon2: {},
+      extras: [['Capacity Extra','Push Press\nEvery 2:00 for 5 sets:\n3 reps, building\n\nDip vertical, drive through the whole foot. No press-out.\n\ninto\n\nEvery 90 seconds for 6 sets (total), alternate:\n- 8 Tall-kneeling DB shoulder press (each)\n- 8 Single leg RDL (each)'],['','']]
+    };
+    return w;
+  }
   programWeek5() { return this.blankWeek(); }
   programWeek6() { return this.blankWeek(); }
   programWeek7() { return this.blankWeek(); }
