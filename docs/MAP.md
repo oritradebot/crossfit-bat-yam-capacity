@@ -34,7 +34,7 @@ sed -n "A,Bp" public/app.html    # ואז קוראים סקשן אחד
 | constants + program skeleton | `BLOCK_NUM`, `KEY`, `WEEKLY_TARGET`, `MOVEMENTS`, `emptyDay`, `buildProgram` | |
 | demo mode | `DEMO_LOG`, `seedDemo`, `freshProgram` | רק ל-`/demo` |
 | PROGRAM_VERSION + IS_DEMO + DEMO_MAPS | `PROGRAM_VERSION` עולה ב-1 בכל הטמעה | `grep -n "PROGRAM_VERSION ="` |
-| richer result entry | **מפות ההזנה:** `PER_SET_LIFT`, `PER_MOVE_METCON/BOXES/SCORE/OFF`, `METCON_AMOUNT_LABEL`, `TIME_SPLITS`, `ROUND_REPS` | ממולאות בכל הטמעה — `program.md §3` |
+| richer result entry | **מפות ההזנה:** `PER_SET_LIFT`, `PER_MOVE_METCON/BOXES/SCORE/OFF`, `METCON_AMOUNT_LABEL`, `TIME_SPLITS`, `ROUND_REPS`, `SKILL_DAYS`, `LIFT_GROUPS` | ממולאות בכל הטמעה — `program.md §3` |
 | session helpers · program text · celebration · lift PR check · level pills | עזרי סשן, טקסט התוכנית (`planEl`, שורות `L1 =`), קונפטי, בדיקת שיא, הרמה כשלב 1 | |
 | "בפעם הקודמת עשית…" · "הורד את הנתונים שלי" · set fill | ההשוואה מול עצמך, ייצוא CSV, מילוי סטים | |
 | **BLOCK 2 program** | `blankWeek`, `programWeek1()..programWeek8()` | **תוכן האימונים.** `/embed-week` כותב כאן |

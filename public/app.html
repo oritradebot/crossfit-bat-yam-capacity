@@ -2354,6 +2354,36 @@ class Component extends DCLogic {
   };
   pilotKey() { return this.state.selWeek + '_' + this.state.selDay; }
   perSetCount() { return this.state.activeSession==='alt' ? 0 : (this.PER_SET_LIFT[this.pilotKey()] || 0); }
+  // 29/09, per Ori ("להפריד משקלים של DB SNATCH ושל DB BENCH PRESS - ולכל אחד תעשה 4 קוביות", and "לא צריך
+  // לרשום מספר חזרות זה קבוע על 8"): a LIFT that alternates two movements logs each one in its own row of
+  // weight boxes, at the plan's fixed reps — no reps field. The sets are numbered straight through
+  // (group 1 = s1..s4, group 2 = s5..s8), so no new log field; log.weight still mirrors the heaviest box
+  // for the save gate, while the records read every group as its own movement (liftEntries).
+  // Keyed 'weekIdx_dayIdx' like every map here (main session only), resolved at render — no sync impact.
+  LIFT_GROUPS = this.IS_DEMO ? {} : {
+    // W4 Tue · Every 75 s x 8, alternate: 8 heavy DB snatches / heavy bench presses — 8 reps each (Ori)
+    '3_2': { reps: '8', groups: [['DB Snatch', 4], ['DB Bench Press', 4]] }
+  };
+  liftGroupsAt(key, alt) { return (!alt && key && this.LIFT_GROUPS[key]) || null; }
+  // What a session's LIFT gives the records: one { name, weight, reps } — or, on a LIFT_GROUPS day,
+  // one per group with the heaviest box of that group's sets.
+  liftEntries(x, key, alt) {
+    const L = (x && x.lift && x.lift.log) || {};
+    const g = this.liftGroupsAt(key, alt);
+    if (!g) return [{ name: (x && x.lift && x.lift.movement) || '', weight: parseFloat(L.weight), reps: L.reps || '' }];
+    let from = 0;
+    return g.groups.map(([name, n]) => {
+      let mx = 0;
+      for (let i = from+1; i <= from+n; i++) { const v = parseFloat(L['s'+i]); if (v > mx) mx = v; }
+      from += n;
+      return { name, weight: mx, reps: g.reps };
+    });
+  }
+  // Summary text of a LIFT_GROUPS day ('' on any other day, or before a box is filled).
+  liftGroupText(x, key, alt) {
+    if (!this.liftGroupsAt(key, alt)) return '';
+    return this.liftEntries(x, key, alt).filter(e => e.weight > 0).map(e => e.name + ' ' + e.weight + 'kg × ' + e.reps).join(' · ');
+  }
   // v3 (07/09, Ori: "קפדני בכל מקום"): every main-session metcon with two or
   // more named movements logs a result per movement, and the overall result
   // opens only once all of them are in — the W4/W5 pilot rule, everywhere.
@@ -2487,7 +2517,7 @@ class Component extends DCLogic {
     for (let i = 0; i < 56; i++) {
       if (i === exceptGi) continue;
       const d = this.state.data[Math.floor(i/7)].days[i%7];
-      for (const x of [d, d.alt]) { if (!x || !x.lift || !x.lift.log) continue; if (this.normName(x.lift.movement, true) !== key) continue; const w = parseFloat(x.lift.log.weight); if (w > best) best = w; }
+      for (const x of [d, d.alt]) { if (!x) continue; for (const le of this.liftEntries(x, Math.floor(i/7)+'_'+(i%7), x === d.alt)) { if (le.weight > best && this.normName(le.name, true) === key) best = le.weight; } }
     }
     return best;
   }
@@ -2500,27 +2530,31 @@ class Component extends DCLogic {
   flushLiftPR() { const gi = this._prArmed; if (gi == null) return; this._prArmed = null; this.checkLiftPR(gi); }
   checkLiftPR(gi) {
     const d = this.state.data[Math.floor(gi/7)].days[gi%7];
-    const x = (this.state.activeSession==='alt' && d.alt) ? d.alt : d;
-    const w = parseFloat(x.lift && x.lift.log && x.lift.log.weight);
-    const move = ((x.lift && x.lift.movement) || '').split('—')[0].trim();
-    if (!(w > 0) || !move) return;
-    // The record to beat is the block's best OR the one carried over from an
-    // earlier block (profiles.prs) — whichever is heavier.
-    const blockBest = this.bestWeightFor(x.lift.movement, gi);
-    const pv = this.prevBestFor(x.lift.movement);
-    const best = Math.max(blockBest, pv ? pv.best : 0);
-    if (best > 0 && w <= best) return;
-    // One card per workout: on a per-set day EVERY set blurs, so a climbing
-    // day would otherwise fire a card per set.
-    this._prSeen = this._prSeen || {};
-    const k = gi + ':' + (this.state.activeSession === 'alt' ? 'a' : 'm');
-    if (this._prSeen[k]) return; this._prSeen[k] = 1;
-    // 11/09 (Ori): nothing to compare against — week 1 of a block, or a movement
-    // never logged — is a FIRST record, not silence. Before this, a new athlete
-    // got no card at all for the whole first week (every movement is new).
-    if (!(best > 0)) return this.celebrate('שיא ראשון! 🏆', move + ' · ' + w + ' ק"ג — הבסיס שלך בתנועה הזאת');
-    const prevTxt = (pv && pv.best >= blockBest) ? (pv.best + ' · ' + this.blockLabel(pv.block)) : String(best);
-    this.celebrate('שיא חדש! 🏆', move + ' · ' + w + ' ק"ג (הקודם: ' + prevTxt + ')');
+    const alt = this.state.activeSession==='alt' && !!d.alt;
+    const x = alt ? d.alt : d;
+    // A LIFT_GROUPS day (29/09) has one entry per movement, each its own record.
+    for (const le of this.liftEntries(x, Math.floor(gi/7)+'_'+(gi%7), alt)) {
+      const w = le.weight;
+      const move = String(le.name || '').split('—')[0].trim();
+      if (!(w > 0) || !move) continue;
+      // The record to beat is the block's best OR the one carried over from an
+      // earlier block (profiles.prs) — whichever is heavier.
+      const blockBest = this.bestWeightFor(le.name, gi);
+      const pv = this.prevBestFor(le.name);
+      const best = Math.max(blockBest, pv ? pv.best : 0);
+      if (best > 0 && w <= best) continue;
+      // One card per workout (per movement): on a per-set day EVERY set blurs,
+      // so a climbing day would otherwise fire a card per set.
+      this._prSeen = this._prSeen || {};
+      const k = gi + ':' + (this.state.activeSession === 'alt' ? 'a' : 'm') + ':' + this.normName(move, true);
+      if (this._prSeen[k]) continue; this._prSeen[k] = 1;
+      // 11/09 (Ori): nothing to compare against — week 1 of a block, or a movement
+      // never logged — is a FIRST record, not silence. Before this, a new athlete
+      // got no card at all for the whole first week (every movement is new).
+      if (!(best > 0)) return this.celebrate('שיא ראשון! 🏆', move + ' · ' + w + ' ק"ג — הבסיס שלך בתנועה הזאת');
+      const prevTxt = (pv && pv.best >= blockBest) ? (pv.best + ' · ' + this.blockLabel(pv.block)) : String(best);
+      return this.celebrate('שיא חדש! 🏆', move + ' · ' + w + ' ק"ג (הקודם: ' + prevTxt + ')');
+    }
   }
   // ---- level pills — level is step 1 of result entry (levelPills, pickLevel, planLevels, lastLevel) ----
   // Level the athlete worked at, saved on the SESSION (day.level / alt.level)
@@ -2643,8 +2677,10 @@ class Component extends DCLogic {
     for (let i = gi-1; i >= 0; i--) {
       const d = this.state.data[Math.floor(i/7)].days[i%7];
       for (const x of [d, d.alt]) {
-        if (!x || !x.lift || !x.lift.log || !x.lift.log.weight) continue;
-        if (this.normName(x.lift.movement, true) === key) return { i, weight: parseFloat(x.lift.log.weight), reps: x.lift.log.reps || '', level: x.level || '' };
+        if (!x) continue;
+        for (const le of this.liftEntries(x, Math.floor(i/7)+'_'+(i%7), x === d.alt)) {
+          if (le.weight > 0 && this.normName(le.name, true) === key) return { i, weight: le.weight, reps: le.reps, level: x.level || '' };
+        }
       }
     }
     return null;
@@ -2729,16 +2765,19 @@ class Component extends DCLogic {
   // ---- set fill + config lookup (fillAllSets, metconCfg) ----------------------------------------
   // Per-set lift: one tap copies the first weight typed into every set — then
   // only the sets that differ get corrected (v3, per Ori).
-  fillAllSets(n) {
+  // start = sets before this row (a LIFT_GROUPS day fills one movement's row).
+  fillAllSets(n, start) {
+    start = start || 0;
     const d = structuredClone(this.state.data);
     const dc = d[this.state.selWeek].days[this.state.selDay];
     const t = (this.state.activeSession==='alt' && dc.alt) ? dc.alt : dc;
     const L = t.lift.log || (t.lift.log = { weight:'', reps:'', note:'' });
     let v = '';
-    for (let i=1; i<=n && !v; i++) v = String(L['s'+i] || '').trim();
+    for (let i=start+1; i<=start+n && !v; i++) v = String(L['s'+i] || '').trim();
     if (!v) return;
-    for (let i=1; i<=n; i++) L['s'+i] = v;
-    const mx = parseFloat(v);
+    for (let i=start+1; i<=start+n; i++) L['s'+i] = v;
+    let mx = 0;
+    Object.keys(L).forEach(k=>{ if (/^s\d+$/.test(k)) { const x = parseFloat(L[k]); if (x > mx) mx = x; } });
     L.weight = mx > 0 ? String(mx) : '';
     this.save(d); this.setState({ data:d });
   }
@@ -3871,7 +3910,8 @@ class Component extends DCLogic {
   // ---- log bars: lift sets, metcon boxes, extras (liftBar, metconBar, extraBar, logSummaryText) ----
   liftBar(lift, nSets) {
     const L = lift.log || {};
-    if (!nSets) return React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
+    const grp = this.liftGroupsAt(this.pilotKey(), this.state.activeSession==='alt');
+    if (!nSets && !grp) return React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
       this.unit(this.numEl('lift.log.weight', L.weight, '0'), 'kg / משקל'),
       React.createElement('span', { style:{ fontWeight:700, color:'var(--muted)', paddingBottom:'10px' } }, '×'),
       this.unit(this.numEl('lift.log.reps', L.reps, '0'), 'reps / חזרות'),
@@ -3879,28 +3919,41 @@ class Component extends DCLogic {
     );
     // Per-set pilot: one weight input per set. The heaviest set is mirrored
     // into log.weight (see onLiftSetEdit) — PRs, board and the save gate keep
-    // reading the same field they always did.
-    const cells = [];
-    for (let i=1; i<=nSets; i++) cells.push(this.unit(React.createElement('input', {
-      dir:'auto', inputMode:'decimal', value: L['s'+i] || '', placeholder:'0',
-      onChange:(e)=>this.onLiftSetEdit(i, e.target.value),
-      onBlur:()=>this.flushLiftPR(),
-      style:{ width:'100%', border:'1px solid rgba(35,64,154,.35)', borderRadius:'10px', padding:'10px 6px', fontSize:'15px', background:'var(--log)', color:'var(--ink)', outline:'none', fontWeight:600, textAlign:'center' }
-    }), 'SET '+i));
-    let firstVal = '';
-    for (let i=1; i<=nSets && !firstVal; i++) firstVal = String(L['s'+i] || '').trim();
-    const allSame = !!firstVal && Array.from({length:nSets}, (_,i)=>String(L['s'+(i+1)]||'').trim()).every(v=>v===firstVal);
-    return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap:'8px' } },
-      React.createElement('div', { dir:'ltr', style:{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(72px,1fr))', gap:'8px' } }, cells),
-      React.createElement('div', { dir:'rtl', style:{ display:'flex', gap:'8px', alignItems:'center', flexWrap:'wrap' } },
-        React.createElement('button', { onClick:()=>this.fillAllSets(nSets), disabled: !firstVal || allSame,
-          style:{ border:'1.5px solid '+((firstVal && !allSame) ? 'var(--blue)' : 'var(--line)'), background:'var(--card)', color:(firstVal && !allSame) ? 'var(--blue)' : 'var(--faint)', borderRadius:'999px', padding:'7px 14px', fontWeight:700, fontSize:'12.5px', cursor:(firstVal && !allSame) ? 'pointer' : 'default', fontFamily:'inherit' } },
-          '⇉ אותו משקל לכל הסטים' + (firstVal ? (' (' + firstVal + ')') : '')),
-        React.createElement('span', { style:{ fontSize:'11.5px', color:'var(--muted)' } }, 'ואז מתקנים רק את הסטים ששונים')),
-      React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: L.weight ? 'var(--greenink)' : 'var(--muted)' } },
-        L.weight ? ('🏆 הסט הכבד ביותר — ' + L.weight + 'kg — נרשם לטבלת השיאים') : 'משקל (ק״ג) לכל סט — גם אם עבדתם עם אותו משקל בכל הסטים'),
+    // reading the same field they always did. A LIFT_GROUPS day gets one row
+    // per movement (its name, its own fill button) and no reps field.
+    let from = 0;
+    const rows = (grp ? grp.groups : [['', nSets]]).map(([name, n], r) => {
+      const start = from; from += n;
+      const cells = [];
+      for (let i=start+1; i<=start+n; i++) cells.push(this.unit(React.createElement('input', {
+        dir:'auto', inputMode:'decimal', value: L['s'+i] || '', placeholder:'0',
+        onChange:(e)=>this.onLiftSetEdit(i, e.target.value),
+        onBlur:()=>this.flushLiftPR(),
+        style:{ width:'100%', border:'1px solid rgba(35,64,154,.35)', borderRadius:'10px', padding:'10px 6px', fontSize:'15px', background:'var(--log)', color:'var(--ink)', outline:'none', fontWeight:600, textAlign:'center' }
+      }), 'SET '+(i-start)));
+      let firstVal = '';
+      for (let i=start+1; i<=start+n && !firstVal; i++) firstVal = String(L['s'+i] || '').trim();
+      const allSame = !!firstVal && Array.from({length:n}, (_,i)=>String(L['s'+(start+i+1)]||'').trim()).every(v=>v===firstVal);
+      return React.createElement('div', { key:r, style:{ display:'flex', flexDirection:'column', gap:'8px' } },
+        name ? React.createElement('div', { dir:'ltr', style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'13px', letterSpacing:'.05em', color:'var(--navy)' } }, name.toUpperCase() + ' · ' + grp.reps + ' REPS') : null,
+        React.createElement('div', { dir:'ltr', style:{ display:'grid', gridTemplateColumns: grp ? ('repeat(' + n + ',minmax(0,1fr))') : 'repeat(auto-fill,minmax(72px,1fr))', gap:'8px' } }, cells),
+        React.createElement('div', { dir:'rtl', style:{ display:'flex', gap:'8px', alignItems:'center', flexWrap:'wrap' } },
+          React.createElement('button', { onClick:()=>this.fillAllSets(n, start), disabled: !firstVal || allSame,
+            style:{ border:'1.5px solid '+((firstVal && !allSame) ? 'var(--blue)' : 'var(--line)'), background:'var(--card)', color:(firstVal && !allSame) ? 'var(--blue)' : 'var(--faint)', borderRadius:'999px', padding:'7px 14px', fontWeight:700, fontSize:'12.5px', cursor:(firstVal && !allSame) ? 'pointer' : 'default', fontFamily:'inherit' } },
+            '⇉ אותו משקל לכל הסטים' + (firstVal ? (' (' + firstVal + ')') : '')),
+          React.createElement('span', { style:{ fontSize:'11.5px', color:'var(--muted)' } }, 'ואז מתקנים רק את הסטים ששונים'))
+      );
+    });
+    const grpBest = grp ? this.liftGroupText({ lift }, this.pilotKey(), false) : '';
+    return React.createElement('div', { style:{ display:'flex', flexDirection:'column', gap: grp ? '14px' : '8px' } },
+      rows,
+      grp
+        ? React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: grpBest ? 'var(--greenink)' : 'var(--muted)' } },
+            grpBest ? ('🏆 הסט הכבד ביותר — ' + grpBest + ' — נרשם לטבלת השיאים') : ('משקל (ק״ג) לכל סט · ' + grp.reps + ' חזרות בכל סט, קבוע — אין צורך לרשום'))
+        : React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: L.weight ? 'var(--greenink)' : 'var(--muted)' } },
+            L.weight ? ('🏆 הסט הכבד ביותר — ' + L.weight + 'kg — נרשם לטבלת השיאים') : 'משקל (ק״ג) לכל סט — גם אם עבדתם עם אותו משקל בכל הסטים'),
       React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
-        this.unit(this.numEl('lift.log.reps', L.reps, '0'), 'חזרות בסט הכבד'),
+        grp ? null : this.unit(this.numEl('lift.log.reps', L.reps, '0'), 'חזרות בסט הכבד'),
         this.unit(this.txtEl('lift.log.note', L.note, 'הערה'), 'note')
       )
     );
@@ -4042,14 +4095,27 @@ class Component extends DCLogic {
   // key ('wi_di') + alt let a ROUND_REPS day add its level-based rep total.
   logSummaryText(day, key, alt) {
     const parts = [];
-    const L = (day.lift&&day.lift.log)||{}; if (L.weight||L.reps) parts.push([L.weight&&(L.weight+'kg'), L.reps&&(L.reps+' reps')].filter(Boolean).join(' × '));
-    const M = (day.metcon&&day.metcon.log)||{};
-    if (M.mode==='time' && M.time) parts.push(M.time);
-    else if ((M.rounds||M.reps)) {
-      const rt = key ? this.roundTotal(key, day, (alt?'alt.':'')+'metcon') : null;
-      parts.push([M.rounds&&(M.rounds+' rds'), M.reps&&(M.reps+' reps')].filter(Boolean).join(' + ') + (rt ? (' = ' + rt.total + ' reps') : ''));
-    }
+    const L = (day.lift&&day.lift.log)||{};
+    const lg = key ? this.liftGroupText(day, key, alt) : '';
+    if (lg) parts.push(lg);
+    else if (L.weight||L.reps) parts.push([L.weight&&(L.weight+'kg'), L.reps&&(L.reps+' reps')].filter(Boolean).join(' × '));
+    [['metcon', day.metcon], ['metcon2', day.metcon2]].forEach(([b, m])=>{ const r = this.shareRes(m, key, day, (alt?'alt.':'')+b); if (r) parts.push(r); });
     return parts.join(' · ');
+  }
+  // One metcon's result for the share card and the summaries (29/09: METCON B
+  // was missing from both). The fixed resultMode picks the field, so an
+  // amount day shows its number; rounds + reps get the level total where one
+  // applies. key = 'wi_di' (optional), base carries the 'alt.' prefix.
+  shareRes(m, key, sess, base) {
+    const M = (m && m.log) || {};
+    const mode = (m && m.resultMode) || M.mode || 'time';
+    if (mode === 'time' && M.time) return M.time;
+    if (mode === 'amount' && M.amount) return String(M.amount);
+    if (M.rounds || M.reps) {
+      const rt = key ? this.roundTotal(key, sess, base) : null;
+      return [M.rounds&&(M.rounds+' rds'), M.reps&&(M.reps+' reps')].filter(Boolean).join(' + ') + (rt ? (' = ' + rt.total + ' reps') : '');
+    }
+    return '';
   }
 
   // Days saved before the split may still carry rating='pr' (if the device
@@ -4082,15 +4148,18 @@ class Component extends DCLogic {
             const res = this.logSummaryText(dd, w+'_'+d, dd === base.alt) || L.note || (dd.metcon && dd.metcon.log && dd.metcon.log.note) || '';
             out.flags.push({ key: this.normName(move, true), move, res, wi:w, di:d, week:w+1, block, date:this.dateStr(this.dateAt(gi)) });
           }
-          const rawName = String(lift.movement || '').split('—')[0].trim();
-          const key = this.normName(lift.movement, true);
-          const wt = parseFloat(L.weight);
-          if (!key || !(wt > 0)) return;
-          const e = out.lifts[key] || (out.lifts[key] = { key, move:rawName, best:0, reps:'', count:0, wi:w, di:d, week:w+1, block, date:'', history:[] });
-          e.count++;
-          // Chronological weight log per movement — feeds the progression chart modal.
-          e.history.push({ gi, wt, week:w+1, date:this.dateStr(this.dateAt(gi)), reps:(L.reps||'') });
-          if (wt > e.best) { e.best = wt; e.move = rawName; e.wi = w; e.di = d; e.week = w+1; e.date = this.dateStr(this.dateAt(gi)); e.reps = (L.reps||''); }
+          // One entry per LIFT — or per movement on a LIFT_GROUPS day (29/09).
+          this.liftEntries(dd, w+'_'+d, dd === base.alt).forEach(le=>{
+            const rawName = String(le.name || '').split('—')[0].trim();
+            const key = this.normName(le.name, true);
+            const wt = le.weight;
+            if (!key || !(wt > 0)) return;
+            const e = out.lifts[key] || (out.lifts[key] = { key, move:rawName, best:0, reps:'', count:0, wi:w, di:d, week:w+1, block, date:'', history:[] });
+            e.count++;
+            // Chronological weight log per movement — feeds the progression chart modal.
+            e.history.push({ gi, wt, week:w+1, date:this.dateStr(this.dateAt(gi)), reps:(le.reps||'') });
+            if (wt > e.best) { e.best = wt; e.move = rawName; e.wi = w; e.di = d; e.week = w+1; e.date = this.dateStr(this.dateAt(gi)); e.reps = (le.reps||''); }
+          });
         });
       }
     }
@@ -4440,7 +4509,7 @@ class Component extends DCLogic {
     const extraHas = exPresent.length > 0 && exLogged === exPresent.length;
     const liftOpen = isOpen('lift', liftHas), metconOpen = isOpen('metcon', metHas), metcon2Open = isOpen('metcon2', met2Has), extraOpen = isOpen('extra', extraHas);
     const L0 = day.lift.log || {};
-    const liftSum = liftHas ? (L0.weight + ' ק"ג' + (L0.reps ? (' × ' + L0.reps) : '')) : '';
+    const liftSum = liftHas ? (this.liftGroupText(day, selWeek+'_'+selDay, asAlt) || (L0.weight + ' ק"ג' + (L0.reps ? (' × ' + L0.reps) : ''))) : '';
     const metSum = metHas ? this.resultTextAt(selWeek+'_'+selDay, day, (asAlt?'alt.':'')+'metcon', met) : '';
     const met2Sum = met2Has ? this.resultTextAt(selWeek+'_'+selDay, day, (asAlt?'alt.':'')+'metcon2', met2) : '';
     const extraSum = exPresent.length ? (exLogged + '/' + exPresent.length + ' תועדו') : '';
@@ -5042,8 +5111,9 @@ class Component extends DCLogic {
       const gi=wi*7+di;
       const rows=[];
       if (day) {
-        if (day.lift&&day.lift.movement){ const L=day.lift.log||{}; rows.push({tag: this.isSkillKey(wi+'_'+di) ? 'SKILL' : 'LIFT', name:day.lift.movement, res:[L.weight&&(L.weight+'kg'),L.reps&&('× '+L.reps)].filter(Boolean).join(' ')}); }
-        if (day.metcon&&day.metcon.name){ const M=day.metcon.log||{}; let r=''; if(M.mode==='time'&&M.time)r=M.time; else if(M.rounds||M.reps)r=[M.rounds&&(M.rounds+' rds'),M.reps&&(M.reps+' reps')].filter(Boolean).join(' + '); else if(M.amount)r=M.amount; rows.push({tag:'METCON', name:day.metcon.name, res:r}); }
+        if (day.lift&&day.lift.movement){ const L=day.lift.log||{}; rows.push({tag: this.isSkillKey(wi+'_'+di) ? 'SKILL' : 'LIFT', name:day.lift.movement, res:this.liftGroupText(day, wi+'_'+di, false) || [L.weight&&(L.weight+'kg'),L.reps&&('× '+L.reps)].filter(Boolean).join(' ')}); }
+        if (day.metcon&&day.metcon.name) rows.push({tag:'METCON', name:day.metcon.name, res:this.shareRes(day.metcon, wi+'_'+di, day, 'metcon')});
+        if (day.metcon2&&day.metcon2.name) rows.push({tag:'METCON B', name:day.metcon2.name, res:this.shareRes(day.metcon2, wi+'_'+di, day, 'metcon2')});
         (day.extras||[]).forEach(e=>{ if(e&&e.name) rows.push({tag:'EXTRA', name:e.name, res:''}); });
       }
       const rm=day?this.ratingMeta(day.rating):null;
