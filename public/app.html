@@ -2215,7 +2215,7 @@ class Component extends DCLogic {
   }
 
   // ---- PROGRAM_VERSION (bump on every embed) + IS_DEMO + DEMO_MAPS ------------------------------
-  PROGRAM_VERSION = 37;
+  PROGRAM_VERSION = 38;
   // /demo runs block 1 program (demoWeekN) with its own per-day config maps
   // below; the live maps under it belong to the CURRENT block and start
   // empty - every /embed-week adds that week entries (program.md section 3).
@@ -2263,8 +2263,9 @@ class Component extends DCLogic {
     // W3 (21/09): Sun deadlift in the skill EMOM (4 rounds) · Tue power clean build-to-heavy 3 = 8 open boxes · Wed 6-set snatch complex ·
     // Thu 4 x 10 squats + the bonus 5th set (Ori: a 5th box, optional — the heaviest set is the weekly test) · Fri 4 + 4 squat clean + 2 jerks · Sat 5 x 6 Pendlay rows
     '2_0': 4, '2_2': 8, '2_3': 6, '2_4': 5, '2_5': 8, '2_6': 5,
-    // W4 (27/09): Sun 3 x 10 squats · Mon 6-set clean complex · Thu 4 x 2+2 T&G power cleans. Tue (DB snatch / bench) and Wed (handstand skill) — no entry
-    '3_0': 3, '3_1': 6, '3_4': 4
+    // W4 (27/09): Sun 3 x 10 squats · Mon 6-set clean complex · Thu 4 x 2+2 T&G power cleans. Tue (DB snatch / bench) and Wed (handstand skill) — no entry ·
+    // Fri (01/10) 8-set snatch + 2 OHS complex
+    '3_0': 3, '3_1': 6, '3_4': 4, '3_5': 8
   };
   // PER_MOVE_METCON: these metcon bases log a result per movement
   // (log.mv1..mvN) and the board-score input stays locked until every
@@ -2319,9 +2320,11 @@ class Component extends DCLogic {
     '2_0': { 'metcon':'סך הסטפ-אפים' },
     '2_4': { 'metcon':'סך המכשיר + C2B + WB' },
     '2_5': { 'metcon':'ממוצע חזרות לדקה' },
-    // W4 (27/09): Sun total T2B · Tue Score 2 — the 8:00 run's meters
+    // W4 (27/09): Sun total T2B · Tue Score 2 — the 8:00 run's meters · Fri (01/10) EMOMania with no written score —
+    // the level sets the WB / sit ups, so the result is the squat snatch weight (Ori)
     '3_0': { 'metcon':'סך ה-T2B' },
-    '3_2': { 'metcon2':'סך המטרים בריצה' }
+    '3_2': { 'metcon2':'סך המטרים בריצה' },
+    '3_5': { 'metcon':'משקל הסקוואט סנאצ׳ים (ק״ג)' }
   };
   // TIME_SPLITS (08/09, per Ori: "3 קוביות, אחת לכל מקצה, שיעזרו לסכום את סה"כ
   // זמן החתירה"): a time-mode metcon whose score is the sum of several
@@ -2403,8 +2406,8 @@ class Component extends DCLogic {
     // W3 (21/09): Sun (total step ups), Tue (a time per set), Wed (rounds + reps, total via ROUND_REPS), Fri (EMOMania average).
     // Thu writes only an L1 line — no level step there (planLevels), so it is not a level day
     '2_0': ['metcon'], '2_2': ['metcon'], '2_3': ['metcon'], '2_5': ['metcon'],
-    // W4 (27/09): Sun (total T2B), Mon and Thu (rounds + reps, total via ROUND_REPS)
-    '3_0': ['metcon'], '3_1': ['metcon'], '3_4': ['metcon']
+    // W4 (27/09): Sun (total T2B), Mon and Thu (rounds + reps, total via ROUND_REPS), Fri (01/10, squat snatch weight)
+    '3_0': ['metcon'], '3_1': ['metcon'], '3_4': ['metcon'], '3_5': ['metcon']
   };
   // 10/09, per Ori ("תשנה ספציפית ביום רביעי את המילה LIFT ל-SKILL ואל תדרוש באותו יום חובה להזנה של החלק
   // הזה … אך ורק לרביעי"): days whose FIRST slot is a skill, not a lift. The block header reads SKILL
@@ -2423,7 +2426,8 @@ class Component extends DCLogic {
   // map here, resolved at render — no state field, no sync impact.
   HOLIDAYS = this.IS_DEMO ? {} : {
     '0_6': { title: 'חג שמח', icon: '🍎🍯' },   // W1 Sat 12/09/2026 — Rosh Hashanah, no class
-    '2_1': { title: 'גמר חתימה טובה וצום קל', icon: '🕊️📖✍️' }   // W3 Mon 21/09/2026 — Yom Kippur, no class (Ori, 21/09)
+    '2_1': { title: 'גמר חתימה טובה וצום קל', icon: '🕊️📖✍️' },   // W3 Mon 21/09/2026 — Yom Kippur, no class (Ori, 21/09)
+    '3_6': { title: 'חג שמח', icon: '📜💃' }   // W4 Sat 03/10/2026 — Simchat Torah, no class (Ori, 01/10)
   };
   holidayAt(key) { return (key && this.HOLIDAYS[key]) || null; }
   // ---- session helpers (perMoveOn, curSession) --------------------------------------------------
@@ -2963,8 +2967,10 @@ class Component extends DCLogic {
   }
   programWeek4() {
     // WEEK 4 · 27/09-03/10/2026 (block 2) — from Ori's screenshots 27/09 (five files, WhatsApp names —
-    // the days read from the content: Tuesday says "Big Tuesday"). Sunday-Thursday only for now;
-    // Friday and Saturday stay explicitly blank (COMING SOON) until Ori sends them.
+    // the days read from the content: Tuesday says "Big Tuesday"). Sunday-Thursday embedded 27/09;
+    // Friday 02/10 from Ori's screenshot 01/10.
+    // Saturday 03/10 = Simchat Torah, no class (Ori, 01/10): day 6 stays explicitly blank and
+    // HOLIDAYS['3_6'] shows the greeting instead of COMING SOON.
     // No endurance session this week: Sunday's alt stays explicitly blank.
     // Sunday's back squat is the weekly tens test (its default day, Ori 27/09).
     const w = this.blankWeek();
@@ -3004,6 +3010,13 @@ class Component extends DCLogic {
       metcon: { name:'AMRAP 10:00 — Bike / DU / C&J', scheme:'AMRAP 10:00', score:'Total reps', resultMode:'rounds', note:'Score — total reps\nGoal — light and unbroken, push the calories\n\nL1 = 30/25kg, 40 singles\nL2 = 30/25kg, 24 DU\nL3 = 40/30kg, 24 DU\n\nהזינו כמה סבבים (+חזרות) הושלמו (סבב = 60 / 44 / 44 חזרות לפי הרמה לגברים, 58 / 42 / 42 לנשים).', movements:[['Cal bike (row is 2nd choice)','8/6'],['Double unders','24 · L1 = 40 singles'],['C&Js','12']] },
       metcon2: {},
       extras: [['Capacity Extra','Push Press\nEvery 2:00 for 5 sets:\n3 reps, building\n\nDip vertical, drive through the whole foot. No press-out.\n\ninto\n\nEvery 90 seconds for 6 sets (total), alternate:\n- 8 Tall-kneeling DB shoulder press (each)\n- 8 Single leg RDL (each)'],['','']]
+    };
+    w[5] = {
+      brief: 'יום שלם של סנאצים. הזדמנות לקחת את ההנפה שלכם לפחות ס״מ קדימה.',
+      lift: { movement:'Snatch + 2 Overhead Squats', planned:'Every 90 seconds for 8 sets:\nSnatch + 2 Overhead squats\n\nStart at 65-70% of snatch, build to 8-8.5RPE' },
+      metcon: { name:'Friday EMOMania', scheme:'EMOM 12:00', score:'Squat snatch weight (kg)', resultMode:'amount', note:'EMOM 12:00:\nMinute 1 — Wallballs\nMinute 2 — Sit ups or V-Ups\nMinute 3 — 3 Squat snatches\n\nL1 = 10-12 WB & sit ups\nL2 = 14 WB & sit ups\nL3 = 16 WB & sit ups (or up to 20)\n\nWeight ± 75-80% of today\'s max complex.', movements:[['Wallballs','minute 1'],['Sit ups or V-Ups','minute 2'],['Squat snatches','minute 3 · 3 reps']] },
+      metcon2: {},
+      extras: [['Capacity Extra','AMRAP 10:00:\n10/7 Cal ski (low damper)\n2 Bar muscle ups\n\nAdd 2 MU each round\n(can be banded)\n\nScore — total reps\n\ninto\n\n3-4 rounds, no rush:\n6+6 Single-arm KB front rack reverse lunges\n20m Overhead DB carry (each arm)'],['','']]
     };
     return w;
   }
