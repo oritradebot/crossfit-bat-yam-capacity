@@ -2215,7 +2215,7 @@ class Component extends DCLogic {
   }
 
   // ---- PROGRAM_VERSION (bump on every embed) + IS_DEMO + DEMO_MAPS ------------------------------
-  PROGRAM_VERSION = 38;
+  PROGRAM_VERSION = 39;
   // /demo runs block 1 program (demoWeekN) with its own per-day config maps
   // below; the live maps under it belong to the CURRENT block and start
   // empty - every /embed-week adds that week entries (program.md section 3).
@@ -2289,7 +2289,9 @@ class Component extends DCLogic {
     '2_6': { 'metcon': ['D-ball (kg)'] },
     // W4 (27/09): the two days without level lines — Tue Score 1 the KB, Wed the sled and the D-ball (Ori); nothing for the box / rope / runs
     '3_2': { 'metcon': ['KB swings (kg)'] },
-    '3_3': { 'metcon': ['Sled push (kg)','D-ball (kg)'] }
+    '3_3': { 'metcon': ['Sled push (kg)','D-ball (kg)'] },
+    // Sat (02/10, pairs, no levels): the bench and the devil press, each its own weight (Ori); nothing for the run / burpees
+    '3_6': { 'metcon': ['Bench presses (kg)','Devil press (kg)'] }
   };
   // PER_MOVE_SCORE: on these days the board score (log.amount) MIRRORS box
   // #box once ALL boxes are filled — the LIFT heaviest-set trick — so there
@@ -2363,9 +2365,12 @@ class Component extends DCLogic {
   // (group 1 = s1..s4, group 2 = s5..s8), so no new log field; log.weight still mirrors the heaviest box
   // for the save gate, while the records read every group as its own movement (liftEntries).
   // Keyed 'weekIdx_dayIdx' like every map here (main session only), resolved at render — no sync impact.
+  // A group may carry its own reps as a third item (02/10, W4 Sat: 8-10 dips / 8+8 rows); else the day's reps.
   LIFT_GROUPS = this.IS_DEMO ? {} : {
     // W4 Tue · Every 75 s x 8, alternate: 8 heavy DB snatches / heavy bench presses — 8 reps each (Ori)
-    '3_2': { reps: '8', groups: [['DB Snatch', 4], ['DB Bench Press', 4]] }
+    '3_2': { reps: '8', groups: [['DB Snatch', 4], ['DB Bench Press', 4]] },
+    // W4 Sat (02/10) · Every 1:30 x 8, alternate: 8-10 ring dips / 8+8 chest supported DB rows — 4 boxes each (Ori)
+    '3_6': { groups: [['Ring Dips', 4, '8-10'], ['Chest Supported DB Rows', 4, '8+8']] }
   };
   liftGroupsAt(key, alt) { return (!alt && key && this.LIFT_GROUPS[key]) || null; }
   // What a session's LIFT gives the records: one { name, weight, reps } — or, on a LIFT_GROUPS day,
@@ -2375,11 +2380,11 @@ class Component extends DCLogic {
     const g = this.liftGroupsAt(key, alt);
     if (!g) return [{ name: (x && x.lift && x.lift.movement) || '', weight: parseFloat(L.weight), reps: L.reps || '' }];
     let from = 0;
-    return g.groups.map(([name, n]) => {
+    return g.groups.map(([name, n, reps]) => {
       let mx = 0;
       for (let i = from+1; i <= from+n; i++) { const v = parseFloat(L['s'+i]); if (v > mx) mx = v; }
       from += n;
-      return { name, weight: mx, reps: g.reps };
+      return { name, weight: mx, reps: reps || g.reps };
     });
   }
   // Summary text of a LIFT_GROUPS day ('' on any other day, or before a box is filled).
@@ -2426,8 +2431,8 @@ class Component extends DCLogic {
   // map here, resolved at render — no state field, no sync impact.
   HOLIDAYS = this.IS_DEMO ? {} : {
     '0_6': { title: 'חג שמח', icon: '🍎🍯' },   // W1 Sat 12/09/2026 — Rosh Hashanah, no class
-    '2_1': { title: 'גמר חתימה טובה וצום קל', icon: '🕊️📖✍️' },   // W3 Mon 21/09/2026 — Yom Kippur, no class (Ori, 21/09)
-    '3_6': { title: 'חג שמח', icon: '📜💃' }   // W4 Sat 03/10/2026 — Simchat Torah, no class (Ori, 01/10)
+    '2_1': { title: 'גמר חתימה טובה וצום קל', icon: '🕊️📖✍️' }   // W3 Mon 21/09/2026 — Yom Kippur, no class (Ori, 21/09)
+    // W4 Sat 03/10/2026 (Simchat Torah) was listed here 01/10 — Ori sent a class for it 02/10, so it is a normal day
   };
   holidayAt(key) { return (key && this.HOLIDAYS[key]) || null; }
   // ---- session helpers (perMoveOn, curSession) --------------------------------------------------
@@ -2969,8 +2974,8 @@ class Component extends DCLogic {
     // WEEK 4 · 27/09-03/10/2026 (block 2) — from Ori's screenshots 27/09 (five files, WhatsApp names —
     // the days read from the content: Tuesday says "Big Tuesday"). Sunday-Thursday embedded 27/09;
     // Friday 02/10 from Ori's screenshot 01/10.
-    // Saturday 03/10 = Simchat Torah, no class (Ori, 01/10): day 6 stays explicitly blank and
-    // HOLIDAYS['3_6'] shows the greeting instead of COMING SOON.
+    // Saturday 03/10 (Simchat Torah) from Ori's screenshot 02/10 — first set as a holiday with no class (01/10),
+    // the class replaces it.
     // No endurance session this week: Sunday's alt stays explicitly blank.
     // Sunday's back squat is the weekly tens test (its default day, Ori 27/09).
     const w = this.blankWeek();
@@ -3017,6 +3022,13 @@ class Component extends DCLogic {
       metcon: { name:'Friday EMOMania', scheme:'EMOM 12:00', score:'Squat snatch weight (kg)', resultMode:'amount', note:'EMOM 12:00:\nMinute 1 — Wallballs\nMinute 2 — Sit ups or V-Ups\nMinute 3 — 3 Squat snatches\n\nL1 = 10-12 WB & sit ups\nL2 = 14 WB & sit ups\nL3 = 16 WB & sit ups (or up to 20)\n\nWeight ± 75-80% of today\'s max complex.', movements:[['Wallballs','minute 1'],['Sit ups or V-Ups','minute 2'],['Squat snatches','minute 3 · 3 reps']] },
       metcon2: {},
       extras: [['Capacity Extra','AMRAP 10:00:\n10/7 Cal ski (low damper)\n2 Bar muscle ups\n\nAdd 2 MU each round\n(can be banded)\n\nScore — total reps\n\ninto\n\n3-4 rounds, no rush:\n6+6 Single-arm KB front rack reverse lunges\n20m Overhead DB carry (each arm)'],['','']]
+    };
+    w[6] = {
+      brief: 'שבת זוגית עם עבודה משותפת מחכה לנו - תביאו ספסל ובן זוג מהבית 😉',
+      lift: { movement:'Ring dips + Chest supported DB rows', planned:'Every 1:30 for 8 sets, alternate:\n- 8-10 Ring dips (weighted if you can, full range)\n- 8+8 Chest supported DB rows\n\nHeavy but clean on both.' },
+      metcon: { name:'AMRAP 20:00 (In pairs)', scheme:'AMRAP 20:00 · in pairs', score:'Rounds + reps', resultMode:'rounds', note:'הדאמבל מספיק כבד כדי להיות רלוונטי לסטים כאלה של בנץ׳, וגם מאתגר ליד אחת בדוויל פרס.\n\nהזינו כמה סבבים (+חזרות) הושלמו.', movements:[['Run (together)','100'],['Burpees over the Bench (split)','15'],['Bench presses (each)','12'],['Single arm Devil press (synced)','10']] },
+      metcon2: {},
+      extras: [['BY Extra','3 rounds, no rush:\n10+10 Hammer curls\n20-30s Side plank each side\n30s Arch hold'],['','']]
     };
     return w;
   }
@@ -3935,7 +3947,7 @@ class Component extends DCLogic {
     // reading the same field they always did. A LIFT_GROUPS day gets one row
     // per movement (its name, its own fill button) and no reps field.
     let from = 0;
-    const rows = (grp ? grp.groups : [['', nSets]]).map(([name, n], r) => {
+    const rows = (grp ? grp.groups : [['', nSets]]).map(([name, n, reps], r) => {
       const start = from; from += n;
       const cells = [];
       for (let i=start+1; i<=start+n; i++) cells.push(this.unit(React.createElement('input', {
@@ -3948,7 +3960,7 @@ class Component extends DCLogic {
       for (let i=start+1; i<=start+n && !firstVal; i++) firstVal = String(L['s'+i] || '').trim();
       const allSame = !!firstVal && Array.from({length:n}, (_,i)=>String(L['s'+(start+i+1)]||'').trim()).every(v=>v===firstVal);
       return React.createElement('div', { key:r, style:{ display:'flex', flexDirection:'column', gap:'8px' } },
-        name ? React.createElement('div', { dir:'ltr', style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'13px', letterSpacing:'.05em', color:'var(--navy)' } }, name.toUpperCase() + ' · ' + grp.reps + ' REPS') : null,
+        name ? React.createElement('div', { dir:'ltr', style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'13px', letterSpacing:'.05em', color:'var(--navy)' } }, name.toUpperCase() + ' · ' + (reps || grp.reps) + ' REPS') : null,
         React.createElement('div', { dir:'ltr', style:{ display:'grid', gridTemplateColumns: grp ? ('repeat(' + n + ',minmax(0,1fr))') : 'repeat(auto-fill,minmax(72px,1fr))', gap:'8px' } }, cells),
         React.createElement('div', { dir:'rtl', style:{ display:'flex', gap:'8px', alignItems:'center', flexWrap:'wrap' } },
           React.createElement('button', { onClick:()=>this.fillAllSets(n, start), disabled: !firstVal || allSame,
@@ -3962,7 +3974,7 @@ class Component extends DCLogic {
       rows,
       grp
         ? React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: grpBest ? 'var(--greenink)' : 'var(--muted)' } },
-            grpBest ? ('🏆 הסט הכבד ביותר — ' + grpBest + ' — נרשם לטבלת השיאים') : ('משקל (ק״ג) לכל סט · ' + grp.reps + ' חזרות בכל סט, קבוע — אין צורך לרשום'))
+            grpBest ? ('🏆 הסט הכבד ביותר — ' + grpBest + ' — נרשם לטבלת השיאים') : ('משקל (ק״ג) לכל סט · ' + (grp.reps ? (grp.reps + ' חזרות בכל סט, קבוע') : 'החזרות כתובות ליד כל תנועה') + ' — אין צורך לרשום'))
         : React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: L.weight ? 'var(--greenink)' : 'var(--muted)' } },
             L.weight ? ('🏆 הסט הכבד ביותר — ' + L.weight + 'kg — נרשם לטבלת השיאים') : 'משקל (ק״ג) לכל סט — גם אם עבדתם עם אותו משקל בכל הסטים'),
       React.createElement('div', { style:{ display:'flex', gap:'8px', alignItems:'flex-end', flexWrap:'wrap' } },
