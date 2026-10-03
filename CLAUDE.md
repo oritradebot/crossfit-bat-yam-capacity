@@ -97,7 +97,7 @@
   שרת משלך מ-`.claude/launch.json` (`capacity-static` … `-6`); `preview_start` מסרב לפורט של צ׳אט אחר.
 - **מצב dev (`?dev=1`) לא מריץ את `main()`** של boot.js — הנתיב האמיתי נבדק רק בפרודקשן. אחרי מחיקת משתנה ב-boot.js: grep על **כל** הקובץ (התיקון החם `fb` ab45b01).
 - **כלים במחשב הזה:** `gh` לא מותקן (אין PR מה-CLI). `node` לא מותקן (אין `node --check`). Python 3.14 כן.
-- **Bash tool:** ‏`$TMPDIR` ריק — כותבים סקריפטים לנתיב ה-scratchpad המפורש. heredoc עם גרש בודד לא מאוזן שובר את הכלי. Python שמדפיס עברית צריך `sys.stdout.reconfigure(encoding="utf-8")` (המסוף cp1255).
+- **Bash tool:** ‏`$TMPDIR` ריק — כותבים סקריפטים לנתיב ה-scratchpad המפורש. heredoc עם גרש בודד לא מאוזן שובר את הכלי, ו-`\\n` בתוך Python ב-heredoc הגיע כירידת שורה אמיתית ושבר את ה-JS (02/10) — סקריפט עריכה כותבים לקובץ ב-scratchpad (Write) ומריצים. Python שמדפיס עברית צריך `sys.stdout.reconfigure(encoding="utf-8")` (המסוף cp1255).
 
 ---
 

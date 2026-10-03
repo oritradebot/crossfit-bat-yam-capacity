@@ -630,7 +630,7 @@
       short: 'עשיריות בק סקוואט · כל שבוע',
       unit: 'ק"ג',
       betterWhen: 'higher',
-      weekly: { di: 0, src: 'lift.weight', byWeek: { 1: 4, 2: 4 } }   // W1 Sunday · W2 + W3 Thursday (Ori, 14/09 · 21/09)
+      weekly: { di: 0, src: 'lift.weight', byWeek: { 1: 4, 2: 4, 4: 2 } }   // W1 Sunday · W2 + W3 Thursday (Ori, 14/09 · 21/09) · W5 Tuesday, the 10RM (Ori, 02/10)
     }
   ];
   function testList() { return global.cfbyDemo ? CAPACITESTS_BLOCK1 : CAPACITESTS_BLOCK2; }
@@ -2215,7 +2215,7 @@ class Component extends DCLogic {
   }
 
   // ---- PROGRAM_VERSION (bump on every embed) + IS_DEMO + DEMO_MAPS ------------------------------
-  PROGRAM_VERSION = 39;
+  PROGRAM_VERSION = 40;
   // /demo runs block 1 program (demoWeekN) with its own per-day config maps
   // below; the live maps under it belong to the CURRENT block and start
   // empty - every /embed-week adds that week entries (program.md section 3).
@@ -2265,7 +2265,11 @@ class Component extends DCLogic {
     '2_0': 4, '2_2': 8, '2_3': 6, '2_4': 5, '2_5': 8, '2_6': 5,
     // W4 (27/09): Sun 3 x 10 squats · Mon 6-set clean complex · Thu 4 x 2+2 T&G power cleans. Tue (DB snatch / bench) and Wed (handstand skill) — no entry ·
     // Fri (01/10) 8-set snatch + 2 OHS complex
-    '3_0': 3, '3_1': 6, '3_4': 4, '3_5': 8
+    '3_0': 3, '3_1': 6, '3_4': 4, '3_5': 8,
+    // W5 (04/10): Sun 8-set clean complex · Mon 12 snatch singles (Every 45 s) · Tue squat build to a 10RM = 8 open boxes ·
+    // Thu power clean build-to-heavy 3 = 8 open boxes · Fri OHS build to a heavy double = 8 open boxes. Wed (memorial, no lift) and
+    // Sat (DB push press / D-ball carry → LIFT_GROUPS) — no entry
+    '4_0': 8, '4_1': 12, '4_2': 8, '4_4': 8, '4_5': 8
   };
   // PER_MOVE_METCON: these metcon bases log a result per movement
   // (log.mv1..mvN) and the board-score input stays locked until every
@@ -2291,7 +2295,11 @@ class Component extends DCLogic {
     '3_2': { 'metcon': ['KB swings (kg)'] },
     '3_3': { 'metcon': ['Sled push (kg)','D-ball (kg)'] },
     // Sat (02/10, pairs, no levels): the bench and the devil press, each its own weight (Ori); nothing for the run / burpees
-    '3_6': { 'metcon': ['Bench presses (kg)','Devil press (kg)'] }
+    '3_6': { 'metcon': ['Bench presses (kg)','Devil press (kg)'] },
+    // W5 (02/10, Ori): Wed memorial (pairs, no levels) the four loaded stations · Sat (pairs, no levels) both KB movements +
+    // the pair's total muscle ups, which ROUND_REPS adds to the total
+    '4_3': { 'metcon': ['Sled push (kg)','Goblet lunges (kg)','Farmer carry (kg)','Wall balls (kg)'] },
+    '4_6': { 'metcon': ['KB swings (kg)','KB lunges (kg)','Muscle ups (pair total)'] }
   };
   // PER_MOVE_SCORE: on these days the board score (log.amount) MIRRORS box
   // #box once ALL boxes are filled — the LIFT heaviest-set trick — so there
@@ -2326,7 +2334,11 @@ class Component extends DCLogic {
     // the level sets the WB / sit ups, so the result is the squat snatch weight (Ori)
     '3_0': { 'metcon':'סך ה-T2B' },
     '3_2': { 'metcon2':'סך המטרים בריצה' },
-    '3_5': { 'metcon':'משקל הסקוואט סנאצ׳ים (ק״ג)' }
+    '3_5': { 'metcon':'משקל הסקוואט סנאצ׳ים (ק״ג)' },
+    // W5 (04/10): Sun total burpees · Mon EMOM with no written score — the level sets the DU / pulls, so the result is
+    // the power snatch weight (Ori 02/10, the W4 Friday pattern)
+    '4_0': { 'metcon':'סך הברפיז' },
+    '4_1': { 'metcon':'משקל הפאוור סנאץ׳ (ק״ג)' }
   };
   // TIME_SPLITS (08/09, per Ori: "3 קוביות, אחת לכל מקצה, שיעזרו לסכום את סה"כ
   // זמן החתירה"): a time-mode metcon whose score is the sum of several
@@ -2337,7 +2349,9 @@ class Component extends DCLogic {
     // W1 Sun endurance · METCON-B row 1600 / 1000 / 800 — total row time
     '0_0': { 'alt.metcon2': ['Row 1600','Row 1000','Row 800'] },
     // W3 Tue · 5 sets of run / C&J / run, Rest 1:00 — a time box per set, the total without the rests (Ori, 21/09)
-    '2_2': { 'metcon': ['Set 1','Set 2','Set 3','Set 4','Set 5'] }
+    '2_2': { 'metcon': ['Set 1','Set 2','Set 3','Set 4','Set 5'] },
+    // W5 Tue · 6 sets for time (row / T2B), Rest 1:00 — "total time", the W3 Tuesday precedent
+    '4_2': { 'metcon': ['Set 1','Set 2','Set 3','Set 4','Set 5','Set 6'] }
   };
   // ROUND_REPS (08/09, per Ori: "תשכלל מספר חזרות לכל סט לפי הרמה … 3 סיבובים
   // מלאים + 20 חזרות → לפי הרמה לסכום את כמות החזרות הכוללת"): a rounds+reps
@@ -2355,7 +2369,12 @@ class Component extends DCLogic {
     // W4 (27/09): Mon AMRAP 14 — cals by level and sex + 15 BJO + 9 jerks: L1 15/12 = 39/36 · L2 18/14 = 42/38 · L3 21/18 = 45/42
     '3_1': { 'metcon': { '1': '39/36', '2': '42/38', '3': '45/42' } },
     // Thu AMRAP 10 — 8/6 cals + 12 C&J + L1 40 singles = 60/58 · L2/L3 24 DU = 44/42
-    '3_4': { 'metcon': { '1': '60/58', '2': '44/42', '3': '44/42' } }
+    '3_4': { 'metcon': { '1': '60/58', '2': '44/42', '3': '44/42' } },
+    // W5 Sat (02/10, Ori: "כל חזרה של תרגיל היא נקודה וכל מטר שמתקדמים בתרגיל הוא נקודה") · pairs AMRAP 20, no levels:
+    // '*' = the round size of a day without levels — 10m BBJ + 10 KB swings + 10m KB lunges = 30; the muscle ups (2-5 a
+    // round) are not in it — `plus` adds the pair's total from box 3 (PER_MOVE_BOXES). The label is Hebrew on purpose:
+    // a Latin token in the middle of the RTL total line scrambles it.
+    '4_6': { 'metcon': { '*': 30, plus: { box: 3, label: 'מאסל אפים' } } }
   };
   pilotKey() { return this.state.selWeek + '_' + this.state.selDay; }
   perSetCount() { return this.state.activeSession==='alt' ? 0 : (this.PER_SET_LIFT[this.pilotKey()] || 0); }
@@ -2370,7 +2389,9 @@ class Component extends DCLogic {
     // W4 Tue · Every 75 s x 8, alternate: 8 heavy DB snatches / heavy bench presses — 8 reps each (Ori)
     '3_2': { reps: '8', groups: [['DB Snatch', 4], ['DB Bench Press', 4]] },
     // W4 Sat (02/10) · Every 1:30 x 8, alternate: 8-10 ring dips / 8+8 chest supported DB rows — 4 boxes each (Ori)
-    '3_6': { groups: [['Ring Dips', 4, '8-10'], ['Chest Supported DB Rows', 4, '8+8']] }
+    '3_6': { groups: [['Ring Dips', 4, '8-10'], ['Chest Supported DB Rows', 4, '8+8']] },
+    // W5 Sat · Every 1:30 x 8, alternate: 5+5 heavy DB push presses / 20-30m D-ball carry — a weight per movement (Ori 02/10)
+    '4_6': { groups: [['DB Push Press', 4, '5+5'], ['D-ball Carry', 4, '20-30m']] }
   };
   liftGroupsAt(key, alt) { return (!alt && key && this.LIFT_GROUPS[key]) || null; }
   // What a session's LIFT gives the records: one { name, weight, reps } — or, on a LIFT_GROUPS day,
@@ -2412,7 +2433,9 @@ class Component extends DCLogic {
     // Thu writes only an L1 line — no level step there (planLevels), so it is not a level day
     '2_0': ['metcon'], '2_2': ['metcon'], '2_3': ['metcon'], '2_5': ['metcon'],
     // W4 (27/09): Sun (total T2B), Mon and Thu (rounds + reps, total via ROUND_REPS), Fri (01/10, squat snatch weight)
-    '3_0': ['metcon'], '3_1': ['metcon'], '3_4': ['metcon'], '3_5': ['metcon']
+    '3_0': ['metcon'], '3_1': ['metcon'], '3_4': ['metcon'], '3_5': ['metcon'],
+    // W5 (04/10): Sun (total burpees), Mon (power snatch weight), Tue (a time per set), Thu (rounds + reps), Fri (time)
+    '4_0': ['metcon'], '4_1': ['metcon'], '4_2': ['metcon'], '4_4': ['metcon'], '4_5': ['metcon']
   };
   // 10/09, per Ori ("תשנה ספציפית ביום רביעי את המילה LIFT ל-SKILL ואל תדרוש באותו יום חובה להזנה של החלק
   // הזה … אך ורק לרביעי"): days whose FIRST slot is a skill, not a lift. The block header reads SKILL
@@ -2661,13 +2684,17 @@ class Component extends DCLogic {
   // level's round size + the partial round. null when the day/base has no
   // round sizes, no level is picked, or nothing is logged. key = 'wi_di',
   // base carries the 'alt.' prefix for the endurance session.
+  // A day without levels (W5 Sat, 02/10) keys its one size '*'; `plus: { box, label }` adds that
+  // metcon box (log.mvN — the pair's muscle ups) to the total.
   roundTotal(key, sess, base) {
     const cfg = this.ROUND_REPS[key]; const per = cfg && cfg[base]; if (!per || !sess) return null;
-    const size = this.roundSize(per[String(sess.level || '')]); if (!size) return null;
+    const lv = String(sess.level || '');
+    const size = this.roundSize(lv ? per[lv] : per['*']); if (!size) return null;
     const m = /metcon2$/.test(base) ? sess.metcon2 : sess.metcon; const L = (m && m.log) || {};
     const r = parseInt(L.rounds, 10) || 0, x = parseInt(L.reps, 10) || 0;
     if (!r && !x) return null;
-    return { size, rounds: r, reps: x, total: r * size + x };
+    const plus = per.plus ? (parseInt(L['mv' + per.plus.box], 10) || 0) : 0;
+    return { size, rounds: r, reps: x, plus, total: r * size + x + plus };
   }
   // resultText plus the level-based rep total where one applies.
   resultTextAt(key, sess, base, m) {
@@ -3032,7 +3059,67 @@ class Component extends DCLogic {
     };
     return w;
   }
-  programWeek5() { return this.blankWeek(); }
+  programWeek5() {
+    // WEEK 5 · 04/10-10/10/2026 (block 2) — from Ori's screenshots 02/10 (seven files, Sunday to Saturday).
+    // No endurance session this week: Sunday's alt stays explicitly blank.
+    // Tuesday's back squat 10RM is the weekly tens test this week (byWeek → Tuesday, Ori 02/10).
+    // Monday's EMOM has no written score — level + the power snatch weight as the result (Ori 02/10; the W4 Friday pattern).
+    // Wednesday 07/10 is the memorial partner workout: no brief, no lift; the title is Ori's (02/10).
+    // Friday's plan runs the conditioning before the strength; the slots stay by type (the brief says so).
+    const w = this.blankWeek();
+    const noAlt = w[0].alt;
+    w[0] = {
+      brief: 'יום ראשון שפותח לנו שבוע קצת פחות עצים. נפתח אותו עם קומפלקס קלין טכני, ואחריו עבודה אירובית לא קצרה בכלל.',
+      lift: { movement:'Clean pull + Hang power clean + Below knee hang squat clean + Jerk', planned:'Every 2:00 x 8 sets:\n1 Clean Pull\n1 Hang power clean\n1 Below knee Hang squat clean\n1 Jerk\n\nAdd weight every 2 sets,\nfinish at ±80%\n\nNo number to work from? Build by feel and stop where it stays clean.' },
+      metcon: { name:'Every 4:00 for 4 sets', scheme:'Every 4:00 for 4 sets', score:'Total burpees', resultMode:'amount', note:'L1 = 300m, 15/10kg\nL2 = 400m, 22.5/15kg\nL3 = 400m, 25/17.5kg\n\nScore — total burpees\nGoal — steady run, unbroken DB work, finding pace on burpees.\nPick a weight that will allow that.', movements:[['Run','400m'],['Hang DB C&Js','15'],['Max lateral burpees over the DB','remaining time']] },
+      metcon2: {},
+      extras: [['Capacity Extra','Every 90 seconds for 6 sets (total), alternate:\n- 6+6 Bent over DB rows (DB/KB)\n- 10+10 KB Side bends'],['','']],
+      alt: noAlt
+    };
+    w[1] = {
+      brief: 'על הפרק היום - תרגול סנאצ\'ים מאוד מעמיק, עם 12 סינגלים שאמורים לבנות ביטחון ועקביות במשקלים כמעט-כבדים. בגזרת הדופק מחכה לנו EMOM עם מעברים סופר זריזים.',
+      lift: { movement:'Snatch — 12 singles', planned:'Every 45 seconds for 12 sets:\n1 Snatch\n\n6 Sets @75%\n6 Sets @±80%\n\nNo misses\n\nאפשר ללכת גם לפי תחושה:\nשישה סטים על 6-7RPE, ואז שישה סטים קצת כבדים יותר.\nאין הרבה זמן להחלפות משקל - זה ממש תרגול ממוקד וטכני.' },
+      metcon: { name:'Alternating EMOM 6:00 + 4:00', scheme:'Alternating EMOM 6:00 · 1:00 Rest, then 4:00 EMOM of the same pattern', score:'Power snatch weight (kg)', resultMode:'amount', note:'L1 = 20 DU, 4-6 ring rows\nL2 = 30 DU, 6-8 pull ups\nL3 = 40 DU, 8-10 C2B\n\nWeights → light, unbroken.', movements:[['Double unders + 5 Power snatches','minute 1'],['Double unders + Pull ups','minute 2']] },
+      metcon2: {},
+      extras: [['Capacity Extra','Every 1:30 for 3 sets:\n3 Snatch pulls\n\nUse around 90% of your snatch max, and focus on gaining speed off the ground.\n\ninto\n\nEvery 2:00 for 4 sets:\n8+8 Single arm DB high pulls\ninto\n6+6 Single arm seated DB press'],['','']]
+    };
+    w[2] = {
+      brief: 'עבדנו על זה קשה במשך שבועות, היום הגיע הזמן לתקוף: עשירייה כבדה בבק סקוואט, אחת בלבד - ותדאגו שהיא תהיה כבדה.\nבעבודת הדופק היום: אינטרוולים פיקנטיים.',
+      lift: { movement:'Back Squat — 10RM (Weekly Test)', planned:'In 20:00, build to one heavy set of 10.\n\nSuggested build —\n5 @60% / 5 @70% / 3-4 @76% / then your set of 10.\n\nDon\'t build in tens. Reps drop as the weight climbs, then one set.\n\nScore — kg' },
+      metcon: { name:'6 Sets for time — Row / T2B', scheme:'6 Sets for time · Rest 1:00', score:'Total time', resultMode:'time', note:'L1 = 9/7 cals, 9 hanging knee raises\nL2 = 11/8 cals, 11 T2B\nL3 = 14/11 cals, 14 T2B\n\nScore — total time\n\nאפשר וכדאי לעבוד בזוגות על מכשירים, להתחיל מיד כשהבן זוג יורד מהמכונה (תנו למהיר מביניכם לצאת ראשון)', movements:[['Calories Row',''],['T2B',''],['Rest','1:00']] },
+      metcon2: {},
+      extras: [['Capacity Extra','8-10 DB bench presses\ninto\n15m Farmer carry lunges (same DBs)\nRest 60s\nRepeat 3-4 times'],['','']]
+    };
+    w[3] = {
+      brief: '',
+      lift: { movement:'', planned:'' },
+      metcon: { name:'אימון זוגות לזכרם 7/10', scheme:'In Teams of 2', score:'Time', resultMode:'time', note:'Partner 1 is Rowing 500 m [1000 m Total]\n1000 m Run [Partner 2 is running 500 m]\nThen Switch\nPartner 1 is Sled Pushing 35 m [70 m Total]\n1000 m Run [Partner 2 is running 500 m]\nThen Switch\nPartner 1 is Doing Goblet Walking Lunges 35 m [70 m Total]\n1000 m Run [Partner 2 is running 500 m]\nThen Switch\nPartner 1 is Doing 35 Burpee Broad Jumps [70 Total]\n1000 m Run [Partner 2 is running 500 m]\nThen Switch\nPartner 1 is Farmer Carrying 70 m [140 m Total]\n1000 m Run [Partner 2 is running 500 m]\nThen Switch\nPartner 1 is Doing 70 Wall Balls [140 Total]\n2000 m Run [Partner 2 is running 1000 m] [last set is 1000 each]', movements:[] },
+      metcon2: {},
+      extras: [['',''],['','']]
+    };
+    w[4] = {
+      brief: 'יום חמישי ← הרבה פרונט ראק. נבנה לשלשה כבדה בפאוור קלין, כשהמטרה היא ללכת על סט רצוף. מיד לאחר מכן: רבע שעה של דופק, עם ריצה קצרצרה בין הסבבים. שימו לב שהעיקר הוא דווקא התנועות שמתרחשות היום בתוך המועדון.',
+      lift: { movement:'Power Clean — Heavy 3 (Touch and go)', planned:'In 15:00, build to a heavy set of 3 touch and go power cleans.\nNew set — Every 1:30-2:00.\n\nSuggested climb —\n3 @60% / 65% / 70% / 75% / 80%+, then smaller jumps.\nPercentages off your Clean & Jerk.\n\nScore — kg' },
+      metcon: { name:'AMRAP 15:00 — Run / S2OH / Box jumps', scheme:'AMRAP 15:00 · Add 2 reps to the S2OH & BJ each round', score:'Rounds + reps', resultMode:'rounds', note:'L1 = 40/30kg, lower box\nL2 = 50/35kg\nL3 = 60/40kg\n\nScore — rounds + reps\nהזינו כמה סבבים (+חזרות) הושלמו.', movements:[['Run','100m'],['Shoulder to overhead','2, +2 each round'],['Box jumps @30/24"','2, +2 each round']] },
+      metcon2: {},
+      extras: [['Capacity Extra','Run or calories bike 10:00\n\nthen:\nEvery 2:00 for 3-4 sets:\n8+8 DB single leg RDL\ninto a max effort set of bicep curls (preferably heavy)'],['','']]
+    };
+    w[5] = {
+      brief: 'אימון שישי ענק וצבעוני. נתחיל דווקא מעבודה מהירה ומיוזעת היום, ונדאג שכל הטווחים פתוחים לפני שאנחנו ניגשים לעבודה הכבדה.',
+      lift: { movement:'Overhead Squat — Heavy double', planned:'In 10:00, build to a heavy set of 2.\nTake it from the rack.\n\nScore — kg' },
+      metcon: { name:'4 Rounds For Time', scheme:'4 Rounds For Time', score:'Time', resultMode:'time', note:'Score — time\n\nL1 = 10 WB, 10 burpees, 30/20kg\nL2 = 15 WB, 10 burpees, 40/30kg\nL3 = 15 WB, 15 burpees, 50/35kg\n\nChoose a weight that will move in singles.', movements:[['Wallballs',''],['Bar facing burpees',''],['Power snatches','5'],['Overhead squats','5']] },
+      metcon2: {},
+      extras: [['Capacity Extra — Friday Flush','In pairs, Every 2:00 for 16-20min, alternate:\n- Partner A rows for meters\n- Partner B does 10-15 Sit ups, then max shuttle runs or ski in remaining time\n\nSwitch every 2:00.\nScore — total meters'],['','']]
+    };
+    w[6] = {
+      brief: 'שבת זוגות - כמה מהר תוכלו לסיים כל סבב ולשחרר את הבן זוג לעבודה?',
+      lift: { movement:'Heavy DB Push presses + D-ball carry', planned:'Every 1:30 for 8 sets, alternate:\n- 5+5 Heavy DB Push presses\n- 20-30m D-ball carry\n\nHeavy but clean on both.' },
+      metcon: { name:'AMRAP 20:00 (In pairs)', scheme:'In pairs, 20:00 AMRAP · Alternate full rounds, one partner works at a time', score:'Rounds + reps', resultMode:'rounds', note:'הזינו כמה סבבים (+חזרות) הושלמו (סבב = 30 חזרות, כל מטר = חזרה).\nאת ה-MU של הזוג רושמים בתיבה שלהם — הם מתווספים לסך.', movements:[['Burpee Broad jumps','10m'],['KB swings','10'],['KB walking lunges (hold goblet)','10m'],['Muscle ups (or banded reps)','2-5']] },
+      metcon2: {},
+      extras: [['BY Extra','3 rounds, no rush:\n10+10 Hammer curls\n20-30s Side plank each side\n30s Arch hold'],['','']]
+    };
+    return w;
+  }
   programWeek6() { return this.blankWeek(); }
   programWeek7() { return this.blankWeek(); }
   programWeek8() { return this.blankWeek(); }
@@ -3960,7 +4047,7 @@ class Component extends DCLogic {
       for (let i=start+1; i<=start+n && !firstVal; i++) firstVal = String(L['s'+i] || '').trim();
       const allSame = !!firstVal && Array.from({length:n}, (_,i)=>String(L['s'+(start+i+1)]||'').trim()).every(v=>v===firstVal);
       return React.createElement('div', { key:r, style:{ display:'flex', flexDirection:'column', gap:'8px' } },
-        name ? React.createElement('div', { dir:'ltr', style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'13px', letterSpacing:'.05em', color:'var(--navy)' } }, name.toUpperCase() + ' · ' + (reps || grp.reps) + ' REPS') : null,
+        name ? React.createElement('div', { dir:'ltr', style:{ fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'13px', letterSpacing:'.05em', color:'var(--navy)' } }, name.toUpperCase() + ' · ' + (/[a-z]$/i.test(String(reps || grp.reps)) ? (reps || grp.reps) : ((reps || grp.reps) + ' REPS'))) : null,
         React.createElement('div', { dir:'ltr', style:{ display:'grid', gridTemplateColumns: grp ? ('repeat(' + n + ',minmax(0,1fr))') : 'repeat(auto-fill,minmax(72px,1fr))', gap:'8px' } }, cells),
         React.createElement('div', { dir:'rtl', style:{ display:'flex', gap:'8px', alignItems:'center', flexWrap:'wrap' } },
           React.createElement('button', { onClick:()=>this.fillAllSets(n, start), disabled: !firstVal || allSame,
@@ -4078,11 +4165,13 @@ class Component extends DCLogic {
     // the total (rounds × size + reps) is shown as it is typed.
     const rrCfg = mode === 'rounds' ? this.metconCfg(this.ROUND_REPS, base) : '';
     const rrLevel = rrCfg ? String(this.curSession().level || '') : '';
-    const rrSize = (rrCfg && rrLevel) ? this.roundSize(rrCfg[rrLevel]) : 0;
+    const rrSize = rrCfg ? this.roundSize(rrLevel ? rrCfg[rrLevel] : rrCfg['*']) : 0;
+    const rrPlus = rrCfg && rrCfg.plus;   // W5 Sat: the pair's muscle ups box, added to the total
+    const rrLv = rrLevel ? (' לפי L' + rrLevel) : '';
     const rrTot = rrSize ? this.roundTotal(this.pilotKey(), this.curSession(), (this.state.activeSession==='alt'?'alt.':'')+base) : null;
     const rrLine = rrSize ? React.createElement('div', { dir:'rtl', style:{ fontSize:'12px', fontWeight:600, color: rrTot ? 'var(--greenink)' : 'var(--muted)', lineHeight:1.5 } },
-        rrTot ? ('✓ סך החזרות לפי L' + rrLevel + ': ' + rrTot.rounds + ' × ' + rrTot.size + ' + ' + rrTot.reps + ' = ' + rrTot.total + ' חזרות')
-              : ('סבב ברמה L' + rrLevel + ' = ' + rrSize + ' חזרות · הזינו סבבים מלאים + חזרות מהסבב האחרון — הסך יחושב לבד')) : null;
+        rrTot ? ('✓ סך החזרות' + rrLv + ': ' + rrTot.rounds + ' × ' + rrTot.size + ' + ' + rrTot.reps + (rrPlus ? (' + ' + rrTot.plus + ' ' + rrPlus.label) : '') + ' = ' + rrTot.total + ' חזרות')
+              : ((rrLevel ? ('סבב ברמה L' + rrLevel) : 'סבב') + ' = ' + rrSize + ' חזרות · הזינו סבבים מלאים + חזרות מהסבב האחרון' + (rrPlus ? (' (בלי ' + rrPlus.label + ' — הם בתיבה שלהם)') : '') + ' — הסך יחושב לבד')) : null;
     const seg = (k, lbl) => React.createElement('button', {
       key:k, onClick:()=>this.onEditPath(base+'.log.mode', k),
       style:{ flex:1, border:'none', cursor:'pointer', padding:'6px 10px', borderRadius:'8px', fontFamily:"'Oswald',sans-serif", fontWeight:700, fontSize:'12px', transition:'all .15s',
