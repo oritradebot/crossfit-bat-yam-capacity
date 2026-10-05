@@ -1206,6 +1206,7 @@
               <button onClick="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" aria-label="{{ c.title }}" style="{{ c.miniStyle }}">
                 <span style="font-size:10px; font-weight:700; opacity:.85; letter-spacing:.03em;">{{ c.dow }}</span>
                 <span style="font-family:'Oswald',sans-serif; font-weight:600; font-size:15px;">{{ c.dnum }}</span>
+                <span style="font-family:'Oswald',sans-serif; font-size:10px; font-weight:600; letter-spacing:.05em; height:10px; line-height:10px; opacity:.85;">{{ c.lvl }}</span>
               </button>
             </sc-for>
           </div>
@@ -1244,7 +1245,7 @@
               <div style="display:grid; grid-template-columns:34px repeat(7,1fr); gap:6px; align-items:center;">
                 <div style="font-family:'Oswald',sans-serif; font-weight:600; font-size:12px; color:var(--muted); text-align:center;">W{{ wk.n }}</div>
                 <sc-for list="{{ wk.cells }}" as="c" hint-placeholder-count="7">
-                  <button onClick="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" aria-label="{{ c.title }}" style="{{ c.cellStyle }}">{{ c.dnum }}</button>
+                  <button onClick="{{ onCell }}" data-wi="{{ c.wi }}" data-di="{{ c.di }}" title="{{ c.title }}" aria-label="{{ c.title }}" style="{{ c.cellStyle }}"><span>{{ c.dnum }}</span><sc-if value="{{ c.hasLvl }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px; font-weight:600; letter-spacing:.05em; line-height:1; opacity:.85;">{{ c.lvl }}</span></sc-if></button>
                 </sc-for>
               </div>
             </sc-for>
@@ -4612,7 +4613,7 @@ class Component extends DCLogic {
     this.toast('השמירה בוטלה');
   }
 
-  // ---- date + day-state helpers (dateAt, dateStr, rangeStr, dayHasPlan, dayComplete, dayState) ----
+  // ---- date + day-state helpers (dateAt, dateStr, rangeStr, dayHasPlan, dayComplete, dayState, doneLevel) ----
   dateAt(i) { const d = new Date(this.startDate); d.setDate(d.getDate()+i); return d; }
   pad(n) { return String(n).padStart(2,'0'); }
   dateStr(d) { return this.pad(d.getDate())+'/'+this.pad(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(2); }
@@ -4627,6 +4628,10 @@ class Component extends DCLogic {
   // alt-done day must paint blue and count everywhere a done day counts.
   dayComplete(day) { return !!(day.done || (day.alt && day.alt.done)); }
   dayState(day) { if (this.dayComplete(day)) return 'done'; if (day.rest) return 'rest'; return this.dayHasPlan(day) ? 'planned' : 'empty'; }
+  // Level the completed session was saved at ('' when the day isn't done or its
+  // plan has no level lines) — the small L-label under the date on the map and
+  // the this-week strip (05/10, Ori). Main session first, else the endurance twin.
+  doneLevel(day) { for (const x of [day, day && day.alt]) { if (x && x.done && /^[1-4]$/.test(String(x.level || ''))) return String(x.level); } return ''; }
 
   // ---- renderVals — everything the template binds to (tabs, overview, log, prs, panel) ----------
   renderVals() {
@@ -4654,13 +4659,15 @@ class Component extends DCLogic {
       n: wi+1,
       cells: wk.days.map((day, di) => {
         const gi = wi*7+di; const st = this.dayState(day);
-        return { wi, di, dnum: this.dateAt(gi).getDate(), title: this.dowShort[di]+' '+this.dateStr(this.dateAt(gi)), cellStyle: this.cellStyle(st, gi===ti, this.isMissed(gi,day)) };
+        const lv = this.doneLevel(day);   // L-label on a completed cell (05/10, Ori)
+        return { wi, di, dnum: this.dateAt(gi).getDate(), lvl: lv ? 'L'+lv : '', hasLvl: !!lv, title: this.dowShort[di]+' '+this.dateStr(this.dateAt(gi))+(lv ? ' · L'+lv : ''), cellStyle: this.cellStyle(st, gi===ti, this.isMissed(gi,day)) };
       })
     }));
 
     const thisWeekCells = data[cwi].days.map((day, di) => {
       const gi = cwi*7+di; const st = this.dayState(day);
-      return { wi: cwi, di, dow: this.dowShort[di], dnum: this.dateAt(gi).getDate(), title: this.dowShort[di]+' '+this.dateStr(this.dateAt(gi)), miniStyle: this.miniStyle(st, gi===ti, this.isMissed(gi,day)) };
+      const lv = this.doneLevel(day);
+      return { wi: cwi, di, dow: this.dowShort[di], dnum: this.dateAt(gi).getDate(), lvl: lv ? 'L'+lv : '', title: this.dowShort[di]+' '+this.dateStr(this.dateAt(gi))+(lv ? ' · L'+lv : ''), miniStyle: this.miniStyle(st, gi===ti, this.isMissed(gi,day)) };
     });
     const curWeekDone = data[cwi].days.reduce((s,x)=>s+(x.done?1:0)+(x.alt&&x.alt.done?1:0),0);
 
@@ -5042,7 +5049,7 @@ class Component extends DCLogic {
       (active ? 'background:var(--card); color:var(--navy);' : 'background:transparent; color:#c3cdea;');
   }
   cellStyle(st, today, missed) {
-    const base = 'aspect-ratio:1/1; border-radius:8px; cursor:pointer; font-family:\'Oswald\',sans-serif; font-weight:600; font-size:12px; display:flex; align-items:center; justify-content:center; transition:transform .1s; ';
+    const base = 'aspect-ratio:1/1; border-radius:8px; cursor:pointer; font-family:\'Oswald\',sans-serif; font-weight:600; font-size:12px; line-height:1.2; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; transition:transform .1s; ';
     let s;
     if (st==='done') s = 'background:var(--blue); color:#fff; border:none;';
     else if (missed) s = 'background:var(--redbg); color:var(--red); border:1.5px solid var(--red);';
