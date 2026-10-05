@@ -1154,7 +1154,7 @@
             <button onClick="{{ gotoToday }}" style="margin-top:14px; background:var(--orange); color:#fff; border:none; border-radius:999px; padding:11px 20px; font-weight:700; font-size:14px; cursor:pointer;">← לאימון של היום</button>
           </div>
         </sc-if>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:22px;">
+        <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:12px;">
           <div style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px;">
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--blue); line-height:1;">{{ statSessions }}<span style="font-size:16px; color:var(--muted);">/{{ statTarget }}</span></div>
             <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">אימונים שהושלמו</div>
@@ -1167,11 +1167,30 @@
             <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; line-height:1;">{{ curWeekNum }}<span style="font-size:16px; color:#9fb0dd;">/8</span></div>
             <div style="font-size:12px; color:#9fb0dd; font-weight:600; letter-spacing:.04em; margin-top:6px;">שבוע נוכחי</div>
           </div>
-          <!-- ---- level card (deploy 10, 10/09): the slot the RX card left — the level worked at most this block ---- -->
-          <div style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px;">
-            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; color:var(--blue); line-height:1;">{{ statLevel }}</div>
-            <div style="font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.04em; margin-top:6px;">{{ statLevelSub }}</div>
+        </div>
+        <!-- ---- ladder card (הסולם, 05/10): the rung, the challenge and the week row — replaced the level card (Ori, 05/10) ---- -->
+        <!-- One card, computed from the saved days of the block (ladderState) — nothing new is stored. docs/domains/ladder.md -->
+        <div dir="rtl" style="background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px 20px; margin-bottom:22px;">
+          <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:6px;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:17px; letter-spacing:.03em;">🪜 הסולם</div>
+            <div style="font-size:12px; color:var(--muted);">מדרגות רמה · מתחילת הבלוק</div>
           </div>
+          <div style="display:flex; align-items:center; gap:14px; margin-top:12px;">
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; font-size:40px; color:var(--blue); line-height:1; flex:none; min-width:58px; text-align:center;">{{ ladderRung }}</div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:13px; font-weight:700; color:var(--ink);">{{ ladderTitle }}</div>
+              <div style="font-size:12.5px; color:var(--muted); margin-top:3px; line-height:1.45;">{{ ladderSub }}</div>
+            </div>
+          </div>
+          <sc-if value="{{ ladderHasWeeks }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;">
+              <sc-for list="{{ ladderWeeks }}" as="w" hint-placeholder-count="8">
+                <span title="{{ w.title }}" style="{{ w.style }}">{{ w.txt }}</span>
+              </sc-for>
+            </div>
+            <div style="font-size:11px; color:var(--muted); margin-top:10px;">{{ ladderCounts }}</div>
+          </sc-if>
+          <div style="font-size:11px; color:var(--faint); margin-top:8px; line-height:1.5;">3 אימונים במדרגה פותחים אתגר 🎯 · 3 ברמה הבאה מעלים ⬆ · 3 ברצף מתחת למדרגה מחזירים מדרגה</div>
         </div>
 
 
@@ -1730,7 +1749,7 @@
         </div>
         <div dir="rtl" style="padding:14px 18px; display:flex; flex-direction:column; gap:9px;">
           <sc-if value="{{ welcomeStep0 }}" hint-placeholder-val="{{ true }}">
-            <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📊</span><div style="line-height:1.45;"><b style="font-size:13px;">סקירה</b> <span style="font-size:12px; color:var(--muted);">— ההתקדמות שלך בבלוק, המטרה שלך, השבוע הנוכחי ומפת התוכנית.</span></div></div>
+            <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📊</span><div style="line-height:1.45;"><b style="font-size:13px;">סקירה</b> <span style="font-size:12px; color:var(--muted);">— ההתקדמות שלך בבלוק, הסולם 🪜 (המדרגה שלך לפי הרמות שבחרת), המטרה שלך, השבוע הנוכחי ומפת התוכנית.</span></div></div>
             <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">📅</span><div style="line-height:1.45;"><b style="font-size:13px;">יומן</b> <span style="font-size:12px; color:var(--muted);">— האימון היומי: התוכנית, ההזנה, ומה עשית בפעם הקודמת.</span></div></div>
             <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">🏆</span><div style="line-height:1.45;"><b style="font-size:13px;">שיאים ומבחנים</b> <span style="font-size:12px; color:var(--muted);">— המבחנים שלך לפני ואחרי, שיאי המשקל לפי תרגיל, ואימונים שסימנת 🏆.</span></div></div>
             <div style="display:flex; gap:9px; align-items:baseline;"><span style="font-size:16px; flex:none;">👤</span><div style="line-height:1.45;"><b style="font-size:13px;">פרופיל</b> <span style="font-size:12px; color:var(--muted);">— הכפתור העגול למעלה: השם שלך, ההישגים והנתונים האישיים, ומצב תצוגה בהיר / כהה 🌙.</span></div></div>
@@ -2636,17 +2655,7 @@ class Component extends DCLogic {
     return lv.length > 1 ? lv : [];
   }
   // Most recent level chosen on an earlier day of the block ('' if none).
-  // 10/09 (deploy 10, Ori: the overview slot RX left): the level the athlete worked at most in this
-  // block — saved sessions only (main + endurance), by the level picked in step 1. Ties go up.
-  levelStats() {
-    const n = { '1': 0, '2': 0, '3': 0 }; let total = 0;
-    (this.state.data || []).forEach(wk => (wk.days || []).forEach(day => {
-      [day, day.alt].forEach(sess => { if (sess && sess.done && sess.level && n[sess.level] != null) { n[sess.level]++; total++; } });
-    }));
-    if (!total) return { top: '', total: 0, n };
-    const top = ['3', '2', '1'].reduce((b, k) => (n[k] > n[b] ? k : b), '3');
-    return { top, total, n };
-  }
+  // (levelStats — the deploy-10 "level worked at most" card — was folded into the ladder, 05/10.)
   lastLevel() {
     const g = this.state.selWeek*7 + this.state.selDay;
     for (let i = g-1; i >= 0; i--) {
@@ -2654,6 +2663,96 @@ class Component extends DCLogic {
       for (const x of [d, d.alt]) { if (x && /^[1-4]$/.test(String(x.level||''))) return String(x.level); }
     }
     return '';
+  }
+  // ---- ladder (הסולם) ----
+  // Ori's idea, 05/10/2026 (docs/domains/ladder.md): a rung L1/L2/L3 per athlete, no points.
+  // Only saved sessions on level days count (main + endurance), by the level picked in step 1,
+  // in block order. Three rules, all with the same number (3):
+  //   accumulate — 3 sessions at the rung (or above, Ori 05/10) open the challenge for the next rung;
+  //   climb      — 3 sessions at the next rung, not necessarily in a row, raise the rung ⬆;
+  //   return     — 3 sessions IN A ROW below the rung lower it by one and reset the counters.
+  // The first saved level sets the rung and counts as 1 of 3 (Ori 05/10). A session below the
+  // rung never resets the counters; only the third in a row does. Pure functions, no `this.state`:
+  // tools/ladder-tests.html evaluates this section on its own (wrapped in a class) and runs the cases.
+  LADDER = { need: 3, top: 3, bottom: 1 };
+  // The sessions that count, oldest first: [{ level, week (1-based), day, kind }]
+  ladderSessions(weeks) {
+    const out = [];
+    (weeks || []).forEach((wk, wi) => ((wk && wk.days) || []).forEach((day, di) => {
+      [[day, 'main'], [day && day.alt, 'alt']].forEach(([sess, kind]) => {
+        if (sess && sess.done && /^[1-3]$/.test(String(sess.level || ''))) out.push({ level: +sess.level, week: wi + 1, day: di, kind });
+      });
+    }));
+    return out;
+  }
+  // rung 0 = nothing saved at a level yet. events: open / up / down, each with the session index `i`
+  // (1-based) and the week; weeks[n] = { rung at the end of week n, arrow ⬆/⬇ if it moved that week }.
+  ladderState(sessions) {
+    const R = this.LADDER, need = R.need;
+    const st = { rung: 0, open: false, at: 0, next: 0, below: 0, count: 0, events: [], weeks: {}, perLevel: { 1: 0, 2: 0, 3: 0 } };
+    const reset = () => { st.open = false; st.at = 0; st.next = 0; st.below = 0; };
+    const openIfReady = (s) => {
+      if (!st.open && st.rung < R.top && st.at >= need) { st.open = true; st.next = 0; st.events.push({ type: 'open', rung: st.rung, target: st.rung + 1, week: s.week, i: st.count }); }
+    };
+    (sessions || []).forEach(s => {
+      const lvl = +s.level;
+      if (!(lvl >= 1 && lvl <= 3)) return;
+      st.count++; st.perLevel[lvl]++;
+      if (!st.rung) st.rung = lvl;
+      if (lvl < st.rung) {
+        st.below++;
+        if (st.below >= need) { st.rung--; reset(); st.events.push({ type: 'down', rung: st.rung, week: s.week, i: st.count }); }
+      } else {
+        st.below = 0;
+        if (lvl === st.rung) { if (!st.open) { st.at++; openIfReady(s); } }
+        else if (st.open) { st.next++; if (st.next >= need) { st.rung++; reset(); st.events.push({ type: 'up', rung: st.rung, week: s.week, i: st.count }); } }
+        else { st.at++; openIfReady(s); }
+      }
+      const w = st.weeks[s.week] || (st.weeks[s.week] = { rung: 0, arrow: '' });
+      w.rung = st.rung;
+      const last = st.events.length ? st.events[st.events.length - 1] : null;
+      if (last && last.i === st.count && last.type !== 'open') w.arrow = last.type === 'up' ? '⬆' : '⬇';
+    });
+    return st;
+  }
+  // The card's values (renderVals). `upto` = the current week number, so the row ends today, not at W8.
+  ladderVals(st, upto) {
+    const L = (n) => 'L' + n, need = this.LADDER.need;
+    const v = { ladderRung: '—', ladderTitle: 'הסולם מתחיל באימון הראשון שתשמור ברמה', ladderSub: 'בוחרים רמה בשלב 1 של ההזנה, שומרים את האימון, והמדרגה הראשונה נקבעת.', ladderHasWeeks: false, ladderWeeks: [], ladderCounts: '' };
+    if (!st.rung) return v;
+    v.ladderRung = L(st.rung);
+    v.ladderTitle = 'המדרגה שלך · ' + st.count + (st.count === 1 ? ' אימון ברמה' : ' אימונים ברמה');
+    let sub;
+    if (st.open) sub = '🎯 אתגר ' + L(st.rung + 1) + ' פתוח · ' + st.next + ' מתוך ' + need + ' אימונים ב-' + L(st.rung + 1);
+    else if (st.rung >= this.LADDER.top) sub = 'המדרגה הגבוהה · ממשיכים לשמור על הרמה';
+    else { const left = need - st.at; sub = (left === 1 ? 'עוד אימון אחד' : 'עוד ' + left + ' אימונים') + ' ב-' + L(st.rung) + ' ומעלה פותחים את האתגר ל-' + L(st.rung + 1); }
+    if (st.below) sub += ' · ' + st.below + ' מתוך ' + need + ' ברצף מתחת למדרגה';
+    v.ladderSub = sub;
+    v.ladderHasWeeks = true;
+    for (let n = 1; n <= Math.max(1, Math.min(8, upto || 1)); n++) {
+      const w = st.weeks[n];
+      const on = !!w, arrow = on ? w.arrow : '';
+      v.ladderWeeks.push({
+        txt: 'W' + n + ' ' + (on ? L(w.rung) + (arrow ? ' ' + arrow : '') : '—'),
+        title: on ? ('שבוע ' + n + ': ' + L(w.rung) + (arrow === '⬆' ? ' — עלית מדרגה' : arrow === '⬇' ? ' — חזרת מדרגה' : '')) : ('שבוע ' + n + ': בלי אימון ברמה'),
+        style: 'font-size:11px; font-weight:700; border-radius:8px; padding:3px 8px; white-space:nowrap; ' +
+          (arrow === '⬆' ? 'background:rgba(239,91,37,.14); color:var(--orange);' : on ? 'background:rgba(35,64,154,.10); color:var(--navy);' : 'background:var(--chip); color:var(--faint);')
+      });
+    }
+    v.ladderCounts = 'L1 ×' + st.perLevel[1] + ' · L2 ×' + st.perLevel[2] + ' · L3 ×' + st.perLevel[3];
+    return v;
+  }
+  // After a save: did this session move the ladder? Celebration for a climb (like a PR), a quiet
+  // toast after the save toast for an opened challenge or a return — "part of the game, not a failure".
+  ladderAfterSave(before, after) {
+    if (before.rung && after.rung > before.rung) {
+      this.celebrate('עלית ל-L' + after.rung + '! ⬆', '3 אימונים ב-L' + after.rung + ' — המדרגה החדשה שלך בסולם');
+      return;
+    }
+    let msg = '';
+    if (before.rung && after.rung < before.rung) msg = '🪜 חזרת ל-L' + after.rung + ' · 3 אימונים שם פותחים את האתגר מחדש';
+    else if (after.open && (!before.open || after.rung !== before.rung)) msg = '🎯 נפתח אתגר L' + (after.rung + 1) + ' · 3 אימונים ב-L' + (after.rung + 1) + ' מעלים מדרגה';
+    if (msg) setTimeout(() => this.toast(msg), 2400);
   }
   // ---- "בפעם הקודמת עשית…" (v3) ------------------------------------------
   // The most recent EARLIER day of the block where the same movement / metcon
@@ -3769,9 +3868,11 @@ class Component extends DCLogic {
   // fw=full weeks. Thresholds must match boot.js publicSummary() semantics.
   // (The two RX badges went with the RX pills, 08/09; boot.js still publishes
   // the rx counter, it is simply unused here.)
+  // lad = ladder climbs (05/10, Ori: "a badge + ⬆ on the card"): app-only, from
+  // ladderState(); boot.js does not publish it — the panel shows no badges.
   badgeList(c) {
     c = c || {};
-    const t=c.t||0, s=c.s||0, p=c.p||0, hard=c.hard||0, fw=c.fw||0;
+    const t=c.t||0, s=c.s||0, p=c.p||0, hard=c.hard||0, fw=c.fw||0, lad=c.lad||0;
     return [
       { icon:'🎯', label:'אימון ראשון', earned:t>=1 },
       { icon:'⭐', label:'10 אימונים', earned:t>=10 },
@@ -3785,7 +3886,8 @@ class Component extends DCLogic {
       { icon:'💪', label:'שבוע מלא', earned:fw>=1 },
       { icon:'📅', label:'3 שבועות מלאים', earned:fw>=3 },
       { icon:'🏅', label:'בלוק מושלם', earned:fw>=8 },
-      { icon:'🥵', label:'5 אימונים קשים', earned:hard>=5 }
+      { icon:'🥵', label:'5 אימונים קשים', earned:hard>=5 },
+      { icon:'🪜', label:'עליתי מדרגה', earned:lad>=1 }
     ];
   }
   badgeCards(list) {
@@ -4485,11 +4587,14 @@ class Component extends DCLogic {
     if (twin && twin.done && !t.done) { this.toast('ביום אינדורנס נספר אימון אחד — בטלו קודם את השמירה של האימון השני'); return; }
     const c = this.canComplete(t, this.pilotKey(), t !== dc);
     if (!c.ok) { this.toast(c.anyPresent ? ('חסר: ' + c.missing.join(' · ')) : 'אין אימון להשלים'); return; }
+    const ladBefore = this.ladderState(this.ladderSessions(this.state.data));   // the ladder (05/10): compare before / after this save
     t.done = true; t.rest = false;
+    const ladAfter = this.ladderState(this.ladderSessions(d));
     this.save(d); this.setState({ data:d }, () => {
       // streak milestones (the badge thresholds) — once, when the run reaches them
       const run = this.runEndingAt(this.state.selWeek*7 + this.state.selDay);
       if (run === 5 || run === 10) this.celebrate('רצף של ' + run + ' ימים! 🔥', 'שמרת על הקצב — ' + run + ' ימי אימון רצופים');
+      this.ladderAfterSave(ladBefore, ladAfter);   // a climb wins over the streak card (same card slot, 5s)
     });
     // This toast fires before any network I/O, so it must not CLAIM the cloud
     // — "מסתנכרן…" states the push has started, which is true (the write just
@@ -4687,7 +4792,8 @@ class Component extends DCLogic {
       };
     });
     const testsMeasured = testRows.length ? (testRows.filter(r => r.delta).length + ' מתוך ' + testRows.length + ' נמדדו שוב') : '';
-    const badges = this.badgeList({ t: totalDone, s: best, p: PT.curFlagCount, hard: hardCount, fw: fullWeeks });
+    const lad = this.ladderState(this.ladderSessions(this.state.data));   // the ladder (05/10) — card + climb badge
+    const badges = this.badgeList({ t: totalDone, s: best, p: PT.curFlagCount, hard: hardCount, fw: fullWeeks, lad: lad.events.filter(e => e.type === 'up').length });
     const badgeCount = badges.filter(b=>b.earned).length + ' / ' + badges.length;
     const badgeCards = this.badgeCards(badges);
 
@@ -4744,8 +4850,7 @@ class Component extends DCLogic {
       editTabStyle: this.segStyle(editMode),
 
       statSessions: done, statTarget: target, statPct: pct,
-      statLevel: (()=>{ const lv = this.levelStats(); return lv.top ? ('L' + lv.top) : '—'; })(),
-      statLevelSub: (()=>{ const lv = this.levelStats(); return lv.total ? ('הרמה הכי שכיחה · L1 ×' + lv.n['1'] + ' · L2 ×' + lv.n['2'] + ' · L3 ×' + lv.n['3']) : 'עדיין לא נבחרה רמה'; })(),
+      ...this.ladderVals(lad, this.cwi() + 1),   // ladderRung / ladderTitle / ladderSub / ladderHasWeeks / ladderWeeks / ladderCounts
       hasTests: testRows.length > 0, testRows, testsMeasured,
       // goal card (v3): stored on the athlete (profiles.goal via boot.js), not on the block
       goalEditing: this.state.goalEditing || !this.state.myGoal,

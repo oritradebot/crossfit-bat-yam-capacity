@@ -58,7 +58,7 @@
 | גרסה | `public/version.json` + `BUILD` | **חייבים להיות זהים.** [`release.md`](docs/domains/release.md) |
 | סכימת DB | `supabase/schema.sql` | מתעדכן ידנית — ה-DB החי מקבל ALTER בנפרד |
 | יומן | `יומן-פרויקט.md` | בלוק 2 והלאה. בלוק 1: `docs/archive/journal-block-1.md` |
-| כלים | `tools/` | `map.py`, `journal_tail.py`, **`release_check.py` (לפני כל commit)**, `merge-tests.html` (בדפדפן, לפני נגיעה במיזוג); `block_summary.py` + `recap_cards_server.py` רצים על קובץ גיבוי |
+| כלים | `tools/` | `map.py`, `journal_tail.py`, **`release_check.py` (לפני כל commit)**, `merge-tests.html` (בדפדפן, לפני נגיעה במיזוג), `ladder-tests.html` (בדפדפן, לפני נגיעה בסולם); `block_summary.py` + `recap_cards_server.py` רצים על קובץ גיבוי |
 | דמו למשתתפים | `/demo` → `app.html?demo=1` | `demoMain` ב-boot.js + `DEMO_LOG` ב-app.html — [`personal-v3.md` §ד](docs/domains/personal-v3.md) |
 
 ---
@@ -77,7 +77,8 @@
 | 🏁 כרטיס סיכום בלוק | [`design/block-recap/README.md`](design/block-recap/README.md) | חוק ההדבקה, השער, גדלים |
 | ♿ נגישות | [`a11y.md`](docs/domains/a11y.md) | מה נעשה 10/09 (שמות לכפתורי אייקון, הפחתת תנועה, פוקוס), מה נדחה (`dir` על השורש, px→rem), איך בודקים |
 | 🎨 UI/UX | [`ui-ux.md`](docs/domains/ui-ux.md) | שכבות צפות (כרטיס השיא, טוסט, קונפטי), מלכודת האנימציה שמוחקת `transform` (3.1.1), בדיקה ברוחב טלפון בדמו, מה נדחה (עיתוי הכרטיס מול המקלדת) |
-| 🏆 ניקוד | — | **הוסר ב-v3** (אחוזונים / 70-30 / קטגוריות) |
+| 🪜 הסולם | [`ladder.md`](docs/domains/ladder.md) | מדרגות הרמה L1-L3 בסקירה (05/10): שלושת החוקים, הכרעות אורי, איפה הקוד, `tools/ladder-tests.html` לפני כל נגיעה במנוע |
+| 🏆 ניקוד | — | **הוסר ב-v3** (אחוזונים / 70-30 / קטגוריות). במקומו, מ-05/10: הסולם — בלי נקודות |
 
 ## ⚙️ נהלים חוזרים
 

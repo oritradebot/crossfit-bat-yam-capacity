@@ -25,7 +25,7 @@ sed -n "A,Bp" public/app.html    # ואז קוראים סקשן אחד
 | thumbnail template | SVG לתצוגה מקדימה | לא נוגעים |
 
 ### app template — תתי-סקשנים
-`page shell + header` · `demo strip (isDemo)` · `overview tab (isOverview)` · `records + tests tab (isPRs)` · `log tab (isLog)` · מודאלים: `welcomeOpen` (מדריך ראשון), `onbOpen`, `movesOpen`, `shareOpen` (שיתוף יום + כרטיס בלוק), `builderOpen` (בונה תוכנית, מנהל), `profileOpen`, `liftChartOpen`, `hasCelebrate`, `hasToast`, `adminOpen`.
+`page shell + header` · `demo strip (isDemo)` · `overview tab (isOverview)` · `ladder card (הסולם)` · `records + tests tab (isPRs)` · `log tab (isLog)` · מודאלים: `welcomeOpen` (מדריך ראשון), `onbOpen`, `movesOpen`, `shareOpen` (שיתוף יום + כרטיס בלוק), `builderOpen` (בונה תוכנית, מנהל), `profileOpen`, `liftChartOpen`, `hasCelebrate`, `hasToast`, `adminOpen`.
 
 ### app logic — תתי-סקשנים, בסדר הופעה
 
@@ -36,6 +36,7 @@ sed -n "A,Bp" public/app.html    # ואז קוראים סקשן אחד
 | PROGRAM_VERSION + IS_DEMO + DEMO_MAPS | `PROGRAM_VERSION` עולה ב-1 בכל הטמעה | `grep -n "PROGRAM_VERSION ="` |
 | richer result entry | **מפות ההזנה:** `PER_SET_LIFT`, `PER_MOVE_METCON/BOXES/SCORE/OFF`, `METCON_AMOUNT_LABEL`, `TIME_SPLITS`, `ROUND_REPS`, `SKILL_DAYS`, `LIFT_GROUPS` | ממולאות בכל הטמעה — `program.md §3` |
 | session helpers · program text · celebration · lift PR check · level pills | עזרי סשן, טקסט התוכנית (`planEl`, שורות `L1 =`), קונפטי, בדיקת שיא, הרמה כשלב 1 | |
+| **ladder (הסולם)** | `LADDER`, `ladderSessions`, `ladderState`, `ladderVals`, `ladderAfterSave` — המדרגה L1-L3 מהאימונים שנשמרו ברמה | [`ladder.md`](domains/ladder.md) · `tools/ladder-tests.html` |
 | "בפעם הקודמת עשית…" · "הורד את הנתונים שלי" · set fill | ההשוואה מול עצמך, ייצוא CSV, מילוי סטים | |
 | **BLOCK 2 program** | `blankWeek`, `programWeek1()..programWeek8()` | **תוכן האימונים.** `/embed-week` כותב כאן |
 | BLOCK 1 program (demo only) | `demoWeek1()..demoWeek8()` — 40KB | **לא קוראים אף פעם.** האפליקציה האמיתית לא נוגעת בזה |

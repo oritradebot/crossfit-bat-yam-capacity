@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>בדיקות הסולם — app.html</title>
+<!--
+  Browser-run tests for the ladder (הסולם) engine in public/app.html (05/10/2026).
+  No Node on this machine, so the page fetches app.html as TEXT, slices the pure section
+  between the banners "// ---- ladder (הסולם) ----" and the next "// ---- " banner, and
+  evaluates it. Nothing here touches the DOM of the app or Supabase.
+
+  Run:  preview_start "recap-preview" (python -m http.server 8161 from the repo root)
+        then open http://localhost:8161/tools/ladder-tests.html
+  Read: every line is ✅ or ❌ with expected vs actual; the summary is at the top.
+  Add a case: push a {name, run} object into CASES — run() returns true or a string that explains the failure.
+  Rules under test: docs/domains/ladder.md §2-§4.
+-->
+<style>
+  :root{--bg:#0f1830;--card:#16233f;--line:#243657;--txt:#eaf0ff;--mut:#8ea3c9;--ok:#7ee2a8;--bad:#ff8a80;--orange:#ef5b25}
+  body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.6 'Heebo',system-ui,sans-serif;padding:20px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--mut);font-size:12px;margin-bottom:16px}
+  #sum{font-size:16px;font-weight:700;margin:12px 0}
+  .ok{color:var(--ok)}.bad{color:var(--bad)}
+  .case{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:8px}
+  .case pre{direction:ltr;text-align:left;font-size:11px;color:var(--mut);white-space:pre-wrap;margin:6px 0 0}
+  code{direction:ltr;unicode-bidi:embed}
+</style>
+</head>
+<body>
+<h1>🪜 בדיקות הסולם</h1>
+<div class="sub">הפונקציות הטהורות של הסולם ב-app.html — <code>ladderSessions</code> (איסוף האימונים שנספרים) ו-<code>ladderState</code> (מנוע המדרגות).</div>
+<div id="sum">טוען את app.html…</div>
+<div id="out"></div>
+<script>
+(async function () {
+  var out = document.getElementById("out"), sum = document.getElementById("sum");
+  function show(name, res, detail) {
+    var d = document.createElement("div"); d.className = "case";
+    d.innerHTML = (res === true ? '<span class="ok">✅</span> ' : '<span class="bad">❌</span> ') + name +
+      (res === true ? "" : '<pre>' + String(res === false ? (detail || "failed") : res).replace(/</g, "&lt;") + '</pre>');
+    out.appendChild(d);
+    return res === true;
+  }
+  var src;
+  try { src = await fetch("../public/app.html", { cache: "reload" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); }); }
+  catch (e) { sum.textContent = "לא הצלחתי לטעון את app.html (" + e.message + ") — להריץ מהשרת של תיקיית הריפו (recap-preview, פורט 8161)"; sum.className = "bad"; return; }
+  var a = src.indexOf("// ---- ladder (הסולם) ----");
+  var b = a < 0 ? -1 : src.indexOf("// ---- ", a + 10);
+  if (a < 0 || b < 0) { sum.textContent = "לא מצאתי את העוגן '// ---- ladder (הסולם) ----' ב-app.html"; sum.className = "bad"; return; }
+  var section = src.slice(a, b);
+  var api;
+  try {
+    // The section is class-body code (a field + methods), so it is wrapped in a throwaway class.
+    // celebrate / toast are stubbed so ladderAfterSave can be exercised without the app.
+    api = new Function(
+      "class T {\n" + section + "\n  celebrate(t, s) { this._cel = [t, s]; }\n  toast(m) { this._toast = m; }\n}\n" +
+      "var t = new T(); return { t: t, LADDER: t.LADDER, ladderSessions: t.ladderSessions.bind(t), ladderState: t.ladderState.bind(t), ladderVals: t.ladderVals.bind(t) };"
+    )();
+  } catch (e) { sum.textContent = "הסקשן לא מתקמפל: " + e.message; sum.className = "bad"; return; }
+
+  // ---- fixtures -----------------------------------------------------------
+  function S(levels) { return levels.map(function (l, i) { return { level: l, week: 1 + Math.floor(i / 3), day: i % 3, kind: "main" }; }); }
+  function ev(st) { return st.events.map(function (e) { return e.type + "@" + e.i + "->L" + e.rung; }).join(","); }
+  function weeks(st) { return Object.keys(st.weeks).map(function (k) { return "W" + k + " L" + st.weeks[k].rung + st.weeks[k].arrow; }).join(" · "); }
+  function J(x) { return JSON.stringify(x); }
+  function expect(label, got, want) { return got === want ? true : label + ": expected " + J(want) + ", got " + J(got); }
+  function all() { for (var i = 0; i < arguments.length; i++) if (arguments[i] !== true) return arguments[i]; return true; }
+
+  // ---- cases: the state machine (ladder.md §2-§4) ---------------------------
+  var CASES = [
+    { name: "הדוגמה של אורי: L2 ×3 פותחים אתגר, L3, L2, L3, L3 → עלית ל-L3 בשבוע 3", run: function () {
+      var st = api.ladderState(S([2, 2, 2, 3, 2, 3, 3]));
+      return all(expect("rung", st.rung, 3), expect("open", st.open, false), expect("events", ev(st), "open@3->L2,up@7->L3"),
+                 expect("weeks", weeks(st), "W1 L2 · W2 L2 · W3 L3⬆"));
+    } },
+    { name: "אימון במדרגה כשהאתגר פתוח לא מזיז את ההתקדמות (עדיין 1 מתוך 3)", run: function () {
+      var st = api.ladderState(S([2, 2, 2, 3, 2]));
+      return all(expect("rung", st.rung, 2), expect("open", st.open, true), expect("next", st.next, 1), expect("below", st.below, 0));
+    } },
+    { name: "3 ברצף מתחת למדרגה → יורדים, הכל מתאפס, ועוד 3 במדרגה פותחים את האתגר מחדש", run: function () {
+      var st = api.ladderState(S([2, 2, 2, 3, 2, 3, 3, 2, 2, 2, 2, 2, 2]));
+      return all(expect("rung", st.rung, 2), expect("open", st.open, true), expect("at", st.at, 3), expect("next", st.next, 0),
+                 expect("events", ev(st), "open@3->L2,up@7->L3,down@10->L2,open@13->L2"),
+                 expect("weeks", weeks(st), "W1 L2 · W2 L2 · W3 L3⬆ · W4 L2⬇ · W5 L2"));
+    } },
+    { name: "מתחת למדרגה לא ברצף — לא יורדים; הרצף מתאפס באימון במדרגה", run: function () {
+      var st = api.ladderState(S([3, 3, 2, 2, 3, 2, 2, 3]));
+      return all(expect("rung", st.rung, 3), expect("below", st.below, 0), expect("events", ev(st), ""));
+    } },
+    { name: "האימון הראשון קובע את המדרגה (L3 מההתחלה = L3) ונספר כ-1 מתוך 3", run: function () {
+      var st = api.ladderState(S([3]));
+      var st2 = api.ladderState(S([2]));
+      return all(expect("rung L3", st.rung, 3), expect("at", st.at, 1), expect("rung L2", st2.rung, 2), expect("at2", st2.at, 1));
+    } },
+    { name: "ב-L3 אין אתגר לפתוח", run: function () {
+      var st = api.ladderState(S([3, 3, 3, 3, 3]));
+      return all(expect("rung", st.rung, 3), expect("open", st.open, false), expect("events", ev(st), ""));
+    } },
+    { name: "מעל המדרגה לפני הפתיחה נספר לפתיחה (הכרעה 2): L2, L3, L3 פותחים; עוד 3 ב-L3 מעלים", run: function () {
+      var st = api.ladderState(S([2, 3, 3, 3, 3, 3]));
+      return all(expect("rung", st.rung, 3), expect("events", ev(st), "open@3->L2,up@6->L3"));
+    } },
+    { name: "ב-L1 אין לאן לרדת", run: function () {
+      var st = api.ladderState(S([1, 1, 1, 1, 1]));
+      return all(expect("rung", st.rung, 1), expect("open", st.open, true), expect("below", st.below, 0), expect("events", ev(st), "open@3->L1"));
+    } },
+    { name: "מ-L1 ל-L3 דרך L2: שתי עליות, כל אחת 3+3", run: function () {
+      var st = api.ladderState(S([1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3]));
+      return all(expect("rung", st.rung, 3), expect("events", ev(st), "open@3->L1,up@6->L2,open@9->L2,up@12->L3"),
+                 expect("weeks", weeks(st), "W1 L1 · W2 L2⬆ · W3 L2 · W4 L3⬆"));
+    } },
+    { name: "קפיצה של שתי רמות (L1 → L3) נספרת כ'מעל' — לאתגר L2", run: function () {
+      var st = api.ladderState(S([1, 1, 1, 3, 3, 3]));
+      return all(expect("rung", st.rung, 2), expect("events", ev(st), "open@3->L1,up@6->L2"));
+    } },
+    { name: "רמות לא תקינות (ריק / 0 / null) נדלגות ולא נספרות", run: function () {
+      var st = api.ladderState(S([0, 2, null, "", 2, 2]));
+      return all(expect("rung", st.rung, 2), expect("count", st.count, 3), expect("open", st.open, true), expect("perLevel", J(st.perLevel), J({ 1: 0, 2: 3, 3: 0 })));
+    } },
+    { name: "בלי אימונים: מדרגה 0 (מצב ריק של הכרטיס)", run: function () {
+      var st = api.ladderState([]);
+      return all(expect("rung", st.rung, 0), expect("count", st.count, 0), expect("weeks", weeks(st), ""));
+    } },
+    { name: "ספירת L1/L2/L3 (השורה הקטנה בכרטיס)", run: function () {
+      var st = api.ladderState(S([2, 1, 3, 3, 2, 2, 3]));
+      return expect("perLevel", J(st.perLevel), J({ 1: 1, 2: 3, 3: 3 }));
+    } },
+    { name: "שבוע בלי אימון ברמה לא מופיע ב-weeks (הכרטיס מציג בו —)", run: function () {
+      var st = api.ladderState([{ level: 2, week: 1 }, { level: 2, week: 3 }]);
+      return expect("weeks", weeks(st), "W1 L2 · W3 L2");
+    } }
+  ];
+
+  // ---- cases: collecting the sessions from the tracker (day shape: done / level / alt) ----
+  function day(o) { o = o || {}; var d = { done: !!o.done, level: o.level == null ? "" : o.level, rest: false }; if (o.alt) d.alt = { done: !!o.alt.done, level: o.alt.level == null ? "" : o.alt.level }; return d; }
+  function wk(days) { while (days.length < 7) days.push(day()); return { days: days }; }
+  CASES.push(
+    { name: "ladderSessions: רק סשנים שנשמרו עם רמה 1-3 נספרים, בסדר הבלוק", run: function () {
+      var weeks = [wk([day({ done: true, level: "2" }), day({ done: false, level: "3" }), day({ done: true, level: "" }), day({ done: true, level: "4" }), day({ done: true, level: "3" })]),
+                   wk([day({ done: true, level: "1" })])];
+      var r = api.ladderSessions(weeks);
+      return expect("sessions", J(r.map(function (s) { return [s.level, s.week, s.day, s.kind]; })), J([[2, 1, 0, "main"], [3, 1, 4, "main"], [1, 2, 0, "main"]]));
+    } },
+    { name: "ladderSessions: סשן אינדורנס (alt) נספר כמו ראשי, אחרי הראשי של אותו יום", run: function () {
+      var weeks = [wk([day({ done: false, level: "", alt: { done: true, level: "2" } }), day({ done: true, level: "3", alt: { done: true, level: "1" } })])];
+      var r = api.ladderSessions(weeks);
+      return expect("sessions", J(r.map(function (s) { return [s.level, s.kind]; })), J([[2, "alt"], [3, "main"], [1, "alt"]]));
+    } },
+    { name: "ladderSessions: ריק / חסר → []", run: function () {
+      return all(expect("empty", J(api.ladderSessions([])), "[]"), expect("undefined", J(api.ladderSessions(undefined)), "[]"), expect("no days", J(api.ladderSessions([{}])), "[]"));
+    } },
+    // ---- the card's values
+    { name: "ladderVals: מצב ריק — קו, הסבר, בלי שורת שבועות", run: function () {
+      var v = api.ladderVals(api.ladderState([]), 3);
+      return all(expect("rung", v.ladderRung, "—"), expect("weeks", v.ladderHasWeeks, false), expect("counts", v.ladderCounts, ""));
+    } },
+    { name: "ladderVals: אתגר פתוח — '1 מתוך 3', שורת שבועות עד השבוע הנוכחי עם — על שבוע ריק", run: function () {
+      var v = api.ladderVals(api.ladderState([{ level: 2, week: 1 }, { level: 2, week: 1 }, { level: 2, week: 1 }, { level: 3, week: 3 }]), 4);
+      return all(expect("rung", v.ladderRung, "L2"), expect("sub", v.ladderSub, "🎯 אתגר L3 פתוח · 1 מתוך 3 אימונים ב-L3"),
+                 expect("weeks", J(v.ladderWeeks.map(function (w) { return w.txt; })), J(["W1 L2", "W2 —", "W3 L2", "W4 —"])),
+                 expect("counts", v.ladderCounts, "L1 ×0 · L2 ×3 · L3 ×1"));
+    } },
+    { name: "ladderVals: צוברים — 'עוד אימון אחד' / 'עוד 2 אימונים'; ב-L3 אין אתגר; רצף מתחת למדרגה מוצג", run: function () {
+      var a = api.ladderVals(api.ladderState(S([2, 2])), 1), b = api.ladderVals(api.ladderState(S([2])), 1), c = api.ladderVals(api.ladderState(S([3, 2])), 1);
+      return all(expect("one left", a.ladderSub, "עוד אימון אחד ב-L2 ומעלה פותחים את האתגר ל-L3"),
+                 expect("two left", b.ladderSub, "עוד 2 אימונים ב-L2 ומעלה פותחים את האתגר ל-L3"),
+                 expect("top + below", c.ladderSub, "המדרגה הגבוהה · ממשיכים לשמור על הרמה · 1 מתוך 3 ברצף מתחת למדרגה"),
+                 expect("title count", c.ladderTitle, "המדרגה שלך · 2 אימונים ברמה"));
+    } },
+    { name: "ladderVals: עלייה מסומנת ⬆ בכתום, ⬇ נשאר בצבע הרגיל (לא כישלון)", run: function () {
+      var v = api.ladderVals(api.ladderState(S([2, 2, 2, 3, 3, 3, 2, 2, 2])), 3);
+      var w = v.ladderWeeks;
+      return all(expect("txt", J(w.map(function (x) { return x.txt; })), J(["W1 L2", "W2 L3 ⬆", "W3 L2 ⬇"])),
+                 expect("up orange", w[1].style.indexOf("var(--orange)") > 0, true), expect("down navy", w[2].style.indexOf("var(--navy)") > 0, true));
+    } },
+    // ---- the save hook: climb → celebration card; open / return → a toast after the save toast
+    { name: "ladderAfterSave: עלייה → כרטיס חגיגה (בלי טוסט)", run: function () {
+      var t = api.t; t._cel = null; t._toast = null;
+      t.ladderAfterSave(api.ladderState(S([2, 2, 2, 3, 3])), api.ladderState(S([2, 2, 2, 3, 3, 3])));
+      return all(expect("title", t._cel && t._cel[0], "עלית ל-L3! ⬆"), expect("no toast yet", t._toast, null));
+    } },
+    { name: "ladderAfterSave: אתגר נפתח → טוסט מושהה; ירידה → טוסט מושהה; בלי שינוי → כלום", run: function () {
+      var t = api.t; t._cel = null; t._toast = null;
+      t.ladderAfterSave(api.ladderState(S([2, 2])), api.ladderState(S([2, 2, 2])));
+      t.ladderAfterSave(api.ladderState(S([3, 2, 2])), api.ladderState(S([3, 2, 2, 2])));
+      t.ladderAfterSave(api.ladderState(S([2])), api.ladderState(S([2, 2])));
+      return new Promise(function (res) { setTimeout(function () {
+        res(all(expect("no card", t._cel, null), expect("toast is the return (last scheduled)", t._toast, "🪜 חזרת ל-L2 · 3 אימונים שם פותחים את האתגר מחדש")));
+      }, 2600); });
+    } },
+    { name: "ladderAfterSave: האימון הראשון קובע מדרגה בלי חגיגה", run: function () {
+      var t = api.t; t._cel = null;
+      t.ladderAfterSave(api.ladderState([]), api.ladderState(S([3])));
+      return expect("no card", t._cel, null);
+    } }
+  );
+
+  var pass = 0;
+  for (var ci = 0; ci < CASES.length; ci++) {   // sequential: a case may return a Promise (the delayed toast)
+    var c = CASES[ci], r;
+    try { r = await c.run(); } catch (e) { r = "threw: " + (e && e.message); }
+    if (show(c.name, r)) pass++;
+  }
+  sum.textContent = (pass === CASES.length ? "✅ " : "❌ ") + pass + " / " + CASES.length + " עברו";
+  sum.className = pass === CASES.length ? "ok" : "bad";
+  window.__ladderTests = { pass: pass, total: CASES.length };
+})();
+</script>
+</body>
+</html>
