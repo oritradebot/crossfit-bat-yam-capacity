@@ -1338,6 +1338,9 @@
             <sc-for list="{{ liftPRList }}" as="lp" hint-placeholder-count="4">
               <button onClick="{{ onLiftChart }}" data-key="{{ lp.key }}" style="display:flex; flex-direction:column; gap:6px; text-align:start; background:var(--card); border:1px solid var(--line); border-inline-start:4px solid var(--navy); border-radius:14px; padding:14px 16px; cursor:pointer; color:var(--ink); box-shadow:0 4px 16px var(--shcol);">
                 <div dir="auto" style="font-weight:700; font-size:14.5px;">{{ lp.move }}</div>
+                <sc-if value="{{ lp.srcLabel }}" hint-placeholder-val="{{ false }}">
+                <div dir="auto" style="font-size:11px; color:var(--muted); margin-top:-3px;">{{ lp.srcLabel }}</div>
+                </sc-if>
                 <div style="display:flex; align-items:baseline; gap:8px; width:100%;">
                   <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:24px; color:var(--blue); direction:ltr;">{{ lp.bestLabel }}</span>
                   <span style="{{ lp.weekStyle }}">{{ lp.week }}</span>
@@ -2414,18 +2417,51 @@ class Component extends DCLogic {
     '4_6': { groups: [['DB Push Press', 4, '5+5'], ['D-ball Carry', 4, '20-30m']] }
   };
   liftGroupsAt(key, alt) { return (!alt && key && this.LIFT_GROUPS[key]) || null; }
-  // What a session's LIFT gives the records: one { name, weight, reps } — or, on a LIFT_GROUPS day,
-  // one per group with the heaviest box of that group's sets.
+  // ---- lift families (3.6.0, Ori 05/10) ----
+  // One LIFT day -> the families its ONE weight is credited to. The weight then shows under each
+  // family in "בפעם הקודמת", in the records tab and in the chart, with the day's own name as the
+  // source. Ori's rules (05/10): hang stays hang unless the full lift is in the same complex;
+  // Clean & Jerk only on a C&J singles day, every other clean+jerk complex splits into its lifts;
+  // "Jerk of choice" = Push Jerk; Overhead Squat, alone or in a complex, = Snatch; pulls stay
+  // their own family; lift-offs and jerk dips are drills and count nowhere; DB / accessory days
+  // keep their exact name. Keyed 'weekIdx_dayIdx', main session only, resolved at render — no
+  // sync impact. No entry -> the day's own name, as before. Every embed adds its week here.
+  LIFT_FAMILIES = this.IS_DEMO ? {} : {
+    '0_0': ['Back Squat'], '0_1': ['Snatch'], '0_2': ['Power Clean', 'Hang Clean', 'Push Jerk'], '0_4': ['Power Clean'], '0_5': ['Snatch'],
+    '1_0': ['Deadlift'], '1_1': ['Clean & Jerk'], '1_2': ['Snatch'], '1_4': ['Back Squat'], '1_5': ['Snatch'],
+    '2_0': ['Deadlift'], '2_2': ['Power Clean'], '2_3': ['Snatch'], '2_4': ['Back Squat'], '2_5': ['Clean', 'Push Jerk'],
+    '3_0': ['Back Squat'], '3_1': ['Clean', 'Push Jerk'], '3_4': ['Power Clean'], '3_5': ['Snatch'],
+    '4_0': ['Clean Pull', 'Hang Power Clean', 'Hang Clean', 'Push Jerk'], '4_1': ['Snatch'], '4_2': ['Back Squat'], '4_4': ['Power Clean'], '4_5': ['Snatch']
+  };
+  // Block-1 ledger names (profiles.prs, keyed by normName) -> the same families, so a carried
+  // record lands under its family (ledgerLifts). Keys not listed stay as they are.
+  LEDGER_FAMILIES = {
+    'back squats': ['Back Squat'], 'deadlifts': ['Deadlift'], 'silent deadlifts holds': ['Deadlift'],
+    'snatch hang snatch': ['Snatch'], 'squat snatch hang squat snatch': ['Snatch'], 'halting snatch overhead squat': ['Snatch'],
+    'squat clean pause jerk': ['Clean', 'Push Jerk'], 'clean 2 front squats': ['Clean', 'Front Squat'],
+    'clean pull squat clean jerk': ['Clean Pull', 'Clean', 'Push Jerk'], 'clean pull power clean 2 jerks': ['Clean Pull', 'Power Clean', 'Push Jerk'],
+    'power clean push jerk split jerk': ['Power Clean', 'Push Jerk', 'Split Jerk'], 'power clean jerk': ['Power Clean & Jerk'],
+    'power clean hang squat clean': ['Power Clean', 'Hang Clean'], 'push press 2 push jerks': ['Push Press', 'Push Jerk']
+  };
+  liftFamiliesAt(key, alt) { return (!alt && key && this.LIFT_FAMILIES[key]) || null; }
+  // What a session's LIFT gives the records: one { name, weight, reps, src } — or, on a LIFT_GROUPS
+  // day, one per group with the heaviest box of that group's sets — or, on a LIFT_FAMILIES day,
+  // one per family with the day's one weight. src = the day's own name (shown as the source).
   liftEntries(x, key, alt) {
     const L = (x && x.lift && x.lift.log) || {};
     const g = this.liftGroupsAt(key, alt);
-    if (!g) return [{ name: (x && x.lift && x.lift.movement) || '', weight: parseFloat(L.weight), reps: L.reps || '' }];
+    if (!g) {
+      const src = (x && x.lift && x.lift.movement) || '';
+      const e = { name: src, weight: parseFloat(L.weight), reps: L.reps || '', src };
+      const fam = this.liftFamiliesAt(key, alt);
+      return fam ? fam.map(name => ({ ...e, name })) : [e];
+    }
     let from = 0;
     return g.groups.map(([name, n, reps]) => {
       let mx = 0;
       for (let i = from+1; i <= from+n; i++) { const v = parseFloat(L['s'+i]); if (v > mx) mx = v; }
       from += n;
-      return { name, weight: mx, reps: reps || g.reps };
+      return { name, weight: mx, reps: reps || g.reps, src: name };
     });
   }
   // Summary text of a LIFT_GROUPS day ('' on any other day, or before a box is filled).
@@ -2815,7 +2851,7 @@ class Component extends DCLogic {
       for (const x of [d, d.alt]) {
         if (!x) continue;
         for (const le of this.liftEntries(x, Math.floor(i/7)+'_'+(i%7), x === d.alt)) {
-          if (le.weight > 0 && this.normName(le.name, true) === key) return { i, weight: le.weight, reps: le.reps, level: x.level || '' };
+          if (le.weight > 0 && this.normName(le.name, true) === key) return { i, weight: le.weight, reps: le.reps, level: x.level || '', src: le.src || '' };
         }
       }
     }
@@ -2837,20 +2873,33 @@ class Component extends DCLogic {
     return null;
   }
   mmss(sec) { sec = Math.round(Math.abs(sec)); return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0'); }
-  lastLine(text, delta, deltaGood) {
+  lastLine(text, delta, deltaGood, sub) {
     return React.createElement('div', { dir:'rtl', style:{ display:'flex', gap:'6px', alignItems:'center', flexWrap:'wrap', fontSize:'12px', color:'var(--muted)', background:'var(--paper)', border:'1px solid var(--line)', borderRadius:'10px', padding:'7px 10px' } },
       React.createElement('span', { style:{ flex:'none' } }, '🕘'),
       React.createElement('span', { style:{ fontWeight:600 } }, text),
-      delta ? React.createElement('span', { style:{ fontWeight:700, color: deltaGood === null ? 'var(--muted)' : (deltaGood ? 'var(--greenink)' : 'var(--red)') } }, delta) : null
+      delta ? React.createElement('span', { style:{ fontWeight:700, color: deltaGood === null ? 'var(--muted)' : (deltaGood ? 'var(--greenink)' : 'var(--red)') } }, delta) : null,
+      sub ? React.createElement('span', { dir:'auto', style:{ fontSize:'11px', color:'var(--faint)', flexBasis:'100%' } }, sub) : null
     );
   }
-  lastLiftEl(day, gi) {
-    const pv = this.prevLift(gi, day.lift && day.lift.movement); if (!pv) return null;
-    const curW = parseFloat(day.lift && day.lift.log && day.lift.log.weight);
-    let delta = '', good = null;
-    if (curW > 0 && pv.weight > 0 && curW !== pv.weight) { const d = Math.round((curW - pv.weight)*10)/10; delta = (d > 0 ? '+' : '−') + Math.abs(d) + ' ק"ג מהפעם הקודמת'; good = d > 0; }
-    const lvl = pv.level ? (' · L' + pv.level + ((day.level && day.level !== pv.level) ? ' (רמה שונה)' : '')) : '';
-    return this.lastLine('בפעם הקודמת · ' + this.whenLabel(pv.i) + ': ' + pv.weight + ' ק"ג' + (pv.reps ? (' × ' + pv.reps) : '') + lvl, delta, good);
+  // One line per lift entry of the day (the day's own name, or each family / group on a
+  // LIFT_FAMILIES / LIFT_GROUPS day) that has an earlier result in the block. On a family day the
+  // line is prefixed with the family, and the earlier day's own name is the small source line.
+  lastLiftEl(day, gi, alt) {
+    const key = Math.floor(gi/7) + '_' + (gi%7);
+    const entries = this.liftEntries(day, key, alt).filter(e => e.name);
+    const lines = [];
+    for (const le of entries) {
+      const pv = this.prevLift(gi, le.name); if (!pv) continue;
+      const curW = le.weight;
+      let delta = '', good = null;
+      if (curW > 0 && pv.weight > 0 && curW !== pv.weight) { const d = Math.round((curW - pv.weight)*10)/10; delta = (d > 0 ? '+' : '−') + Math.abs(d) + ' ק"ג מהפעם הקודמת'; good = d > 0; }
+      const lvl = pv.level ? (' · L' + pv.level + ((day.level && day.level !== pv.level) ? ' (רמה שונה)' : '')) : '';
+      const fam = (le.src !== le.name) ? (le.name + ' · ') : '';
+      const sub = (pv.src && pv.src !== le.name) ? pv.src : '';
+      lines.push(this.lastLine(fam + 'בפעם הקודמת · ' + this.whenLabel(pv.i) + ': ' + pv.weight + ' ק"ג' + (pv.reps ? (' × ' + pv.reps) : '') + lvl, delta, good, sub));
+    }
+    if (!lines.length) return null;
+    return React.createElement(React.Fragment, null, ...lines);
   }
   lastMetconEl(day, m, gi) {
     const pv = this.prevMetcon(gi, m); if (!pv) return null;
@@ -4067,7 +4116,7 @@ class Component extends DCLogic {
       const isBest = p.wt === entry.best;
       const x = X(i), y = Y(p.wt);
       kids.push(React.createElement('circle', { key:'c'+i, cx:x, cy:y, r:isBest?5.5:4, fill:isBest?'var(--orange)':'var(--card)', stroke:isBest?'var(--orange)':'var(--blue)', strokeWidth:2 },
-        React.createElement('title', null, 'W'+p.week+' · '+p.date+' · '+p.wt+'kg'+(p.reps?(' × '+p.reps):''))));
+        React.createElement('title', null, 'W'+p.week+' · '+p.date+' · '+p.wt+'kg'+(p.reps?(' × '+p.reps):'')+((p.src && p.src !== entry.move)?(' · '+p.src):''))));
       if (i % vstep === 0 || isBest || i === h.length-1)
         kids.push(React.createElement('text', { key:'v'+i, x, y:y-10, textAnchor:'middle', fontSize:11, fontWeight:700, fontFamily:"'Oswald',sans-serif", fill:isBest?'var(--orange)':'var(--navy)' }, String(p.wt)));
       if (i % step === 0 || i === h.length-1)
@@ -4374,8 +4423,8 @@ class Component extends DCLogic {
             const e = out.lifts[key] || (out.lifts[key] = { key, move:rawName, best:0, reps:'', count:0, wi:w, di:d, week:w+1, block, date:'', history:[] });
             e.count++;
             // Chronological weight log per movement — feeds the progression chart modal.
-            e.history.push({ gi, wt, week:w+1, date:this.dateStr(this.dateAt(gi)), reps:(le.reps||'') });
-            if (wt > e.best) { e.best = wt; e.move = rawName; e.wi = w; e.di = d; e.week = w+1; e.date = this.dateStr(this.dateAt(gi)); e.reps = (le.reps||''); }
+            e.history.push({ gi, wt, week:w+1, date:this.dateStr(this.dateAt(gi)), reps:(le.reps||''), src:(le.src||'') });
+            if (wt > e.best) { e.best = wt; e.move = rawName; e.wi = w; e.di = d; e.week = w+1; e.date = this.dateStr(this.dateAt(gi)); e.reps = (le.reps||''); e.src = (le.src||''); }
           });
         });
       }
@@ -4411,11 +4460,24 @@ class Component extends DCLogic {
     return s;
   }
   blockLabel(n) { return 'BLOCK ' + this.roman(n == null ? this.BLOCK_NUM : n); }
+  // The profile ledger re-keyed by family (LEDGER_FAMILIES, 3.6.0): a block-1 name that maps to
+  // families is credited to each of them, the heaviest wins when several names land on one
+  // family; src keeps the old name. Unlisted keys pass through unchanged.
+  ledgerLifts() {
+    const L = (this.state.prevPRs && this.state.prevPRs.lifts) || {};
+    const out = {};
+    Object.keys(L).forEach(k => {
+      const p = L[k]; if (!p || !(p.best > 0)) return;
+      const fams = this.LEDGER_FAMILIES[k];
+      const targets = fams ? fams.map(f => [this.normName(f, true), f, p.move || k]) : [[k, p.move || k, '']];
+      targets.forEach(([fk, move, src]) => { if (!out[fk] || p.best > out[fk].best) out[fk] = { ...p, move, src }; });
+    });
+    return out;
+  }
   // The ledger's best for a movement (null = earlier blocks never logged it).
   prevBestFor(movement) {
-    const L = this.state.prevPRs && this.state.prevPRs.lifts;
     const k = this.normName(movement, true);
-    const e = (L && k) ? L[k] : null;
+    const e = k ? this.ledgerLifts()[k] : null;
     return (e && e.best > 0) ? e : null;
   }
   // This block's records laid over the ledger — the lists the שיאים tab, the
@@ -4426,15 +4488,17 @@ class Component extends DCLogic {
     const chip = "font-family:'Oswald',sans-serif; font-weight:700; font-size:12px; letter-spacing:.08em; direction:ltr; color:var(--goldink); background:rgba(232,165,58,.16); border-radius:999px; padding:2px 8px;";
     const liftMap = {};
     Object.keys(cur.lifts).forEach(k=>{ liftMap[k] = cur.lifts[k]; });
-    Object.keys(prev.lifts || {}).forEach(k=>{
-      const p = prev.lifts[k]; if (!p || !(p.best > 0)) return;
+    const prevLifts = this.ledgerLifts();
+    Object.keys(prevLifts).forEach(k=>{
+      const p = prevLifts[k]; if (!p || !(p.best > 0)) return;
       const c = liftMap[k];
       if (c && c.best > p.best) return;                      // beaten in this block — the old record steps aside
-      liftMap[k] = { key:k, move:p.move || (c && c.move) || k, best:p.best, reps:p.reps || '', week:p.week, block:p.block,
+      liftMap[k] = { key:k, move:p.move || (c && c.move) || k, best:p.best, reps:p.reps || '', week:p.week, block:p.block, src:p.src || '',
         carried:true, wi:-1, di:-1, date:'', count:c ? c.count : 0, history:c ? c.history : [] };
     });
     const lifts = Object.values(liftMap).sort((a,b)=>b.best-a.best).map(e=>({ ...e,
       bestLabel: e.best + 'kg' + (e.reps ? (' × '+e.reps) : ''),
+      srcLabel: (e.src && e.src !== e.move) ? e.src : '',
       week: e.carried ? this.blockLabel(e.block) : ('W'+e.week),
       weekStyle: 'margin-inline-start:auto; ' + (e.carried ? chip : "font-family:'Oswald',sans-serif; font-weight:700; font-size:13px; color:var(--navy);"),
       date: e.carried ? ('שבוע ' + e.week) : e.date,
@@ -4905,7 +4969,7 @@ class Component extends DCLogic {
       prToggle: (fut || otherDone) ? null : this.prToggle(this.dayHasPR(day), true),
       hasPRBadge: this.dayHasPR(day),
       liftBar: fut ? this.futureNote() : (otherDone ? this.altLockNote(asAlt) : this.liftBar(day.lift, this.perSetCount())),
-      lastLift: (fut || otherDone) ? null : this.lastLiftEl(day, gi),
+      lastLift: (fut || otherDone) ? null : this.lastLiftEl(day, gi, asAlt),
       lastMetcon: (fut || otherDone) ? null : this.lastMetconEl(day, met, gi),
       lastMetcon2: (fut || otherDone) ? null : this.lastMetconEl(day, met2, gi),
       liftOpen, metconOpen, metcon2Open, extraOpen,

@@ -62,6 +62,9 @@ C:\Users\leaan\Desktop\crossfit manager project\בלוק 2 אימונים להט
 
 - `PER_SET_LIFT` — רשומה לכל יום עם מוט. ספירה לפי `program.md §3`.
   ימים בלי משקל מוט → **לא מוסיפים רשומה**.
+- `LIFT_FAMILIES` — **חובה לכל יום LIFT עם מוט** (3.6.0, אורי 05/10): `'N_D': ['Snatch']`, קומפלקס → כל משפחה שבו
+  (`['Clean Pull','Hang Power Clean','Hang Clean','Push Jerk']`). החוקים והרשימה המלאה: `program.md` → שורת `LIFT_FAMILIES`.
+  שם חדש שלא נופל בחוקים (למשל muscle clean בקומפלקס) → שאל את אורי בשער. ימי DB/אביזרים — בלי רשומה.
 - `PER_MOVE_METCON` / `PER_MOVE_BOXES` / `PER_MOVE_SCORE` — רק אם רלוונטי
 - `METCON_AMOUNT_LABEL` — לימי `amount`, שהתווית תהיה "חזרות" ולא מ׳/קל׳
 - **שורות הרמה בתבנית `L1 = …`** (או `Level 1 = …`) — הפילים של שלב 1 נגזרים מהן (`planLevels`); בלי התבנית אין פילים
