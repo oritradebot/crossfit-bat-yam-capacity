@@ -72,14 +72,16 @@
   // in-app screen also lists every week's value. More tests arrive per embed.
   // 14/09 (W2): the program may move the test to another day in some weeks —
   // `byWeek` (weekIdx → dayIdx) overrides `di` for those weeks; weeklyDi()
-  // resolves the day, and every reader goes through it.
+  // resolves the day, and every reader goes through it. A dayIdx of -1 marks a
+  // week the test skips (W6: no tens, Ori 13/10) — dayAt finds no day, so the
+  // week simply has no value.
   var CAPACITESTS_BLOCK2 = [
     { key: 'squat10',
       name: 'Back Squat — 4 x 10 (מבחן שבועי)',
       short: 'עשיריות בק סקוואט · כל שבוע',
       unit: 'ק"ג',
       betterWhen: 'higher',
-      weekly: { di: 0, src: 'lift.weight', byWeek: { 1: 4, 2: 4, 4: 2 } }   // W1 Sunday · W2 + W3 Thursday (Ori, 14/09 · 21/09) · W5 Tuesday, the 10RM (Ori, 02/10)
+      weekly: { di: 0, src: 'lift.weight', byWeek: { 1: 4, 2: 4, 4: 2, 5: -1 } }   // W1 Sunday · W2 + W3 Thursday (Ori, 14/09 · 21/09) · W5 Tuesday, the 10RM (Ori, 02/10) · W6 skipped, no tens (Ori, 13/10)
     }
   ];
   function testList() { return global.cfbyDemo ? CAPACITESTS_BLOCK1 : CAPACITESTS_BLOCK2; }
@@ -136,6 +138,7 @@
   /* ---- weekly tests (block 2) ---------------------------------------------
      One value per week (same day, same reader). The slots a weekly test
      exposes to the card are the first measured week and the latest one.   */
+  // -1 = the test is not measured that week (byWeek, W6): readSlot finds no day and the week stays empty.
   function weeklyDi(t, wi) {
     var b = t.weekly && t.weekly.byWeek;
     return (b && b[wi] != null) ? b[wi] : t.weekly.di;

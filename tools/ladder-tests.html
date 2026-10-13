@@ -137,11 +137,11 @@
   function day(o) { o = o || {}; var d = { done: !!o.done, level: o.level == null ? "" : o.level, rest: false }; if (o.alt) d.alt = { done: !!o.alt.done, level: o.alt.level == null ? "" : o.alt.level }; return d; }
   function wk(days) { while (days.length < 7) days.push(day()); return { days: days }; }
   CASES.push(
-    { name: "ladderSessions: רק סשנים שנשמרו עם רמה 1-3 נספרים, בסדר הבלוק", run: function () {
+    { name: "ladderSessions: רק סשנים שנשמרו עם רמה נספרים, בסדר הבלוק; L4 (שישי W6, 13/10) נספר כ-L3", run: function () {
       var weeks = [wk([day({ done: true, level: "2" }), day({ done: false, level: "3" }), day({ done: true, level: "" }), day({ done: true, level: "4" }), day({ done: true, level: "3" })]),
                    wk([day({ done: true, level: "1" })])];
       var r = api.ladderSessions(weeks);
-      return expect("sessions", J(r.map(function (s) { return [s.level, s.week, s.day, s.kind]; })), J([[2, 1, 0, "main"], [3, 1, 4, "main"], [1, 2, 0, "main"]]));
+      return expect("sessions", J(r.map(function (s) { return [s.level, s.week, s.day, s.kind]; })), J([[2, 1, 0, "main"], [3, 1, 3, "main"], [3, 1, 4, "main"], [1, 2, 0, "main"]]));
     } },
     { name: "ladderSessions: סשן אינדורנס (alt) נספר כמו ראשי, אחרי הראשי של אותו יום", run: function () {
       var weeks = [wk([day({ done: false, level: "", alt: { done: true, level: "2" } }), day({ done: true, level: "3", alt: { done: true, level: "1" } })])];
