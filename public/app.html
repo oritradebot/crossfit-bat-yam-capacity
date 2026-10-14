@@ -2675,6 +2675,8 @@ class Component extends DCLogic {
   // exactly the levels the plan writes for the metcon (planLevels; L1-L3 in
   // block 2 — W6 Friday adds a Level 4, which the ladder reads as L3) and every result field below stays locked until one is
   // picked (metconBar). A day whose plan has no level lines shows no pills.
+  // 14/10 (Ori): with four levels the title and the pills do not fit one phone row, and L4 used to wrap
+  // alone — the title now takes a full row of its own (flexBasis 100%) so the four pills sit together.
   levelPills(levels) {
     const t = this.curSession();
     const cur = String(t.level || '');
@@ -2684,7 +2686,7 @@ class Component extends DCLogic {
       style:{ border:'1.5px '+((!on && hint) ? 'dashed' : 'solid')+' '+((on || hint) ? 'var(--navy)' : 'var(--line)'), background:on?'var(--navy-bg)':'var(--card)', color:on?'#fff':'var(--muted)', borderRadius:'999px', padding:'6px 12px', fontWeight:700, fontSize:'12px', cursor:'pointer', fontFamily:"'Oswald',sans-serif", letterSpacing:'.04em', transition:'all .15s' }
     }, 'L'+k);
     const row = React.createElement('div', { dir:'rtl', style:{ display:'flex', gap:'6px', alignItems:'center', flexWrap:'wrap' } },
-      React.createElement('span', { style:{ fontSize:'12px', fontWeight:700, color:'var(--navy)' } }, 'שלב 1 · באיזו רמה עבדת?'),
+      React.createElement('span', { style:{ fontSize:'12px', fontWeight:700, color:'var(--navy)', flexBasis: levels.length >= 4 ? '100%' : 'auto' } }, 'שלב 1 · באיזו רמה עבדת?'),
       levels.map(n => String(n)).map(k => btn(k, cur===k, (!cur && last===k) ? 'הרמה שבחרת בפעם הקודמת' : '')),
       (!cur && last) ? React.createElement('span', { style:{ fontSize:'11px', color:'var(--muted)' } }, '· בפעם הקודמת L'+last) : null
     );
